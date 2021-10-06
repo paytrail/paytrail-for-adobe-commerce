@@ -17,7 +17,7 @@
   ],
   "require": {
     "php": "^7.1",
-    "paytrail/paytrail-php-sdk": "1.5.*",
+    "paytrail/paytrail-php-sdk": "1.0.*",
     "ext-curl": "*"
   },
   "type": "magento2-module",
