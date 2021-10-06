@@ -69,7 +69,7 @@ The timeout period of 8 hours can be adjusted in Magento configuration. A longer
 __Pending Payment__<br/>
 Assigned to an order when customer is redirected to the payment provider of their choosing.
 
-__Pending Checkout__<br/>
+__Pending Paytrail Payment Service__<br/>
 Assigned to an order if Paytrail for Adobe Commerce is still waiting for a confirmation of payment. Applies to invoices, such as Collector.
 
 __Processing__<br/>
@@ -82,13 +82,13 @@ Available statuses:
 - Processing
 - Suspected Fraud
 - Pending Payment
+- Pending Paytrail Payment Service
 - Payment Review
 - Pending
 - On Hold
 - Complete
 - Closed
 - Canceled
-- Pending Checkout
 
 ## Multiple stores
 If you have multiple stores, you can set up the payment module differently depending on the selected store. In configuration settings, there is a selection for Store View.
