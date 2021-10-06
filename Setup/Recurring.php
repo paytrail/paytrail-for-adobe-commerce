@@ -25,11 +25,6 @@ class Recurring implements InstallSchemaInterface
     /**
      * @var string
      */
-    const ORDER_STATUS_CUSTOM_LABEL_OLD = 'Pending Paytrail Payment Service'; //the module has been rebranded,
-
-    /**
-     * @var string
-     */
     const ORDER_STATUS_CUSTOM_LABEL = 'Pending Paytrail Payment Service';
 
     /**
