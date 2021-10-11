@@ -49,7 +49,7 @@ class Adapter
     }
 
     /**
-     * Create Instance of the Op Merchant Services SDK Api Client
+     * Create Instance of the Paytrail PHP-SDK API Client
      * @return Client
      * @throws LocalizedException
      */
