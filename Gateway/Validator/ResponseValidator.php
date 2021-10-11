@@ -65,11 +65,11 @@ class ResponseValidator extends AbstractValidator
         }
 
         if ($this->validateResponse($validationSubject) == false) {
-            $fails[] = "Invalid response data from Checkout";
+            $fails[] = "Invalid response data from Paytrail";
         }
 
         if ($this->validateAlgorithm($validationSubject["checkout-algorithm"]) == false) {
-            $fails[] = "Invalid response data from Checkout";
+            $fails[] = "Invalid response data from Paytrail";
         }
 
         if (sizeof($fails) > 0) {
