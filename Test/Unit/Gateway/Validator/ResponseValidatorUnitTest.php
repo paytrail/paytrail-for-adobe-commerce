@@ -84,8 +84,8 @@ class ResponseValidatorUnitTest extends TestCase
             'failsDescription' => [
                 0 => 'OrderId is invalid',
                 1 => 'Response and Request merchant ids does not match',
-                2 => 'Invalid response data from Checkout',
-                3 => 'Invalid response data from Checkout'
+                2 => 'Invalid response data from Paytrail',
+                3 => 'Invalid response data from Paytrail'
             ]]);
 
         $this->responseValidator->validate($this->shouldFail);
