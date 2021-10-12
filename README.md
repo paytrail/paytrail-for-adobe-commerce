@@ -34,7 +34,7 @@ __Stores -> Configuration -> Sales -> Payment Methods -> Paytrail for Adobe Comm
 
 The module has the following settings:
 - __Enable__: Defines whether the payment method is enabled or not *(Input: Yes / No)*
-- __Skip bank selection__: Defines whether the bank selection will be skipped *(Input: Yes / No)*
+- __Payment method selection on a separate page__: Display payment method selection on a separate page *(Input: Yes / No)*
 - __Merchant ID__: Your Paytrail merchant ID *(Input: Text)*
 - __Merchant Secret__: Your Paytrail merchant secret *(Input: Secret)*
 - __New Order Status__: A custom status for a new order paid for with Paytrail *(Input: Selection)*

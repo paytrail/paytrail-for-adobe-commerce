@@ -4,7 +4,7 @@
 "Failed to complete the payment. Please try again or contact the customer service.","Failed to complete the payment. Please try again or contact the customer service."
 "Payment failed","Payment failed"
 "Payment has been completed","Payment has been completed"
-"Order canceled. Failed to redirect to Checkout.","Order canceled. Failed to redirect to Checkout."
+"Order canceled. Failed to redirect to Paytrail.","Order canceled. Failed to redirect to Paytrail."
 Finnish,Finnish
 English,English
 Swedish,Swedish
@@ -33,8 +33,8 @@ JCB,JCB
 MobilePay,MobilePay
 "Checkout account","Checkout account"
 Paypal,Paypal
-"The customer was redirected to Checkout.","The customer was redirected to Checkout."
-"Cannot get payment URL from Checkout","Cannot get payment URL from Checkout"
+"The customer was redirected to Paytrail.","The customer was redirected to Paytrail."
+"Cannot get payment URL from Paytrail","Cannot get payment URL from Paytrail"
 "Unexpected error (totals do not match).","Unexpected error (totals do not match)."
 "mobile","Mobile"
 "bank","Online Banking"
@@ -44,7 +44,7 @@ Paypal,Paypal
 PayPal,PayPal
 "Place Order","Place Order"
 "An error occurred on the server. Please try to place the order again.","An error occurred on the server. Please try to place the order again."
-Checkout,Checkout
+Paytrail,Paytrail
 Enabled,Enabled
 Title,Title
 "Merchant ID","Merchant ID"

@@ -15,7 +15,7 @@
                                                     <item name="children" xsi:type="array">
                                                         <item name="renders" xsi:type="array">
                                                             <item name="children" xsi:type="array">
-                                                                <item name="checkout-payment" xsi:type="array">
+                                                                <item name="paytrail-payment" xsi:type="array">
                                                                     <item name="component" xsi:type="string">Paytrail_PaymentService/js/view/payment/paytrail-payment</item>
                                                                     <item name="methods" xsi:type="array">
                                                                         <item name="paytrail" xsi:type="array">

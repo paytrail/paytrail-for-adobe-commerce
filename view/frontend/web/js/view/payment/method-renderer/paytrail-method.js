@@ -147,7 +147,7 @@ define(
                                         if (response.redirect) {
                                             window.location.href = response.redirect;
                                         }
-                                        $('#checkout-form-wrapper').append(response.data);
+                                        $('#paytrail-form-wrapper').append(response.data);
                                         return false;
                                     }
                                     fullScreenLoader.stopLoader();

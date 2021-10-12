@@ -4,7 +4,7 @@ namespace Paytrail\PaymentService\Gateway\Http\Client;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Payment\Gateway\Http\ClientInterface;
 use Paytrail\PaymentService\Helper\ApiData;
-use OpMerchantServices\SDK\Response\RefundResponse;
+use Paytrail\SDK\Response\RefundResponse;
 use Psr\Log\LoggerInterface;
 use Magento\Payment\Gateway\Http\TransferInterface;
 

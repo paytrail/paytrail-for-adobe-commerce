@@ -1,7 +1,7 @@
 <?php
 namespace Paytrail\PaymentService\Block\Form;
 
-class Checkout extends \Magento\Payment\Block\Info
+class Paytrail extends \Magento\Payment\Block\Info
 {
     /**
      * @var string

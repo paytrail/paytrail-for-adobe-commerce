@@ -4,7 +4,7 @@ Order canceled. Failed to complete the payment.,Maksua ei voitu suorittaa. Ole h
 Failed to complete the payment. Please try again or contact the customer service.,Maksua ei voitu suorittaa. Ole hyvä ja yritä uudelleen.
 Payment failed,Maksu epäonnistui.
 Payment has been completed,Maksu hyväksytty.
-Order canceled. Failed to redirect to Checkout.,Maksua ei voitu suorittaa. Ole hyvä ja yritä uudelleen.
+Order canceled. Failed to redirect to Paytrail.,Maksua ei voitu suorittaa. Ole hyvä ja yritä uudelleen.
 Finnish,suomi
 English,englanti
 Swedish,ruotsi
@@ -31,20 +31,20 @@ MasterCard (Nets),MasterCard (Nets)
 Diners Club (Nets),Diners Club (Nets)
 American Express (Nets),American Express (Nets)
 MobilePay,MobilePay
-Checkout account,Checkout-tili
+Paytrail account,Paytrail-tili
 Paypal,Paypal
-The customer was redirected to Checkout.,Asiakas ohjattiin maksamaan Checkoutiin.
-Cannot get payment URL from Checkout,Maksun osoitetta ei voitu hakea.
+The customer was redirected to Paytrail.,Asiakas ohjattiin maksamaan Paytrailiin.
+Cannot get payment URL from Paytrail,Maksun osoitetta ei voitu hakea.
 Unexpected error (totals do not match).,Odottamaton virhe (summat eivät täsmää).
 mobile,Mobiilimaksu
 bank,Maksu verkkopankissa
 creditcard,Maksu luotto- tai pankkikortilla
 credit,Lasku tai osamaksu
-Checkout Account,Checkout-tili
+Paytrail Account,Paytrail-tili
 PayPal,PayPal
 Place Order,Vahvista tilaus
 An error occurred on the server. Please try to place the order again.,Tapahtui palvelinvirhe. Ole hyvä ja yritä uudelleen.
-Checkout,Checkout
+Paytrail,Paytrail
 Enabled,Käytössä
 Title,Nimi
 Merchant ID,Kauppiastunnus
@@ -69,7 +69,7 @@ Shipping,Toimitus
 "Restore Order", "Palauta tilaus"
 "Are you sure you want to make changes to this order?", "Haluatko varmasti tehdä muutoksia tähän tilaukseen?"
 "Pending payment from Paytrail Payment Service","Odottaa maksua Paytrail Payment Serviceista"
-"Order canceled. Failed to redirect to Paytrail Payment Service.","Tilaus peruutettu. Ohjausta Paytrail Payment Service -maksupalveluun ei voitu tehdä"
+"Order canceled. Failed to redirect to Paytrail Payment Service.","Tilaus peruutettu. Ohjausta Paytrail-maksupalveluun ei voitu tehdä"
 "Paytrail Payment Service API credentials are incorrect. Please contact support.","Paytrail Payment Service -maksupalvelun tunnuksia ei löytynyt. Ole hyvä, ja ota yhteyttä asiakaspalveluun."
 "By confirming this purchase, you consent to the","Maksamalla tilauksen hyväksyt"
 "terms of the payment service","maksupalveluehdot"

@@ -7,9 +7,9 @@ use Paytrail\PaymentService\Gateway\Config\Config;
 use Magento\Store\Model\StoreManagerInterface;
 
 /**
- * Class Checkout
+ * Class Paytrail
  */
-class Checkout extends \Magento\Payment\Block\Info
+class Paytrail extends \Magento\Payment\Block\Info
 {
     /**
      * @var string

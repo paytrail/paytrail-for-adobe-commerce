@@ -16,8 +16,8 @@ use Paytrail\PaymentService\Exceptions\CheckoutException;
 use Paytrail\PaymentService\Helper\ApiData;
 use Paytrail\PaymentService\Helper\Data as paytrailHelper;
 use Paytrail\PaymentService\Gateway\Config\Config;
-use OpMerchantServices\SDK\Model\Provider;
-use OpMerchantServices\SDK\Response\PaymentResponse;
+use Paytrail\SDK\Model\Provider;
+use Paytrail\SDK\Response\PaymentResponse;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -179,7 +179,7 @@ class Index extends \Magento\Framework\App\Action\Action
                 $block = $this->pageFactory
                     ->create()
                     ->getLayout()
-                    ->createBlock('Paytrail\PaymentService\Block\Redirect\Checkout')
+                    ->createBlock('Paytrail\PaymentService\Block\Redirect\Paytrail')
                     ->setUrl($formAction)
                     ->setParams($formData);
 
@@ -198,7 +198,7 @@ class Index extends \Magento\Framework\App\Action\Action
         if ($order) {
             $this->orderManagementInterface->cancel($order->getId());
             $order->addCommentToStatusHistory(
-                __('Order canceled. Failed to redirect to Paytrail Payment Service payment service.')
+                __('Order canceled. Failed to redirect to Paytrail Payment Service.')
             );
             $this->orderRepositoryInterface->save($order);
         }

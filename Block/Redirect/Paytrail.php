@@ -3,9 +3,9 @@
 namespace Paytrail\PaymentService\Block\Redirect;
 
 /**
- * Class Checkout
+ * Class Paytrail
  */
-class Checkout extends \Magento\Framework\View\Element\AbstractBlock
+class Paytrail extends \Magento\Framework\View\Element\AbstractBlock
 {
     protected $form;
     protected $params;
@@ -13,7 +13,7 @@ class Checkout extends \Magento\Framework\View\Element\AbstractBlock
     protected $formId = 'checkout_form';
 
     /**
-     * Checkout constructor.
+     * Paytrail constructor.
      * @param \Magento\Framework\Data\Form $form
      * @param \Magento\Framework\View\Element\Context $context
      * @param array $data

@@ -7,8 +7,8 @@
                data-bind="attr: {'id': getCode()}, value: getCode(), checked: isChecked, click: selectPaymentMethod, visible: isRadioButtonVisible()"/>
         <label data-bind="attr: {'for': getCode()}" class="label">
             <span data-bind="text: getTitle()"></span>
-            <div class="checkout-logo">
-                <div class="checkout-logo-container">
+            <div class="paytrail-logo">
+                <div class="paytrail-logo-container">
                     <img src="https://cdn2.hubspot.net/hubfs/335946/System/paytrail-logo.png"
                          alt="Paytrail Payment Service">
                 </div>
@@ -24,25 +24,25 @@
             <!-- ko template: getTemplate() --><!-- /ko -->
             <!--/ko-->
         </div>
-        <div class="checkout-payment-terms-container">
+        <div class="paytrail-payment-terms-container">
             <span data-bind="html: getTerms()"></span>
         </div>
 
-        <div class="checkout-payment-methods">
+        <div class="paytrail-payment-methods">
             <!-- Collapsible elements for payment groups-->
-            <div id='accordion-element' class="checkout-payment-groups"
+            <div id='accordion-element' class="paytrail-payment-groups"
                  data-bind="mageInit: {'accordion':{'collapsible': true, 'openedState': 'active', 'active': '0'}}">
                 <!-- ko foreach:  { data: getMethodGroups(), as: 'methodGroup' } -->
-                <div class='checkout-group-collapsible' data-role='collapsible'
+                <div class='paytrail-group-collapsible' data-role='collapsible'
                      data-bind="attr: {id: methodGroup['id']}">
-                    <div class="checkout-group-header-wrapper" data-role="trigger">
-                        <div class="checkout-group-title">
+                    <div class="paytrail-group-header-wrapper" data-role="trigger">
+                        <div class="paytrail-group-title">
                             <!-- ko if: $parent.getGroupIcon(methodGroup['id']) -->
-                            <img class="checkout-group-logo" data-bind="attr: {src: $parent.getGroupIcon(methodGroup['id'])}"/>
+                            <img class="paytrail-group-logo" data-bind="attr: {src: $parent.getGroupIcon(methodGroup['id'])}"/>
                             <!--/ko-->
                             <span data-bind="text: name"></span>
                         </div>
-                        <div class="checkout-group-method-list" >
+                        <div class="paytrail-group-method-list" >
                             <ul>
                                 <!-- ko foreach: methodGroup['providers'], as: 'paymentMethod' -->
                                 <li data-bind="text: name"></li>
@@ -51,16 +51,16 @@
                         </div>
                     </div>
                 </div>
-                <div data-role="content" class="checkout-group-wrapper">
+                <div data-role="content" class="paytrail-group-wrapper">
                     <!-- ko foreach: methodGroup['providers'], as: 'paymentMethod' -->
-                    <div class="checkout-payment-method" data-bind="
-                  attr: {id: 'checkout-payment-method-' + id},
+                    <div class="paytrail-payment-method" data-bind="
+                  attr: {id: 'paytrail-payment-method-' + id},
                   css: { active: $parents[1].selectedPaymentMethodId() == id },
                   click: $parents[1].setPaymentMethodId">
-                        <div class="checkout-payment-method-logo">
+                        <div class="paytrail-payment-method-logo">
                             <img data-bind="attr: { src: icon }">
                         </div>
-                        <div class="checkout-payment-method-title" data-bind="text: name"></div>
+                        <div class="paytrail-payment-method-title" data-bind="text: name"></div>
                         <div>
                             <input type="radio"
                                    data-bind="attr: {value: id}, checked: $parents[1].selectedPaymentMethodId"/>
@@ -72,7 +72,7 @@
                 <!-- /ko -->
             </div>
         </div>
-        <div class="checkout-agreements-block">
+        <div class="paytrail-agreements-block">
             <!-- ko foreach: $parent.getRegion('before-place-order') -->
             <!-- ko template: getTemplate() --><!-- /ko -->
             <!--/ko-->
@@ -92,7 +92,7 @@
                 </button>
             </div>
         </div>
-        <div id="checkout-form-wrapper" style="display:none;"></div>
+        <div id="paytrail-form-wrapper" style="display:none;"></div>
     </div>
     <!-- /ko -->
 </div>

@@ -5,14 +5,14 @@ namespace Paytrail\PaymentService\Model\Adapter;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Module\ModuleListInterface;
 use Paytrail\PaymentService\Gateway\Config\Config;
-use OpMerchantServices\SDK\Client;
+use Paytrail\SDK\Client;
 
 class Adapter
 {
     /**
      * @var string MODULE_CODE
      */
-    const MODULE_CODE = 'Paytrail_Checkout';
+    const MODULE_CODE = 'Paytrail_PaymentService';
     /**
      * @var int
      */
@@ -55,7 +55,7 @@ class Adapter
      */
     public function initPaytrailMerchantClient()
     {
-        if (class_exists('OpMerchantServices\SDK\Client')) {
+        if (class_exists('Paytrail\SDK\Client')) {
             $paytrailClient = new Client(
                 $this->merchantId,
                 $this->merchantSecret,
@@ -63,7 +63,7 @@ class Adapter
             );
             return $paytrailClient;
         } else {
-            throw new LocalizedException(__('OpMerchantServices\SDK\Client does not exist'));
+            throw new LocalizedException(__('Paytrail\SDK\Client does not exist'));
         }
     }
 

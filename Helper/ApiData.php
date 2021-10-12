@@ -20,13 +20,13 @@ use Paytrail\PaymentService\Helper\Data as CheckoutHelper;
 use Paytrail\PaymentService\Logger\Request\RequestLogger as RequestLogger;
 use Paytrail\PaymentService\Logger\Response\ResponseLogger as ResponseLogger;
 use Paytrail\PaymentService\Model\Adapter\Adapter;
-use OpMerchantServices\SDK\Model\Address;
-use OpMerchantServices\SDK\Model\CallbackUrl;
-use OpMerchantServices\SDK\Model\Customer;
-use OpMerchantServices\SDK\Model\Item;
-use OpMerchantServices\SDK\Request\EmailRefundRequest;
-use OpMerchantServices\SDK\Request\PaymentRequest;
-use OpMerchantServices\SDK\Request\RefundRequest;
+use Paytrail\SDK\Model\Address;
+use Paytrail\SDK\Model\CallbackUrl;
+use Paytrail\SDK\Model\Customer;
+use Paytrail\SDK\Model\Item;
+use Paytrail\SDK\Request\EmailRefundRequest;
+use Paytrail\SDK\Request\PaymentRequest;
+use Paytrail\SDK\Request\RefundRequest;
 use Psr\Log\LoggerInterface;
 
 /**
