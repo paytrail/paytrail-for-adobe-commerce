@@ -7,3 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.0] - 2021-10-11
 ### Added
 - All initial module functionalities
+
+<!-- Gift card fix changes: 
+- Add Magento gift card support 
+- Add Magento store credit support
+- Add Magento reward point support
+end Gift card fix changes -->
