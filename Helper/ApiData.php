@@ -652,7 +652,7 @@ class ApiData
 
                 $cardItems[] = [
                     'title' => $card['c'],
-                    'code' => 'gift-card-discount', // TODO resolve productCode
+                    'code' => 'gift-card-discount',
                     'amount' => -1,
                     'price' => \floatval($card['a']),
                     'vat' => 0
