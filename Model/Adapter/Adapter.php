@@ -55,15 +55,19 @@ class Adapter
      */
     public function initPaytrailMerchantClient()
     {
-        if (class_exists('Paytrail\SDK\Client')) {
-            $paytrailClient = new Client(
-                $this->merchantId,
-                $this->merchantSecret,
-                'paytrail-for-adobe-commerce-' . $this->getExtensionVersion()
-            );
-            return $paytrailClient;
-        } else {
-            throw new LocalizedException(__('Paytrail\SDK\Client does not exist'));
+        try {
+            if (class_exists('Paytrail\SDK\Client')) {
+                $paytrailClient = new Client(
+                    $this->merchantId,
+                    $this->merchantSecret,
+                    'paytrail-for-adobe-commerce-' . $this->getExtensionVersion()
+                );
+                return $paytrailClient;
+            } else {
+                throw new LocalizedException(__('Paytrail\SDK\Client does not exist'));
+            }
+        } catch (\Error $e) {
+            throw new LocalizedException(__('An error has occured during checkout process, please contact the store owners'));
         }
     }
 
