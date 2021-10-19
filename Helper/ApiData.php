@@ -28,6 +28,7 @@ use Paytrail\SDK\Request\EmailRefundRequest;
 use Paytrail\SDK\Request\PaymentRequest;
 use Paytrail\SDK\Request\RefundRequest;
 use Psr\Log\LoggerInterface;
+use Magento\Framework\Exception\LocalizedException;
 
 /**
  * Class ApiData
@@ -636,6 +637,54 @@ class ApiData
                 'amount' => -1,
                 'price' => floatval($discountData->getDiscountInclTax()),
                 'vat' => round(floatval($discountTaxPct))
+            ];
+        }
+
+        // Add gift card discount row
+        if ($order->getGiftCardsAmount()) {
+            $cardItems = [];
+            $cardCollectedTotal = 0;
+            $cards = $this->json->unserialize($order->getGiftCards());
+
+            /** @var string[] $card */
+            foreach ($cards as $card) {
+                $cardCollectedTotal += $card['a'];
+
+                $cardItems[] = [
+                    'title' => $card['c'],
+                    'code' => 'gift-card-discount',
+                    'amount' => -1,
+                    'price' => \floatval($card['a']),
+                    'vat' => 0
+                ];
+            }
+
+            if (\floatval($cardCollectedTotal) !== \floatval($order->getGiftCardsAmount())) {
+                throw new LocalizedException(\__('Gift card error, please contact customer support'));
+            }
+
+            $items = \array_merge($items, $cardItems);
+        }
+
+        // Add store credit discount row.
+        if ($order->getCustomerBalanceAmount()) {
+            $items[] = [
+                'title' => \__('Store Credit Discount')->getText(),
+                'code' => 'store-credit-discount',
+                'amount' => -1,
+                'price' => floatval($order->getCustomerBalanceAmount()),
+                'vat' => 0
+            ];
+        }
+
+        // Add reward currency discount row.
+        if ($order->getRewardCurrencyAmount()) {
+            $items[] = [
+                'title' => \__('Reward Point discount')->getText(),
+                'code' => 'reward-point-discount',
+                'amount' => -1,
+                'price' => floatval($order->getRewardCurrencyAmount()),
+                'vat' => 0
             ];
         }
 
