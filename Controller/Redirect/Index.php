@@ -154,7 +154,7 @@ class Index extends \Magento\Framework\App\Action\Action
                     $this->checkoutSession->getLastRealOrderId()
                 );
 
-                $responseData = $this->getResponseData($order, $selectedPaymentMethodId);
+                $responseData = $this->getResponseData($order);
                 $formData = $this->getFormFields(
                     $responseData,
                     $selectedPaymentMethodId
@@ -260,9 +260,9 @@ class Index extends \Magento\Framework\App\Action\Action
      * @return PaymentResponse
      * @throws CheckoutException
      */
-    protected function getResponseData($order, $methodId)
+    protected function getResponseData($order)
     {
-        $response = $this->apiData->processApiRequest('payment', $order, null, null, $methodId);
+        $response = $this->apiData->processApiRequest('payment', $order, null, null);
 
         $errorMsg = $response['error'];
 
