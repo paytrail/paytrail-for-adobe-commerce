@@ -20,6 +20,9 @@
     "paytrail/paytrail-php-sdk": "1.0.*",
     "ext-curl": "*"
   },
+  "conflict": {
+    "markup/module-paytrail": "*"
+  },
   "type": "magento2-module",
   "version": "1.0.2",
   "license": "MIT",

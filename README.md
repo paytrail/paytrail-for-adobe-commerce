@@ -1,6 +1,8 @@
 # Paytrail for Adobe Commerce
 [Paytrail](https://www.paytrail.com) payment service for [Adobe Commerce](https://www.magento.com) (formerly known as Magento 2)
 
+**WARNING: This module is not compatible with Markup/Paytrail module. Using both modules will cause errors.**
+
 ***Always perform a backup of your database and source code before installing any extensions.***
 
 This module has been tested on Adobe Commerce / Magento 2.4.2, 2.4.1 and 2.3.X {community|commerce} versions. Support for 2.2.X has ended and compatibility with older versions cannot be guaranteed.
