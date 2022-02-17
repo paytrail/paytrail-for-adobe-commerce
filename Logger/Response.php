@@ -1,6 +1,6 @@
 <?php
 
-namespace Paytrail\PaymentService\Logger\Response;
+namespace Paytrail\PaymentService\Logger;
 
 use Monolog\Logger;
 
@@ -13,7 +13,7 @@ class Response extends \Magento\Framework\Logger\Handler\Base
      * Logging level
      * @var int
      */
-    protected $loggerType = Logger::DEBUG;
+    protected $loggerType = Logger::NOTICE;
 
     /**
      * File name
