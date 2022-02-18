@@ -3,7 +3,6 @@
 namespace Paytrail\PaymentService\Helper;
 
 use Magento\Framework\App\Helper\Context;
-use Magento\Framework\Escaper;
 use Magento\Framework\Locale\Resolver;
 use Magento\Sales\Model\Order;
 use Magento\Tax\Helper\Data as TaxHelper;
@@ -119,47 +118,6 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
     public function getIdFromOrderReferenceNumber($reference)
     {
         return preg_replace('/\s+/', '', substr($reference, 1, -1));
-    }
-
-    /**
-     * @param Order $order
-     * @return mixed
-     */
-    public function getDiscountData(Order $order)
-    {
-        $discountIncl = 0;
-        $discountExcl = 0;
-
-        // Get product discount amounts
-        foreach ($order->getAllItems() as $item) {
-            if (!$this->taxHelper->priceIncludesTax()) {
-                $discountExcl += $item->getDiscountAmount();
-                $discountIncl += $item->getDiscountAmount() * (($item->getTaxPercent() / 100) + 1);
-            } else {
-                $discountExcl += $item->getDiscountAmount() / (($item->getTaxPercent() / 100) + 1);
-                $discountIncl += $item->getDiscountAmount();
-            }
-        }
-
-        // Get shipping tax rate
-        if ((float)$order->getShippingInclTax() && (float)$order->getShippingAmount()) {
-            $shippingTaxRate = $order->getShippingInclTax() / $order->getShippingAmount();
-        } else {
-            $shippingTaxRate = 1;
-        }
-
-        // Add / exclude shipping tax
-        $shippingDiscount = (float)$order->getShippingDiscountAmount();
-        if (!$this->taxHelper->priceIncludesTax()) {
-            $discountIncl += $shippingDiscount * $shippingTaxRate;
-            $discountExcl += $shippingDiscount;
-        } else {
-            $discountIncl += $shippingDiscount;
-            $discountExcl += $shippingDiscount / $shippingTaxRate;
-        }
-
-        $return = new \Magento\Framework\DataObject();
-        return $return->setDiscountInclTax($discountIncl)->setDiscountExclTax($discountExcl);
     }
 
     /**

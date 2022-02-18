@@ -27,6 +27,7 @@
         <generate_reference>1</generate_reference>
         <recommended_tax_algorithm>0</recommended_tax_algorithm>
         <logo>https://cdn2.hubspot.net/hubfs/335946/System/paytrail-logo.png</logo>
+        <rounding_row_tax_percent>24</rounding_row_tax_percent>
         <paytrail_personalization>
           <payment_group_bg>#ebebeb</payment_group_bg>
           <payment_group_text>#323232</payment_group_text>
