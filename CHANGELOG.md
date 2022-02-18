@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] - 2022-02-21
+- Refactor logging to a separate class.
+- Improve error logging beyond Api errors
+- Add support for giftcards and cart discounts.
+  - Gift card discounts are now split between all products in the order.
+  - Cart discounts are split between all products in the order.
+- Remove unnecessary constructor arguments in ApiData Helper
+- Remove discount implementation from Data Helper
+
 ## [1.0.4] - 2022-01-03
 - Added default value for "skip method selection" config. Fixing missing javascript validations in frontend.
 
