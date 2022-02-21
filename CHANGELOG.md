@@ -7,9 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.1.0] - 2022-02-21
 - Refactor logging to a separate class.
 - Improve error logging beyond Api errors
-- Add support for giftcards and cart discounts.
-  - Gift card discounts are now split between all products in the order.
-  - Cart discounts are split between all products in the order.
+- **Add support for giftcards and cart discounts.**
+  - Gift card and Cart total discounts are now split between all products in the payment when posted to paytrail.
+  - Custom total discounts can now be implemented by implementing DiscountGetterInterface and injecting the
+  implementation to DiscountSplitter class.
+  - Rounding correction of the split discounts is now placed on a separate row. The tax percent of it is configurable 
+  from admin. Please check that the tax configuration is valid before deploying the update to production.
 - Remove unnecessary constructor arguments in ApiData Helper
 - Remove discount implementation from Data Helper
 
