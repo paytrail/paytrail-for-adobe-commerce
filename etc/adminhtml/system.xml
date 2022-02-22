@@ -35,6 +35,11 @@
                     <label>New Order Status</label>
                     <source_model>Magento\Sales\Model\Config\Source\Order\Status\Newprocessing</source_model>
                 </field>
+                <field id="rounding_row_tax_percent" translate="label" type="text" sortOrder="45"
+                       showInDefault="1" showInWebsite="1" showInStore="1" canRestore="1">
+                    <label>Rounding correction tax percent</label>
+                    <comment>Tax percent applied to discount rounding correction rows</comment>
+                </field>
                 <field id="recipient_email" translate="label" type="text" sortOrder="20" showInDefault="1"
                        showInWebsite="1" showInStore="1" canRestore="1">
                     <label>Email Address For Notifications</label>

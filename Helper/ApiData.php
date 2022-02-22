@@ -7,7 +7,6 @@ use Magento\Config\Model\ResourceModel\Config;
 use Magento\Directory\Api\CountryInformationAcquirerInterface;
 use Magento\Framework\App\RequestInterface;
 use Magento\Framework\Exception\NoSuchEntityException;
-use Magento\Framework\Module\ModuleListInterface;
 use Magento\Framework\Serialize\Serializer\Json;
 use Magento\Framework\UrlInterface;
 use Magento\Sales\Model\Order;
@@ -15,10 +14,8 @@ use Magento\Sales\Model\Order\Item as OrderItem;
 use Magento\Store\Model\StoreManagerInterface;
 use Paytrail\PaymentService\Exceptions\CheckoutException;
 use Magento\Tax\Helper\Data as TaxHelper;
-use Paytrail\PaymentService\Gateway\Config\Config as GatewayConfig;
 use Paytrail\PaymentService\Helper\Data as CheckoutHelper;
-use Paytrail\PaymentService\Logger\Request\RequestLogger as RequestLogger;
-use Paytrail\PaymentService\Logger\Response\ResponseLogger as ResponseLogger;
+use Paytrail\PaymentService\Logger\PaytrailLogger;
 use Paytrail\PaymentService\Model\Adapter\Adapter;
 use Paytrail\SDK\Model\Address;
 use Paytrail\SDK\Model\CallbackUrl;
@@ -27,6 +24,7 @@ use Paytrail\SDK\Model\Item;
 use Paytrail\SDK\Request\EmailRefundRequest;
 use Paytrail\SDK\Request\PaymentRequest;
 use Paytrail\SDK\Request\RefundRequest;
+use Magento\Framework\Exception\LocalizedException;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -35,27 +33,12 @@ use Psr\Log\LoggerInterface;
 class ApiData
 {
     /**
-     * @var Order
-     */
-    private $order;
-
-    /**
-     * @var RequestLogger
-     */
-    private $requestLogger;
-
-    /**
-     * @var ResponseLogger
-     */
-    private $responseLogger;
-
-    /**
      * @var CheckoutHelper
      */
     private $helper;
 
     /**
-     * @var LoggerInterface
+     * @var PaytrailLogger
      */
     private $log;
 
@@ -85,61 +68,55 @@ class ApiData
     private $taxHelper;
 
     /**
-     * @var Config
-     */
-    private $resourceConfig;
-
-    /**
-     * @var GatewayConfig
-     */
-    private $gatewayConfig;
-
-    /**
      * @var Adapter
      */
     private $paytrailAdapter;
+
     /**
      * @var PaymentRequest
      */
     private $paymentRequest;
+
     /**
      * @var RefundRequest
      */
     private $refundRequest;
+
     /**
      * @var StoreManagerInterface
      */
     private $storeManager;
+
     /**
      * @var EmailRefundRequest
      */
     private $emailRefundRequest;
 
     /**
-     * Temporary fix for discount handling in Collector payments.
-     * @var $collectorMethods
+     * @var \Op\Checkout\Model\Payment\DiscountSplitter
      */
-    private $collectorMethods = ['collectorb2c','collectorb2b'];
+    private $discountSplitter;
 
     /**
-     * ApiData constructor.
-     * @param LoggerInterface $log
+     * @var \Magento\Sales\Model\ResourceModel\Order\Tax\Item
+     */
+    private $taxItems;
+
+    /**
      * @param UrlInterface $urlBuilder
      * @param RequestInterface $request
      * @param Json $json
      * @param CountryInformationAcquirerInterface $countryInformationAcquirer
      * @param TaxHelper $taxHelper
-     * @param Order $order
-     * @param RequestLogger $requestLogger
-     * @param ResponseLogger $responseLogger
-     * @param CheckoutHelper $helper
+     * @param Data $helper
      * @param Config $resourceConfig
      * @param StoreManagerInterface $storeManager
-     * @param GatewayConfig $gatewayConfig
      * @param Adapter $paytrailAdapter
      * @param PaymentRequest $paymentRequest
      * @param RefundRequest $refundRequest
      * @param EmailRefundRequest $emailRefundRequest
+     * @param \Paytrail\PaymentService\Model\Payment\DiscountSplitter $discountSplitter
+     * @param \Magento\Sales\Model\ResourceModel\Order\Tax\Item $taxItem
      */
     public function __construct(
         LoggerInterface $log,
@@ -147,18 +124,16 @@ class ApiData
         RequestInterface $request,
         Json $json,
         CountryInformationAcquirerInterface $countryInformationAcquirer,
-        Order $order,
-        RequestLogger $requestLogger,
-        ResponseLogger $responseLogger,
         TaxHelper $taxHelper,
         CheckoutHelper $helper,
         Config $resourceConfig,
         StoreManagerInterface $storeManager,
-        GatewayConfig $gatewayConfig,
         Adapter $paytrailAdapter,
         PaymentRequest $paymentRequest,
         RefundRequest $refundRequest,
-        EmailRefundRequest $emailRefundRequest
+        EmailRefundRequest $emailRefundRequest,
+        \Paytrail\PaymentService\Model\Payment\DiscountSplitter $discountSplitter,
+        \Magento\Sales\Model\ResourceModel\Order\Tax\Item $taxItem
     ) {
         $this->log = $log;
         $this->urlBuilder = $urlBuilder;
@@ -166,17 +141,14 @@ class ApiData
         $this->json = $json;
         $this->countryInfo = $countryInformationAcquirer;
         $this->taxHelper = $taxHelper;
-        $this->order = $order;
-        $this->requestLogger = $requestLogger;
-        $this->responseLogger = $responseLogger;
         $this->helper = $helper;
-        $this->resourceConfig = $resourceConfig;
-        $this->gatewayConfig = $gatewayConfig;
         $this->paytrailAdapter = $paytrailAdapter;
         $this->paymentRequest = $paymentRequest;
         $this->refundRequest = $refundRequest;
         $this->storeManager = $storeManager;
         $this->emailRefundRequest = $emailRefundRequest;
+        $this->discountSplitter = $discountSplitter;
+        $this->taxItems = $taxItem;
     }
 
     /**
@@ -193,8 +165,7 @@ class ApiData
         $requestType,
         $order = null,
         $amount = null,
-        $transactionId = null,
-        $methodId = null
+        $transactionId = null
     ) {
         $response["data"] = null;
         $response["error"] = null;
@@ -202,92 +173,93 @@ class ApiData
         try {
             $paytrailClient = $this->paytrailAdapter->initPaytrailMerchantClient();
 
-            $this->helper->logCheckoutData(
+            $this->log->debugLog(
                 'request',
-                'info',
-                'Creating '
-                . $requestType
-                . ' request to Paytrail Payment Service API. '
-                . $orderLog = isset($order) ? 'Order Id: ' . $order->getId() : ''
+                \sprintf(
+                    'Creating %s request to Paytrail API %s',
+                    $requestType,
+                    isset($order) ? 'With order id: ' . $order->getId() : ''
+                )
             );
+
             // Handle payment requests
             if ($requestType === 'payment') {
                 $paytrailPayment = $this->paymentRequest;
-                $this->setPaymentRequestData($paytrailPayment, $order, $methodId);
+                $this->setPaymentRequestData($paytrailPayment, $order);
 
                 $response["data"] = $paytrailClient->createPayment($paytrailPayment);
 
-                $loggedData = json_encode(
-                    [
-                        'transactionId' => $response["data"]->getTransactionId(),
-                        'href' => $response["data"]->getHref()
-                    ],
-                    JSON_UNESCAPED_SLASHES
-                );
-                $this->helper->logCheckoutData(
+                $loggedData = $this->json->serialize([
+                    'transactionId' => $response["data"]->getTransactionId(),
+                    'href' => $response["data"]->getHref()
+                ]);
+
+                $this->log->debugLog(
                     'response',
-                    'success',
-                    'Successful response for order Id '
-                    . $order->getId()
-                    . '. Order data: '
-                    . $loggedData
+                    sprintf(
+                        'Successful response for order id: %s with data: %s',
+                        $order->getId(),
+                        $loggedData
+                    )
                 );
-                // Handle refund requests
+
+            // Handle refund requests
             } elseif ($requestType === 'refund') {
                 $paytrailRefund = $this->refundRequest;
                 $this->setRefundRequestData($paytrailRefund, $amount);
 
                 $response["data"] = $paytrailClient->refund($paytrailRefund, $transactionId);
 
-                $this->helper->logCheckoutData(
+                $this->log->debugLog(
                     'response',
-                    'success',
-                    'Successful response for refund. Transaction Id: '
-                    . $response["data"]->getTransactionId()
+                    sprintf(
+                        'Successful response for refund. Transaction Id: %s',
+                        $response["data"]->getTransactionId()
+                    )
                 );
-                // Handle email refund requests
+
+            // Handle email refund requests
             } elseif ($requestType === 'email_refund') {
                 $paytrailEmailRefund = $this->emailRefundRequest;
                 $this->setEmailRefundRequestData($paytrailEmailRefund, $amount, $order);
 
                 $response["data"] = $paytrailClient->emailRefund($paytrailEmailRefund, $transactionId);
 
-                $this->helper->logCheckoutData(
+                $this->log->debugLog(
                     'response',
-                    'success',
-                    'Successful response for email refund. Transaction Id: '
-                    . $response["data"]->getTransactionId()
+                    sprintf(
+                        'Successful response for email refund. Transaction Id: %s',
+                        $response["data"]->getTransactionId()
+                    )
                 );
             } elseif ($requestType === 'payment_providers') {
                 $response["data"] = $paytrailClient->getGroupedPaymentProviders(
                     $amount,
                     $this->helper->getStoreLocaleForPaymentProvider()
                 );
-                $this->helper->logCheckoutData(
+                $this->log->debugLog(
                     'response',
-                    'success',
                     'Successful response for payment providers.'
                 );
             }
         } catch (RequestException $e) {
+            $this->log->error(\sprintf(
+                'Connection error to Paytrail Payment Service API: %s Error Code: %s',
+                $e->getMessage(),
+                $e->getCode()
+            ));
+
             if ($e->hasResponse()) {
-                $this->helper->logCheckoutData(
-                    'request',
-                    'error',
-                    'Connection error to Paytrail Payment Service API: '
-                    . $e->getMessage()
-                    . 'Error Code: '
-                    . $e->getCode()
-                );
                 $response["error"] = $e->getMessage();
                 return $response;
             }
         } catch (\Exception $e) {
-            $this->helper->logCheckoutData(
-                'response',
-                'error',
-                'A problem occurred: '
-                . $e->getMessage()
+            $this->log->error(
+                \sprintf(
+                    'A problem occurred during Paytrail Api connection: %s',
+                    $e->getMessage()
+                ),
+                $e->getTrace()
             );
             $response["error"] = $e->getMessage();
             return $response;
@@ -299,11 +271,10 @@ class ApiData
     /**
      * @param PaymentRequest $paytrailPayment
      * @param Order $order
-     * @param string $methodId
      * @return mixed
      * @throws \Exception
      */
-    protected function setPaymentRequestData($paytrailPayment, $order, $methodId)
+    protected function setPaymentRequestData($paytrailPayment, $order)
     {
         $billingAddress = $order->getBillingAddress() ?? $order->getShippingAddress();
         $shippingAddress = $order->getShippingAddress();
@@ -329,7 +300,7 @@ class ApiData
 
         $paytrailPayment->setLanguage($this->helper->getStoreLocaleForPaymentProvider());
 
-        $items = $this->getOrderItemLines($order, $methodId);
+        $items = $this->getOrderItemLines($order);
 
         $paytrailPayment->setItems($items);
 
@@ -338,7 +309,7 @@ class ApiData
         $paytrailPayment->setCallbackUrls($this->createCallbackUrl());
 
         // Log payment data
-        $this->helper->logCheckoutData('request', 'info', $paytrailPayment);
+        $this->log->debugLog('request', $paytrailPayment);
 
         return $paytrailPayment;
     }
@@ -429,10 +400,10 @@ class ApiData
      * @return array
      * @throws \Exception
      */
-    protected function getOrderItemLines($order, $methodId)
+    protected function getOrderItemLines($order)
     {
-        $orderItems = $this->itemArgs($order, $methodId);
-        $orderTotal = round(($order->getGrandTotal() + $order->getGiftCardsAmount()) * 100);
+        $orderItems = $this->itemArgs($order);
+        $orderTotal = round($order->getGrandTotal() * 100);
 
         $items = array_map(
             function ($item) use ($order) {
@@ -552,21 +523,25 @@ class ApiData
      * @param Order $order
      * @param string $methodId
      * @return array|null
+     * @throws LocalizedException
      */
-    protected function itemArgs($order, $methodId)
+    protected function itemArgs($order)
     {
         $items = [];
 
         # Add line items
         /** @var $item OrderItem */
-        foreach ($order->getAllItems() as $key => $item) {
-
-            //Temporary fix for Collector payment methods discount calculation
+        foreach ($order->getAllItems() as $item) {
             $discountIncl = 0;
             if (!$this->taxHelper->priceIncludesTax()) {
                 $discountIncl += $item->getDiscountAmount() * (($item->getTaxPercent() / 100) + 1);
             } else {
                 $discountIncl += $item->getDiscountAmount();
+            }
+
+            if (!$item->getQtyOrdered()) {
+                // Prevent division by zero errors
+                throw new LocalizedException(\__('Quantity missing for order item: %sku', ['sku' => $item->getSku()]));
             }
 
             // When in grouped or bundle product price is dynamic (product_calculations = 0)
@@ -584,7 +559,7 @@ class ApiData
                     'title' => $item->getName(),
                     'code' => $item->getSku(),
                     'amount' => floatval($item->getQtyOrdered()),
-                    'price' => in_array($methodId, $this->collectorMethods) ? floatval($item->getPriceInclTax()) - ($discountIncl / $item->getQtyOrdered()) : floatval($item->getPriceInclTax()),
+                    'price' => floatval($item->getPriceInclTax()) - round(($discountIncl / $item->getQtyOrdered()), 2),
                     'vat' => round(floatval($item->getTaxPercent()))
                 ];
             }
@@ -592,54 +567,10 @@ class ApiData
 
         // Add shipping
         if (!$order->getIsVirtual()) {
-            $shippingExclTax = $order->getShippingAmount();
-            $shippingInclTax = $order->getShippingInclTax();
-            $shippingTaxPct = 0;
-            if ($shippingExclTax > 0) {
-                $shippingTaxPct = ($shippingInclTax - $shippingExclTax) / $shippingExclTax * 100;
-            }
-
-            if ($order->getShippingDescription()) {
-                $shippingLabel = $order->getShippingDescription();
-            } else {
-                $shippingLabel = __('Shipping');
-            }
-
-            $items[] = [
-                'title' => $shippingLabel,
-                'code' => 'shipping-row',
-                'amount' => 1,
-                'price' => floatval($order->getShippingInclTax()),
-                'vat' => round(floatval($shippingTaxPct))
-            ];
+            $items[] = $this->getShippingItem($order);
         }
 
-        // Add discount row
-        if (abs($order->getDiscountAmount()) > 0 && !in_array($methodId, $this->collectorMethods)) {
-            $discountData = $this->helper->getDiscountData($order);
-            $discountInclTax = $discountData->getDiscountInclTax();
-            $discountExclTax = $discountData->getDiscountExclTax();
-            $discountTaxPct = 0;
-            if ($discountExclTax > 0) {
-                $discountTaxPct = ($discountInclTax - $discountExclTax) / $discountExclTax * 100;
-            }
-
-            if ($order->getDiscountDescription()) {
-                $discountLabel = $order->getDiscountDescription();
-            } else {
-                $discountLabel = __('Discount');
-            }
-
-            $items[] = [
-                'title' => (string)$discountLabel,
-                'code' => 'discount-row',
-                'amount' => -1,
-                'price' => floatval($discountData->getDiscountInclTax()),
-                'vat' => round(floatval($discountTaxPct))
-            ];
-        }
-
-        return $items;
+        return $this->discountSplitter->process($items, $order);
     }
 
     /**
@@ -650,30 +581,60 @@ class ApiData
     public function validateHmac($params, $signature)
     {
         try {
-            $this->helper->logCheckoutData(
+            $this->log->debugLog(
                 'request',
-                'info',
-                'Validating Hmac for transaction: '
-                . $params["checkout-transaction-id"]
+                \sprintf(
+                    'Validating Hmac for transaction: %s',
+                    $params["checkout-transaction-id"]
+                )
             );
             $paytrailClient = $this->paytrailAdapter->initPaytrailMerchantClient();
 
             $paytrailClient->validateHmac($params, '', $signature);
         } catch (\Exception $e) {
-            $this->helper->logCheckoutData(
-                'request',
-                'error',
-                'Hmac validation failed for transaction: '
-                . $params["checkout-transaction-id"]
+            $this->log->error(
+                sprintf(
+                    'Paytrail PaymentService error: Hmac validation failed for transaction %s',
+                    $params["checkout-transaction-id"]
+                )
             );
             return false;
         }
-        $this->helper->logCheckoutData(
+        $this->log->debugLog(
             'response',
-            'info',
-            'Hmac validation successful for transaction: '
-            . $params["checkout-transaction-id"]
+            sprintf(
+                'Hmac validation successful for transaction: %s',
+                $params["checkout-transaction-id"]
+            )
         );
         return true;
+    }
+
+    private function getShippingItem(Order $order)
+    {
+        $taxDetails = [];
+        $price = 0;
+
+        if ($order->getShippingAmount()) {
+            foreach ($this->taxItems->getTaxItemsByOrderId($order->getId()) as $detail) {
+                if (isset($detail['taxable_item_type']) && $detail['taxable_item_type'] == 'shipping') {
+                    $taxDetails = $detail;
+                    break;
+                }
+            }
+
+            $price = $order->getShippingAmount();
+            $price -= $order->getShippingDiscountAmount();
+            $price += $order->getShippingTaxAmount();
+            $price += $order->getShippingDiscountTaxCompensationAmount();
+        }
+
+        return [
+            'title' => $order->getShippingDescription() ?: __('Shipping'),
+            'code' => 'shipping-row',
+            'amount' => 1,
+            'price' => floatval($price),
+            'vat' => $taxDetails['tax_percent'] ?? 0,
+        ];
     }
 }

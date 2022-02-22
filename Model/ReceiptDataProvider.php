@@ -6,6 +6,7 @@ use Magento\Framework\App\Action\Context;
 use Magento\Framework\App\CacheInterface;
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\DB\TransactionFactory;
+use Magento\Framework\Exception\InputException;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Mail\Template\TransportBuilder;
 use Magento\Sales\Api\Data\OrderInterface;
@@ -124,7 +125,7 @@ class ReceiptDataProvider
     private $cache;
 
     /**
-     * @var /Magento/Sales/Model/Order
+     * @var \Magento\Sales\Model\Order
      */
     protected $currentOrder;
 
@@ -341,13 +342,15 @@ class ReceiptDataProvider
         try {
             $this->orderSender->send($this->currentOrder);
         } catch (\Exception $e) {
-            // TODO: log or not email sending issues ? atleast no need to break on this error.
+            $this->logger->error(\sprintf(
+                'Paytrail: Order email sending failed: %s',
+                $e->getMessage()
+            ));
         }
     }
 
     /**
      * process invoice
-     * @throws LocalizedException
      * @throws CheckoutException
      */
     protected function processInvoice()
@@ -366,13 +369,8 @@ class ReceiptDataProvider
                 )->addObject(
                     $this->currentOrder
                 )->save();
-            } catch (LocalizedException $exception) {
-                $invoiceFailException = $exception->getMessage();
-                $this->logger->error($exception->getMessage());
-            }
-
-            if (isset($invoiceFailException)) {
-                $this->paytrailHelper->processError($invoiceFailException);
+            } catch (\Exception $exception) {
+                $this->paytrailHelper->processError($exception->getMessage());
             }
         }
     }
@@ -460,21 +458,28 @@ class ReceiptDataProvider
             $this->currentOrder->addCommentToStatusHistory(__('Order canceled. Failed to complete the payment.'));
             $this->orderRepositoryInterface->save($this->currentOrder);
             $this->orderManagementInterface->cancel($this->currentOrder->getId());
-            $this->paytrailHelper->processError('Failed to complete the payment. Please try again or contact the customer service.');
+            $this->paytrailHelper->processError(
+                'Failed to complete the payment. Please try again or contact the customer service.'
+            );
         }
     }
 
     /**
      * @return bool|mixed
+     * @throws CheckoutException
      */
     protected function loadTransaction()
     {
         /** @var bool|mixed $transaction */
-        $transaction = $this->transactionRepository->getByTransactionId(
-            $this->transactionId,
-            $this->currentOrder->getPayment()->getId(),
-            $this->orderId
-        );
+        try {
+            $transaction = $this->transactionRepository->getByTransactionId(
+                $this->transactionId,
+                $this->currentOrder->getPayment()->getId(),
+                $this->orderId
+            );
+        } catch (InputException $e) {
+            $this->paytrailHelper->processError($e->getMessage());
+        }
 
         return $transaction;
     }
@@ -494,7 +499,7 @@ class ReceiptDataProvider
      * @return bool
      * @throws CheckoutException
      */
-    protected function processTransaction()
+    protected function processTransaction(): bool
     {
         $transaction = $this->loadTransaction();
         if ($transaction) {
@@ -508,7 +513,7 @@ class ReceiptDataProvider
      * @param \Magento\Sales\Model\Order $order
      * @param $transactionId
      * @param array $details
-     * @return transactionBuilder|null
+     * @return \Magento\Sales\Api\Data\TransactionInterface|null
      */
     protected function addPaymentTransaction(\Magento\Sales\Model\Order $order, $transactionId, array $details = [])
     {

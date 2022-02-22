@@ -135,8 +135,7 @@ class Index extends \Magento\Framework\App\Action\Action
         $order = null;
         try {
             if ($this->getRequest()->getParam('is_ajax')) {
-                $selectedPaymentMethodRaw
-                    = $this->getRequest()->getParam(
+                $selectedPaymentMethodRaw = $this->getRequest()->getParam(
                     'preselected_payment_method_id'
                 );
                 $selectedPaymentMethodId = strpos($selectedPaymentMethodRaw, '-') !== false
@@ -154,7 +153,7 @@ class Index extends \Magento\Framework\App\Action\Action
                     $this->checkoutSession->getLastRealOrderId()
                 );
 
-                $responseData = $this->getResponseData($order, $selectedPaymentMethodId);
+                $responseData = $this->getResponseData($order);
                 $formData = $this->getFormFields(
                     $responseData,
                     $selectedPaymentMethodId
@@ -179,7 +178,7 @@ class Index extends \Magento\Framework\App\Action\Action
                 $block = $this->pageFactory
                     ->create()
                     ->getLayout()
-                    ->createBlock('Paytrail\PaymentService\Block\Redirect\Paytrail')
+                    ->createBlock(\Paytrail\PaymentService\Block\Redirect\Paytrail::class)
                     ->setUrl($formAction)
                     ->setParams($formData);
 
@@ -260,13 +259,13 @@ class Index extends \Magento\Framework\App\Action\Action
      * @return PaymentResponse
      * @throws CheckoutException
      */
-    protected function getResponseData($order, $methodId)
+    protected function getResponseData($order)
     {
-        $response = $this->apiData->processApiRequest('payment', $order, null, null, $methodId);
+        $response = $this->apiData->processApiRequest('payment', $order);
 
         $errorMsg = $response['error'];
 
-        if (isset($errorMsg)){
+        if (isset($errorMsg)) {
             $this->errorMsg = ($errorMsg);
             $this->paytrailHelper->processError($errorMsg);
         }

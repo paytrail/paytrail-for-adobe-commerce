@@ -3,15 +3,13 @@
 namespace Paytrail\PaymentService\Helper;
 
 use Magento\Framework\App\Helper\Context;
-use Magento\Framework\Escaper;
 use Magento\Framework\Locale\Resolver;
 use Magento\Sales\Model\Order;
 use Magento\Tax\Helper\Data as TaxHelper;
 use Paytrail\PaymentService\Exceptions\CheckoutException;
 use Paytrail\PaymentService\Exceptions\TransactionSuccessException;
 use Paytrail\PaymentService\Gateway\Config\Config;
-use Paytrail\PaymentService\Logger\Request\RequestLogger;
-use Paytrail\PaymentService\Logger\Response\ResponseLogger;
+use Paytrail\PaymentService\Logger\PaytrailLogger;
 
 /**
  * Class Data
@@ -29,40 +27,30 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
      */
     private $taxHelper;
     /**
-     * @var RequestLogger
-     */
-    private $requestLogger;
-    /**
-     * @var ResponseLogger
-     */
-    private $responseLogger;
-    /**
      * @var Config
      */
     private $gatewayConfig;
 
+    /** @var PaytrailLogger */
+    private $paytrailLogger;
+
     /**
-     * Helper class constructor.
-     *
      * @param Context $context
      * @param Resolver $localeResolver
      * @param TaxHelper $taxHelper
-     * @param RequestLogger $requestLogger
-     * @param ResponseLogger $responseLogger
+     * @param PaytrailLogger $paytrailLogger
      * @param Config $gatewayConfig
      */
     public function __construct(
         Context $context,
         Resolver $localeResolver,
         TaxHelper $taxHelper,
-        RequestLogger $requestLogger,
-        ResponseLogger $responseLogger,
+        PaytrailLogger $paytrailLogger,
         Config $gatewayConfig
     ) {
         $this->localeResolver = $localeResolver;
         $this->taxHelper = $taxHelper;
-        $this->requestLogger = $requestLogger;
-        $this->responseLogger = $responseLogger;
+        $this->paytrailLogger = $paytrailLogger;
         $this->gatewayConfig = $gatewayConfig;
         parent::__construct($context);
     }
@@ -122,67 +110,25 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
     }
 
     /**
-     * @param Order $order
-     * @return mixed
-     */
-    public function getDiscountData(Order $order)
-    {
-        $discountIncl = 0;
-        $discountExcl = 0;
-
-        // Get product discount amounts
-        foreach ($order->getAllItems() as $item) {
-            if (!$this->taxHelper->priceIncludesTax()) {
-                $discountExcl += $item->getDiscountAmount();
-                $discountIncl += $item->getDiscountAmount() * (($item->getTaxPercent() / 100) + 1);
-            } else {
-                $discountExcl += $item->getDiscountAmount() / (($item->getTaxPercent() / 100) + 1);
-                $discountIncl += $item->getDiscountAmount();
-            }
-        }
-
-        // Get shipping tax rate
-        if ((float)$order->getShippingInclTax() && (float)$order->getShippingAmount()) {
-            $shippingTaxRate = $order->getShippingInclTax() / $order->getShippingAmount();
-        } else {
-            $shippingTaxRate = 1;
-        }
-
-        // Add / exclude shipping tax
-        $shippingDiscount = (float)$order->getShippingDiscountAmount();
-        if (!$this->taxHelper->priceIncludesTax()) {
-            $discountIncl += $shippingDiscount * $shippingTaxRate;
-            $discountExcl += $shippingDiscount;
-        } else {
-            $discountIncl += $shippingDiscount;
-            $discountExcl += $shippingDiscount / $shippingTaxRate;
-        }
-
-        $return = new \Magento\Framework\DataObject();
-        return $return->setDiscountInclTax($discountIncl)->setDiscountExclTax($discountExcl);
-    }
-
-    /**
      * @param string $logType
      * @param string $level
      * @param mixed $data
+     *
+     * @deprecated implementation replaced by dedicated logger class
+     * @see \Paytrail\PaymentService\Logger\PaytrailLogger::logData
      */
     public function logCheckoutData($logType, $level, $data)
     {
-        if ($logType === 'request' && $this->gatewayConfig->getRequestLog() == true) {
-            if ($level === 'error') {
-                $this->requestLogger->requestErrorLog($level, $data);
-            } else {
-                $this->requestLogger->requestInfoLog($level, $data);
-            }
+        if (
+            $level !== 'error' &&
+            (($logType === 'request' && $this->gatewayConfig->getRequestLog() == false)
+            || ($logType === 'response' && $this->gatewayConfig->getResponseLog() == false))
+        ) {
+            return;
         }
-        if ($logType === 'response' && $this->gatewayConfig->getResponseLog() == true) {
-            if ($level === 'error') {
-                $this->responseLogger->responseErrorLog($level, $data);
-            } else {
-                $this->responseLogger->responseInfoLog($level, $data);
-            }
-        }
+
+        $level = $level == 'error' ? $level : $this->paytrailLogger->resolveLogLevel($logType);
+        $this->paytrailLogger->logData($level, $data);
     }
 
     /**
@@ -191,6 +137,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
      */
     public function processError($errorMessage)
     {
+        $this->paytrailLogger->logData(\Monolog\Logger::ERROR, $errorMessage);
         throw new CheckoutException(__($errorMessage));
     }
 
