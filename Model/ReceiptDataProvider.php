@@ -35,11 +35,6 @@ class ReceiptDataProvider
     const RECEIPT_PROCESSING_CACHE_PREFIX = "receipt_processing_";
 
     /**
-     * @var \Magento\Framework\UrlInterface
-     */
-    protected $urlBuilder;
-
-    /**
      * @var Context
      */
     protected $context;
@@ -170,6 +165,10 @@ class ReceiptDataProvider
      * @var LoggerInterface
      */
     protected $logger;
+    /**
+     * @var \Magento\Backend\Model\UrlInterface
+     */
+    private $backendUrl;
 
     /**
      * ReceiptDataProvider constructor.
@@ -214,9 +213,9 @@ class ReceiptDataProvider
         transactionBuilder $transactionBuilder,
         Config $gatewayConfig,
         ApiData $apiData,
-        LoggerInterface $logger
+        LoggerInterface $logger,
+        \Magento\Backend\Model\UrlInterface $backendUrl
     ) {
-        $this->urlBuilder = $context->getUrl();
         $this->cache = $cache;
         $this->context = $context;
         $this->session = $session;
@@ -237,6 +236,7 @@ class ReceiptDataProvider
         $this->gatewayConfig = $gatewayConfig;
         $this->apiData = $apiData;
         $this->logger = $logger;
+        $this->backendUrl = $backendUrl;
     }
 
     /**
@@ -400,15 +400,21 @@ class ReceiptDataProvider
     protected function notifyCanceledOrder()
     {
         if (filter_var($this->gatewayConfig->getNotificationEmail(), FILTER_VALIDATE_EMAIL)) {
-            $postObject = new \Magento\Framework\DataObject();
-            $postObject->setData(['order_id' => $this->orderIncrementalId]);
             $transport = $this->transportBuilder
                 ->setTemplateIdentifier('restore_order_notification')
                 ->setTemplateOptions(['area' => \Magento\Framework\App\Area::AREA_FRONTEND, 'store' => \Magento\Store\Model\Store::DEFAULT_STORE_ID])
-                ->setTemplateVars(['data' => $postObject])
+                ->setTemplateVars([
+                    'order' => [
+                        'increment' => $this->currentOrder->getIncrementId(),
+                        'url' => $this->backendUrl->getUrl(
+                            'sales/order/view',
+                            ['order_id' => $this->currentOrder->getId()]
+                        )
+                    ]
+                ])
                 ->setFrom([
-                    'name' => $this->paytrailHelper->getConfig('general/store_information/name') . ' - Magento',
-                    'email' => $this->paytrailHelper->getConfig('trans_email/ident_general/email')
+                    'name' => $this->scopeConfig->getValue('general/store_information/name') . ' - Magento',
+                    'email' => $this->scopeConfig->getValue('trans_email/ident_general/email'),
                 ])->addTo([
                     $this->gatewayConfig->getNotificationEmail()
                 ])->getTransport();
