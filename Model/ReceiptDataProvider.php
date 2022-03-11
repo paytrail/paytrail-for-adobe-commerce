@@ -332,7 +332,7 @@ class ReceiptDataProvider
             $this->currentOrder->setState(Recurring::ORDER_STATE_CUSTOM_CODE);
             $this->currentOrder->setStatus(Recurring::ORDER_STATUS_CUSTOM_CODE);
             $this->currentOrder->addCommentToStatusHistory(__('Pending payment from Paytrail Payment Service'));
-        } else {
+        } elseif (!($this->currentOrder->getStatus() === 'processing' && $this->currentOrder->getTotalPaid())) {
             $this->currentOrder->setState($orderState)->setStatus($orderState);
             $this->currentOrder->addCommentToStatusHistory(__('Payment has been completed'));
         }
