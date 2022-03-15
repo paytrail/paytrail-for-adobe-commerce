@@ -1,10 +1,12 @@
 <?php
 namespace Paytrail\PaymentService\Helper;
 
+use Magento\Framework\Exception\AlreadyExistsException;
+use Magento\Framework\Exception\InputException;
 use Magento\Framework\Exception\LocalizedException;
-use Magento\Framework\Exception\NoSuchEntityException;
+use Magento\Sales\Api\OrderRepositoryInterface;
 use Magento\Sales\Api\TransactionRepositoryInterface;
-use Magento\Setup\Exception;
+use Magento\Sales\Model\ResourceModel\Order;
 use Magento\Sales\Model\Service\InvoiceService;
 use Magento\Framework\DB\TransactionFactory;
 
@@ -14,12 +16,12 @@ use Magento\Framework\DB\TransactionFactory;
 class ActivateOrder
 {
     /**
-     * @var \Magento\Sales\Api\OrderRepositoryInterface
+     * @var OrderRepositoryInterface
      */
     protected $orderRepository;
 
     /**
-     * @var \Magento\Sales\Model\ResourceModel\Order
+     * @var Order
      */
     protected $orderResourceModel;
     /**
@@ -37,18 +39,18 @@ class ActivateOrder
 
     /**
      * ActivateOrder constructor.
-     * @param \Magento\Sales\Api\OrderRepositoryInterface $orderRepository
+     * @param OrderRepositoryInterface $orderRepository
      * @param TransactionRepositoryInterface $transactionRepository
      * @param InvoiceService $invoiceService
      * @param TransactionFactory $transactionFactory
-     * @param \Magento\Sales\Model\ResourceModel\Order $orderResourceModel
+     * @param Order $orderResourceModel
      */
     public function __construct(
-        \Magento\Sales\Api\OrderRepositoryInterface $orderRepository,
+        OrderRepositoryInterface $orderRepository,
         TransactionRepositoryInterface $transactionRepository,
         InvoiceService $invoiceService,
         TransactionFactory $transactionFactory,
-        \Magento\Sales\Model\ResourceModel\Order $orderResourceModel
+        Order $orderResourceModel
     ) {
         $this->orderResourceModel = $orderResourceModel;
         $this->orderRepository = $orderRepository;
@@ -59,7 +61,7 @@ class ActivateOrder
 
     /**
      * @param $orderId
-     * @throws \Magento\Framework\Exception\AlreadyExistsException
+     * @throws AlreadyExistsException
      */
     public function activateOrder($orderId)
     {
@@ -78,7 +80,7 @@ class ActivateOrder
 
     /**
      * @param $orderId
-     * @return int
+     * @return bool
      */
     public function isCanceled($orderId)
     {
@@ -103,6 +105,7 @@ class ActivateOrder
     /**
      * @param $order
      * @return mixed
+     * @throws InputException
      */
     protected function getCaptureTransaction($order)
     {
@@ -118,6 +121,7 @@ class ActivateOrder
 
     /**
      * @param $order
+     * @throws InputException
      */
     protected function processInvoice($order)
     {

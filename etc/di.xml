@@ -1,18 +1,13 @@
 <?xml version="1.0"?>
 <config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
   <preference for="Paytrail\PaymentService\Api\RedirectInterface" type="Paytrail\PaymentService\Model\Redirect" />
+
+  <type name="Magento\Sales\Block\Adminhtml\Order\View">
+    <plugin name="paytrail_restore_order_button" type="Paytrail\PaymentService\Plugin\Magento\Sales\Block\Adminhtml\Order\ViewPlugin"/>
+  </type>
+
   <type name="Magento\Tax\Model\Config">
     <plugin name="paytrail_payment_service_tax_config_plugin" type="Paytrail\PaymentService\Plugin\Model\TaxConfigPlugin" sortOrder="1" disabled="false" />
-  </type>
-  <virtualType name="SalesOrderViewWidgetContext" type="\Magento\Backend\Block\Widget\Context">
-    <arguments>
-      <argument name="buttonList" xsi:type="object">Paytrail\PaymentService\Block\Adminhtml\Order\View\ButtonList</argument>
-    </arguments>
-  </virtualType>
-  <type name="Magento\Sales\Block\Adminhtml\Order\View">
-    <arguments>
-      <argument name="context" xsi:type="object">SalesOrderViewWidgetContext</argument>
-    </arguments>
   </type>
 
   <virtualType name="PaytrailAdapter" type="Magento\Payment\Model\Method\Adapter">
