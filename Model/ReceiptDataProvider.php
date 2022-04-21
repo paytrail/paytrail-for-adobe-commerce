@@ -276,12 +276,13 @@ class ReceiptDataProvider
 
         $this->currentOrderPayment = $this->currentOrder->getPayment();
 
-        /** @var bool $paymentVerified */
+        /** @var string|void $paymentVerified */
         $paymentVerified = $this->verifyPaymentData($params);
-
         $this->processTransaction();
-        $this->processPayment($paymentVerified);
-        $this->processInvoice();
+        if ($paymentVerified === 'ok') {
+            $this->processPayment();
+            $this->processInvoice();
+        }
         $this->processOrder($paymentVerified);
 
         $this->unlockProcessingOrder($this->orderId);
@@ -328,13 +329,13 @@ class ReceiptDataProvider
     {
         $orderState = $this->gatewayConfig->getDefaultOrderStatus();
 
-        if ($paymentVerified === 'pending') {
+        if ($paymentVerified === 'ok') {
+            $this->currentOrder->setState($orderState)->setStatus($orderState);
+            $this->currentOrder->addCommentToStatusHistory(__('Payment has been completed'));
+        } else {
             $this->currentOrder->setState(Recurring::ORDER_STATE_CUSTOM_CODE);
             $this->currentOrder->setStatus(Recurring::ORDER_STATUS_CUSTOM_CODE);
             $this->currentOrder->addCommentToStatusHistory(__('Pending payment from Paytrail Payment Service'));
-        } elseif (!($this->currentOrder->getStatus() === 'processing' && $this->currentOrder->getTotalPaid())) {
-            $this->currentOrder->setState($orderState)->setStatus($orderState);
-            $this->currentOrder->addCommentToStatusHistory(__('Payment has been completed'));
         }
 
         $this->orderRepositoryInterface->save($this->currentOrder);
@@ -375,22 +376,15 @@ class ReceiptDataProvider
         }
     }
 
-    /**
-     * @param bool|string $paymentVerified
-     */
-    protected function processPayment($paymentVerified = false)
+    protected function processPayment()
     {
-        if ($paymentVerified === 'ok') {
+        $transaction = $this->addPaymentTransaction($this->currentOrder, $this->transactionId, $this->getDetails());
 
-            /** @var \Magento\Sales\Model\Order\Payment\Transaction\Builder|null $transaction */
-            $transaction = $this->addPaymentTransaction($this->currentOrder, $this->transactionId, $this->getDetails());
+        $this->currentOrderPayment->addTransactionCommentsToOrder($transaction, '');
+        $this->currentOrderPayment->setLastTransId($this->transactionId);
 
-            $this->currentOrderPayment->addTransactionCommentsToOrder($transaction, '');
-            $this->currentOrderPayment->setLastTransId($this->transactionId);
-
-            if ($this->currentOrder->getStatus() == 'canceled') {
-                $this->notifyCanceledOrder();
-            }
+        if ($this->currentOrder->getStatus() == 'canceled') {
+            $this->notifyCanceledOrder();
         }
     }
 
@@ -458,12 +452,12 @@ class ReceiptDataProvider
         $status = $params['checkout-status'];
         $verifiedPayment = $this->apiData->validateHmac($params, $params['signature']);
 
-        if ($verifiedPayment && ($status === 'ok' || $status == 'pending')) {
+        if ($verifiedPayment && ($status === 'ok' || $status == 'pending' || $status == 'delayed')) {
             return $status;
         } else {
             $this->currentOrder->addCommentToStatusHistory(__('Order canceled. Failed to complete the payment.'));
             $this->orderRepositoryInterface->save($this->currentOrder);
-            $this->orderManagementInterface->cancel($this->currentOrder->getId());
+            $this->cancelOrderById($this->currentOrder->getId());
             $this->paytrailHelper->processError(
                 'Failed to complete the payment. Please try again or contact the customer service.'
             );
@@ -519,15 +513,14 @@ class ReceiptDataProvider
      * @param \Magento\Sales\Model\Order $order
      * @param $transactionId
      * @param array $details
-     * @return \Magento\Sales\Api\Data\TransactionInterface|null
+     * @return \Magento\Sales\Api\Data\TransactionInterface
      */
     protected function addPaymentTransaction(\Magento\Sales\Model\Order $order, $transactionId, array $details = [])
     {
-        /** @var null|\Magento\Sales\Model\Order\Payment\Transaction\Builder $transaction */
-        $transaction = null;
         /** @var \Magento\Framework\DataObject|\Magento\Sales\Api\Data\OrderPaymentInterface |mixed|null $payment */
         $payment = $order->getPayment();
 
+        /** @var \Magento\Sales\Api\Data\TransactionInterface $transaction */
         $transaction = $this->transactionBuilder
             ->setPayment($payment)->setOrder($order)
             ->setTransactionId($transactionId)
@@ -536,5 +529,16 @@ class ReceiptDataProvider
             ->build(Transaction::TYPE_CAPTURE);
         $transaction->setIsClosed(false);
         return $transaction;
+    }
+
+    /**
+     * @param int $orderId
+     * @return void
+     */
+    private function cancelOrderById($orderId): void
+    {
+        if ($this->gatewayConfig->getCancelOrderOnFailedPayment()) {
+            $this->orderManagementInterface->cancel($orderId);
+        }
     }
 }
