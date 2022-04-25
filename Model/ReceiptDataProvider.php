@@ -455,7 +455,7 @@ class ReceiptDataProvider
         if ($verifiedPayment && ($status === 'ok' || $status == 'pending' || $status == 'delayed')) {
             return $status;
         } else {
-            $this->currentOrder->addCommentToStatusHistory(__('Order canceled. Failed to complete the payment.'));
+            $this->currentOrder->addCommentToStatusHistory(__('Failed to complete the payment.'));
             $this->orderRepositoryInterface->save($this->currentOrder);
             $this->cancelOrderById($this->currentOrder->getId());
             $this->paytrailHelper->processError(
