@@ -63,6 +63,11 @@ Discount,Alennus
 Shipping,Toimitus
 "Restore a canceled order","Palauta peruutettu tilaus"
 "Restore order #","Palauta tilaus #"
+Hello,Hei
+"Restore order <a href=""%order_url"">%order_increment</a>","Palauta tilaus #<a href=""%order_url"">%order_increment</a>"
+"The payment for the order %order_increment has been completed while the order was in canceled state.
+        Please navigate to your Magento orders, select the order in question, and click restore order. Note the stock.","Tilaukselle #%order_increment saapui maksu tilauksen peruuttamisen jälkeen
+        Pyydämme teitä tarkastamaan kyseisen tilauksen tilan Magenton administa ja käyttämään 'Restore order' toimintoa"
 "The payment for the order #","Maksu tilaukselle #"
 " has been completed while the order was in canceled state. "," on hyväksytty tilauksen ollessa peruutettu tilassa. "
 "Please navigate to your Magento orders, select the order in question, and click restore order. Note the stock.", "Ole hyvä, ja valitse kyseinen tilaus Magenton hallinnassa ja klikkaa Palauta tilaus. Huomioi varastosaldo."
