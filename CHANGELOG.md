@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.2] - 2022-04-25
+Fixes:
+- When an already paid order receives a "Fail" callback from API, it is no longer cancelled.
+- "Delayed" status from API no longer causes the order to be cancelled.
+- Invoices are only created for "Ok" api responses. Mitigating an issue where invoices are missing transaction ids.
+
+New features:
+- You can now disable automatic order cancelling, if you are having issues with cancelled orders receiving payments. You can find the setting from Payment method's configuration.
+
 ## [1.1.0] - 2022-02-21
 - Refactor logging to a separate class.
 - Improve error logging beyond Api errors

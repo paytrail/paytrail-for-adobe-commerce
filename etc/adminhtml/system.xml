@@ -85,6 +85,16 @@
                     <label>Generate Finnish reference number for orders</label>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                 </field>
+                <field id="failed_payment_cancel" translate="label" type="select" sortOrder="80" showInDefault="1" showInWebsite="0"
+                       showInStore="0" canRestore="1">
+                    <label>Automatically cancel orders if the first response from Paytrail API is a failure</label>
+                    <comment><![CDATA[If you experience errors with cancelled orders receiving payments, please turn this
+                    setting to "NO" position. This means that the orders are kept open until cancelled automatically by
+                    cron or manually by admin. See the cron configuration at Sales -> Sales -> Orders cron setting ->
+                    "Pending Payment Order Lifetime" for setting the maximum time Magento waits for a payment.
+                    Remember that as long as the order is open product stock in the order is locked.]]></comment>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                </field>
                 <group id="paytrail_personalization" translate="label" type="text" sortOrder="90" showInDefault="1"
                        showInWebsite="1" showInStore="1">
                     <label>Payment page personalization</label>

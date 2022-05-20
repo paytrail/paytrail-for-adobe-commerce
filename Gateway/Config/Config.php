@@ -32,6 +32,7 @@ class Config extends \Magento\Payment\Gateway\Config\Config
     const KEY_REQUEST_LOG = 'request_log';
     const KEY_DEFAULT_ORDER_STATUS = 'order_status';
     const KEY_NOTIFICATION_EMAIL = 'recipient_email';
+    const KEY_CANCEL_ORDER_ON_FAILED_PAYMENT = 'failed_payment_cancel';
 
     /**
      * @var EncryptorInterface
@@ -255,4 +256,12 @@ class Config extends \Magento\Payment\Gateway\Config\Config
         return $this->getValue(self::KEY_NOTIFICATION_EMAIL, $storeId);
     }
 
+    /**
+     * @param int|null $storeId
+     * @return int
+     */
+    public function getCancelOrderOnFailedPayment($storeId = null)
+    {
+        return $this->getValue(self::KEY_CANCEL_ORDER_ON_FAILED_PAYMENT, $storeId);
+    }
 }
