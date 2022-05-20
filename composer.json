@@ -16,15 +16,15 @@
     }
   ],
   "require": {
-    "php": "^7.1",
-    "paytrail/paytrail-php-sdk": "1.0.*",
+    "php": "^7.3|^8.0",
+    "paytrail/paytrail-php-sdk": "2.0.*",
     "ext-curl": "*"
   },
   "conflict": {
     "markup/module-paytrail": "*"
   },
   "type": "magento2-module",
-  "version": "1.1.2",
+  "version": "1.2.0",
   "license": "MIT",
   "autoload": {
     "files": [
