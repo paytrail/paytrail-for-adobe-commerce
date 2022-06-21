@@ -13,6 +13,9 @@ class Adapter
      * @var string MODULE_CODE
      */
     const MODULE_CODE = 'Paytrail_PaymentService';
+
+    const CC_VAULT_CODE = 'paytrail_cc_vault';
+
     /**
      * @var int
      */

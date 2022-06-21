@@ -75,7 +75,7 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
         if ($this->localeResolver->getLocale() === 'sv_SE') {
             $locale = 'SV';
         }
-        return $locale;
+        return 'FI';
     }
 
     /**

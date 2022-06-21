@@ -27,7 +27,7 @@ class DiscountSplitter
     public function __construct(
         \Magento\SalesRule\Model\DeltaPriceRound $deltaPriceRound,
         ScopeConfigInterface $scopeConfig,
-                                                 $discountGetters = []
+        $discountGetters = []
     ) {
         $this->deltaPriceRound = $deltaPriceRound;
         $this->discountGetters = $discountGetters;

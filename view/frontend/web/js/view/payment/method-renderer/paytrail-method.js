@@ -20,6 +20,7 @@ define(
         'Magento_Checkout/js/model/totals',
         'Magento_Ui/js/model/messageList',
         'mage/translate',
+        'Magento_Checkout/js/action/redirect-on-success',
     ],
     function (ko, $, _, storage, Component, placeOrderAction, selectPaymentMethodAction, additionalValidators, quote, getTotalsAction, urlBuilder, mageUrlBuilder, fullScreenLoader, customer, checkoutData, totals, messageList, $t) {
         'use strict';
@@ -30,31 +31,77 @@ define(
             {
                 defaults: {
                     template: checkoutConfig.paytrail.payment_template
-
                 },
                 payMethod: 'paytrail',
                 redirectAfterPlaceOrder: false,
                 selectedPaymentMethodId: ko.observable(0),
-                selectedMethodGroup: ko.observable('mobile'),
+                selectedOpToken: ko.observable(0),
+                tokencheck: ko.observable(true),
+                selectedMethodGroup: ko.observable(0),
 
                 initialize: function () {
                     self = this;
                     this._super();
+
                     if (!self.getIsSuccess()) {
-                        self.addErrorMessage($t('Paytrail Payment Service API credentials are incorrect. Please contact support.'));
+                        self.addErrorMessage($t('Paytrail Service API credentials are incorrect. Please contact support.'));
+                    }
+                    if (self.getPreviousError()) {
+                        self.addErrorMessage(self.getPreviousError());
+                    }
+                    if (self.getPreviousSuccess()) {
+                        self.addSuccessMessage(self.getPreviousSuccess());
                     }
                     if (self.getSkipMethodSelection() == true) {
                         self.selectedPaymentMethodId(self.payMethod);
-
                     } else {
                         $("<style type='text/css'>" + self.getPaymentMethodStyles() + "</style>").appendTo("head");
                     }
                 },
+                isLoggedIn: function () {
+                    return customer.isLoggedIn();
+                },
+                isLoginButtonEnabled: function (methodGroup) {
+                    if (methodGroup.id === 'creditcard') {
+                        return true;
+                    }
+                    return false;
+                },
+                isPlaceOrderActionAllowed: function() {
+                    if(self.selectedOpToken() != 0 || self.selectedPaymentMethodId() != 0) {
+                        return true;
+                    }
+                    return false;
+                },
+                isRecurringPaymentAllowed: function () {
+                    if((window.checkoutConfig.isRecurringScheduled === true && self.selectedOpToken() != 0)
+                        || window.checkoutConfig.isRecurringScheduled === false) {
+                        return true;
+                    }
+                    return false;
+                },
                 setPaymentMethodId: function (paymentMethod) {
+                    self.selectedOpToken(0);
                     self.selectedPaymentMethodId(paymentMethod.id);
                     $.cookie('checkoutSelectedPaymentMethodId', paymentMethod.id);
 
                     return true;
+                },
+                setOpToken: function (token) {
+                    self.selectedOpToken(token.id);
+                    self.selectedPaymentMethodId(0);
+
+                    return true;
+                },
+                setPaymentGroup: function (paymentGroup) {
+                    self.selectedMethodGroup(paymentGroup.id);
+                    return true;
+                },
+                getDefaultSuccessUrl: function () {
+                    return checkoutConfig[self.payMethod].default_success_page_url;
+                },
+                getSelectedToken: function () {
+                    return self.selectedOpToken();
                 },
                 getInstructions: function () {
                     return checkoutConfig[self.payMethod].instructions;
@@ -62,11 +109,19 @@ define(
                 getIsSuccess: function () {
                     return checkoutConfig[self.payMethod].success;
                 },
+                getPreviousError: function () {
+                    return checkoutConfig[self.payMethod].previous_error;
+                },
+                getPreviousSuccess: function () {
+                    return checkoutConfig[self.payMethod].previous_success;
+                },
                 //Get icon for payment group by group id
                 getGroupIcon: function (group) {
                     return checkoutConfig[self.payMethod].image[group];
                 },
-
+                getTokenizable: function (tokenizable) {
+                    return tokenizable;
+                },
                 getSkipMethodSelection: function () {
                     return checkoutConfig[self.payMethod].skip_method_selection;
                 },
@@ -74,10 +129,30 @@ define(
                     return checkoutConfig[self.payMethod].payment_method_styles;
                 },
                 getMethodGroups: function () {
+                    if (window.checkoutConfig.isRecurringScheduled === true) {
+                        return checkoutConfig[self.payMethod].scheduled_method_group;
+                    }
                     return checkoutConfig[self.payMethod].method_groups;
                 },
                 getTerms: function () {
                     return checkoutConfig[self.payMethod].payment_terms;
+                },
+                addCard: function () {
+                    return true;
+                },
+                getTokensData: function (tokens) {
+                    return Object.values(tokens);
+                },
+                getTokens: function () {
+                    var data = {
+                        'method': this.getCode(),
+                        'additional_data': {
+                            'saved_methods': 'checkoutConfig[self.payMethod].tokens'
+                        }
+                    };
+
+                    data['additional_data'] = _.extend(data['additional_data'], this.additionalData);
+                    return data;
                 },
                 selectPaymentMethod: function () {
                     selectPaymentMethodAction(self.getData());
@@ -91,9 +166,24 @@ define(
                             message: msg
                         }
                     );
+                    self.scrollTo();
+                },
+                addSuccessMessage: function (msg) {
+                    messageList.addSuccessMessage(
+                        {
+                            message: msg
+                        }
+                    );
+                    self.scrollTo();
                 },
                 getBypassPaymentRedirectUrl: function () {
                     return checkoutConfig[self.payMethod].payment_redirect_url;
+                },
+                getAddCardRedirectUrl: function () {
+                    return checkoutConfig[self.payMethod].addcard_redirect_url;
+                },
+                getTokenPaymentRedirectUrl: function () {
+                    return checkoutConfig[self.payMethod].token_payment_redirect_url;
                 },
                 scrollTo: function () {
                     var errorElement_offset;
@@ -109,59 +199,97 @@ define(
                         }
                     );
                 },
-                validate: function () {
-                    if (self.selectedPaymentMethodId() == 0) {
-                        return false;
-                    } else {
-                        return true;
-                    }
-                },
                 // Redirect to Checkout
                 placeOrder: function () {
-                    if (self.getSkipMethodSelection() == false) {
-                        if (self.validate() && additionalValidators.validate()) {
+                    if (self.isPlaceOrderActionAllowed() && additionalValidators.validate()) {
+                        if(self.isRecurringPaymentAllowed()) {
                             return self.placeOrderBypass();
-                        } else {
-                            self.addErrorMessage($t('No payment method selected. Please select one.'));
-                            self.scrollTo();
+                        } else if (self.getSkipMethodSelection() == false || self.getSkipMethodSelection() === null) {
+                            self.addErrorMessage($t('Recurring payment purchases require using a saved card.'));
+                            //a self.scrollTo();
                             return false;
                         }
-                    } else {
-                        return self.placeOrderBypass();
+                    } else if (self.getSkipMethodSelection() == false || self.getSkipMethodSelection() === null) {
+                        self.addErrorMessage($t('No payment method selected. Please select one.'));
+                        //a self.scrollTo();
+                        return false;
                     }
+                    return self.placeOrderBypass();
+                },
+                addNewCard: function () {
+                    if(self.isLoggedIn()) {
+                        fullScreenLoader.startLoader();
+
+                        $.ajax(
+                            {
+                                url: mageUrlBuilder.build(self.getAddCardRedirectUrl()),
+                                type: 'post',
+                                context: this,
+                                data: {
+                                    'is_ajax': true
+                                }
+                            }
+                        ).done(
+                            function (response) {
+                                if ($.type(response) === 'object' && response.success && response.data) {
+                                    if (response.redirect) {
+                                        window.location.href = response.redirect;
+                                    }
+                                    $('#checkout-form-wrapper').append(response.data);
+                                    return false;
+                                }
+                                fullScreenLoader.stopLoader();
+                                self.addErrorMessage(response.message);
+                            }
+                        ).fail(
+                            function (response) {
+                                fullScreenLoader.stopLoader();
+                                self.addErrorMessage(response.message);
+                            }
+                        );
+                    }
+                },
+                getPaymentUrl: function () {
+                    if(self.selectedOpToken() != 0) {
+                        return self.getTokenPaymentRedirectUrl();
+                    }
+                    return self.getBypassPaymentRedirectUrl();
                 },
                 placeOrderBypass: function () {
                     placeOrderAction(self.getData(), self.messageContainer).done(
                         function () {
                             fullScreenLoader.startLoader();
-                            $.ajax(
-                                {
-                                    url: mageUrlBuilder.build(self.getBypassPaymentRedirectUrl()),
+                            $.ajax({
+                                    url: mageUrlBuilder.build(self.getPaymentUrl()),
                                     type: 'post',
                                     context: this,
-                                    data: {'is_ajax': true, 'preselected_payment_method_id': self.selectedPaymentMethodId()}
+                                    data: {
+                                        'is_ajax': true,
+                                        'preselected_payment_method_id': self.selectedPaymentMethodId(),
+                                        'selected_optoken': self.selectedOpToken()
+                                    }
                                 }
                             ).done(
                                 function (response) {
                                     if ($.type(response) === 'object' && response.success && response.data) {
+
+                                        if(response.reference) {
+                                            window.location.href = self.getDefaultSuccessUrl();
+                                        }
                                         if (response.redirect) {
                                             window.location.href = response.redirect;
                                         }
-                                        $('#paytrail-form-wrapper').append(response.data);
+
+                                        $('#checkout-form-wrapper').append(response.data);
                                         return false;
                                     }
                                     fullScreenLoader.stopLoader();
-
                                     self.addErrorMessage(response.message);
                                 }
                             ).fail(
                                 function (response) {
                                     fullScreenLoader.stopLoader();
-
                                     self.addErrorMessage(response.message);
-                                }
-                            ).always(
-                                function () {
                                 }
                             );
                         }

@@ -4,6 +4,7 @@ namespace Paytrail\PaymentService\Controller\Redirect;
 
 use Magento\Checkout\Model\Session;
 use Magento\Framework\App\Action\Context;
+use Magento\Framework\App\RequestInterface;
 use Magento\Framework\Controller\Result\Json;
 use Magento\Framework\Controller\Result\JsonFactory;
 use Magento\Framework\Exception\LocalizedException;
@@ -19,11 +20,12 @@ use Paytrail\PaymentService\Gateway\Config\Config;
 use Paytrail\SDK\Model\Provider;
 use Paytrail\SDK\Response\PaymentResponse;
 use Psr\Log\LoggerInterface;
+use Magento\Framework\App\Action\HttpPostActionInterface;
 
 /**
  * Class Index
  */
-class Index extends \Magento\Framework\App\Action\Action
+class Index implements HttpPostActionInterface
 {
     protected $urlBuilder;
 
@@ -81,34 +83,35 @@ class Index extends \Magento\Framework\App\Action\Action
      * @var $errorMsg
      */
     protected $errorMsg = null;
+    private RequestInterface $request;
 
     /**
-     * Index constructor.
-     *
      * @param Context $context
      * @param Session $checkoutSession
      * @param OrderFactory $orderFactory
      * @param JsonFactory $jsonFactory
      * @param OrderRepositoryInterface $orderRepositoryInterface
      * @param OrderManagementInterface $orderManagementInterface
-     * @param PageFactory  $pageFactory
+     * @param PageFactory $pageFactory
      * @param LoggerInterface $logger
      * @param ApiData $apiData
      * @param paytrailHelper $paytrailHelper
      * @param Config $gatewayConfig
+     * @param RequestInterface $request
      */
     public function __construct(
         Context $context,
         Session $checkoutSession,
         OrderFactory $orderFactory,
         JsonFactory $jsonFactory,
-        \Magento\Sales\Api\OrderRepositoryInterface $orderRepositoryInterface,
+        OrderRepositoryInterface $orderRepositoryInterface,
         OrderManagementInterface $orderManagementInterface,
         PageFactory $pageFactory,
         LoggerInterface $logger,
         ApiData $apiData,
         paytrailHelper $paytrailHelper,
-        Config $gatewayConfig
+        Config $gatewayConfig,
+        RequestInterface $request
     ) {
         $this->urlBuilder = $context->getUrl();
         $this->checkoutSession = $checkoutSession;
@@ -121,7 +124,7 @@ class Index extends \Magento\Framework\App\Action\Action
         $this->apiData = $apiData;
         $this->paytrailHelper = $paytrailHelper;
         $this->gatewayConfig = $gatewayConfig;
-        parent::__construct($context);
+        $this->request = $request;
     }
 
     /**
@@ -134,13 +137,15 @@ class Index extends \Magento\Framework\App\Action\Action
 
         $order = null;
         try {
-            if ($this->getRequest()->getParam('is_ajax')) {
-                $selectedPaymentMethodRaw = $this->getRequest()->getParam(
+            if ($this->request->getParam('is_ajax')) {
+                $selectedPaymentMethodRaw = $this->request->getParam(
                     'preselected_payment_method_id'
                 );
-                $selectedPaymentMethodId = strpos($selectedPaymentMethodRaw, '-') !== false
-                    ? explode('-', $selectedPaymentMethodRaw)[0]
-                    : $selectedPaymentMethodRaw;
+                $selectedPaymentMethodId = preg_replace(
+                    '/[0-9]{1,2}$/',
+                    '',
+                    $selectedPaymentMethodRaw
+                );
 
                 if (empty($selectedPaymentMethodId)) {
                     $this->errorMsg = __('No payment method selected');

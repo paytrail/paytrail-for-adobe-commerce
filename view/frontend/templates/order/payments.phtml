@@ -1,0 +1,103 @@
+<?php
+
+/** @var \Paytrail\PaymentService\Block\Order\Payments $block */
+?>
+<?php $recurringPayments = $block->getRecurringPayments() ?>
+<?php $closedSubscriptions = $block->getClosedSubscriptions() ?>
+<?php if ($recurringPayments && count($recurringPayments)) : ?>
+    <div class="table-wrapper orders-history">
+        <table class="data table table-order-items history" id="my-subscriptions-table">
+            <caption class="table-caption"><?= $block->escapeHtml(__('Payments')) ?></caption>
+            <thead>
+            <tr>
+                <th scope="col" class="col id"><?= $block->escapeHtml(__('Next order date')) ?></th>
+                <th scope="col" class="col date"><?= $block->escapeHtml(__('Status')) ?></th>
+                <th scope="col" class="col total"><?= $block->escapeHtml(__('Recurring payment profile')) ?></th>
+                <th scope="col" class="col actions"><?= $block->escapeHtml(__('Grand total')) ?></th>
+                <th scope="col" class="col actions"><?= $block->escapeHtml(__('Action')) ?></th>
+            </tr>
+            </thead>
+            <tbody>
+            <?php foreach ($recurringPayments as $recurringPayment) : ?>
+                <tr>
+                    <td data-th="<?= $block->escapeHtml(__('Next Order Date')) ?>" class="col id"><?= $block->escapeHtml($block->validateDate($recurringPayment->getNextOrderDate())) ?></td>
+                    <td data-th="<?= $block->escapeHtml(__('Status')) ?>" class="col date"><?= /* @noEscape */ $block->escapeHtml($block->getRecurringPaymentStatusName($recurringPayment->getStatus())) ?></td>
+                    <td data-th="<?= $block->escapeHtml(__('Recurring Payment Profile')) ?>" class="col total"><?= /* @noEscape */ $block->escapeHtml($recurringPayment->getName()) ?></td>
+                    <td data-th="<?= $block->escapeHtml(__('Grand total')) ?>" class="col status"><?= $block->escapeHtml($block->getCurrentCurrency()).$block->escapeHtml($recurringPayment->getBaseGrandTotal()) ?></td>
+                    <td data-th="<?= $block->escapeHtml(__('Actions')) ?>" class="col actions">
+                        <a href="<?= $block->escapeUrl($block->getViewUrl($recurringPayment)) ?>" class="action view">
+                            <span><?= $block->escapeHtml(__('View Order')) ?></span>
+                        </a>
+                        <a href="<?= $block->escapeHtml($block->getStopPaymentUrl($recurringPayment)) ?>" class="action order stop-payment-confirmation">
+                            <span ><?= $block->escapeHtml(__('Stop payment')) ?></span>
+                        </a>
+                    </td>
+                </tr>
+            <?php endforeach; ?>
+            </tbody>
+        </table>
+    </div>
+    <?php if ($block->getPagerHtml()) : ?>
+        <div class="order-products-toolbar toolbar bottom"><?= $block->getPagerHtml() ?></div>
+    <?php endif ?>
+<?php else : ?>
+    <div class="message info empty"><span><?= $block->escapeHtml($block->getEmptyRecurringPaymentsMessage()) ?></span></div>
+<?php endif ?>
+
+<?php if ($closedSubscriptions && count($closedSubscriptions)) : ?>
+    <h2><?= $block->escapeHtml(__('Canceled subscriptions')) ?></h2>
+    <div class="table-wrapper subscription-canceled">
+        <table class="data table table-order-items history" id="my-closed-subscriptions-table">
+            <caption class="table-caption"><?= $block->escapeHtml(__('Canceled subscriptions')) ?></caption>
+            <thead>
+            <tr>
+                <th scope="col" class="col id"><?= $block->escapeHtml(__('Next order date')) ?></th>
+                <th scope="col" class="col date"><?= $block->escapeHtml(__('Status')) ?></th>
+                <th scope="col" class="col total"><?= $block->escapeHtml(__('Recurring payment profile')) ?></th>
+                <th scope="col" class="col actions"><?= $block->escapeHtml(__('Grand total')) ?></th>
+            </tr>
+            </thead>
+            <tbody>
+            <?php foreach ($closedSubscriptions as $closedSubscription) : ?>
+                <tr>
+                    <td data-th="<?= $block->escapeHtml(__('Next Order Date')) ?>" class="col id"><?= $block->escapeHtml($block->validateDate($closedSubscription->getNextOrderDate())) ?></td>
+                    <td data-th="<?= $block->escapeHtml(__('Status')) ?>" class="col date"><?= /* @noEscape */ $block->escapeHtml($block->getRecurringPaymentStatusName($closedSubscription->getStatus())) ?></td>
+                    <td data-th="<?= $block->escapeHtml(__('Recurring Payment Profile')) ?>" class="col total"><?= /* @noEscape */ $block->escapeHtml($closedSubscription->getName()) ?></td>
+                    <td data-th="<?= $block->escapeHtml(__('Grand total')) ?>" class="col status"><?= $block->escapeHtml($closedSubscription->getBaseGrandTotal()) ?></td>
+                    <td data-th="<?= $block->escapeHtml(__('Actions')) ?>" class="col actions">
+                        <a href="<?= $block->escapeUrl($block->getViewUrl($closedSubscription)) ?>" class="action view">
+                            <span><?= $block->escapeHtml(__('View Order')) ?></span>
+                        </a>
+                    </td>
+                </tr>
+            <?php endforeach; ?>
+            </tbody>
+        </table>
+    </div>
+<?php endif; ?>
+
+<script type = 'text/javascript'>
+    require([
+            'jquery',
+            'Magento_Ui/js/modal/confirm'
+        ],
+        function ($, confirmation) {
+            $('.stop-payment-confirmation').click(function (event) {
+                event.preventDefault();
+
+                var url = event.currentTarget.href;
+                confirmation({
+                    title: 'Stop Recurring Payment',
+                    content: 'Do you wish to stop this payment?',
+                    actions: {
+                        confirm: function () {
+                            window.location.href = url;
+                        },
+                        cancel: function () {},
+                        always: function () {}
+                    }
+                });
+                return false;
+            });
+        });
+</script>

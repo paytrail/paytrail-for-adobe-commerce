@@ -4,6 +4,9 @@ namespace Paytrail\PaymentService\Controller\Receipt;
 
 use Magento\Checkout\Model\Session;
 use Magento\Framework\App\Action\Context;
+use Magento\Framework\App\RequestInterface;
+use Magento\Framework\Controller\Result\RedirectFactory;
+use Magento\Framework\Message\ManagerInterface;
 use Magento\Quote\Model\QuoteRepository;
 use Magento\Sales\Api\Data\OrderInterface;
 use Paytrail\PaymentService\Gateway\Config\Config;
@@ -11,11 +14,12 @@ use Paytrail\PaymentService\Gateway\Validator\ResponseValidator;
 use Paytrail\PaymentService\Helper\Data;
 use Paytrail\PaymentService\Helper\ProcessPayment;
 use Paytrail\PaymentService\Model\ReceiptDataProvider;
+use Magento\Framework\App\Action\HttpGetActionInterface;
 
 /**
  * Class Index
  */
-class Index extends \Magento\Framework\App\Action\Action
+class Index implements HttpGetActionInterface
 {
     /**
      * @var Session
@@ -54,6 +58,10 @@ class Index extends \Magento\Framework\App\Action\Action
      * @var Data
      */
     private $paytrailHelper;
+    private RequestInterface $request;
+    private Context $context;
+    private RedirectFactory $redirectFactory;
+    private ManagerInterface $messageManager;
 
     /**
      * Index constructor.
@@ -66,6 +74,9 @@ class Index extends \Magento\Framework\App\Action\Action
      * @param ProcessPayment $processPayment
      * @param Config $gatewayConfig
      * @param Data $paytrailHelper
+     * @param RequestInterface $request
+     * @param RedirectFactory $redirectFactory
+     * @param ManagerInterface $messageManager
      */
     public function __construct(
         Context $context,
@@ -76,9 +87,11 @@ class Index extends \Magento\Framework\App\Action\Action
         OrderInterface $orderInterface,
         ProcessPayment $processPayment,
         Config $gatewayConfig,
-        Data $paytrailHelper
+        Data $paytrailHelper,
+        RequestInterface $request,
+        RedirectFactory $redirectFactory,
+        ManagerInterface $messageManager
     ) {
-        parent::__construct($context);
         $this->session = $session;
         $this->responseValidator = $responseValidator;
         $this->receiptDataProvider = $receiptDataProvider;
@@ -87,6 +100,10 @@ class Index extends \Magento\Framework\App\Action\Action
         $this->processPayment = $processPayment;
         $this->gatewayConfig = $gatewayConfig;
         $this->paytrailHelper = $paytrailHelper;
+        $this->request = $request;
+        $this->context = $context;
+        $this->redirectFactory = $redirectFactory;
+        $this->messageManager = $messageManager;
     }
 
     /**
@@ -102,7 +119,7 @@ class Index extends \Magento\Framework\App\Action\Action
         $cancelStatuses = ["canceled"];
 
         /** @var string $reference */
-        $reference = $this->getRequest()->getParam('checkout-reference');
+        $reference = $this->request->getParam('checkout-reference');
 
         /** @var string $orderNo */
         $orderNo = $this->gatewayConfig->getGenerateReferenceForOrder()
@@ -122,7 +139,7 @@ class Index extends \Magento\Framework\App\Action\Action
 
         if ($status == 'pending_payment' || in_array($status, $cancelStatuses)) {
             // order status could be changed by callback, if not, status change needs to be forced by processing the payment
-            $failMessages = $this->processPayment->process($this->getRequest()->getParams(), $this->session);
+            $failMessages = $this->processPayment->process($this->request->getParams(), $this->session);
         }
 
         if ($status == 'pending_payment') { // status could be changed by callback, if not, it needs to be forced
@@ -130,21 +147,24 @@ class Index extends \Magento\Framework\App\Action\Action
             $status = $order->getStatus(); // getting current status
         }
 
-        if (in_array($status, $successStatuses)) {
-            $this->_redirect('checkout/onepage/success');
-            return;
-        } elseif (in_array($status, $cancelStatuses)) {
+        $redirect = $this->redirectFactory->create();
 
+        if (in_array($status, $successStatuses)) {
+            $redirect->setPath('checkout/onepage/success');
+            return $redirect;
+        } elseif (in_array($status, $cancelStatuses)) {
             /** @var string $failMessage */
             foreach ($failMessages as $failMessage) {
                 $this->messageManager->addErrorMessage($failMessage);
             }
-
-            $this->_redirect('checkout/cart');
-            return;
+            $redirect->setPath('checkout/cart');
+            return $redirect;
         }
 
-        $this->messageManager->addErrorMessage(__('Order processing has been aborted. Please contact customer service.'));
-        $this->_redirect('checkout/cart');
+        $this->messageManager->addErrorMessage(__(
+            'Order processing has been aborted. Please contact customer service.'
+        ));
+        $redirect->setPath('checkout/cart');
+        return $redirect;
     }
 }

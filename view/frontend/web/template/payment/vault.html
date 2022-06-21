@@ -1,0 +1,23 @@
+
+<hr>
+
+<span text="getNarf()"></span>
+
+<button class="action primary checkout"
+        type="submit"
+        data-bind="
+                        click: $parent.addCard,
+                        attr: {title: $t('Add stored credit card')},
+                        "
+        >
+    <span data-bind="i18n: 'Add card'"> Add Card </span>
+</button>
+<hr>
+
+<label class="label" data-bind="attr: {'for': getTokensData()}">
+    <span text="getMaskedCard()"></span>
+    (
+    <span translate="'expires'"></span>:
+    <span text="getExpirationDate()"></span>
+    )
+</label>
