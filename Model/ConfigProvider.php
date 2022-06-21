@@ -182,7 +182,7 @@ class ConfigProvider implements ConfigProviderInterface
             //Get images for payment groups
             foreach ($groupData['groups'] as $group) {
                 $groupId = $group['id'];
-                $groupImage = $group['icon'];
+                $groupImage = $group['svg'];
                 $config['payment'][self::CODE]['image'][$groupId] = '';
                 if ($groupImage) {
                     $config['payment'][self::CODE]['image'][$groupId] = $groupImage;
