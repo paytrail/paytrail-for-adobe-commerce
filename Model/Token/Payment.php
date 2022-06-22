@@ -104,7 +104,7 @@ class Payment
     {
         try {
             $order = $this->orderRepository->get($orderId);
-            $client = $this->adapter->initOpMerchantClient();
+            $client = $this->adapter->initPaytrailMerchantClient();
             $customer = $this->customerRepository->getById((int)$order->getCustomerId());
 
             $mitPayment = $this->getMitPaymentRequest();

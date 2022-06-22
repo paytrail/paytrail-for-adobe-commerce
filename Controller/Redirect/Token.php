@@ -164,10 +164,10 @@ class Token implements HttpPostActionInterface
      */
     public function execute() // there is also other call which changes order status
     {
-        $selectedOpTokenRaw = $this->request->getParam('selected_optoken');
-        $selectedOpTokenId = preg_replace('/[^0-9a-f]{2,}$/', '', $selectedOpTokenRaw);
+        $selectedTokenRaw = $this->request->getParam('selected_token');
+        $selectedTokenId = preg_replace('/[^0-9a-f]{2,}$/', '', $selectedTokenRaw);
 
-        if (empty($selectedOpTokenId)) {
+        if (empty($selectedTokenId)) {
             $this->errorMsg = __('No payment token selected');
             throw new LocalizedException(__('No payment token selected'));
         }
@@ -179,12 +179,12 @@ class Token implements HttpPostActionInterface
 
         $customer = $this->customerSession->getCustomer();
         try {
-            $responseData = $this->getTokenResponseData($order, $selectedOpTokenId, $customer);
+            $responseData = $this->getTokenResponseData($order, $selectedTokenId, $customer);
             if ($this->subscriptionCreate->getSubscriptionSchedule($order) && $responseData->getTransactionId()) {
                 $orderSchedule = $this->subscriptionCreate->getSubscriptionSchedule($order);
                 $this->subscriptionCreate->createSubscription(
                     $orderSchedule,
-                    $selectedOpTokenId,
+                    $selectedTokenId,
                     $customer->getId(),
                     $order->getId()
                 );
@@ -317,5 +317,4 @@ class Token implements HttpPostActionInterface
 
         return $returnUrl;
     }
-
 }

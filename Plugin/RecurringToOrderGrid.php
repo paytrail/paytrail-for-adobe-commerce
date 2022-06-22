@@ -27,7 +27,11 @@ class RecurringToOrderGrid
             $subject->getSelect()->joinLeft(
                 $subject->getResource()->getTable('paytrail_subscriptions'),
                 $tableName . '.subscription_id = paytrail_subscriptions.entity_id',
-                ['recurring_status' => 'paytrail_subscriptions.status']
+                [
+                    'recurring_status' => 'paytrail_subscriptions.status',
+                    'customer_id' => 'paytrail_subscriptions.customer_id',
+                    'subscription_id' => 'paytrail_subscriptions.entity_id'
+                ]
             );
 
             $subject->getSelect()->joinLeft(

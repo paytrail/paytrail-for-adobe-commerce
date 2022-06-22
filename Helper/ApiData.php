@@ -204,7 +204,7 @@ class ApiData
                 // token payment using Customer Initialized Transaction
                 $paytrailPayment = $this->citPaymentRequest;
                 $paytrailPayment = $this->requestData->setTokenPaymentRequestData($paytrailPayment, $order, $methodId, $tokenizationId);
-                $response["data"] = $paytrailPayment->createCitPaymentCharge($paytrailPayment);
+                $response["data"] = $paytrailClient->createCitPaymentCharge($paytrailPayment);
                 $loggedData = $this->json->serialize([
                     'transactionId' => $response["data"]->getTransactionId(),
                     '3ds' => $response["data"]->getThreeDSecureUrl()

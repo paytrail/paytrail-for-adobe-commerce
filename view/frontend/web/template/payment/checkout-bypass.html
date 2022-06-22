@@ -84,11 +84,11 @@
                     <div class="paytrail-stored-cards">
                         <!-- ko foreach : { data: $parent.getTokensData(methodGroup.tokens), as: 'token' } -->
                         <div class="paytrail-stored-token" data-bind="
-                        click: $parents[1].setOpToken,
+                        click: $parents[1].setToken,
                         attr: {id: token.id },
-                        css: { active: $parents[1].selectedOpToken() == token.id }">
+                        css: { active: $parents[1].selectedToken() == token.id }">
 
-                            <input class="radio" type="radio" name="optoken" data-bind="attr: {value: token.id}, checked: $parents[1].selectedOpToken()"/>
+                            <input class="radio" type="radio" name="optoken" data-bind="attr: {value: token.id}, checked: $parents[1].selectedToken()"/>
                             <div class="paytrail-stored-token-data">
 
                                 <img data-bind="attr: {'src': token.url}"/>

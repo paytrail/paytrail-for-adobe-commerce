@@ -35,7 +35,7 @@ define(
                 payMethod: 'paytrail',
                 redirectAfterPlaceOrder: false,
                 selectedPaymentMethodId: ko.observable(0),
-                selectedOpToken: ko.observable(0),
+                selectedToken: ko.observable(0),
                 tokencheck: ko.observable(true),
                 selectedMethodGroup: ko.observable(0),
 
@@ -44,7 +44,7 @@ define(
                     this._super();
 
                     if (!self.getIsSuccess()) {
-                        self.addErrorMessage($t('Paytrail Service API credentials are incorrect. Please contact support.'));
+                        self.addErrorMessage($t('Paytrail Payment Service API credentials are incorrect. Please contact support.'));
                     }
                     if (self.getPreviousError()) {
                         self.addErrorMessage(self.getPreviousError());
@@ -68,27 +68,27 @@ define(
                     return false;
                 },
                 isPlaceOrderActionAllowed: function() {
-                    if(self.selectedOpToken() != 0 || self.selectedPaymentMethodId() != 0) {
+                    if (self.selectedToken() != 0 || self.selectedPaymentMethodId() != 0) {
                         return true;
                     }
                     return false;
                 },
                 isRecurringPaymentAllowed: function () {
-                    if((window.checkoutConfig.isRecurringScheduled === true && self.selectedOpToken() != 0)
+                    if((window.checkoutConfig.isRecurringScheduled === true && self.selectedToken() != 0)
                         || window.checkoutConfig.isRecurringScheduled === false) {
                         return true;
                     }
                     return false;
                 },
                 setPaymentMethodId: function (paymentMethod) {
-                    self.selectedOpToken(0);
+                    self.selectedToken(0);
                     self.selectedPaymentMethodId(paymentMethod.id);
                     $.cookie('checkoutSelectedPaymentMethodId', paymentMethod.id);
 
                     return true;
                 },
-                setOpToken: function (token) {
-                    self.selectedOpToken(token.id);
+                setToken: function (token) {
+                    self.selectedToken(token.id);
                     self.selectedPaymentMethodId(0);
 
                     return true;
@@ -101,7 +101,7 @@ define(
                     return checkoutConfig[self.payMethod].default_success_page_url;
                 },
                 getSelectedToken: function () {
-                    return self.selectedOpToken();
+                    return self.selectedToken();
                 },
                 getInstructions: function () {
                     return checkoutConfig[self.payMethod].instructions;
@@ -199,7 +199,7 @@ define(
                         }
                     );
                 },
-                // Redirect to Checkout
+                // Redirect to Paytrail
                 placeOrder: function () {
                     if (self.isPlaceOrderActionAllowed() && additionalValidators.validate()) {
                         if(self.isRecurringPaymentAllowed()) {
@@ -219,6 +219,7 @@ define(
                 addNewCard: function () {
                     if(self.isLoggedIn()) {
                         fullScreenLoader.startLoader();
+                        /** start here */
 
                         $.ajax(
                             {
@@ -235,7 +236,7 @@ define(
                                     if (response.redirect) {
                                         window.location.href = response.redirect;
                                     }
-                                    $('#checkout-form-wrapper').append(response.data);
+                                    $('#paytrail-form-wrapper').append(response.data);
                                     return false;
                                 }
                                 fullScreenLoader.stopLoader();
@@ -246,11 +247,17 @@ define(
                                 fullScreenLoader.stopLoader();
                                 self.addErrorMessage(response.message);
                             }
+                        ).always(
+                            function () {
+                                //a self.scrollTo();
+                            }
                         );
+
+                        /** end here */
                     }
                 },
                 getPaymentUrl: function () {
-                    if(self.selectedOpToken() != 0) {
+                    if(self.selectedToken() != 0) {
                         return self.getTokenPaymentRedirectUrl();
                     }
                     return self.getBypassPaymentRedirectUrl();
@@ -260,19 +267,17 @@ define(
                         function () {
                             fullScreenLoader.startLoader();
                             $.ajax({
-                                    url: mageUrlBuilder.build(self.getPaymentUrl()),
-                                    type: 'post',
-                                    context: this,
-                                    data: {
-                                        'is_ajax': true,
-                                        'preselected_payment_method_id': self.selectedPaymentMethodId(),
-                                        'selected_optoken': self.selectedOpToken()
-                                    }
+                                url: mageUrlBuilder.build(self.getPaymentUrl()),
+                                type: 'post',
+                                context: this,
+                                data: {
+                                    'is_ajax': true,
+                                    'preselected_payment_method_id': self.selectedPaymentMethodId(),
+                                    'selected_token': self.selectedToken()
                                 }
-                            ).done(
+                            }).done(
                                 function (response) {
                                     if ($.type(response) === 'object' && response.success && response.data) {
-
                                         if(response.reference) {
                                             window.location.href = self.getDefaultSuccessUrl();
                                         }
@@ -280,7 +285,7 @@ define(
                                             window.location.href = response.redirect;
                                         }
 
-                                        $('#checkout-form-wrapper').append(response.data);
+                                        $('#paytrail-form-wrapper').append(response.data);
                                         return false;
                                     }
                                     fullScreenLoader.stopLoader();
@@ -290,6 +295,10 @@ define(
                                 function (response) {
                                     fullScreenLoader.stopLoader();
                                     self.addErrorMessage(response.message);
+                                }
+                            ).always(
+                                function () {
+                                    //a self.scrollTo();
                                 }
                             );
                         }
