@@ -169,6 +169,10 @@ class ReceiptDataProvider
      * @var \Magento\Backend\Model\UrlInterface
      */
     private $backendUrl;
+    /**
+     * @var bool
+     */
+    private $skipHmac;
 
     /**
      * ReceiptDataProvider constructor.
@@ -192,6 +196,8 @@ class ReceiptDataProvider
      * @param Config $gatewayConfig
      * @param ApiData $apiData
      * @param LoggerInterface $logger
+     * @param \Magento\Backend\Model\UrlInterface $backendUrl
+     * @param bool $skipHmac
      */
     public function __construct(
         Context $context,
@@ -214,7 +220,8 @@ class ReceiptDataProvider
         Config $gatewayConfig,
         ApiData $apiData,
         LoggerInterface $logger,
-        \Magento\Backend\Model\UrlInterface $backendUrl
+        \Magento\Backend\Model\UrlInterface $backendUrl,
+        $skipHmac = false
     ) {
         $this->cache = $cache;
         $this->context = $context;
@@ -237,6 +244,7 @@ class ReceiptDataProvider
         $this->apiData = $apiData;
         $this->logger = $logger;
         $this->backendUrl = $backendUrl;
+        $this->skipHmac = $skipHmac;
     }
 
     /**
@@ -450,7 +458,15 @@ class ReceiptDataProvider
     protected function verifyPaymentData($params)
     {
         $status = $params['checkout-status'];
-        $verifiedPayment = $this->apiData->validateHmac($params, $params['signature']);
+
+        /**
+         * When paying with payment token, such as a card saved to vault. The HMAC validation is done by the php-sdk
+         * directly during the payment post. When this happens the signature parameter is not passed into subsquent
+         * logic. Making Hmac validation here impossible. This forces the skip implementation for Token payments.
+         *
+         * @see \Paytrail\SDK\Client::createCitPayment
+         */
+        $verifiedPayment = $this->skipHmac ?: $this->apiData->validateHmac($params, $params['signature']);
 
         if ($verifiedPayment && ($status === 'ok' || $status == 'pending' || $status == 'delayed')) {
             return $status;

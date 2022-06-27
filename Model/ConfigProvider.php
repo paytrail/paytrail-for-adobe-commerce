@@ -7,9 +7,12 @@ use Magento\Checkout\Model\Session;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Framework\Locale\Resolver;
+use Magento\Framework\UrlInterface;
 use Magento\Framework\View\Asset\Repository as AssetRepository;
 use Magento\Payment\Helper\Data as PaymentHelper;
+use Magento\Payment\Model\CcConfigProvider;
 use Magento\Store\Model\StoreManagerInterface;
+use Magento\Vault\Model\CustomerTokenManagement;
 use Paytrail\PaymentService\Gateway\Config\Config;
 use Paytrail\PaymentService\Helper\ApiData as apiData;
 use Paytrail\PaymentService\Helper\Data as paytrailHelper;
@@ -22,10 +25,11 @@ use Psr\Log\LoggerInterface;
 class ConfigProvider implements ConfigProviderInterface
 {
     const CODE = 'paytrail';
-    const CREDITCARD_GROUP_ID = 'creditcard';
+    const VAULT_CODE = 'paytrail_cc_vault';
 
     protected $methodCodes = [
         self::CODE,
+        self::VAULT_CODE
     ];
     protected $paytrailHelper;
     protected $apidata;
@@ -59,6 +63,36 @@ class ConfigProvider implements ConfigProviderInterface
     private $log;
 
     /**
+     * @var CustomerTokenManagement
+     */
+    private $customerTokenManagement;
+
+    /**
+     * @var CcConfigProvider
+     */
+    private $ccConfigProvider;
+
+    /**
+     * @var array
+     */
+    private $paymenticons;
+
+    /**
+     * @var UrlInterface
+     */
+    private $urlBuilder;
+
+    /**
+     * @var PaymentHelper
+     */
+    private $paymentHelper;
+
+    /**
+     * @var \Magento\Payment\Model\MethodInterface[]
+     */
+    private $methods;
+
+    /**
      * ConfigProvider constructor
      *
      * @param paytrailHelper $paytrailHelper
@@ -71,6 +105,9 @@ class ConfigProvider implements ConfigProviderInterface
      * @param Resolver $localeResolver
      * @param Adapter $paytrailAdapter
      * @param LoggerInterface $log
+     * @param CustomerTokenManagement $customerTokenManagement
+     * @param CcConfigProvider $ccConfigProvider
+     * @param UrlInterface $urlBuilder
      * @throws LocalizedException
      */
     public function __construct(
@@ -83,7 +120,10 @@ class ConfigProvider implements ConfigProviderInterface
         StoreManagerInterface $storeManager,
         Resolver $localeResolver,
         Adapter $paytrailAdapter,
-        LoggerInterface $log
+        LoggerInterface $log,
+        CustomerTokenManagement $customerTokenManagement,
+        CcConfigProvider $ccConfigProvider,
+        UrlInterface $urlBuilder
     ) {
         $this->paytrailHelper = $paytrailHelper;
         $this->apidata = $apidata;
@@ -94,9 +134,15 @@ class ConfigProvider implements ConfigProviderInterface
         $this->localeResolver = $localeResolver;
         $this->paytrailAdapter = $paytrailAdapter;
         $this->log = $log;
+        $this->customerTokenManagement = $customerTokenManagement;
+        $this->ccConfigProvider = $ccConfigProvider;
+
         foreach ($this->methodCodes as $code) {
             $this->methods[$code] = $paymentHelper->getMethodInstance($code);
         }
+        $this->paymenticons = $this->ccConfigProvider->getIcons();
+        $this->urlBuilder = $urlBuilder;
+        $this->paymentHelper = $paymentHelper;
     }
 
     /**
@@ -114,6 +160,7 @@ class ConfigProvider implements ConfigProviderInterface
         }
         try {
             $groupData = $this->getAllPaymentMethods();
+            $scheduledMethod[] = $this->handlePaymentProviderGroupData($groupData['groups'])['creditcard'];
 
             $config = [
                 'payment' => [
@@ -122,9 +169,13 @@ class ConfigProvider implements ConfigProviderInterface
                         'skip_method_selection' => $this->gatewayConfig->getSkipBankSelection(),
                         'payment_redirect_url' => $this->getPaymentRedirectUrl(),
                         'payment_template' => $this->gatewayConfig->getPaymentTemplate(),
-                        'method_groups' => $this->handlePaymentProviderGroupData($groupData['groups']),
+                        'method_groups' => array_values($this->handlePaymentProviderGroupData($groupData['groups'])),
+                        'scheduled_method_group' => array_values($scheduledMethod),
                         'payment_terms' => $groupData['terms'],
-                        'payment_method_styles' => $this->wrapPaymentMethodStyles($storeId)
+                        'payment_method_styles' => $this->wrapPaymentMethodStyles($storeId),
+                        'addcard_redirect_url' => $this->getAddCardRedirectUrl(),
+                        'token_payment_redirect_url' => $this->getTokenPaymentRedirectUrl(),
+                        'default_success_page_url' => $this->getDefaultSuccessPageUrl()
                     ]
                 ]
             ];
@@ -140,6 +191,11 @@ class ConfigProvider implements ConfigProviderInterface
         } catch (\Exception $e) {
             $config['payment'][self::CODE]['success'] = 0;
             return $config;
+        }
+        if ($this->checkoutSession->getData('paytrail_previous_error')) {
+            $config['payment'][self::CODE]['previous_error'] = $this->checkoutSession->getData('paytrail_previous_error', 1);
+        } elseif ($this->checkoutSession->getData('paytrail_previous_success')) {
+            $config['payment'][self::CODE]['previous_success'] = $this->checkoutSession->getData('paytrail_previous_success', 1);
         }
         $config['payment'][self::CODE]['success'] = 1;
         return $config;
@@ -161,6 +217,7 @@ class ConfigProvider implements ConfigProviderInterface
         $styles .= '.paytrail-group-collapsible.active li{ color:' . $this->gatewayConfig->getPaymentGroupHighlightTextColor($storeId) . '}';
         $styles .= '.paytrail-group-collapsible:hover:not(.active) {background-color:' . $this->gatewayConfig->getPaymentGroupHoverColor() . '}';
         $styles .= '.paytrail-payment-methods .paytrail-payment-method.active{ border-color:' . $this->gatewayConfig->getPaymentMethodHighlightColor($storeId) . ';border-width:2px;}';
+        $styles .= '.paytrail-payment-methods .paytrail-stored-token.active{ border-color:' . $this->gatewayConfig->getPaymentMethodHighlightColor($storeId) . ';border-width:2px;}';
         $styles .= '.paytrail-payment-methods .paytrail-payment-method:hover, .paytrail-payment-methods .paytrail-payment-method:not(.active):hover { border-color:' . $this->gatewayConfig->getPaymentMethodHoverHighlight($storeId) . ';}';
         $styles .= $this->gatewayConfig->getAdditionalCss($storeId);
         return $styles;
@@ -172,6 +229,21 @@ class ConfigProvider implements ConfigProviderInterface
     protected function getPaymentRedirectUrl()
     {
         return 'paytrail/redirect';
+    }
+
+    protected function getAddCardRedirectUrl()
+    {
+        return 'paytrail/tokenization/addcard';
+    }
+
+    protected function getTokenPaymentRedirectUrl()
+    {
+        return 'paytrail/redirect/token';
+    }
+
+    public function getDefaultSuccessPageUrl()
+    {
+        return $this->urlBuilder->getUrl('checkout/onepage/success/');
     }
 
     /**
@@ -215,19 +287,62 @@ class ConfigProvider implements ConfigProviderInterface
         $allMethods = [];
         $allGroups = [];
         foreach ($responseData as $group) {
-            $allGroups[] = [
+            $allGroups[$group['id']] = [
                 'id' => $group['id'],
                 'name' => $group['name'],
                 'icon' => $group['icon']
             ];
+
             foreach ($group['providers'] as $provider) {
                 $allMethods[] = $provider;
             }
         }
         foreach ($allGroups as $key => $group) {
+            if ($group['id'] == 'creditcard') {
+                $allGroups[$key]["can_tokenize"] = true;
+                $allGroups[$key]["tokens"] = $this->getCustomerTokens();
+            } else {
+                $allGroups[$key]["can_tokenize"] = false;
+                $allGroups[$key]["tokens"] = false;
+            }
+
             $allGroups[$key]['providers'] = $this->addProviderDataToGroup($allMethods, $group['id']);
         }
-        return array_values($allGroups);
+        return $allGroups;
+    }
+
+    /**
+     * @param string $type
+     * @return array
+     */
+    protected function getIconUrl($type)
+    {
+        if (isset($this->paymenticons[$type])) {
+            return $this->paymenticons[$type];
+        }
+
+        return [
+            'url' => '',
+            'width' => 0,
+            'height' => 0
+        ];
+    }
+
+    protected function getCustomerTokens()
+    {
+        $tokens =  $this->customerTokenManagement->getCustomerSessionTokens();
+        $t = [];
+        foreach($tokens as $token) {
+            if($token->getPaymentMethodCode() == self::VAULT_CODE && $token->getIsActive() && $token->getIsVisible()) {
+                $cdata = json_decode($token->getTokenDetails(), true);
+                $t[$token->getEntityId()]["expires"] = $cdata['expirationDate'];
+                $t[$token->getEntityId()]["url"] = $this->getIconUrl($cdata["type"])['url'];
+                $t[$token->getEntityId()]["maskedCC"] = $cdata["maskedCC"];
+                $t[$token->getEntityId()]["type"] = $cdata["type"];
+                $t[$token->getEntityId()]["id"] = $token->getPublicHash();
+            }
+        }
+        return $t;
     }
 
     /**
@@ -239,14 +354,14 @@ class ConfigProvider implements ConfigProviderInterface
      */
     protected function addProviderDataToGroup($responseData, $groupId)
     {
+        $methods = [];
         $i = 1;
 
         foreach ($responseData as $key => $method) {
             if ($method->getGroup() == $groupId) {
-                $id = $groupId === self::CREDITCARD_GROUP_ID ? $method->getId() . '-' . $i++ : $method->getId();
                 $methods[] = [
                     'checkoutId' => $method->getId(),
-                    'id' => $id,
+                    'id' => $method->getId() . $i++,
                     'name' => $method->getName(),
                     'group' => $method->getGroup(),
                     'icon' => $method->getIcon(),

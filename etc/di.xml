@@ -1,18 +1,11 @@
 <?xml version="1.0"?>
 <config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
-  <preference for="Paytrail\PaymentService\Api\RedirectInterface" type="Paytrail\PaymentService\Model\Redirect" />
+  <type name="Magento\Sales\Block\Adminhtml\Order\View">
+    <plugin name="paytrail_restore_order_button" type="Paytrail\PaymentService\Plugin\Magento\Sales\Block\Adminhtml\Order\ViewPlugin"/>
+  </type>
+
   <type name="Magento\Tax\Model\Config">
     <plugin name="paytrail_payment_service_tax_config_plugin" type="Paytrail\PaymentService\Plugin\Model\TaxConfigPlugin" sortOrder="1" disabled="false" />
-  </type>
-  <virtualType name="SalesOrderViewWidgetContext" type="\Magento\Backend\Block\Widget\Context">
-    <arguments>
-      <argument name="buttonList" xsi:type="object">Paytrail\PaymentService\Block\Adminhtml\Order\View\ButtonList</argument>
-    </arguments>
-  </virtualType>
-  <type name="Magento\Sales\Block\Adminhtml\Order\View">
-    <arguments>
-      <argument name="context" xsi:type="object">SalesOrderViewWidgetContext</argument>
-    </arguments>
   </type>
 
   <virtualType name="PaytrailAdapter" type="Magento\Payment\Model\Method\Adapter">
@@ -61,9 +54,47 @@
       <argument name="commands" xsi:type="array">
         <item name="initialize" xsi:type="string">Paytrail\PaymentService\Gateway\Command\Initialize</item>
         <item name="refund" xsi:type="string">PaytrailRefundCommand</item>
+        <item name="vault_authorize" xsi:type="string">PaytrailPaymentServiceVaultAuthorizeCommand</item>
       </argument>
     </arguments>
   </virtualType>
+
+  <virtualType name="PaytrailPaymentServiceVaultAuthorizeCommand" type="Magento\Payment\Gateway\Command\GatewayCommand">
+    <arguments>
+      <argument name="requestBuilder" xsi:type="object">PaytrailPaymentServiceVaultAuthorizeRequest</argument>
+    </arguments>
+  </virtualType>
+
+  <virtualType name="PaytrailPaymentServiceVaultAuthorizeRequest" type="Magento\Payment\Gateway\Request\BuilderComposite">
+    <arguments>
+      <argument name="builders" xsi:type="array">
+        <item name="refund" xsi:type="string">Paytrail\PaymentService\Gateway\Request\VaultRequestBuilder</item>
+      </argument>
+    </arguments>
+  </virtualType>
+
+  <virtualType name="PaytrailVaultFacade" type="Magento\Vault\Model\Method\Vault">
+    <arguments>
+      <argument name="config" xsi:type="object">PaytrailVaultPaymentConfig</argument>
+      <argument name="valueHandlerPool" xsi:type="object">PaytrailValueHandlerPool</argument>
+      <argument name="vaultProvider" xsi:type="object">PaytrailAdapter</argument>
+      <argument name="code" xsi:type="const">Paytrail\PaymentService\Gateway\Config\Config::CC_VAULT_CODE</argument>
+    </arguments>
+  </virtualType>
+
+  <virtualType name="PaytrailVaultPaymentConfig" type="Magento\Payment\Gateway\Config\Config">
+    <arguments>
+      <argument name="methodCode" xsi:type="const">Paytrail\PaymentService\Gateway\Config\Config::CC_VAULT_CODE</argument>
+    </arguments>
+  </virtualType>
+
+  <type name="Magento\Vault\Model\Ui\TokensConfigProvider">
+    <arguments>
+      <argument name="tokenUiComponentProviders" xsi:type="array">
+        <item name="paytrail" xsi:type="object">Paytrail\PaymentService\Model\Ui\TokenUiComponentProvider</item>
+      </argument>
+    </arguments>
+  </type>
 
   <virtualType name="PaytrailRefundCommand" type="Magento\Payment\Gateway\Command\GatewayCommand">
     <arguments>
@@ -115,6 +146,55 @@
   <type name="Paytrail\PaymentService\Logger\Response\Response">
     <arguments>
       <argument name="filesystem" xsi:type="object">Magento\Framework\Filesystem\Driver\File</argument>
+    </arguments>
+  </type>
+  <!-- Subscription -->
+  <!-- Commands -->
+  <type name="Magento\Framework\Console\CommandListInterface">
+    <arguments>
+      <argument name="commands" xsi:type="array">
+        <item name="recurring_payment_bill" xsi:type="object">Paytrail\PaymentService\Console\Command\Bill</item>
+        <item name="recurring_payment_notify" xsi:type="object">Paytrail\PaymentService\Console\Command\Notify</item>
+      </argument>
+    </arguments>
+  </type>
+
+  <!-- Preferences -->
+  <preference for="Paytrail\PaymentService\Api\SubscriptionRepositoryInterface"
+              type="Paytrail\PaymentService\Model\SubscriptionRepository"/>
+  <preference for="Paytrail\PaymentService\Api\Data\SubscriptionInterface"
+              type="Paytrail\PaymentService\Model\Subscription"/>
+  <preference for="Paytrail\PaymentService\Api\Data\SubscriptionSearchResultInterface"
+              type="Paytrail\PaymentService\Model\ResourceModel\Subscription\Collection"/>
+  <preference for="Paytrail\PaymentService\Api\RecurringProfileRepositoryInterface"
+              type="Paytrail\PaymentService\Model\Subscription\ProfileRepository"/>
+  <preference for="Paytrail\PaymentService\Api\Data\RecurringProfileInterface"
+              type="Paytrail\PaymentService\Model\Subscription\Profile"/>
+  <preference for="Paytrail\PaymentService\Api\Data\RecurringProfileSearchResultInterface"
+              type="Paytrail\PaymentService\Model\ResourceModel\Subscription\Profile\Collection"/>
+  <preference for="Paytrail\PaymentService\Api\SubscriptionLinkRepositoryInterface"
+              type="Paytrail\PaymentService\Model\Subscription\SubscriptionLinkRepository"/>
+  <preference for="Paytrail\PaymentService\Api\Data\SubscriptionLinkInterface"
+              type="Paytrail\PaymentService\Model\Subscription\SubscriptionLink"/>
+  <preference for="Paytrail\PaymentService\Api\Data\SubscriptionLinkSearchResultInterface"
+              type="Paytrail\PaymentService\Model\ResourceModel\Subscription\SubscriptionLink\Collection"/>
+
+  <!-- Plugins -->
+  <type name="Magento\Checkout\Model\Cart">
+    <plugin name="prevent_different_scheduled_cart" type="Paytrail\PaymentService\Plugin\PreventDifferentScheduledCart"/>
+  </type>
+
+  <!-- arguments -->
+  <type name="\Paytrail\PaymentService\Model\Subscription\OrderCloner">
+    <arguments>
+      <argument name="quoteSession" xsi:type="object">Magento\Backend\Model\Session\Quote\Proxy</argument>
+    </arguments>
+  </type>
+
+  <type name="\Paytrail\PaymentService\Console\Command\Notify">
+    <arguments>
+      <argument name="notify" xsi:type="object">\Paytrail\PaymentService\Model\Recurring\Notify\Proxy</argument>
+      <argument name="state" xsi:type="object">\Magento\Framework\App\State\Proxy</argument>
     </arguments>
   </type>
 </config>

@@ -17,8 +17,9 @@
   ],
   "require": {
     "php": "^7.3|^8.0",
-    "paytrail/paytrail-php-sdk": "2.0.*",
-    "ext-curl": "*"
+    "paytrail/paytrail-php-sdk": ">=2.0",
+    "ext-curl": "*",
+    "nesbot/carbon": "^2.57.0"
   },
   "conflict": {
     "markup/module-paytrail": "*"

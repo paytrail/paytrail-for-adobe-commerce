@@ -117,6 +117,43 @@
   display:none;
 }
 
+
+.paytrail-stored-token {
+    height: 50px;
+    border: 1px solid #E6E7E8;
+    margin-bottom: 5px;
+
+}
+
+.paytrail-stored-token input[type="radio"] {
+    display:none;
+}
+
+.paytrail-stored-token .paytrail-stored-token-data {
+    height: 50px;
+    display: inline-block;
+    vertical-align: middle;
+    padding-left: 20px;
+}
+
+.paytrail-stored-token .paytrail-stored-token-data span {
+    display: inline-block;
+    line-height: 30px;
+    height: 30px;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    vertical-align: middle;
+}
+
+.paytrail-stored-token .paytrail-stored-token-data img {
+    vertical-align: middle;
+    display: inline-block;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    height: 30px;
+}
+
+
 .paytrail-payment-methods .paytrail-payment-method:nth-child(5n+0) {
   margin-right: 0;
 }
@@ -134,6 +171,15 @@
 .paytrail-payment-methods .paytrail-payment-method-logo img {
   width: auto;
   height: 90%;
+}
+
+.recurring-amount {
+  position: relative;
+  top: 20px;
+}
+
+.recurring-price {
+  margin-bottom: 0;
 }
 
 @media only screen and (max-width : 1023px) {
