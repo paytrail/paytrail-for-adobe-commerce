@@ -5,10 +5,6 @@ namespace Paytrail\PaymentService\Model\Subscription;
 use Magento\Framework\Exception\CouldNotSaveException;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Sales\Api\OrderRepositoryInterface;
-use Magento\Sales\Model\Order;
-use Magento\Sales\Model\Order\Email\Sender\OrderSender;
-use Magento\Sales\Model\OrderRepository;
-use Paytrail\PaymentService\Api\SubscriptionLinkRepositoryInterface;
 use Paytrail\PaymentService\Api\SubscriptionRepositoryInterface;
 use Paytrail\PaymentService\Helper\Data;
 use Paytrail\PaymentService\Model\ResourceModel\Subscription as SubscriptionResource;
@@ -57,21 +53,6 @@ class OrderBiller
     private $subscriptionResource;
 
     /**
-     * @var SubscriptionLinkRepositoryInterface
-     */
-    private $subscriptionLinkRepository;
-
-    /**
-     * @var OrderSender
-     */
-    private $orderSender;
-
-    /**
-     * @var Order
-     */
-    private $orderRepository;
-
-    /**
      * @param PaymentCount $paymentCount
      * @param Payment $mitPayment
      * @param CollectionFactory $collectionFactory
@@ -79,9 +60,6 @@ class OrderBiller
      * @param SubscriptionRepositoryInterface $subscriptionRepository
      * @param SubscriptionResource $subscriptionResource
      * @param LoggerInterface $logger
-     * @param SubscriptionLinkRepositoryInterface $subscriptionLinkRepository
-     * @param OrderSender $orderSender
-     * @param OrderRepository $orderRepository
      */
     public function __construct(
         PaymentCount                    $paymentCount,
@@ -90,10 +68,7 @@ class OrderBiller
         NextDateCalculator              $nextDateCalculator,
         SubscriptionRepositoryInterface $subscriptionRepository,
         SubscriptionResource            $subscriptionResource,
-        LoggerInterface                 $logger,
-        SubscriptionLinkRepositoryInterface $subscriptionLinkRepository,
-        OrderSender $orderSender,
-        OrderRepository $orderRepository
+        LoggerInterface                 $logger
     ) {
         $this->paymentCount = $paymentCount;
         $this->mitPayment = $mitPayment;
@@ -102,9 +77,6 @@ class OrderBiller
         $this->subscriptionRepository = $subscriptionRepository;
         $this->subscriptionResource = $subscriptionResource;
         $this->logger = $logger;
-        $this->subscriptionLinkRepository = $subscriptionLinkRepository;
-        $this->orderSender = $orderSender;
-        $this->orderRepository = $orderRepository;
     }
 
     /**
@@ -127,21 +99,8 @@ class OrderBiller
                 $this->paymentCount->reduceFailureRetryCount($subscription);
                 continue;
             }
-            $this->sendOrderConfirmationEmail($subscription->getId());
             $this->updateNextOrderDate($subscription);
         }
-    }
-
-    /**
-     * @param $subscriptionId
-     * @return void
-     * @throws \Magento\Framework\Exception\InputException
-     * @throws \Magento\Framework\Exception\NoSuchEntityException
-     */
-    private function sendOrderConfirmationEmail($subscriptionId)
-    {
-        $orderIds = $this->subscriptionLinkRepository->getOrderIdsBySubscriptionId($subscriptionId);
-        $this->orderSender->send($this->orderRepository->get(array_last($orderIds)));
     }
 
     /**
