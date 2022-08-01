@@ -37,6 +37,12 @@ class RecurringPayment extends \Magento\Ui\DataProvider\AbstractDataProvider
     {
         if (!$this->collection) {
             $this->collection = $this->collectionFactory->create();
+            $this->collection->getSelect()
+                ->join(
+                    ['cu' => 'customer_entity'],
+                    'main_table.customer_id = cu.entity_id',
+                    ['cu.email']
+                );
         }
 
         return $this->collection;
