@@ -11,6 +11,7 @@ use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Registry;
 use Magento\Sales\Api\OrderManagementInterface;
 use Magento\Sales\Api\OrderRepositoryInterface;
+use Magento\Sales\Model\Order;
 use Paytrail\PaymentService\Api\SubscriptionRepositoryInterface;
 use Paytrail\PaymentService\Api\SubscriptionLinkRepositoryInterface;
 use Psr\Log\LoggerInterface;
@@ -18,7 +19,7 @@ use Psr\Log\LoggerInterface;
 class Stop extends Action\Action implements Action\HttpGetActionInterface
 {
     protected const STATUS_CLOSED = 'closed';
-    protected const ORDER_STATUS = 'pending_payment';
+    protected const ORDER_PENDING_STATUS = 'pending';
 
     /**
      * @var Registry
@@ -100,7 +101,8 @@ class Stop extends Action\Action implements Action\HttpGetActionInterface
                     throw new LocalizedException(__('Customer is not authorized for this operation'));
                 }
                 $subscription->setStatus(self::STATUS_CLOSED);
-                if ($order->getStatus() === self::ORDER_STATUS) {
+                if ($order->getStatus() === Order::STATE_PENDING_PAYMENT
+                    || $order->getStatus() === self::ORDER_PENDING_STATUS) {
                     $this->orderManagementInterface->cancel($order->getId());
                 }
             }
