@@ -171,6 +171,7 @@ class OrderCloner
         $quote->getPayment()->setMethod(
             $this->getQuotePaymentMethod($oldOrder)
         );
+        $quote->collectTotals();
 
         return $quote;
     }
