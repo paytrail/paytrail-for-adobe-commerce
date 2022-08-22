@@ -42,14 +42,6 @@ class OrderCloner
      */
     private $joinProcessor;
     /**
-     * @var PaymentTokenManagement
-     */
-    private $paymentTokenManagement;
-    /**
-     * @var SerializerInterface
-     */
-    private $serializer;
-    /**
      * @var \Magento\Quote\Api\CartRepositoryInterface
      */
     private $cartRepositoryInterface;
@@ -57,13 +49,10 @@ class OrderCloner
     /**
      * @param CollectionFactory $orderCollection
      * @param UnavailableProductsProvider $unavailableProducts
-     * @param Create $orderCreate
      * @param Quote $quoteSession
      * @param JoinProcessorInterface $joinProcessor
      * @param QuoteManagement $quoteManagement
      * @param LoggerInterface $logger
-     * @param PaymentTokenManagement $paymentTokenManagement
-     * @param SerializerInterface $serializer
      * @param CartRepositoryInterface $cartRepositoryInterface
      */
     public function __construct(
@@ -73,8 +62,6 @@ class OrderCloner
         JoinProcessorInterface $joinProcessor,
         QuoteManagement $quoteManagement,
         LoggerInterface $logger,
-        PaymentTokenManagement $paymentTokenManagement,
-        SerializerInterface  $serializer,
         CartRepositoryInterface $cartRepositoryInterface
     ) {
         $this->orderCollection = $orderCollection;
@@ -83,8 +70,6 @@ class OrderCloner
         $this->joinProcessor = $joinProcessor;
         $this->quoteManagement = $quoteManagement;
         $this->logger = $logger;
-        $this->paymentTokenManagement = $paymentTokenManagement;
-        $this->serializer = $serializer;
         $this->cartRepositoryInterface = $cartRepositoryInterface;
     }
 
@@ -168,25 +153,7 @@ class OrderCloner
     {
         $quote = $this->cartRepositoryInterface->get($oldOrder->getQuoteId());
         $quote->setData('recurring_payment_flag', true);
-        $quote->getPayment()->setMethod(
-            $this->getQuotePaymentMethod($oldOrder)
-        );
 
         return $quote;
-    }
-
-    /**
-     * @param $oldOrder
-     * @return string
-     */
-    private function getQuotePaymentMethod($oldOrder): string
-    {
-        $payment = $this->paymentTokenManagement->getByPaymentId($oldOrder->getId());
-        if ($payment) {
-            $token = $this->serializer->unserialize($payment->getTokenDetails());
-            return 'Card: **** **** **** ' . $token['maskedCC'];
-        }
-
-        return $oldOrder->getPayment()->getMethod();
     }
 }
