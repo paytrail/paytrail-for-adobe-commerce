@@ -168,7 +168,6 @@ class OrderCloner
     {
         $quote = $this->cartRepositoryInterface->get($oldOrder->getQuoteId());
         $quote->setData('recurring_payment_flag', true);
-        //$quote->collectTotals();
 
         return $quote;
     }
