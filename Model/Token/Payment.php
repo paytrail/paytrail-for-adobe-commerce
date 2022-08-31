@@ -6,9 +6,13 @@ namespace Paytrail\PaymentService\Model\Token;
 use Magento\Customer\Api\CustomerRepositoryInterface;
 use Magento\Framework\DB\Transaction;
 use Magento\Framework\Exception\LocalizedException;
+use Magento\Sales\Api\Data\OrderStatusHistoryInterfaceFactory;
+use Magento\Sales\Api\OrderManagementInterface;
 use Magento\Sales\Api\OrderRepositoryInterface;
+use Magento\Sales\Api\OrderStatusHistoryRepositoryInterface;
 use Magento\Sales\Model\Order;
 use Magento\Sales\Model\Order\Payment\Transaction\BuilderInterface;
+use Magento\Sales\Model\Order\Status\HistoryFactory;
 use Magento\Sales\Model\Service\InvoiceService;
 use Paytrail\PaymentService\Helper\Data;
 use Paytrail\PaymentService\Model\Adapter\Adapter;
@@ -62,6 +66,18 @@ class Payment
     private $transactionBuilder;
 
     /**
+     * @var OrderManagementInterface
+     */
+    private $orderManagement;
+
+    /**
+     * @var OrderStatusHistoryInterfaceFactory
+     */
+    private $orderStatusHistoryFactory;
+
+    private $orderStatusHistoryRepository;
+
+    /**
      * @param OrderRepositoryInterface $orderRepository
      * @param Adapter $adapter
      * @param Data $helper
@@ -81,7 +97,10 @@ class Payment
         InvoiceService $invoiceService,
         Transaction $transaction,
         Order $currentOrder,
-        BuilderInterface $transactionBuilder
+        BuilderInterface $transactionBuilder,
+        OrderManagementInterface $orderManagement,
+        OrderStatusHistoryInterfaceFactory $orderStatusHistoryFactory,
+        OrderStatusHistoryRepositoryInterface $orderStatusHistoryRepository
     ) {
         $this->orderRepository = $orderRepository;
         $this->adapter = $adapter;
@@ -92,6 +111,9 @@ class Payment
         $this->transaction = $transaction;
         $this->currentOrder = $currentOrder;
         $this->transactionBuilder = $transactionBuilder;
+        $this->orderManagement = $orderManagement;
+        $this->orderStatusHistoryFactory = $orderStatusHistoryFactory;
+        $this->orderStatusHistoryRepository = $orderStatusHistoryRepository;
     }
 
     /**
@@ -226,11 +248,22 @@ class Payment
         \Magento\Sales\Api\Data\OrderInterface $order,
         \Paytrail\SDK\Response\MitPaymentResponse $mitResponse
     ): void {
-        $order->setState(\Magento\Sales\Model\Order::STATE_PROCESSING);
-        $order->setStatus(\Magento\Sales\Model\Order::STATE_PROCESSING);
-        $order->addCommentToStatusHistory(__('Payment has been completed'));
-        $order->addCommentToStatusHistory(__('Transaction ID: ') . $mitResponse->getTransactionId());
 
+        $commentsArray = [
+            'pending_payment' => __('Transaction ID: ') . $mitResponse->getTransactionId(),
+            'processing' => __('Payment has been completed')
+        ];
+
+        foreach ($commentsArray as $status => $comment) {
+            $historyComment = $this->orderStatusHistoryFactory->create();
+            $historyComment
+                ->setStatus($status)
+                ->setComment($comment);
+            $this->orderManagement->addComment($order->getEntityId(),$historyComment);
+            $this->orderStatusHistoryRepository->save($historyComment);
+        }
+
+        $order->setState(\Magento\Sales\Model\Order::STATE_PROCESSING);
         $this->orderRepository->save($order);
     }
 }
