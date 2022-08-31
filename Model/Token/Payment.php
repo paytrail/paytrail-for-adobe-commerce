@@ -74,6 +74,9 @@ class Payment
      */
     private $orderStatusHistoryFactory;
 
+    /**
+     * @var OrderStatusHistoryRepositoryInterface
+     */
     private $orderStatusHistoryRepository;
 
     /**
@@ -86,6 +89,9 @@ class Payment
      * @param Transaction $transaction
      * @param Order $currentOrder
      * @param BuilderInterface $transactionBuilder
+     * @param OrderManagementInterface $orderManagement
+     * @param OrderStatusHistoryInterfaceFactory $orderStatusHistoryFactory
+     * @param OrderStatusHistoryRepositoryInterface $orderStatusHistoryRepository
      */
     public function __construct(
         OrderRepositoryInterface $orderRepository,
