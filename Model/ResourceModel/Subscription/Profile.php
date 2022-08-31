@@ -3,7 +3,7 @@
 namespace Paytrail\PaymentService\Model\ResourceModel\Subscription;
 
 use Magento\Framework\Exception\CouldNotDeleteException;
-use Magento\Framework\Model\ResourceModel\Db\VersionControl\AbstractDb;
+use Magento\Framework\Model\ResourceModel\Db\AbstractDb;
 
 class Profile extends AbstractDb
 {
