@@ -7,7 +7,7 @@
 <?php if ($recurringPayments && count($recurringPayments)) : ?>
     <div class="table-wrapper orders-history">
         <table class="data table table-order-items history" id="my-subscriptions-table">
-            <caption class="table-caption"><?= $block->escapeHtml(__('Payments')) ?></caption>
+            <caption class="table-caption"><?= $block->escapeHtml(__('Subscriptions')) ?></caption>
             <thead>
             <tr>
                 <th scope="col" class="col id"><?= $block->escapeHtml(__('Next order date')) ?></th>
@@ -29,7 +29,7 @@
                             <span><?= $block->escapeHtml(__('View Order')) ?></span>
                         </a>
                         <a href="<?= $block->escapeHtml($block->getStopPaymentUrl($recurringPayment)) ?>" class="action order stop-payment-confirmation">
-                            <span ><?= $block->escapeHtml(__('Stop payment')) ?></span>
+                            <span ><?= $block->escapeHtml(__('Stop subscription')) ?></span>
                         </a>
                     </td>
                 </tr>

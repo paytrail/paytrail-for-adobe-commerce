@@ -283,4 +283,13 @@ class Config extends \Magento\Payment\Gateway\Config\Config
     {
         return self::SAVE_CARD_URL;
     }
+
+    /**
+     * @param int|null $storeId
+     * @return int
+     */
+    public function getCancelOrderOnFailedPayment($storeId = null)
+    {
+        return $this->getValue(self::KEY_CANCEL_ORDER_ON_FAILED_PAYMENT, $storeId);
+    }
 }
