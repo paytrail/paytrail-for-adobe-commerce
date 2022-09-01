@@ -5,14 +5,10 @@ namespace Paytrail\PaymentService\Model\Subscription;
 use Magento\Backend\Model\Session\Quote;
 use Magento\Framework\Api\ExtensionAttribute\JoinProcessorInterface;
 use Magento\Framework\Exception\LocalizedException;
-use Magento\Framework\Serialize\SerializerInterface;
 use Magento\Quote\Model\QuoteManagement;
-use Magento\Sales\Model\AdminOrder\Create;
 use Magento\Sales\Model\Order\Reorder\UnavailableProductsProvider;
 use Magento\Sales\Model\ResourceModel\Order\CollectionFactory;
-use Magento\Vault\Model\PaymentTokenManagement;
 use Psr\Log\LoggerInterface;
-use Paytrail\PaymentService\Api\Data\SubscriptionInterface;
 use Magento\Quote\Api\CartRepositoryInterface;
 
 class OrderCloner
@@ -123,7 +119,26 @@ class OrderCloner
 
         $quote = $this->getQuote($oldOrder);
 
+        $this->removeNonScheduledProducts($quote);
+
         return $this->quoteManagement->submit($quote);
+    }
+
+    /**
+     * @param $quote
+     * @return void
+     */
+    private function removeNonScheduledProducts($quote): void
+    {
+        foreach ($quote->getAllVisibleItems() as $quoteItem) {
+            if(!$quoteItem->getProduct()->getRecurringPaymentSchedule()) {
+                $quote->deleteItem($quoteItem);
+                $quote->setTotalsCollectedFlag(false);
+            }
+        }
+
+        $quote->save();
+        $quote->collectTotals();
     }
 
     /**
@@ -153,7 +168,6 @@ class OrderCloner
     {
         $quote = $this->cartRepositoryInterface->get($oldOrder->getQuoteId());
         $quote->setData('recurring_payment_flag', true);
-        $quote->collectTotals();
 
         return $quote;
     }
