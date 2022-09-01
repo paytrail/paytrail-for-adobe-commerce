@@ -6,6 +6,7 @@ use Magento\Checkout\Model\Session;
 use Magento\Framework\App\Action\Context;
 use Magento\Quote\Model\QuoteRepository;
 use Magento\Sales\Api\Data\OrderInterface;
+use Magento\Sales\Model\OrderFactory;
 use Paytrail\PaymentService\Gateway\Config\Config;
 use Paytrail\PaymentService\Gateway\Validator\ResponseValidator;
 use Paytrail\PaymentService\Helper\Data;
@@ -56,6 +57,11 @@ class Index extends \Magento\Framework\App\Action\Action
     private $paytrailHelper;
 
     /**
+     * @var OrderFactory
+     */
+    private $orderFactory;
+
+    /**
      * Index constructor.
      * @param Context $context
      * @param Session $session
@@ -66,6 +72,7 @@ class Index extends \Magento\Framework\App\Action\Action
      * @param ProcessPayment $processPayment
      * @param Config $gatewayConfig
      * @param Data $paytrailHelper
+     * @param OrderFactory $orderFactory
      */
     public function __construct(
         Context $context,
@@ -76,7 +83,8 @@ class Index extends \Magento\Framework\App\Action\Action
         OrderInterface $orderInterface,
         ProcessPayment $processPayment,
         Config $gatewayConfig,
-        Data $paytrailHelper
+        Data $paytrailHelper,
+        OrderFactory $orderFactory
     ) {
         parent::__construct($context);
         $this->session = $session;
@@ -87,6 +95,7 @@ class Index extends \Magento\Framework\App\Action\Action
         $this->processPayment = $processPayment;
         $this->gatewayConfig = $gatewayConfig;
         $this->paytrailHelper = $paytrailHelper;
+        $this->orderFactory = $orderFactory;
     }
 
     /**
@@ -110,7 +119,7 @@ class Index extends \Magento\Framework\App\Action\Action
             : $reference;
 
         /** @var \Magento\Sales\Model\Order $order */
-        $order = $this->orderInterface->loadByIncrementId($orderNo);
+        $order = $this->orderFactory->create()->loadByIncrementId($orderNo);
 
         sleep(2); //giving callback time to get processed
 
@@ -126,7 +135,7 @@ class Index extends \Magento\Framework\App\Action\Action
         }
 
         if ($status == 'pending_payment') { // status could be changed by callback, if not, it needs to be forced
-            $order = $this->orderInterface->loadByIncrementId($orderNo); // refreshing order
+            $order = $this->orderFactory->create()->loadByIncrementId($orderNo); // refreshing order
             $status = $order->getStatus(); // getting current status
         }
 
