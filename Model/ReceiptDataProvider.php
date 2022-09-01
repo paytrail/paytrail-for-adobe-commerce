@@ -1,6 +1,7 @@
 <?php
 namespace Paytrail\PaymentService\Model;
 
+use Magento\Backend\Model\UrlInterface;
 use Magento\Checkout\Model\Session;
 use Magento\Framework\App\Action\Context;
 use Magento\Framework\App\CacheInterface;
@@ -18,6 +19,7 @@ use Magento\Sales\Model\Order\Email\Sender\OrderSender;
 use Magento\Sales\Model\Order\Payment\Transaction;
 use Magento\Sales\Model\Order\Payment\Transaction\Builder as transactionBuilder;
 use Magento\Sales\Model\Order\Payment\Transaction\BuilderInterface as transactionBuilderInterface;
+use Magento\Sales\Model\OrderFactory;
 use Magento\Sales\Model\Service\InvoiceService;
 use Paytrail\PaymentService\Exceptions\CheckoutException;
 use Paytrail\PaymentService\Gateway\Config\Config;
@@ -166,9 +168,14 @@ class ReceiptDataProvider
      */
     protected $logger;
     /**
-     * @var \Magento\Backend\Model\UrlInterface
+     * @var UrlInterface
      */
     private $backendUrl;
+
+    /**
+     * @var OrderFactory
+     */
+    private $orderFactory;
 
     /**
      * ReceiptDataProvider constructor.
@@ -192,6 +199,8 @@ class ReceiptDataProvider
      * @param Config $gatewayConfig
      * @param ApiData $apiData
      * @param LoggerInterface $logger
+     * @param UrlInterface $backendUrl
+     * @param OrderFactory $orderFactory
      */
     public function __construct(
         Context $context,
@@ -214,7 +223,8 @@ class ReceiptDataProvider
         Config $gatewayConfig,
         ApiData $apiData,
         LoggerInterface $logger,
-        \Magento\Backend\Model\UrlInterface $backendUrl
+        UrlInterface $backendUrl,
+        OrderFactory $orderFactory
     ) {
         $this->cache = $cache;
         $this->context = $context;
@@ -237,6 +247,7 @@ class ReceiptDataProvider
         $this->apiData = $apiData;
         $this->logger = $logger;
         $this->backendUrl = $backendUrl;
+        $this->orderFactory = $orderFactory;
     }
 
     /**
@@ -434,7 +445,7 @@ class ReceiptDataProvider
      */
     protected function loadOrder()
     {
-        $order = $this->orderInterface->loadByIncrementId($this->orderIncrementalId);
+        $order = $this->orderFactory->create()->loadByIncrementId($this->orderIncrementalId);
         if (!$order->getId()) {
             $this->paytrailHelper->processError('Order not found');
         }
