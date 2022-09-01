@@ -148,8 +148,7 @@ class Index extends \Magento\Framework\App\Action\Action
                 }
 
                 /** @var Order $order */
-                $order = $this->orderFactory->create();
-                $order = $order->loadByIncrementId(
+                $order = $this->orderFactory->create()->loadByIncrementId(
                     $this->checkoutSession->getLastRealOrderId()
                 );
 
