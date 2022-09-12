@@ -14,6 +14,7 @@
                 <th scope="col" class="col date"><?= $block->escapeHtml(__('Status')) ?></th>
                 <th scope="col" class="col total"><?= $block->escapeHtml(__('Recurring payment profile')) ?></th>
                 <th scope="col" class="col actions"><?= $block->escapeHtml(__('Grand total')) ?></th>
+                <th scope="col" class="col actions"><?= $block->escapeHtml(__('Card number')) ?></th>
                 <th scope="col" class="col actions"><?= $block->escapeHtml(__('Action')) ?></th>
             </tr>
             </thead>
@@ -24,6 +25,7 @@
                     <td data-th="<?= $block->escapeHtml(__('Status')) ?>" class="col date"><?= /* @noEscape */ $block->escapeHtml($block->getRecurringPaymentStatusName($recurringPayment->getStatus())) ?></td>
                     <td data-th="<?= $block->escapeHtml(__('Recurring Payment Profile')) ?>" class="col total"><?= /* @noEscape */ $block->escapeHtml($recurringPayment->getName()) ?></td>
                     <td data-th="<?= $block->escapeHtml(__('Grand total')) ?>" class="col status"><?= $block->escapeHtml($block->getCurrentCurrency()).$block->escapeHtml($recurringPayment->getBaseGrandTotal()) ?></td>
+                    <td data-th="<?= $block->escapeHtml(__('Card number')) ?>" class="col status"><?= $block->escapeHtml($block->getCardNumber($recurringPayment)) ?></td>
                     <td data-th="<?= $block->escapeHtml(__('Actions')) ?>" class="col actions">
                         <a href="<?= $block->escapeUrl($block->getViewUrl($recurringPayment)) ?>" class="action view">
                             <span><?= $block->escapeHtml(__('View Order')) ?></span>
