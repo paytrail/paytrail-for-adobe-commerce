@@ -27,12 +27,29 @@
                     <td data-th="<?= $block->escapeHtml(__('Grand total')) ?>" class="col status"><?= $block->escapeHtml($block->getCurrentCurrency()).$block->escapeHtml($recurringPayment->getBaseGrandTotal()) ?></td>
                     <td data-th="<?= $block->escapeHtml(__('Card number')) ?>" class="col status"><?= $block->escapeHtml($block->getCardNumber($recurringPayment)) ?></td>
                     <td data-th="<?= $block->escapeHtml(__('Actions')) ?>" class="col actions">
-                        <a href="<?= $block->escapeUrl($block->getViewUrl($recurringPayment)) ?>" class="action view">
-                            <span><?= $block->escapeHtml(__('View Order')) ?></span>
-                        </a>
-                        <a href="<?= $block->escapeHtml($block->getStopPaymentUrl($recurringPayment)) ?>" class="action order stop-payment-confirmation">
-                            <span ><?= $block->escapeHtml(__('Stop subscription')) ?></span>
-                        </a>
+                        <div class="customer-welcome">
+                            <button
+                                    data-mage-init='{"dropdown":{}}'
+                                    data-toggle="dropdown"
+                                    data-action="customer-menu-toggle">
+                                <span><?= $block->escapeHtml(__('Action')) ?></span>
+                            </button>
+                            <ul data-target="dropdown" class="dropdown-options">
+                                <li>
+                                    <a href="<?= $block->escapeUrl($block->getViewUrl($recurringPayment)) ?>" class="action view">
+                                        <span><?= $block->escapeHtml(__('View Order')) ?></span>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="<?= $block->escapeHtml($block->getStopPaymentUrl($recurringPayment)) ?>" class="action order stop-payment-confirmation">
+                                        <span><?= $block->escapeHtml(__('Stop subscription')) ?></span>
+                                    </a>
+                                </li>
+                                <li>
+                                    <span><?= $block->escapeHtml(__('Change card')) ?></span>
+                                </li>
+                            </ul>
+                        </div>
                     </td>
                 </tr>
             <?php endforeach; ?>
