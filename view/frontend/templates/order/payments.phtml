@@ -46,7 +46,9 @@
                                     </a>
                                 </li>
                                 <li>
-                                    <span><?= $block->escapeHtml(__('Change card')) ?></span>
+                                    <a class="action show-payment-methods">
+                                        <?= $block->escapeHtml(__('Change card')) ?>
+                                    </a>
                                 </li>
                             </ul>
                         </div>
@@ -95,12 +97,95 @@
     </div>
 <?php endif; ?>
 
+<div id="payment-methods-modal">
+    <?= $block->getChildHtml('vault.cards.list') ?>
+
+    <button id="add-new-payment-card">
+        <span><?= $block->escapeHtml(__('Add Card')) ?></span>
+    </button>
+</div>
+
 <script type = 'text/javascript'>
     require([
             'jquery',
-            'Magento_Ui/js/modal/confirm'
+            'Magento_Ui/js/modal/confirm',
+            'Magento_Ui/js/modal/modal',
+            'mage/url',
+            'Magento_Ui/js/model/messageList'
         ],
-        function ($, confirmation) {
+        function ($, confirmation, modal, mageUrlBuilder, messageList) {
+            const messages = {
+                error: (msg) => {
+                    messageList.addErrorMessage(
+                        {
+                            message: msg
+                        }
+                    );
+                    self.scrollTo();
+                },
+                success: (msg) => {
+                    messageList.addSuccessMessage(
+                        {
+                            message: msg
+                        }
+                    );
+                    self.scrollTo();
+                },
+            }
+
+            $('#add-new-payment-card').click(() => {
+                let addCardRedirectUrl = '<?= /* @noEscape */ $block->getAddCardRedirectUrl() ?>';
+
+                if (!addCardRedirectUrl) {
+                    return;
+                }
+
+                $.ajax(
+                    {
+                        url: mageUrlBuilder.build(addCardRedirectUrl),
+                        type: 'post',
+                        context: this,
+                        data: {
+                            'is_ajax': true
+                        }
+                    }
+                ).done(
+                    function (response) {
+                        if ($.type(response) === 'object' && response.success && response.data && response.redirect) {
+                            window.location.href = response.redirect;
+                        } else {
+                            messages.error(response.message);
+                        }
+
+                    }
+                ).fail(
+                    function (response) {
+                        messages.error(response.message);
+                    }
+                )
+            });
+
+            $('.show-payment-methods').click((event) => {
+                event.preventDefault();
+                let modalContainer = $('#payment-methods-modal');
+                let options = {
+                    type: 'popup',
+                    responsive: true,
+                    innerScroll: true,
+                    title: 'Change card',
+                    buttons: [{
+                        text: $.mage.__('Close'),
+                        class: '',
+                        click: function () {
+                            this.closeModal();
+                        }
+                    }]
+                };
+
+                let popup = modal(options, modalContainer);
+                modalContainer.modal('openModal');
+            })
+
             $('.stop-payment-confirmation').click(function (event) {
                 event.preventDefault();
 

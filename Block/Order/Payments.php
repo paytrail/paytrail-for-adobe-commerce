@@ -10,6 +10,7 @@ use Magento\Framework\View\Element\Template\Context;
 use Magento\Store\Model\StoreManagerInterface;
 use Magento\Vault\Model\PaymentTokenRepository;
 use Paytrail\PaymentService\Api\Data\SubscriptionInterface;
+use Paytrail\PaymentService\Model\ConfigProvider;
 use Paytrail\PaymentService\Model\SubscriptionRepository;
 use Paytrail\PaymentService\Model\ResourceModel\Subscription\Collection as SubscriptionCollection;
 use Paytrail\PaymentService\Model\ResourceModel\Subscription\CollectionFactory;
@@ -47,6 +48,11 @@ class Payments extends Template
     private $serializer;
 
     /**
+     * @var ConfigProvider
+     */
+    private $configProvider;
+
+    /**
      * @param Context $context
      * @param SubscriptionRepository $subscriptionRepository
      * @param CollectionFactory $subscriptionCollectionFactory
@@ -61,9 +67,10 @@ class Payments extends Template
         SubscriptionRepository $subscriptionRepository,
         CollectionFactory      $subscriptionCollectionFactory,
         Session                $customerSession,
-        StoreManagerInterface $storeManager,
+        StoreManagerInterface  $storeManager,
         PaymentTokenRepository $paymentTokenRepository,
-        SerializerInterface $serializer,
+        SerializerInterface    $serializer,
+        ConfigProvider         $configProvider,
         array                  $data = []
     ) {
         $this->subscriptionRepository = $subscriptionRepository;
@@ -73,6 +80,7 @@ class Payments extends Template
         $this->paymentTokenRepository = $paymentTokenRepository;
         $this->serializer = $serializer;
         parent::__construct($context, $data);
+        $this->configProvider = $configProvider;
     }
 
     /**
@@ -249,5 +257,16 @@ class Payments extends Template
         }
 
         return '';
+    }
+
+    /**
+     * @return string|null
+     * @throws \Magento\Framework\Exception\NoSuchEntityException
+     */
+    public function getAddCardRedirectUrl(): ?string
+    {
+        $config = $this->configProvider->getConfig();
+
+        return $config['payment']['paytrail']['addcard_redirect_url'] ?? null;
     }
 }
