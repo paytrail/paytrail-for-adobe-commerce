@@ -3,6 +3,7 @@
 namespace Paytrail\PaymentService\Controller\Tokenization;
 
 use Magento\Checkout\Model\Session;
+use Magento\Framework\App\ResponseInterface;
 use Magento\Framework\Serialize\SerializerInterface;
 use Magento\Framework\Encryption\EncryptorInterface;
 use Magento\Customer\Model\Session as CustomerSession;
@@ -149,7 +150,7 @@ class SaveCard extends \Magento\Framework\App\Action\Action
                 'paytrail_previous_error',
                 __('Card saving has been aborted. Please contact customer service.')
             );
-            $this->_redirect('checkout', ['_fragment' => 'payment']);
+            $this->redirect();
             return;
         }
         $responseData = $this->getResponseData($tokenizationId);
@@ -171,13 +172,13 @@ class SaveCard extends \Magento\Framework\App\Action\Action
         } catch (\Magento\Framework\Exception\AlreadyExistsException $e) {
             $this->messageManager->addErrorMessage('This card has already been added to your vault');
             $this->logger->error($e->getMessage());
-            $this->_redirect('checkout', ['_fragment' => 'payment']);
+            $this->redirect();
             return;
         }
 
         // success
         $this->checkoutSession->setData('paytrail_previous_success', __(self::ADDING_CARD_SUCCESS));
-        $this->_redirect('checkout', ['_fragment' => 'payment']);
+        $this->redirect();
     }
 
     /**
@@ -260,5 +261,17 @@ class SaveCard extends \Magento\Framework\App\Action\Action
             . $this->cardTypes[$addingCard->getType()]
             . $tokenDetails
         );
+    }
+
+    /**
+     * @return ResponseInterface
+     */
+    protected function redirect(): ResponseInterface
+    {
+        $customRedirectUrl = $this->_request->getParam('custom_redirect_url');
+
+        return $customRedirectUrl
+            ? $this->_redirect($customRedirectUrl)
+            : $this->_redirect('checkout', ['_fragment' => 'payment']);
     }
 }

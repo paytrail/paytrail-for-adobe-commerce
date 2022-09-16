@@ -46,7 +46,7 @@
                                     </a>
                                 </li>
                                 <li>
-                                    <a class="action show-payment-methods">
+                                    <a class="action show-payment-methods" data-id="<?= $recurringPayment->getId() ?>">
                                         <?= $block->escapeHtml(__('Change card')) ?>
                                     </a>
                                 </li>
@@ -114,6 +114,15 @@
             'Magento_Ui/js/model/messageList'
         ],
         function ($, confirmation, modal, mageUrlBuilder, messageList) {
+            $(document).ready(() => {
+                const url = new URL(window.location.href);
+                if (url.searchParams.get('open-change-card-modal') !== null
+                    && url.searchParams.get('subscription') !== null
+                ) {
+                    $(`.show-payment-methods[data-id='${url.searchParams.get('subscription')}']`).first().trigger('click');
+                }
+            })
+
             const messages = {
                 error: (msg) => {
                     messageList.addErrorMessage(
@@ -140,12 +149,14 @@
                     return;
                 }
 
+                let subscriptionId = $('#payment-methods-modal').attr('data-id');
                 $.ajax(
                     {
                         url: mageUrlBuilder.build(addCardRedirectUrl),
                         type: 'post',
                         context: this,
                         data: {
+                            'custom_redirect_url': mageUrlBuilder.build(`paytrail/order/payments?open-change-card-modal=1&subscription=${subscriptionId}`),
                             'is_ajax': true
                         }
                     }
@@ -177,10 +188,13 @@
                         text: $.mage.__('Close'),
                         class: '',
                         click: function () {
+                            modalContainer.attr('data-id', null);
                             this.closeModal();
                         }
                     }]
                 };
+
+                modalContainer.attr('data-id', $(event.currentTarget).attr('data-id'));
 
                 let popup = modal(options, modalContainer);
                 modalContainer.modal('openModal');
