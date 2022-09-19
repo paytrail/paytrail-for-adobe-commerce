@@ -5,7 +5,7 @@
 <?php $recurringPayments = $block->getRecurringPayments() ?>
 <?php $closedSubscriptions = $block->getClosedSubscriptions() ?>
 <?php if ($recurringPayments && count($recurringPayments)) : ?>
-    <div class="table-wrapper orders-history">
+    <div class="table-wrapper subscriptions-history">
         <table class="data table table-order-items history" id="my-subscriptions-table">
             <caption class="table-caption"><?= $block->escapeHtml(__('Subscriptions')) ?></caption>
             <thead>
@@ -25,10 +25,11 @@
                     <td data-th="<?= $block->escapeHtml(__('Recurring Payment Profile')) ?>" class="col total"><?= /* @noEscape */ $block->escapeHtml($recurringPayment->getName()) ?></td>
                     <td data-th="<?= $block->escapeHtml(__('Grand total')) ?>" class="col status"><?= $block->escapeHtml($block->getCurrentCurrency()).$block->escapeHtml($recurringPayment->getBaseGrandTotal()) ?></td>
                     <td data-th="<?= $block->escapeHtml(__('Actions')) ?>" class="col actions">
-                        <div class="customer-welcome">
+                        <div class="customer-welcome customer-subscription-action">
                             <button
                                     data-mage-init='{"dropdown":{}}'
                                     data-toggle="dropdown"
+                                    class="action"
                                     data-action="customer-menu-toggle">
                                 <span><?= $block->escapeHtml(__('Action')) ?></span>
                             </button>
@@ -44,7 +45,9 @@
                                     </a>
                                 </li>
                                 <li>
-                                    <span><?= $block->escapeHtml(__('Change card')) ?></span>
+                                    <a href="#" class="action">
+                                        <span><?= $block->escapeHtml(__('Change card')) ?></span>
+                                    </a>
                                 </li>
                             </ul>
                         </div>

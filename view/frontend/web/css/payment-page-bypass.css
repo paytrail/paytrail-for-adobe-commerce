@@ -182,6 +182,10 @@
   margin-bottom: 0;
 }
 
+.subscriptions-history {
+  overflow-x: visible !important;
+}
+
 @media only screen and (max-width : 1023px) {
   .paytrail-payment-methods .paytrail-payment-method {
     width: 23.6%;
