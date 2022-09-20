@@ -4,10 +4,13 @@ declare(strict_types=1);
 namespace Paytrail\PaymentService\Block\Order;
 
 use Magento\Customer\Model\Session;
+use Magento\Framework\Serialize\SerializerInterface;
 use Magento\Framework\View\Element\Template;
 use Magento\Framework\View\Element\Template\Context;
 use Magento\Store\Model\StoreManagerInterface;
+use Magento\Vault\Model\PaymentTokenRepository;
 use Paytrail\PaymentService\Api\Data\SubscriptionInterface;
+use Paytrail\PaymentService\Model\ConfigProvider;
 use Paytrail\PaymentService\Model\SubscriptionRepository;
 use Paytrail\PaymentService\Model\ResourceModel\Subscription\Collection as SubscriptionCollection;
 use Paytrail\PaymentService\Model\ResourceModel\Subscription\CollectionFactory;
@@ -35,11 +38,28 @@ class Payments extends Template
     private $storeManager;
 
     /**
+     * @var PaymentTokenRepository
+     */
+    private $paymentTokenRepository;
+
+    /**
+     * @var SerializerInterface
+     */
+    private $serializer;
+
+    /**
+     * @var ConfigProvider
+     */
+    private $configProvider;
+
+    /**
      * @param Context $context
      * @param SubscriptionRepository $subscriptionRepository
      * @param CollectionFactory $subscriptionCollectionFactory
      * @param Session $customerSession
      * @param StoreManagerInterface $storeManager
+     * @param PaymentTokenRepository $paymentTokenRepository
+     * @param SerializerInterface $serializer
      * @param array $data
      */
     public function __construct(
@@ -47,14 +67,20 @@ class Payments extends Template
         SubscriptionRepository $subscriptionRepository,
         CollectionFactory      $subscriptionCollectionFactory,
         Session                $customerSession,
-        StoreManagerInterface $storeManager,
+        StoreManagerInterface  $storeManager,
+        PaymentTokenRepository $paymentTokenRepository,
+        SerializerInterface    $serializer,
+        ConfigProvider         $configProvider,
         array                  $data = []
     ) {
         $this->subscriptionRepository = $subscriptionRepository;
         $this->subscriptionCollectionFactory = $subscriptionCollectionFactory;
         $this->customerSession = $customerSession;
         $this->storeManager = $storeManager;
+        $this->paymentTokenRepository = $paymentTokenRepository;
+        $this->serializer = $serializer;
         parent::__construct($context, $data);
+        $this->configProvider = $configProvider;
     }
 
     /**
@@ -216,5 +242,31 @@ class Payments extends Template
     public function getEmptyRecurringPaymentsMessage()
     {
         return __('You have no payments to display.');
+    }
+
+    /**
+     * @param $recurringPayment
+     * @return string
+     */
+    public function getCardNumber($recurringPayment)
+    {
+        $token = $this->paymentTokenRepository->getById($recurringPayment->getSelectedToken());
+        if ($token) {
+            $tokenDetails = $this->serializer->unserialize($token->getTokenDetails());
+            return '**** **** **** ' . $tokenDetails['maskedCC'];
+        }
+
+        return '';
+    }
+
+    /**
+     * @return string|null
+     * @throws \Magento\Framework\Exception\NoSuchEntityException
+     */
+    public function getAddCardRedirectUrl(): ?string
+    {
+        $config = $this->configProvider->getConfig();
+
+        return $config['payment']['paytrail']['addcard_redirect_url'] ?? null;
     }
 }

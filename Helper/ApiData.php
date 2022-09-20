@@ -449,11 +449,15 @@ class ApiData
      */
     protected function getCallbackUrl($param)
     {
-        $successUrl = $this->urlBuilder->getUrl('paytrail/' . $param, [
-            '_secure' => $this->request->isSecure()
-        ]);
+        $routeParams = [
+            '_secure' => $this->request->isSecure(),
+        ];
 
-        return $successUrl;
+        if ($this->request->getParam('custom_redirect_url')) {
+            $routeParams['custom_redirect_url'] = $this->request->getParam('custom_redirect_url');
+        }
+
+        return $this->urlBuilder->getUrl('paytrail/' . $param, $routeParams);
     }
 
     /**

@@ -184,6 +184,13 @@
 
 .subscriptions-history {
   overflow-x: visible !important;
+  
+.paytrail-order-payments.account .table-wrapper {
+    overflow-x: visible !important;
+}
+
+#payment-methods-modal {
+    display: none;
 }
 
 @media only screen and (max-width : 1023px) {
