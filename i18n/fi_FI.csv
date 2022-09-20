@@ -107,3 +107,6 @@ Hello,Hei
 "Card added successfully","Kortin lisäys onnistui"
 "Recurring payment purchases require using a saved card.","Toistuvat tilaukset vaativat tallennetun luottokortin maksuja varten"
 "Card number","Kortin numero"
+"Select Card","Valitse kortti"
+"Unable to change card","Korttia ei voitu vaihtaa"
+"Card for subscription changed successfully","Kortin vaihto toistuvaan tilaukseen onnistui"
