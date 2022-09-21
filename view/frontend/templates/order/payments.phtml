@@ -5,7 +5,7 @@
 <?php $recurringPayments = $block->getRecurringPayments() ?>
 <?php $closedSubscriptions = $block->getClosedSubscriptions() ?>
 <?php if ($recurringPayments && count($recurringPayments)) : ?>
-    <div class="table-wrapper orders-history">
+    <div class="table-wrapper subscriptions-history">
         <table class="data table table-order-items history" id="my-subscriptions-table">
             <caption class="table-caption"><?= $block->escapeHtml(__('Subscriptions')) ?></caption>
             <thead>
@@ -27,12 +27,12 @@
                     <td data-th="<?= $block->escapeHtml(__('Grand total')) ?>" class="col status"><?= $block->escapeHtml($block->getCurrentCurrency()).$block->escapeHtml($recurringPayment->getBaseGrandTotal()) ?></td>
                     <td data-th="<?= $block->escapeHtml(__('Card number')) ?>" class="col status"><?= $block->escapeHtml($block->getCardNumber($recurringPayment)) ?></td>
                     <td data-th="<?= $block->escapeHtml(__('Actions')) ?>" class="col actions">
-                        <div class="customer-welcome">
+                        <div class="customer-welcome customer-subscription-action">
                             <button
                                     data-mage-init='{"dropdown":{}}'
                                     data-toggle="dropdown"
                                     data-action="customer-menu-toggle">
-                                <span><?= $block->escapeHtml(__('Action')) ?></span>
+                                <span><?= $block->escapeHtml(__('Action')) ?> &#8744;</span>
                             </button>
                             <ul data-target="dropdown" class="dropdown-options">
                                 <li>
@@ -47,7 +47,7 @@
                                 </li>
                                 <li>
                                     <a class="action show-payment-methods" data-id="<?= $recurringPayment->getId() ?>">
-                                        <?= $block->escapeHtml(__('Change card')) ?>
+                                        <span><?= $block->escapeHtml(__('Change card')) ?></span
                                     </a>
                                 </li>
                             </ul>
