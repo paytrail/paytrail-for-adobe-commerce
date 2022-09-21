@@ -98,11 +98,18 @@
 <?php endif; ?>
 
 <div id="payment-methods-modal">
-    <?= $block->getChildHtml('vault.cards.list') ?>
+    <form method="post" action="<?= $block->getUrl('paytrail/card/change') ?>">
+        <input type="hidden" name="subscription_id" id="payment-change-card-subscription-input">
+        <?= $block->getChildHtml('vault.cards.list') ?>
 
-    <button id="add-new-payment-card">
-        <span><?= $block->escapeHtml(__('Add Card')) ?></span>
-    </button>
+        <button type="button" id="add-new-payment-card">
+            <span><?= $block->escapeHtml(__('Add Card')) ?></span>
+        </button>
+
+        <button type="submit">
+            <span><?= $block->escapeHtml(__('Change Card')) ?></span>
+        </button>
+    </form>
 </div>
 
 <script type = 'text/javascript'>
@@ -179,6 +186,7 @@
             $('.show-payment-methods').click((event) => {
                 event.preventDefault();
                 let modalContainer = $('#payment-methods-modal');
+                let subscriptionInput = $('#payment-change-card-subscription-input')
                 let options = {
                     type: 'popup',
                     responsive: true,
@@ -188,13 +196,13 @@
                         text: $.mage.__('Close'),
                         class: '',
                         click: function () {
-                            modalContainer.attr('data-id', null);
+                            subscriptionInput.val(null);
                             this.closeModal();
                         }
                     }]
                 };
 
-                modalContainer.attr('data-id', $(event.currentTarget).attr('data-id'));
+                subscriptionInput.val($(event.currentTarget).attr('data-id'));
 
                 let popup = modal(options, modalContainer);
                 modalContainer.modal('openModal');
