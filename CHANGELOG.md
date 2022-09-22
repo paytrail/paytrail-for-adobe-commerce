@@ -3,6 +3,9 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+## [1.2.1] - 2022-09-23
+- Refactored order loading in payment callback controllers to use factory - load implementation over direct model instantiation
+- Added new restore order controller. It is used then the "Restore order" button is clicked in the admin view. This implementation replaces previous non-compliant implementation that which restored the order during page reload of the same page.
 
 ## [1.2.0] - 2022-05-20
 - Added support for PHP 8
