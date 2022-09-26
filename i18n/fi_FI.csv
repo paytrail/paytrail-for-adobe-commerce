@@ -110,3 +110,5 @@ Hello,Hei
 "Select Card","Valitse kortti"
 "Unable to change card","Korttia ei voitu vaihtaa"
 "Card for subscription changed successfully","Kortin vaihto toistuvaan tilaukseen onnistui"
+"Subscription couldn't be canceled","Tilausta ei voitu peruuttaa"
+"Subscription has been canceled correctly","Tilaus on peruutettu oikein"
