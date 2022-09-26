@@ -10,7 +10,7 @@ interface SubscriptionManagementInterface
      * Cancel active subscription
      *
      * @param string $subscriptionId
-     * @return mixed
+     * @return \Magento\Framework\Phrase
      */
     public function cancelSubscription(string $subscriptionId);
 }

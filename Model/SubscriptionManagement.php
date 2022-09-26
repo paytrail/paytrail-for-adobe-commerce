@@ -86,16 +86,15 @@ class SubscriptionManagement
 
     /**
      * @param $subscriptionId
-     * @return string
+     * @return \Magento\Framework\Phrase
+     * @throws LocalizedException
      */
     public function cancelSubscription($subscriptionId)
     {
         try {
             $subscription = $this->subscriptionRepository->get((int)$subscriptionId);
             $orderIds = $this->subscriptionLinkRepository->getOrderIdsBySubscriptionId((int)$subscriptionId);
-            $params = $this->request->getParams();
-
-            $customer = $this->customerRepository->get($params['username']);
+            $customer = $this->customerSession->getCustomer();
 
             foreach ($orderIds as $orderId) {
                 $order = $this->orderRepository->get($orderId);
