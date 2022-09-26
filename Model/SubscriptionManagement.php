@@ -1,7 +1,6 @@
 <?php
 namespace Paytrail\PaymentService\Model;
 
-use Magento\Customer\Api\CustomerRepositoryInterface;
 use Magento\Customer\Model\Session;
 use Magento\Framework\App\RequestInterface;
 use Magento\Framework\Exception\LocalizedException;
@@ -47,8 +46,6 @@ class SubscriptionManagement
      */
     protected $request;
 
-    protected $customerRepository;
-
     /**
      * @var LoggerInterface
      */
@@ -61,7 +58,6 @@ class SubscriptionManagement
      * @param OrderRepositoryInterface $orderRepository
      * @param OrderManagementInterface $orderManagementInterface
      * @param RequestInterface $request
-     * @param CustomerRepositoryInterface $customerRepository
      * @param LoggerInterface $logger
      */
     public function __construct(
@@ -71,7 +67,6 @@ class SubscriptionManagement
         OrderRepositoryInterface $orderRepository,
         OrderManagementInterface $orderManagementInterface,
         RequestInterface $request,
-        CustomerRepositoryInterface $customerRepository,
         LoggerInterface $logger
     ) {
         $this->customerSession = $customerSession;
@@ -80,7 +75,6 @@ class SubscriptionManagement
         $this->orderRepository = $orderRepository;
         $this->orderManagementInterface = $orderManagementInterface;
         $this->request = $request;
-        $this->customerRepository = $customerRepository;
         $this->logger = $logger;
     }
 
