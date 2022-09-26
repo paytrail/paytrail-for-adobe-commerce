@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<routes xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Webapi:etc/webapi.xsd">
+
+    <!-- Subscriptions Service -->
+    <route url="/V1/paytrail/subscription/cancel/:subscription_id" method="GET">
+        <service class="Paytrail\PaymentService\Api\SubscriptionManagementInterface" method="cancelSubscription" />
+        <resources>
+            <resource ref="anonymous"/>
+        </resources>
+    </route>
+</routes>
