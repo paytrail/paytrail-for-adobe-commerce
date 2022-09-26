@@ -4,6 +4,9 @@ declare(strict_types=1);
 namespace Paytrail\PaymentService\Block\Order;
 
 use Magento\Customer\Model\Session;
+use Magento\Framework\Exception\NoSuchEntityException;
+use Magento\Framework\Message\ManagerInterface as MessageManagerInterface;
+use Magento\Framework\Phrase;
 use Magento\Framework\Serialize\SerializerInterface;
 use Magento\Framework\View\Element\Template;
 use Magento\Framework\View\Element\Template\Context;
@@ -53,6 +56,11 @@ class Payments extends Template
     private $configProvider;
 
     /**
+     * @var MessageManagerInterface
+     */
+    private MessageManagerInterface $messageManager;
+
+    /**
      * @param Context $context
      * @param SubscriptionRepository $subscriptionRepository
      * @param CollectionFactory $subscriptionCollectionFactory
@@ -63,15 +71,16 @@ class Payments extends Template
      * @param array $data
      */
     public function __construct(
-        Context                $context,
-        SubscriptionRepository $subscriptionRepository,
-        CollectionFactory      $subscriptionCollectionFactory,
-        Session                $customerSession,
-        StoreManagerInterface  $storeManager,
-        PaymentTokenRepository $paymentTokenRepository,
-        SerializerInterface    $serializer,
-        ConfigProvider         $configProvider,
-        array                  $data = []
+        Context                 $context,
+        SubscriptionRepository  $subscriptionRepository,
+        CollectionFactory       $subscriptionCollectionFactory,
+        Session                 $customerSession,
+        StoreManagerInterface   $storeManager,
+        PaymentTokenRepository  $paymentTokenRepository,
+        SerializerInterface     $serializer,
+        ConfigProvider          $configProvider,
+        MessageManagerInterface $messageManager,
+        array                   $data = []
     ) {
         $this->subscriptionRepository = $subscriptionRepository;
         $this->subscriptionCollectionFactory = $subscriptionCollectionFactory;
@@ -81,6 +90,7 @@ class Payments extends Template
         $this->serializer = $serializer;
         parent::__construct($context, $data);
         $this->configProvider = $configProvider;
+        $this->messageManager = $messageManager;
     }
 
     /**
@@ -117,7 +127,7 @@ class Payments extends Template
             'name'
         );
 
-       $collection->addFieldToFilter('main_table.customer_id', $this->customerSession->getId());
+        $collection->addFieldToFilter('main_table.customer_id', $this->customerSession->getId());
 
         return $collection;
     }
@@ -155,7 +165,7 @@ class Payments extends Template
     /**
      * @param $_order
      * @return string
-     * @throws \Magento\Framework\Exception\NoSuchEntityException
+     * @throws NoSuchEntityException
      */
     public function validateDate($date): string
     {
@@ -261,12 +271,28 @@ class Payments extends Template
 
     /**
      * @return string|null
-     * @throws \Magento\Framework\Exception\NoSuchEntityException
+     * @throws NoSuchEntityException
      */
     public function getAddCardRedirectUrl(): ?string
     {
         $config = $this->configProvider->getConfig();
 
         return $config['payment']['paytrail']['addcard_redirect_url'] ?? null;
+    }
+
+    /**
+     * @return Phrase|null
+     * @throws NoSuchEntityException
+     */
+    public function getPreviousError(): ?Phrase
+    {
+        $config = $this->configProvider->getConfig();
+
+        $previousError = $config['payment']['paytrail']['previous_error'] ?? null;
+        if ($previousError) {
+            $this->messageManager->addErrorMessage(__($previousError));
+        }
+
+        return $previousError;
     }
 }
