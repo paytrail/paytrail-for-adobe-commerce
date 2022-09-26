@@ -6,7 +6,10 @@
     <route url="/V1/paytrail/subscription/cancel/:subscription_id" method="GET">
         <service class="Paytrail\PaymentService\Api\SubscriptionManagementInterface" method="cancelSubscription" />
         <resources>
-            <resource ref="anonymous"/>
+            <resource ref="self"/>
         </resources>
+        <data>
+            <parameter name="customerId" force="true">%customer_id%</parameter>
+        </data>
     </route>
 </routes>
