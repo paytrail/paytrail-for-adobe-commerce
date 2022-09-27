@@ -137,12 +137,12 @@ class ActivateOrder
     }
 
     /**
-     * @param \Magento\Sales\Api\Data\InvoiceInterface|\Magento\Sales\Model\Order\Invoice $invoice
+     * @param \Magento\Sales\Api\Data\InvoiceInterface $invoice
      * @param $order
      * @return void
      * @throws LocalizedException
      */
-    private function saveInvoiceAndOrder(\Magento\Sales\Api\Data\InvoiceInterface|\Magento\Sales\Model\Order\Invoice $invoice, $order): void
+    private function saveInvoiceAndOrder(\Magento\Sales\Api\Data\InvoiceInterface $invoice, $order): void
     {
         try {
             /** @var \Magento\Framework\DB\Transaction $transactionSave */
