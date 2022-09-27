@@ -88,21 +88,18 @@ class Index implements ActionInterface
     /**
      * Index constructor.
      *
-     * @param Context $context
      * @param Session $checkoutSession
-     * @param OrderFactory $orderFactory
-     * @param JsonFactory $jsonFactory
      * @param OrderRepositoryInterface $orderRepositoryInterface
      * @param OrderManagementInterface $orderManagementInterface
-     * @param PageFactory  $pageFactory
      * @param LoggerInterface $logger
      * @param ApiData $apiData
      * @param paytrailHelper $paytrailHelper
      * @param Config $gatewayConfig
+     * @param ResultFactory $resultFactory
+     * @param RequestInterface $request
      */
     public function __construct(
         Session $checkoutSession,
-        OrderFactory $orderFactory,
         \Magento\Sales\Api\OrderRepositoryInterface $orderRepositoryInterface,
         OrderManagementInterface $orderManagementInterface,
         LoggerInterface $logger,
@@ -113,7 +110,6 @@ class Index implements ActionInterface
         RequestInterface $request
     ) {
         $this->checkoutSession = $checkoutSession;
-        $this->orderFactory = $orderFactory;
         $this->orderRepositoryInterface = $orderRepositoryInterface;
         $this->orderManagementInterface = $orderManagementInterface;
         $this->logger = $logger;
@@ -147,11 +143,7 @@ class Index implements ActionInterface
                     throw new LocalizedException(__('No payment method selected'));
                 }
 
-                /** @var Order $order */
-                $order = $this->orderFactory->create()->loadByIncrementId(
-                    $this->checkoutSession->getLastRealOrderId()
-                );
-
+                $order = $this->checkoutSession->getLastRealOrder();
                 $responseData = $this->getResponseData($order);
                 $formData = $this->getFormFields(
                     $responseData,
@@ -165,13 +157,11 @@ class Index implements ActionInterface
                 if ($this->gatewayConfig->getSkipBankSelection()) {
                     $redirect_url = $responseData->getHref();
 
-                    return $resultJson->setData(
-                        [
-                            'success' => true,
-                            'data' => 'redirect',
-                            'redirect' => $redirect_url
-                        ]
-                    );
+                    return $resultJson->setData([
+                        'success' => true,
+                        'data' => 'redirect',
+                        'redirect' => $redirect_url
+                    ]);
                 }
 
                 $block = $this->resultFactory->create(ResultFactory::TYPE_PAGE)
@@ -180,19 +170,17 @@ class Index implements ActionInterface
                     ->setUrl($formAction)
                     ->setParams($formData);
 
-                return $resultJson->setData(
-                    [
-                        'success' => true,
-                        'data' => $block->toHtml(),
-                    ]
-                );
+                return $resultJson->setData([
+                    'success' => true,
+                    'data' => $block->toHtml(),
+                ]);
             }
         } catch (\Exception $e) {
             // Error will be handled below
             $this->logger->error($e->getMessage());
         }
 
-        if ($order) {
+        if ($order->getId()) {
             $this->orderManagementInterface->cancel($order->getId());
             $order->addCommentToStatusHistory(
                 __('Order canceled. Failed to redirect to Paytrail Payment Service.')
@@ -202,12 +190,10 @@ class Index implements ActionInterface
 
         $this->checkoutSession->restoreQuote();
 
-        return $resultJson->setData(
-            [
-                'success' => false,
-                'message' => $this->errorMsg
-            ]
-        );
+        return $resultJson->setData([
+            'success' => false,
+            'message' => $this->errorMsg
+        ]);
     }
 
     /**
