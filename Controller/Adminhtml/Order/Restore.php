@@ -15,18 +15,31 @@ class Restore extends Action implements HttpGetActionInterface
      */
     private $activateOrderHelper;
 
+    /**
+     * @var \Magento\Backend\Model\Session
+     */
+    private $session;
+    /**
+     * @var \Magento\Framework\App\RequestInterface
+     */
+    private $request;
+
     public function __construct(
         Context $context,
-        ActivateOrder $activateOrderHelper
+        ActivateOrder $activateOrderHelper,
+        \Magento\Backend\Model\Session $session,
+        \Magento\Framework\App\RequestInterface $request
     ) {
         parent::__construct($context);
+        $this->session  = $session;
+        $this->request = $request;
         $this->activateOrderHelper = $activateOrderHelper;
     }
 
     public function execute()
     {
-        $this->_getSession()->clearStorage();
-        $orderId = $this->getRequest()->getParam('order_id');
+        $this->session->clearStorage();
+        $orderId = $this->request->getParam('order_id');
         /** @var Redirect $resultRedirect */
         $resultRedirect = $this->resultRedirectFactory->create();
         try {
