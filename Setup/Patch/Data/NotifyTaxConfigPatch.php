@@ -1,8 +1,4 @@
 <?php
-/**
- * Copyright © Magento, Inc. All rights reserved.
- * See COPYING.txt for license details.
- */
 
 declare(strict_types=1);
 
@@ -25,10 +21,8 @@ class NotifyTaxConfigPatch implements DataPatchInterface
 
     public function __construct(
         NotifierInterface $notifier,
-        UrlInterface $url
     ) {
         $this->notifier = $notifier;
-        $this->url = $url;
     }
 
     public static function getDependencies()
