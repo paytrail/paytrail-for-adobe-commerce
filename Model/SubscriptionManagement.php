@@ -2,7 +2,7 @@
 namespace Paytrail\PaymentService\Model;
 
 use Magento\Customer\Model\Session;
-use Magento\Framework\App\RequestInterface;
+use Magento\Framework\Api\SearchCriteriaBuilder;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Sales\Api\OrderManagementInterface;
 use Magento\Sales\Api\OrderRepositoryInterface;
@@ -42,9 +42,9 @@ class SubscriptionManagement
     protected $orderManagementInterface;
 
     /**
-     * @var RequestInterface
+     * @var SearchCriteriaBuilder
      */
-    protected $request;
+    protected $searchCriteriaBuilder;
 
     /**
      * @var LoggerInterface
@@ -57,7 +57,7 @@ class SubscriptionManagement
      * @param SubscriptionLinkRepositoryInterface $subscriptionLinkRepository
      * @param OrderRepositoryInterface $orderRepository
      * @param OrderManagementInterface $orderManagementInterface
-     * @param RequestInterface $request
+     * @param SearchCriteriaBuilder $searchCriteriaBuilder
      * @param LoggerInterface $logger
      */
     public function __construct(
@@ -66,7 +66,7 @@ class SubscriptionManagement
         SubscriptionLinkRepositoryInterface $subscriptionLinkRepository,
         OrderRepositoryInterface $orderRepository,
         OrderManagementInterface $orderManagementInterface,
-        RequestInterface $request,
+        SearchCriteriaBuilder $searchCriteriaBuilder,
         LoggerInterface $logger
     ) {
         $this->customerSession = $customerSession;
@@ -74,7 +74,7 @@ class SubscriptionManagement
         $this->subscriptionLinkRepository = $subscriptionLinkRepository;
         $this->orderRepository = $orderRepository;
         $this->orderManagementInterface = $orderManagementInterface;
-        $this->request = $request;
+        $this->searchCriteriaBuilder = $searchCriteriaBuilder;
         $this->logger = $logger;
     }
 
@@ -87,11 +87,15 @@ class SubscriptionManagement
     {
         try {
             $subscription = $this->subscriptionRepository->get((int)$subscriptionId);
-            $orderIds = $this->subscriptionLinkRepository->getOrderIdsBySubscriptionId((int)$subscriptionId);
             $customer = $this->customerSession->getCustomer();
 
-            foreach ($orderIds as $orderId) {
-                $order = $this->orderRepository->get($orderId);
+            $orderIds = $this->subscriptionLinkRepository->getOrderIdsBySubscriptionId((int)$subscriptionId);
+            $searchCriteria = $this->searchCriteriaBuilder
+                ->addFilter('entity_id', $orderIds, 'in')
+                ->create();
+            $orders = $this->orderRepository->getList($searchCriteria);
+
+            foreach ($orders->getItems() as $order) {
                 if (!$customer->getId() || $customer->getId() != $order->getCustomerId()) {
                     throw new LocalizedException(__('Customer is not authorized for this operation'));
                 }
