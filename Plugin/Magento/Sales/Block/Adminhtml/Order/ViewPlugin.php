@@ -2,13 +2,9 @@
 
 namespace Paytrail\PaymentService\Plugin\Magento\Sales\Block\Adminhtml\Order;
 
-use Magento\Backend\Block\Widget\Context;
 use Magento\Backend\Model\UrlInterface;
 use Magento\Framework\App\RequestInterface;
-use Magento\Framework\Registry;
 use Magento\Sales\Block\Adminhtml\Order\View;
-use Magento\Sales\Helper\Reorder;
-use Magento\Sales\Model\ConfigInterface;
 use Paytrail\PaymentService\Helper\ActivateOrder;
 
 class ViewPlugin
