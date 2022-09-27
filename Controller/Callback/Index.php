@@ -28,10 +28,9 @@ class Index implements \Magento\Framework\App\ActionInterface
     private $request;
 
     /**
-     * Index constructor.
-     * @param Context $context
      * @param Session $session
      * @param ProcessPayment $processPayment
+     * @param RequestInterface $request
      */
     public function __construct(
         Session $session,
