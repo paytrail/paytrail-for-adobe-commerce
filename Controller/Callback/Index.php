@@ -4,12 +4,13 @@ namespace Paytrail\PaymentService\Controller\Callback;
 
 use Magento\Checkout\Model\Session;
 use Magento\Framework\App\Action\Context;
+use Magento\Framework\App\RequestInterface;
 use Paytrail\PaymentService\Helper\ProcessPayment;
 
 /**
  * Class Index
  */
-class Index extends \Magento\Framework\App\Action\Action
+class Index implements \Magento\Framework\App\ActionInterface
 {
     /**
      * @var Session
@@ -22,18 +23,23 @@ class Index extends \Magento\Framework\App\Action\Action
     private $processPayment;
 
     /**
+     * @var RequestInterface
+     */
+    private $request;
+
+    /**
      * Index constructor.
      * @param Context $context
      * @param Session $session
      * @param ProcessPayment $processPayment
      */
     public function __construct(
-        Context $context,
         Session $session,
-        ProcessPayment $processPayment
+        ProcessPayment $processPayment,
+        RequestInterface $request
     ) {
-        parent::__construct($context);
         $this->session = $session;
+        $this->request = $request;
         $this->processPayment = $processPayment;
     }
 
@@ -42,7 +48,7 @@ class Index extends \Magento\Framework\App\Action\Action
      */
     public function execute()
     {
-        $this->processPayment->process($this->getRequest()->getParams(), $this->session);
+        $this->processPayment->process($this->request->getParams(), $this->session);
 
         return;
     }
