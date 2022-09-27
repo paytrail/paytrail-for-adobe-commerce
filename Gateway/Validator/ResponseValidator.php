@@ -72,7 +72,7 @@ class ResponseValidator extends AbstractValidator
             $fails[] = "Invalid response data from Paytrail";
         }
 
-        if (sizeof($fails) > 0) {
+        if (count($fails) > 0) {
             $isValid = false;
         }
         return $this->createResult($isValid, $fails);
