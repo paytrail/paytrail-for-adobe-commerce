@@ -27,7 +27,7 @@ class DiscountSplitter
     public function __construct(
         \Magento\SalesRule\Model\DeltaPriceRound $deltaPriceRound,
         ScopeConfigInterface $scopeConfig,
-                                                 $discountGetters = []
+        $discountGetters = []
     ) {
         $this->deltaPriceRound = $deltaPriceRound;
         $this->discountGetters = $discountGetters;
@@ -114,7 +114,7 @@ class DiscountSplitter
      * @return float|int
      * @throws LocalizedException
      */
-    private function getDiscountsFromOrder(\Magento\Sales\Model\Order $order): float|int
+    private function getDiscountsFromOrder(\Magento\Sales\Model\Order $order)
     {
         $discountTotal = 0;
         $discountTotal += $order->getGiftCardsAmount();
@@ -153,7 +153,7 @@ class DiscountSplitter
      * @return float|int
      * @throws LocalizedException
      */
-    private function getItemTotal(array $items): float|int
+    private function getItemTotal(array $items)
     {
         $total = 0;
         foreach ($items as $item) {
