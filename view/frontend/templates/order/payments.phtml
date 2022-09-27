@@ -21,11 +21,17 @@
             <tbody>
             <?php foreach ($recurringPayments as $recurringPayment) : ?>
                 <tr>
-                    <td data-th="<?= $block->escapeHtml(__('Next Order Date')) ?>" class="col id"><?= $block->escapeHtml($block->validateDate($recurringPayment->getNextOrderDate())) ?></td>
-                    <td data-th="<?= $block->escapeHtml(__('Status')) ?>" class="col date"><?= /* @noEscape */ $block->escapeHtml($block->getRecurringPaymentStatusName($recurringPayment->getStatus())) ?></td>
-                    <td data-th="<?= $block->escapeHtml(__('Recurring Payment Profile')) ?>" class="col total"><?= /* @noEscape */ $block->escapeHtml($recurringPayment->getName()) ?></td>
-                    <td data-th="<?= $block->escapeHtml(__('Grand total')) ?>" class="col status"><?= $block->escapeHtml($block->getCurrentCurrency()).$block->escapeHtml($recurringPayment->getBaseGrandTotal()) ?></td>
-                    <td data-th="<?= $block->escapeHtml(__('Card number')) ?>" class="col status"><?= $block->escapeHtml($block->getCardNumber($recurringPayment)) ?></td>
+                    <td data-th="<?= $block->escapeHtml(__('Next Order Date')) ?>"
+                        class="col id"><?= $block->escapeHtml($block->validateDate($recurringPayment->getNextOrderDate())) ?></td>
+                    <td data-th="<?= $block->escapeHtml(__('Status')) ?>" class="col date"><?= /* @noEscape */
+                        $block->escapeHtml($block->getRecurringPaymentStatusName($recurringPayment->getStatus())) ?></td>
+                    <td data-th="<?= $block->escapeHtml(__('Recurring Payment Profile')) ?>"
+                        class="col total"><?= /* @noEscape */
+                        $block->escapeHtml($recurringPayment->getName()) ?></td>
+                    <td data-th="<?= $block->escapeHtml(__('Grand total')) ?>"
+                        class="col status"><?= $block->escapeHtml($block->getCurrentCurrency()) . $block->escapeHtml($recurringPayment->getBaseGrandTotal()) ?></td>
+                    <td data-th="<?= $block->escapeHtml(__('Card number')) ?>"
+                        class="col status"><?= $block->escapeHtml($block->getCardNumber($recurringPayment)) ?></td>
                     <td data-th="<?= $block->escapeHtml(__('Actions')) ?>" class="col actions">
                         <div class="customer-welcome customer-subscription-action">
                             <button
@@ -36,12 +42,14 @@
                             </button>
                             <ul data-target="dropdown" class="dropdown-options">
                                 <li>
-                                    <a href="<?= $block->escapeUrl($block->getViewUrl($recurringPayment)) ?>" class="action view">
+                                    <a href="<?= $block->escapeUrl($block->getViewUrl($recurringPayment)) ?>"
+                                       class="action view">
                                         <span><?= $block->escapeHtml(__('View Order')) ?></span>
                                     </a>
                                 </li>
                                 <li>
-                                    <a href="<?= $block->escapeHtml($block->getStopPaymentUrl($recurringPayment)) ?>" class="action order stop-payment-confirmation">
+                                    <a href="<?= $block->escapeHtml($block->getStopPaymentUrl($recurringPayment)) ?>"
+                                       class="action order stop-payment-confirmation">
                                         <span><?= $block->escapeHtml(__('Stop subscription')) ?></span>
                                     </a>
                                 </li>
@@ -62,7 +70,8 @@
         <div class="order-products-toolbar toolbar bottom"><?= $block->getPagerHtml() ?></div>
     <?php endif ?>
 <?php else : ?>
-    <div class="message info empty"><span><?= $block->escapeHtml($block->getEmptyRecurringPaymentsMessage()) ?></span></div>
+    <div class="message info empty"><span><?= $block->escapeHtml($block->getEmptyRecurringPaymentsMessage()) ?></span>
+    </div>
 <?php endif ?>
 
 <?php if ($closedSubscriptions && count($closedSubscriptions)) : ?>
@@ -81,10 +90,15 @@
             <tbody>
             <?php foreach ($closedSubscriptions as $closedSubscription) : ?>
                 <tr>
-                    <td data-th="<?= $block->escapeHtml(__('Next Order Date')) ?>" class="col id"><?= $block->escapeHtml($block->validateDate($closedSubscription->getNextOrderDate())) ?></td>
-                    <td data-th="<?= $block->escapeHtml(__('Status')) ?>" class="col date"><?= /* @noEscape */ $block->escapeHtml($block->getRecurringPaymentStatusName($closedSubscription->getStatus())) ?></td>
-                    <td data-th="<?= $block->escapeHtml(__('Recurring Payment Profile')) ?>" class="col total"><?= /* @noEscape */ $block->escapeHtml($closedSubscription->getName()) ?></td>
-                    <td data-th="<?= $block->escapeHtml(__('Grand total')) ?>" class="col status"><?= $block->escapeHtml($closedSubscription->getBaseGrandTotal()) ?></td>
+                    <td data-th="<?= $block->escapeHtml(__('Next Order Date')) ?>"
+                        class="col id"><?= $block->escapeHtml($block->validateDate($closedSubscription->getNextOrderDate())) ?></td>
+                    <td data-th="<?= $block->escapeHtml(__('Status')) ?>" class="col date"><?= /* @noEscape */
+                        $block->escapeHtml($block->getRecurringPaymentStatusName($closedSubscription->getStatus())) ?></td>
+                    <td data-th="<?= $block->escapeHtml(__('Recurring Payment Profile')) ?>"
+                        class="col total"><?= /* @noEscape */
+                        $block->escapeHtml($closedSubscription->getName()) ?></td>
+                    <td data-th="<?= $block->escapeHtml(__('Grand total')) ?>"
+                        class="col status"><?= $block->escapeHtml($closedSubscription->getBaseGrandTotal()) ?></td>
                     <td data-th="<?= $block->escapeHtml(__('Actions')) ?>" class="col actions">
                         <a href="<?= $block->escapeUrl($block->getViewUrl($closedSubscription)) ?>" class="action view">
                             <span><?= $block->escapeHtml(__('View Order')) ?></span>
@@ -112,118 +126,13 @@
     </form>
 </div>
 
-<script type = 'text/javascript'>
-    require([
-            'jquery',
-            'Magento_Ui/js/modal/confirm',
-            'Magento_Ui/js/modal/modal',
-            'mage/url',
-            'Magento_Ui/js/model/messageList'
-        ],
-        function ($, confirmation, modal, mageUrlBuilder, messageList) {
-            $(document).ready(() => {
-                const url = new URL(window.location.href);
-                if (url.searchParams.get('open-change-card-modal') !== null
-                    && url.searchParams.get('subscription') !== null
-                ) {
-                    $(`.show-payment-methods[data-id='${url.searchParams.get('subscription')}']`).first().trigger('click');
-                }
-            })
-
-            const messages = {
-                error: (msg) => {
-                    messageList.addErrorMessage(
-                        {
-                            message: msg
-                        }
-                    );
-                    self.scrollTo();
-                },
-                success: (msg) => {
-                    messageList.addSuccessMessage(
-                        {
-                            message: msg
-                        }
-                    );
-                    self.scrollTo();
-                },
+<script type="text/x-magento-init">
+    {
+        "*": {
+            "Paytrail_PaymentService/js/payments": {
+                "previousError": "<?= /* @noEscape */ $block->getPreviousError() ?>",
+                "addCardRedirectUrl": "<?= /* @noEscape */ $block->getAddCardRedirectUrl() ?>"
             }
-
-            $('#add-new-payment-card').click(() => {
-                let addCardRedirectUrl = '<?= /* @noEscape */ $block->getAddCardRedirectUrl() ?>';
-
-                if (!addCardRedirectUrl) {
-                    return;
-                }
-
-                let subscriptionId = $('#payment-methods-modal').attr('data-id');
-                $.ajax(
-                    {
-                        url: mageUrlBuilder.build(addCardRedirectUrl),
-                        type: 'post',
-                        context: this,
-                        data: {
-                            'custom_redirect_url': mageUrlBuilder.build(`paytrail/order/payments?open-change-card-modal=1&subscription=${subscriptionId}`),
-                            'is_ajax': true
-                        }
-                    }
-                ).done(
-                    function (response) {
-                        if ($.type(response) === 'object' && response.success && response.data && response.redirect) {
-                            window.location.href = response.redirect;
-                        } else {
-                            messages.error(response.message);
-                        }
-
-                    }
-                ).fail(
-                    function (response) {
-                        messages.error(response.message);
-                    }
-                )
-            });
-
-            $('.show-payment-methods').click((event) => {
-                event.preventDefault();
-                let modalContainer = $('#payment-methods-modal');
-                let subscriptionInput = $('#payment-change-card-subscription-input')
-                let options = {
-                    type: 'popup',
-                    responsive: true,
-                    innerScroll: true,
-                    title: 'Change card',
-                    buttons: [{
-                        text: $.mage.__('Close'),
-                        class: '',
-                        click: function () {
-                            subscriptionInput.val(null);
-                            this.closeModal();
-                        }
-                    }]
-                };
-
-                subscriptionInput.val($(event.currentTarget).attr('data-id'));
-
-                let popup = modal(options, modalContainer);
-                modalContainer.modal('openModal');
-            })
-
-            $('.stop-payment-confirmation').click(function (event) {
-                event.preventDefault();
-
-                var url = event.currentTarget.href;
-                confirmation({
-                    title: 'Stop Recurring Payment',
-                    content: 'Do you wish to stop this payment?',
-                    actions: {
-                        confirm: function () {
-                            window.location.href = url;
-                        },
-                        cancel: function () {},
-                        always: function () {}
-                    }
-                });
-                return false;
-            });
-        });
+        }
+    }
 </script>

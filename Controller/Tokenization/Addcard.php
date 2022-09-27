@@ -8,9 +8,9 @@ use Magento\Framework\App\Action\Context;
 use Magento\Framework\Controller\Result\Json;
 use Magento\Framework\Controller\Result\JsonFactory;
 use Paytrail\PaymentService\Exceptions\CheckoutException;
+use Paytrail\PaymentService\Gateway\Config\Config;
 use Paytrail\PaymentService\Helper\ApiData;
 use Paytrail\PaymentService\Helper\Data as opHelper;
-use Paytrail\PaymentService\Gateway\Config\Config;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -101,7 +101,6 @@ class AddCard extends \Magento\Framework\App\Action\Action
 
         try {
             if ($this->customerSession->getCustomerId() && $this->getRequest()->getParam('is_ajax')) {
-
                 $responseData = $this->getResponseData();
                 $redirect_url = $responseData->getHeader('Location')[0];
 
@@ -136,7 +135,7 @@ class AddCard extends \Magento\Framework\App\Action\Action
 
         $errorMsg = $response['error'];
 
-        if (isset($errorMsg)){
+        if (isset($errorMsg)) {
             $this->errorMsg = ($errorMsg);
             $this->opHelper->processError($errorMsg);
         }
