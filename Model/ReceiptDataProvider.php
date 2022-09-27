@@ -549,7 +549,21 @@ class ReceiptDataProvider
     private function cancelOrderById($orderId): void
     {
         if ($this->gatewayConfig->getCancelOrderOnFailedPayment()) {
-            $this->orderManagementInterface->cancel($orderId);
+            try {
+                $this->orderManagementInterface->cancel($orderId);
+            } catch (\Exception $e) {
+                $this->logger->critical(sprintf(
+                    'Paytrail exception during order cancel: %s,\n error trace: %s',
+                    $e->getMessage(),
+                    $e->getTraceAsString()
+                ));
+
+                // Mask and throw end-user friendly exception
+                throw new CheckoutException(\__(
+                    'Error while cancelling order. Please contact customer support with order id: %id to release discount coupons.',
+                    [ 'id'=> $orderId ]
+                ));
+            }
         }
     }
 }
