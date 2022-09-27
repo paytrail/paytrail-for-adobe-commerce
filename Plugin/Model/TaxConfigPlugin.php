@@ -7,7 +7,6 @@ use Paytrail\PaymentService\Gateway\Config\Config as GatewayConfig;
 
 class TaxConfigPlugin
 {
-
     const UNIT_CALCULATION = 'UNIT_BASE_CALCULATION';
 
     /**
@@ -20,11 +19,9 @@ class TaxConfigPlugin
      *
      * @param GatewayConfig $gatewayConfig
      */
-    public function __construct
-    (
+    public function __construct(
         GatewayConfig $gatewayConfig
-    )
-    {
+    ) {
         $this->gatewayConfig = $gatewayConfig;
     }
 
