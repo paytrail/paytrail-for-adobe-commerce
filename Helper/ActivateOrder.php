@@ -49,8 +49,7 @@ class ActivateOrder
         TransactionRepositoryInterface $transactionRepository,
         InvoiceService $invoiceService,
         TransactionFactory $transactionFactory,
-        LoggerInterface $logger,
-
+        LoggerInterface $logger
     ) {
         $this->orderRepository = $orderRepository;
         $this->transactionRepository = $transactionRepository;
