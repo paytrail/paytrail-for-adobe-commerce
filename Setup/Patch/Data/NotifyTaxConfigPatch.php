@@ -20,7 +20,7 @@ class NotifyTaxConfigPatch implements DataPatchInterface
     private $notifier;
 
     public function __construct(
-        NotifierInterface $notifier,
+        NotifierInterface $notifier
     ) {
         $this->notifier = $notifier;
     }
