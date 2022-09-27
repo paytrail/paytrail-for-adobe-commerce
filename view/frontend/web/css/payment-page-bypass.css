@@ -190,27 +190,27 @@
     display: none;
 }
 
-.customer-welcome {
+.customer-subscription-action {
   display: inline-block;
   position: relative;
 }
 
-.customer-welcome.active {
+.customer-subscription-action.active {
   overflow: visible;
 }
 
-.customer-welcome::before,
-.customer-welcome::after {
+.customer-subscription-action::before,
+.customer-subscription-action::after {
   content: '';
   display: table;
 }
 
-.customer-welcome ul::after {
+.customer-subscription-action ul::after {
   right: 9px;
   top: -14px;
 }
 
-.customer-welcome ul::after {
+.customer-subscription-action ul::after {
   border: 7px solid;
   border-top-color: currentcolor;
   border-right-color: currentcolor;
@@ -220,7 +220,7 @@
   z-index: 98;
 }
 
-.customer-welcome ul::before, .customer-welcome ul::after {
+.customer-subscription-action ul::before, .customer-subscription-action ul::after {
   border-bottom-style: solid;
   content: '';
   display: block;
@@ -229,12 +229,12 @@
   width: 0;
 }
 
-.customer-welcome ul::before {
+.customer-subscription-action ul::before {
   right: 10px;
   top: -12px;
 }
 
-.customer-welcome ul::before {
+.customer-subscription-action ul::before {
   border: 6px solid;
   border-top-color: currentcolor;
   border-right-color: currentcolor;
@@ -244,13 +244,12 @@
   z-index: 99;
 }
 
-.customer-welcome.active ul {
+.customer-subscription-action.active ul {
   display: block;
 }
 
-.customer-welcome ul {
+.customer-subscription-action ul {
   margin: 0;
-  margin-top: 0px;
   padding: 0;
   list-style: none none;
   background: #ffffff;
@@ -266,20 +265,20 @@
   box-shadow: 0 3px 3px rgba(0, 0, 0, 0.15);
 }
 
-.customer-welcome ul li {
+.customer-subscription-action ul li {
   margin: 0;
   padding: 0;
 }
 
-.customer-welcome ul {
+.customer-subscription-action ul {
   list-style: none none;
 }
 
-.customer-welcome li a:visited {
+.customer-subscription-action li a:visited {
   color: #333333;
 }
 
-.customer-welcome li a {
+.customer-subscription-action li a {
   color: #333333;
   text-decoration: none;
   display: block;
@@ -287,7 +286,7 @@
   padding: 8px;
 }
 
-.customer-welcome ul li:hover {
+.customer-subscription-action ul li:hover {
   background: #e8e8e8;
   cursor: pointer;
 }
