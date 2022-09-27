@@ -181,7 +181,6 @@
   <preference for="Paytrail\PaymentService\Api\SubscriptionManagementInterface"
               type="Paytrail\PaymentService\Model\SubscriptionManagement"/>
 
-
   <!-- Plugins -->
   <type name="Magento\Checkout\Model\Cart">
     <plugin name="prevent_different_scheduled_cart" type="Paytrail\PaymentService\Plugin\PreventDifferentScheduledCart"/>
