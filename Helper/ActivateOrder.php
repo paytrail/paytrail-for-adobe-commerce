@@ -43,16 +43,13 @@ class ActivateOrder
      * @param TransactionRepositoryInterface $transactionRepository
      * @param InvoiceService $invoiceService
      * @param TransactionFactory $transactionFactory
-     * @param Order $orderResourceModel
      */
     public function __construct(
         OrderRepositoryInterface $orderRepository,
         TransactionRepositoryInterface $transactionRepository,
         InvoiceService $invoiceService,
         TransactionFactory $transactionFactory,
-        Order $orderResourceModel
     ) {
-        $this->orderResourceModel = $orderResourceModel;
         $this->orderRepository = $orderRepository;
         $this->transactionRepository = $transactionRepository;
         $this->invoiceService = $invoiceService;
@@ -74,7 +71,7 @@ class ActivateOrder
             $item->setQtyCanceled(0);
         }
 
-        $this->orderResourceModel->save($order);
+        $this->orderRepository->save($order);
         $this->processInvoice($order);
     }
 
