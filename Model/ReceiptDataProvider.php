@@ -559,7 +559,7 @@ class ReceiptDataProvider
                 ));
 
                 // Mask and throw end-user friendly exception
-                throw new CheckoutException(\__(
+                throw new CheckoutException(__(
                     'Error while cancelling order. Please contact customer support with order id: %id to release discount coupons.',
                     [ 'id'=> $orderId ]
                 ));
