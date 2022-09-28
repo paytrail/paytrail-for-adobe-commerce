@@ -129,16 +129,16 @@ class Index implements ActionInterface
 
         $result = $this->resultFactory->create(\Magento\Framework\Controller\ResultFactory::TYPE_REDIRECT);
         if (in_array($status, $successStatuses)) {
-            return $result->setUrl('checkout/onepage/success');
+            return $result->setPath('checkout/onepage/success');
         } elseif (in_array($status, $cancelStatuses)) {
             foreach ($failMessages as $failMessage) {
                 $this->messageManager->addErrorMessage($failMessage);
             }
 
-            return $result->setUrl('checkout/cart');
+            return $result->setPath('checkout/cart');
         }
 
         $this->messageManager->addErrorMessage(__('Order processing has been aborted. Please contact customer service.'));
-        return $result->setUrl('checkout/cart');
+        return $result->setPath('checkout/cart');
     }
 }
