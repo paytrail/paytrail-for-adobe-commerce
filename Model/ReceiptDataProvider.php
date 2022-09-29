@@ -494,7 +494,7 @@ class ReceiptDataProvider
             ->setAdditionalInformation([Transaction::RAW_DETAILS => (array) $details])
             ->setFailSafe(true)
             ->build(Transaction::TYPE_CAPTURE);
-        $transaction->setIsClosed(false);
+        $transaction->setIsClosed(0);
         return $transaction;
     }
 
