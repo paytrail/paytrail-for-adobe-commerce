@@ -112,3 +112,4 @@ Hello,Hei
 "Card for subscription changed successfully","Kortin vaihto toistuvaan tilaukseen onnistui"
 "Subscription couldn't be canceled","Tilausta ei voitu peruuttaa"
 "Subscription has been canceled correctly","Tilaus on peruutettu"
+"Payment methods can't be shown","Maksutapoja ei voi näyttää"
