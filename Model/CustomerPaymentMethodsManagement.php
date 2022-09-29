@@ -9,7 +9,7 @@ use Magento\Framework\Serialize\Serializer\Json;
 use Magento\Vault\Api\PaymentTokenManagementInterface;
 use Psr\Log\LoggerInterface;
 
-class PaymentSubscriptionManagement
+class CustomerPaymentMethodsManagement
 {
     /**
      * @var Session
@@ -61,7 +61,7 @@ class PaymentSubscriptionManagement
      * @return array|void
      * @throws LocalizedException
      */
-    public function showSubscriptionPayment()
+    public function showCustomerPaymentMethods()
     {
         try {
             if ($this->customerSession->isLoggedIn()) {
