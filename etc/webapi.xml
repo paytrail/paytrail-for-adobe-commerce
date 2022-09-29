@@ -12,4 +12,13 @@
             <parameter name="customerId" force="true">%customer_id%</parameter>
         </data>
     </route>
+    <route url="/V1/paytrail/payment/list" method="GET">
+        <service class="Paytrail\PaymentService\Api\PaymentSubscriptionManagementInterface" method="showSubscriptionPayment" />
+        <resources>
+            <resource ref="self"/>
+        </resources>
+        <data>
+            <parameter name="customerId" force="true">%customer_id%</parameter>
+        </data>
+    </route>
 </routes>
