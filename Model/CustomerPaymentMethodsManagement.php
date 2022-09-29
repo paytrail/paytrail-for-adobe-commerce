@@ -44,12 +44,13 @@ class CustomerPaymentMethodsManagement
      * @param LoggerInterface $logger
      */
     public function __construct(
-        Session               $customerSession,
+        Session                         $customerSession,
         PaymentTokenManagementInterface $paymentTokenManagement,
-        SearchCriteriaBuilder $searchCriteriaBuilder,
-        Json $jsonSerializer,
-        LoggerInterface       $logger
-    ) {
+        SearchCriteriaBuilder           $searchCriteriaBuilder,
+        Json                            $jsonSerializer,
+        LoggerInterface                 $logger
+    )
+    {
         $this->customerSession = $customerSession;
         $this->paymentTokenManagement = $paymentTokenManagement;
         $this->searchCriteriaBuilder = $searchCriteriaBuilder;

@@ -8,7 +8,7 @@ namespace Paytrail\PaymentService\Api;
 interface CustomerPaymentMethodsManagementInterface
 {
     /**
-     * Show payment methods for customer subscriptions
+     * Show payment methods for customer
      *
      * @return array|void
      */
