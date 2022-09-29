@@ -180,8 +180,8 @@
               type="Paytrail\PaymentService\Model\ResourceModel\Subscription\SubscriptionLink\Collection"/>
   <preference for="Paytrail\PaymentService\Api\SubscriptionManagementInterface"
               type="Paytrail\PaymentService\Model\SubscriptionManagement"/>
-  <preference for="Paytrail\PaymentService\Api\PaymentSubscriptionManagementInterface"
-              type="Paytrail\PaymentService\Model\PaymentSubscriptionManagement"/>
+  <preference for="Paytrail\PaymentService\Api\CustomerPaymentMethodsManagementInterface"
+              type="Paytrail\PaymentService\Model\CustomerPaymentMethodsManagement"/>
 
   <!-- Plugins -->
   <type name="Magento\Checkout\Model\Cart">

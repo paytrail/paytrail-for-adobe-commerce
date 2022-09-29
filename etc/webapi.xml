@@ -13,7 +13,7 @@
         </data>
     </route>
     <route url="/V1/paytrail/payment/list" method="GET">
-        <service class="Paytrail\PaymentService\Api\PaymentSubscriptionManagementInterface" method="showSubscriptionPayment" />
+        <service class="Paytrail\PaymentService\Api\CustomerPaymentMethodsManagementInterface" method="showCustomerPaymentMethods" />
         <resources>
             <resource ref="self"/>
         </resources>
