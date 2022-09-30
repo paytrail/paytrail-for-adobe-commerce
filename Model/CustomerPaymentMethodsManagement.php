@@ -59,20 +59,21 @@ class CustomerPaymentMethodsManagement
     }
 
     /**
-     * @return array|void
+     * @return array[]
      * @throws LocalizedException
      */
-    public function showCustomerPaymentMethods()
+    public function showCustomerPaymentMethods(): array
     {
+        $paymentMethods = [];
         try {
             if ($this->customerSession->isLoggedIn()) {
                 $customerId = $this->customerSession->getCustomerId();
                 $tokens = $this->paymentTokenManagement->getListByCustomerId($customerId);
-                $paymentMethods = [];
 
                 foreach ($tokens as $token) {
                     if ($token->getIsActive() && $token->getIsVisible()) {
                         $paymentMethods[] = [
+                            'entity_id' => $token->getId(),
                             'customer' => $customerId,
                             'type' => $token->getType(),
                             'payment_method_code' => $token->getPaymentMethodCode(),
@@ -83,14 +84,9 @@ class CustomerPaymentMethodsManagement
                         ];
                     }
                 }
-
-                $jsonArray = [];
-                foreach ($paymentMethods as $paymentMethod) {
-                    $jsonArray[] = $this->jsonSerializer->serialize($paymentMethod);
-                }
-
-                return $jsonArray;
             }
+
+            return $paymentMethods;
         } catch (\Exception $e) {
             $this->logger->error($e->getMessage());
             throw new LocalizedException(__("Payment methods can't be shown"));

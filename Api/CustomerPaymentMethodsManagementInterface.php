@@ -10,7 +10,7 @@ interface CustomerPaymentMethodsManagementInterface
     /**
      * Show payment methods for customer
      *
-     * @return array|void
+     * @return \Paytrail\PaymentService\Api\Data\CustomerPaymentMethodsResultInterface[]
      */
-    public function showCustomerPaymentMethods();
+    public function showCustomerPaymentMethods(): array;
 }
