@@ -9,6 +9,44 @@ class CustomerPaymentMethodsResult extends AbstractModel implements CustomerPaym
     /**
      * @return string
      */
+    public function getEntityId(): string
+    {
+        return $this->getData('entity_id');
+    }
+
+    /**
+     * @param $entityId
+     * @return \Paytrail\PaymentService\Api\Data\CustomerPaymentMethodsResultInterface
+     */
+    public function setEntityId($entityId): self
+    {
+        $this->setData('entity_id', $entityId);
+
+        return $this;
+    }
+
+    /**
+     * @return string
+     */
+    public function getCustomerId(): string
+    {
+        return $this->getData('customer_id');
+    }
+
+    /**
+     * @param $customerId
+     * @return \Paytrail\PaymentService\Api\Data\CustomerPaymentMethodsResultInterface
+     */
+    public function setCustomerId($customerId): self
+    {
+        $this->setData('customer_id', $customerId);
+
+        return $this;
+    }
+
+    /**
+     * @return string
+     */
     public function getType(): string
     {
         return $this->getData('type');

@@ -7,6 +7,28 @@ interface CustomerPaymentMethodsResultInterface
     /**
      * @return string
      */
+    public function getEntityId(): string;
+
+    /**
+     * @param $customerId
+     * @return \Paytrail\PaymentService\Api\Data\CustomerPaymentMethodsResultInterface
+     */
+    public function setEntityId($customerId): self;
+
+    /**
+     * @return string
+     */
+    public function getCustomerId(): string;
+
+    /**
+     * @param $customerId
+     * @return \Paytrail\PaymentService\Api\Data\CustomerPaymentMethodsResultInterface
+     */
+    public function setCustomerId($customerId): self;
+
+    /**
+     * @return string
+     */
     public function getType(): string;
 
     /**
