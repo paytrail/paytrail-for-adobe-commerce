@@ -49,8 +49,7 @@ class CustomerPaymentMethodsManagement
         SearchCriteriaBuilder           $searchCriteriaBuilder,
         Json                            $jsonSerializer,
         LoggerInterface                 $logger
-    )
-    {
+    ) {
         $this->customerSession = $customerSession;
         $this->paymentTokenManagement = $paymentTokenManagement;
         $this->searchCriteriaBuilder = $searchCriteriaBuilder;

@@ -10,10 +10,10 @@ interface CustomerPaymentMethodsResultInterface
     public function getEntityId(): string;
 
     /**
-     * @param $customerId
+     * @param $entityId
      * @return \Paytrail\PaymentService\Api\Data\CustomerPaymentMethodsResultInterface
      */
-    public function setEntityId($customerId): self;
+    public function setEntityId($entityId): self;
 
     /**
      * @return string
