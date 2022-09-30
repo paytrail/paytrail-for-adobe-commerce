@@ -74,7 +74,7 @@ class CustomerPaymentMethodsManagement
                     if ($token->getIsActive() && $token->getIsVisible()) {
                         $paymentMethods[] = [
                             'entity_id' => $token->getId(),
-                            'customer' => $customerId,
+                            'customer_id' => $customerId,
                             'type' => $token->getType(),
                             'payment_method_code' => $token->getPaymentMethodCode(),
                             'created_at' => $token->getCreatedAt(),
