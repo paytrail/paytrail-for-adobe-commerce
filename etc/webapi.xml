@@ -15,10 +15,10 @@
     <route url="/V1/paytrail/orders/show" method="GET">
         <service class="Paytrail\PaymentService\Api\SubscriptionManagementInterface" method="showSubscriptionOrders" />
         <resources>
-            <resource ref="anonymous"/>
+            <resource ref="self"/>
         </resources>
-<!--        <data>-->
-<!--            <parameter name="customerId" force="true">%customer_id%</parameter>-->
-<!--        </data>-->
+        <data>
+            <parameter name="customerId" force="true">%customer_id%</parameter>
+        </data>
     </route>
 </routes>

@@ -123,9 +123,8 @@ class SubscriptionManagement
     {
         $subscriptionOrders = [];
         try {
-//            if ($this->customerSession->isLoggedIn()) {
+            if ($this->customerSession->isLoggedIn()) {
                 $customerId = $this->customerSession->getCustomerId();
-                $customerId = '2';
                 $searchCriteria = $this->searchCriteriaBuilder
                     ->addFilter('customer_id',$customerId,'in')
                     ->create();
@@ -143,9 +142,9 @@ class SubscriptionManagement
                         'orders_ids' => array_values($order),
                     ];
                 }
+            }
 
-                return $subscriptionOrders;
-//            }
+            return $subscriptionOrders;
         } catch (\Exception $e) {
             $this->logger->error($e->getMessage());
             throw new LocalizedException(__("Subscription orders can't be shown"));
