@@ -114,4 +114,41 @@ class SubscriptionManagement
 
         return __('Subscription has been canceled correctly');
     }
+
+    /**
+     * @return array[]
+     * @throws LocalizedException
+     */
+    public function showSubscriptionOrders(): array
+    {
+        $subscriptionOrders = [];
+        try {
+//            if ($this->customerSession->isLoggedIn()) {
+                $customerId = $this->customerSession->getCustomerId();
+                $customerId = '2';
+                $searchCriteria = $this->searchCriteriaBuilder
+                    ->addFilter('customer_id',$customerId,'in')
+                    ->create();
+                $subscriptions = $this->subscriptionRepository->getList($searchCriteria);
+
+                $orders = [];
+                foreach ($subscriptions->getItems() as $subscription) {
+                    $orders[$subscription->getId()] = $this->subscriptionLinkRepository
+                        ->getOrderIdsBySubscriptionId($subscription->getId());
+                }
+
+                foreach ($orders as $key => $order) {
+                    $subscriptionOrders[] = [
+                        'subscription_id' => $key,
+                        'orders_ids' => array_values($order),
+                    ];
+                }
+
+                return $subscriptionOrders;
+//            }
+        } catch (\Exception $e) {
+            $this->logger->error($e->getMessage());
+            throw new LocalizedException(__("Subscription orders can't be shown"));
+        }
+    }
 }
