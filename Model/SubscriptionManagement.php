@@ -1,12 +1,16 @@
 <?php
+
 namespace Paytrail\PaymentService\Model;
 
+use Exception;
+use Magento\Authorization\Model\UserContextInterface;
 use Magento\Customer\Model\Session;
 use Magento\Framework\Api\SearchCriteriaBuilder;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Sales\Api\OrderManagementInterface;
 use Magento\Sales\Api\OrderRepositoryInterface;
 use Magento\Sales\Model\Order;
+use Magento\Vault\Api\PaymentTokenRepositoryInterface;
 use Paytrail\PaymentService\Api\SubscriptionLinkRepositoryInterface;
 use Paytrail\PaymentService\Api\SubscriptionRepositoryInterface;
 use Psr\Log\LoggerInterface;
@@ -52,6 +56,16 @@ class SubscriptionManagement
     protected $logger;
 
     /**
+     * @var PaymentTokenRepositoryInterface
+     */
+    private PaymentTokenRepositoryInterface $paymentTokenRepository;
+
+    /**
+     * @var UserContextInterface
+     */
+    private UserContextInterface $userContext;
+
+    /**
      * @param Session $customerSession
      * @param SubscriptionRepositoryInterface $subscriptionRepository
      * @param SubscriptionLinkRepositoryInterface $subscriptionLinkRepository
@@ -59,6 +73,8 @@ class SubscriptionManagement
      * @param OrderManagementInterface $orderManagementInterface
      * @param SearchCriteriaBuilder $searchCriteriaBuilder
      * @param LoggerInterface $logger
+     * @param PaymentTokenRepositoryInterface $paymentTokenRepository
+     * @param UserContextInterface $userContext
      */
     public function __construct(
         Session $customerSession,
@@ -67,7 +83,9 @@ class SubscriptionManagement
         OrderRepositoryInterface $orderRepository,
         OrderManagementInterface $orderManagementInterface,
         SearchCriteriaBuilder $searchCriteriaBuilder,
-        LoggerInterface $logger
+        LoggerInterface $logger,
+        PaymentTokenRepositoryInterface $paymentTokenRepository,
+        UserContextInterface $userContext
     ) {
         $this->customerSession = $customerSession;
         $this->subscriptionRepository = $subscriptionRepository;
@@ -76,6 +94,8 @@ class SubscriptionManagement
         $this->orderManagementInterface = $orderManagementInterface;
         $this->searchCriteriaBuilder = $searchCriteriaBuilder;
         $this->logger = $logger;
+        $this->paymentTokenRepository = $paymentTokenRepository;
+        $this->userContext = $userContext;
     }
 
     /**
@@ -107,11 +127,44 @@ class SubscriptionManagement
             }
 
             $this->subscriptionRepository->save($subscription);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             $this->logger->error($e->getMessage());
             throw new LocalizedException(__("Subscription couldn't be canceled"));
         }
 
         return __('Subscription has been canceled correctly');
+    }
+
+    /**
+     * Change assigned card for subscription
+     *
+     * @param string $subscriptionId
+     * @param string $cardId
+     *
+     * @return bool
+     *
+     * @throws LocalizedException
+     */
+    public function changeSubscription(string $subscriptionId, string $cardId): bool
+    {
+        $paymentToken = $this->paymentTokenRepository->getById((int)$cardId);
+        $customerId = $this->userContext->getUserId();
+
+        try {
+            $subscription = $this->subscriptionRepository->get((int)$subscriptionId);
+
+            if (!$paymentToken || (int)$paymentToken->getCustomerId() !== $customerId ||
+                (int)$subscription->getCustomerId() !== $customerId
+            ) {
+                throw new Exception();
+            }
+
+            $subscription->setSelectedToken((int)$paymentToken->getEntityId());
+            $this->subscriptionRepository->save($subscription);
+
+            return true;
+        } catch (Exception $e) {
+            throw new LocalizedException(__('Unable to change card'));
+        }
     }
 }

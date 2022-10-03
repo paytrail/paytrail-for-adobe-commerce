@@ -12,4 +12,26 @@
             <parameter name="customerId" force="true">%customer_id%</parameter>
         </data>
     </route>
+
+    <route url="/V1/paytrail/subscription/change/:subscription_id/:card_id" method="PUT">
+        <service class="Paytrail\PaymentService\Api\SubscriptionManagementInterface" method="changeSubscription"/>
+        <resources>
+            <resource ref="self"/>
+        </resources>
+    </route>
+
+    <!-- Cards Service -->
+    <route url="/V1/paytrail/card" method="POST">
+        <service class="Paytrail\PaymentService\Api\CardRepositoryInterface" method="save"/>
+        <resources>
+            <resource ref="self"/>
+        </resources>
+    </route>
+
+    <route url="/V1/paytrail/card/:card_id" method="DELETE">
+        <service class="Paytrail\PaymentService\Api\CardRepositoryInterface" method="delete"/>
+        <resources>
+            <resource ref="self"/>
+        </resources>
+    </route>
 </routes>
