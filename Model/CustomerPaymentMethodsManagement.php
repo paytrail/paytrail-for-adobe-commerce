@@ -7,9 +7,10 @@ use Magento\Framework\Api\SearchCriteriaBuilder;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Serialize\Serializer\Json;
 use Magento\Vault\Api\PaymentTokenManagementInterface;
+use Paytrail\PaymentService\Api\CustomerPaymentMethodsManagementInterface;
 use Psr\Log\LoggerInterface;
 
-class CustomerPaymentMethodsManagement
+class CustomerPaymentMethodsManagement implements CustomerPaymentMethodsManagementInterface
 {
     /**
      * @var Session
@@ -58,7 +59,7 @@ class CustomerPaymentMethodsManagement
     }
 
     /**
-     * @return array[]
+     * @return \Paytrail\PaymentService\Api\Data\CustomerPaymentMethodsResultInterface[]
      * @throws LocalizedException
      */
     public function showCustomerPaymentMethods(): array
