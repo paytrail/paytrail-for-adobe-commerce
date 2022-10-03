@@ -15,7 +15,6 @@ interface SubscriptionListResultInterface
      */
     public function setSubscriptionId($subscriptionId): self;
 
-
     /**
      * @return string
      */
@@ -31,7 +30,6 @@ interface SubscriptionListResultInterface
      * @return string
      */
     public function getNextOrderDate(): string;
-
 
     /**
      * @param $data

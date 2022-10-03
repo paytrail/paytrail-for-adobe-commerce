@@ -15,7 +15,7 @@ interface SubscriptionManagementInterface
     public function cancelSubscription(string $subscriptionId);
 
     /**
-     * Show orders from customer subscriptions
+     * List customer subscriptions
      *
      * @return \Magento\Framework\Phrase
      */
