@@ -121,7 +121,7 @@ class SubscriptionManagement
      */
     public function showSubscriptionOrders(): array
     {
-        $subscriptionOrders = [];
+        $subscriptionResult = [];
         try {
             if ($this->customerSession->isLoggedIn()) {
                 $customerId = $this->customerSession->getCustomerId();
@@ -130,21 +130,21 @@ class SubscriptionManagement
                     ->create();
                 $subscriptions = $this->subscriptionRepository->getList($searchCriteria);
 
-                $orders = [];
-                foreach ($subscriptions->getItems() as $subscription) {
-                    $orders[$subscription->getId()] = $this->subscriptionLinkRepository
-                        ->getOrderIdsBySubscriptionId($subscription->getId());
-                }
-
-                foreach ($orders as $key => $order) {
-                    $subscriptionOrders[] = [
-                        'subscription_id' => $key,
-                        'orders_ids' => array_values($order),
+                foreach ($subscriptions as $subscription) {
+                    $subscriptionResult[] = [
+                        'subscription_id' => $subscription->getId(),
+                        'status' => $subscription->getStatus(),
+                        'next_order_date' => $subscription->getNextOrderDate(),
+                        'recurring_profile_id' => $subscription->getRecurringProfileId(),
+                        'updated_at' => $subscription->getUpdatedAt(),
+                        'repeat_count_left' => $subscription->getRepeatCountLeft(),
+                        'retry_count' => $subscription->getRetryCount(),
+                        'selected_token' => $subscription->getSelectedToken()
                     ];
                 }
             }
 
-            return $subscriptionOrders;
+            return $subscriptionResult;
         } catch (\Exception $e) {
             $this->logger->error($e->getMessage());
             throw new LocalizedException(__("Subscription orders can't be shown"));
