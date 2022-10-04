@@ -10,7 +10,7 @@ use Magento\Framework\Exception\LocalizedException;
 use Magento\Sales\Api\OrderManagementInterface;
 use Magento\Sales\Api\OrderRepositoryInterface;
 use Magento\Sales\Model\Order;
-use Magento\Vault\Api\PaymentTokenRepositoryInterface;
+use Paytrail\PaymentService\Api\PaymentTokenRepositoryInterface;
 use Paytrail\PaymentService\Api\SubscriptionLinkRepositoryInterface;
 use Paytrail\PaymentService\Api\SubscriptionRepositoryInterface;
 use Psr\Log\LoggerInterface;
@@ -148,23 +148,15 @@ class SubscriptionManagement
     public function changeSubscription(string $subscriptionId, string $cardId): bool
     {
         $paymentToken = $this->paymentTokenRepository->getById((int)$cardId);
-        $customerId = $this->userContext->getUserId();
+        $subscription = $this->subscriptionRepository->get((int)$subscriptionId);
 
-        try {
-            $subscription = $this->subscriptionRepository->get((int)$subscriptionId);
+        $customerId = (int)$this->userContext->getUserId();
 
-            if (!$paymentToken || (int)$paymentToken->getCustomerId() !== $customerId ||
-                (int)$subscription->getCustomerId() !== $customerId
-            ) {
-                throw new Exception();
-            }
+        $this->paymentTokenRepository->validateTokensCustomer($paymentToken, $customerId);
+        $this->subscriptionRepository->validateSubscriptionsCustomer($subscription, $customerId);
 
-            $subscription->setSelectedToken((int)$paymentToken->getEntityId());
-            $this->subscriptionRepository->save($subscription);
+        $this->subscriptionRepository->updateSubscriptionsToken($subscription, $paymentToken);
 
-            return true;
-        } catch (Exception $e) {
-            throw new LocalizedException(__('Unable to change card'));
-        }
+        return true;
     }
 }

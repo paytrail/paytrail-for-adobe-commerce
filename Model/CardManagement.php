@@ -5,10 +5,11 @@ namespace Paytrail\PaymentService\Model;
 use Magento\Authorization\Model\UserContextInterface;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Vault\Api\PaymentTokenRepositoryInterface;
-use Paytrail\PaymentService\Api\CardRepositoryInterface;
+use Paytrail\PaymentService\Api\CardManagementInterface;
 use Paytrail\PaymentService\Helper\ApiData;
+use Paytrail\SDK\Exception\ValidationException;
 
-class CardRepository implements CardRepositoryInterface
+class CardManagement implements CardManagementInterface
 {
     /**
      * @var ApiData
@@ -43,12 +44,12 @@ class CardRepository implements CardRepositoryInterface
     /**
      * @inheritdoc
      */
-    public function save(): string
+    public function generateAddCardUrl(): string
     {
         $response = $this->apiData->processApiRequest('add_card');
 
         if (isset($response['error'])) {
-            throw new LocalizedException(__($response['error']), null, 403);
+            throw new ValidationException($response['error']);
         }
 
         return $response['data']->getHeader('Location')[0];

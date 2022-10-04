@@ -22,14 +22,14 @@
 
     <!-- Cards Service -->
     <route url="/V1/paytrail/card" method="POST">
-        <service class="Paytrail\PaymentService\Api\CardRepositoryInterface" method="save"/>
+        <service class="Paytrail\PaymentService\Api\CardManagementInterface" method="generateAddCardUrl"/>
         <resources>
             <resource ref="self"/>
         </resources>
     </route>
 
     <route url="/V1/paytrail/card/:card_id" method="DELETE">
-        <service class="Paytrail\PaymentService\Api\CardRepositoryInterface" method="delete"/>
+        <service class="Paytrail\PaymentService\Api\CardManagementInterface" method="delete"/>
         <resources>
             <resource ref="self"/>
         </resources>

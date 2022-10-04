@@ -3,19 +3,20 @@
 namespace Paytrail\PaymentService\Api;
 
 use Magento\Framework\Exception\LocalizedException;
+use Paytrail\SDK\Exception\ValidationException;
 
 /**
  * @api
  */
-interface CardRepositoryInterface
+interface CardManagementInterface
 {
     /**
      * Initialize add card process
      *
      * @return string
-     * @throws LocalizedException
+     * @throws ValidationException
      */
-    public function save(): string;
+    public function generateAddCardUrl(): string;
 
     /**
      * Delete unused card

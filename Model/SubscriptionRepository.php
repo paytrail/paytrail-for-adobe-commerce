@@ -1,9 +1,12 @@
 <?php
+
 namespace Paytrail\PaymentService\Model;
 
 use Magento\Framework\Exception\CouldNotDeleteException;
 use Magento\Framework\Exception\CouldNotSaveException;
+use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Exception\NoSuchEntityException;
+use Magento\Vault\Api\Data\PaymentTokenInterface;
 use Paytrail\PaymentService\Api\Data\SubscriptionInterface;
 use Paytrail\PaymentService\Api\Data\SubscriptionSearchResultInterface;
 use Paytrail\PaymentService\Api\SubscriptionRepositoryInterface;
@@ -16,9 +19,9 @@ class SubscriptionRepository implements SubscriptionRepositoryInterface
     private \Magento\Framework\Api\SearchCriteria\CollectionProcessorInterface $collectionProcessor;
 
     public function __construct(
-        \Paytrail\PaymentService\Model\ResourceModel\Subscription                      $subscriptionResource,
-        SubscriptionFactory                                                $subscriptionFactory,
-        \Paytrail\PaymentService\Api\Data\SubscriptionSearchResultInterfaceFactory     $searchResultFactory,
+        \Paytrail\PaymentService\Model\ResourceModel\Subscription $subscriptionResource,
+        SubscriptionFactory $subscriptionFactory,
+        \Paytrail\PaymentService\Api\Data\SubscriptionSearchResultInterfaceFactory $searchResultFactory,
         \Magento\Framework\Api\SearchCriteria\CollectionProcessorInterface $collectionProcessor
     ) {
         $this->subscriptionResource = $subscriptionResource;
@@ -61,7 +64,7 @@ class SubscriptionRepository implements SubscriptionRepositoryInterface
 
     public function getList(
         \Magento\Framework\Api\SearchCriteriaInterface $searchCriteria
-    ) : SubscriptionSearchResultInterface {
+    ): SubscriptionSearchResultInterface {
         /** @var SubscriptionSearchResultInterface $searchResult */
         $searchResult = $this->searchResultFactory->create();
         $this->collectionProcessor->process($searchCriteria, $searchResult);
@@ -80,5 +83,26 @@ class SubscriptionRepository implements SubscriptionRepositoryInterface
                 ['error' => $e->getMessage()]
             ));
         }
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function validateSubscriptionsCustomer(SubscriptionInterface $subscription, int $customerId): void
+    {
+        if ((int)$subscription->getCustomerId() !== $customerId) {
+            throw new LocalizedException(__("The subscription doesn't belong to the customer"));
+        }
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function updateSubscriptionsToken(
+        SubscriptionInterface $subscription,
+        PaymentTokenInterface $paymentToken
+    ): void {
+        $subscription->setSelectedToken((int)$paymentToken->getEntityId());
+        $this->save($subscription);
     }
 }
