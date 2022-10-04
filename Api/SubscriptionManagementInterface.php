@@ -1,6 +1,8 @@
 <?php
 namespace Paytrail\PaymentService\Api;
 
+use Magento\Framework\Api\SearchCriteriaInterface;
+
 /**
  * @api
  */
@@ -15,9 +17,9 @@ interface SubscriptionManagementInterface
     public function cancelSubscription(string $subscriptionId);
 
     /**
-     * List customer subscriptions
+     * Shows customer subscriptions
      *
-     * @return \Magento\Framework\Phrase
+     * @return \Paytrail\PaymentService\Api\Data\SubscriptionSearchResultInterface
      */
-    public function showSubscriptionOrders();
+    public function showSubscriptionOrders(SearchCriteriaInterface $searchCriteria);
 }

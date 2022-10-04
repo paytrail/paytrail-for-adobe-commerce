@@ -1,17 +1,22 @@
 <?php
+
 namespace Paytrail\PaymentService\Model;
 
 use Magento\Customer\Model\Session;
+use Magento\Framework\Api\FilterFactory;
 use Magento\Framework\Api\SearchCriteriaBuilder;
+use Magento\Framework\Api\SearchCriteriaInterface;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Sales\Api\OrderManagementInterface;
 use Magento\Sales\Api\OrderRepositoryInterface;
 use Magento\Sales\Model\Order;
+use Paytrail\PaymentService\Api\Data\SubscriptionSearchResultInterface;
 use Paytrail\PaymentService\Api\SubscriptionLinkRepositoryInterface;
+use Paytrail\PaymentService\Api\SubscriptionManagementInterface;
 use Paytrail\PaymentService\Api\SubscriptionRepositoryInterface;
 use Psr\Log\LoggerInterface;
 
-class SubscriptionManagement
+class SubscriptionManagement implements SubscriptionManagementInterface
 {
     protected const STATUS_CLOSED = 'closed';
     protected const ORDER_PENDING_STATUS = 'pending';
@@ -52,6 +57,11 @@ class SubscriptionManagement
     protected $logger;
 
     /**
+     * @var FilterFactory
+     */
+    private $filterFactory;
+
+    /**
      * @param Session $customerSession
      * @param SubscriptionRepositoryInterface $subscriptionRepository
      * @param SubscriptionLinkRepositoryInterface $subscriptionLinkRepository
@@ -67,6 +77,7 @@ class SubscriptionManagement
         OrderRepositoryInterface $orderRepository,
         OrderManagementInterface $orderManagementInterface,
         SearchCriteriaBuilder $searchCriteriaBuilder,
+        FilterFactory $filterFactory,
         LoggerInterface $logger
     ) {
         $this->customerSession = $customerSession;
@@ -76,6 +87,7 @@ class SubscriptionManagement
         $this->orderManagementInterface = $orderManagementInterface;
         $this->searchCriteriaBuilder = $searchCriteriaBuilder;
         $this->logger = $logger;
+        $this->filterFactory = $filterFactory;
     }
 
     /**
@@ -116,38 +128,37 @@ class SubscriptionManagement
     }
 
     /**
-     * @return array[]
+     * @return \Paytrail\PaymentService\Api\Data\SubscriptionSearchResultInterface
      * @throws LocalizedException
      */
-    public function showSubscriptionOrders(): array
+    public function showSubscriptionOrders(SearchCriteriaInterface $searchCriteria): SubscriptionSearchResultInterface
     {
-        $subscriptionResult = [];
         try {
             if ($this->customerSession->isLoggedIn()) {
                 $customerId = $this->customerSession->getCustomerId();
-                $searchCriteria = $this->searchCriteriaBuilder
-                    ->addFilter('customer_id',$customerId,'in')
-                    ->create();
-                $subscriptions = $this->subscriptionRepository->getList($searchCriteria);
+                $filterGroups = $searchCriteria->getFilterGroups();
+                $filter = $this->filterFactory->create();
+                $filter
+                    ->setField('customer_id')
+                    ->setValue($customerId)
+                    ->setConditionType('eq');
 
-                foreach ($subscriptions as $subscription) {
-                    $subscriptionResult[] = [
-                        'subscription_id' => $subscription->getId(),
-                        'status' => $subscription->getStatus(),
-                        'next_order_date' => $subscription->getNextOrderDate(),
-                        'recurring_profile_id' => $subscription->getRecurringProfileId(),
-                        'updated_at' => $subscription->getUpdatedAt(),
-                        'repeat_count_left' => $subscription->getRepeatCountLeft(),
-                        'retry_count' => $subscription->getRetryCount(),
-                        'selected_token' => $subscription->getSelectedToken()
-                    ];
+                foreach ($filterGroups as $filterGroup) {
+                    $groupFilters = $filterGroup->getFilters();
+                    $groupFilters[] = $filter;
+                    $filterGroup->setFilters($groupFilters);
                 }
+
+                $searchCriteria->setFilterGroups($filterGroups);
+
+                return $this->subscriptionRepository->getList($searchCriteria);
             }
 
-            return $subscriptionResult;
         } catch (\Exception $e) {
             $this->logger->error($e->getMessage());
             throw new LocalizedException(__("Subscription orders can't be shown"));
         }
+
+        throw new LocalizedException(__("Customer is not logged in"));
     }
 }
