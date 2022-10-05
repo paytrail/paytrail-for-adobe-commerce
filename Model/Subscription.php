@@ -48,11 +48,6 @@ class Subscription extends \Magento\Framework\Model\AbstractModel implements Sub
         return $this->getData(SubscriptionInterface::FIELD_UPDATED_AT);
     }
 
-    public function getEndDate(): string
-    {
-        return $this->getData(SubscriptionInterface::FIELD_END_DATE);
-    }
-
     public function getRepeatCountLeft(): int
     {
         return $this->getData(SubscriptionInterface::FIELD_REPEAT_COUNT_LEFT);
@@ -96,11 +91,6 @@ class Subscription extends \Magento\Framework\Model\AbstractModel implements Sub
     public function setUpdatedAt(string $updatedAt): SubscriptionInterface
     {
         return $this->setData(SubscriptionInterface::FIELD_UPDATED_AT, $updatedAt);
-    }
-
-    public function setEndDate(string $endDate): SubscriptionInterface
-    {
-        return $this->setData(SubscriptionInterface::FIELD_END_DATE, $endDate);
     }
 
     public function setRepeatCountLeft(int $count): SubscriptionInterface

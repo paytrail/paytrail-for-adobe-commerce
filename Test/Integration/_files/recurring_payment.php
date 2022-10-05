@@ -19,7 +19,6 @@ $payment->setOriginalOrderId(null);
 $payment->setRetryCount(5);
 $payment->setRepeatCountLeft(5);
 $payment->setStatus(\Paytrail\PaymentService\Api\Data\SubscriptionInterface::STATUS_ACTIVE);
-$payment->setEndDate('2121-09-09 20:20:20');
 $payment->setRecurringProfileId($profileId);
 
 $subscriptionRepository->save($payment);

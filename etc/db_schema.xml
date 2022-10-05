@@ -12,8 +12,6 @@
                 comment="Which profile is this payment using"/>
         <column xsi:type="timestamp" name="updated_at" on_update="true" nullable="false" default="CURRENT_TIMESTAMP"
                 comment="Updated At"/>
-        <column xsi:type="datetime" name="end_date" on_update="false" nullable="true"
-                comment="date when order is going to be processed"/>
         <column xsi:type="smallint" name="repeat_count_left" unsigned="true" nullable="true" identity="false"
                 comment="How many times a new recurring order will be made"/>
         <column xsi:type="smallint" name="retry_count" unsigned="true" nullable="true" identity="false"
