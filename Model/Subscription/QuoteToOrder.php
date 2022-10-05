@@ -63,7 +63,6 @@ class QuoteToOrder
         $subscription->setCustomerId($oldPayment->getCustomerId());
         $subscription->setNextOrderDate($this->dateCalculator->getNextDate($oldPayment->getRecurringProfileId()));
         $subscription->setRecurringProfileId($oldPayment->getRecurringProfileId());
-        $subscription->setEndDate($oldPayment->getEndDate());
         $subscription->setRepeatCountLeft($oldPayment->getRepeatCountLeft() - 1);
         $subscription->setRetryCount(5);
 

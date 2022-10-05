@@ -3,7 +3,9 @@
 namespace Paytrail\PaymentService\Model;
 
 use Magento\Customer\Model\Session;
+use Magento\Framework\Api\FilterBuilder;
 use Magento\Framework\Api\FilterFactory;
+use Magento\Framework\Api\Search\FilterGroupBuilder;
 use Magento\Framework\Api\SearchCriteriaBuilder;
 use Magento\Framework\Api\SearchCriteriaInterface;
 use Magento\Framework\Exception\LocalizedException;
@@ -22,9 +24,9 @@ class SubscriptionManagement implements SubscriptionManagementInterface
     protected const ORDER_PENDING_STATUS = 'pending';
 
     /**
-     * @var Session
+     * @var \Magento\Authorization\Model\UserContextInterface
      */
-    protected $customerSession;
+    protected $userContext;
 
     /**
      * @var SubscriptionRepositoryInterface
@@ -57,9 +59,14 @@ class SubscriptionManagement implements SubscriptionManagementInterface
     protected $logger;
 
     /**
-     * @var FilterFactory
+     * @var FilterBuilder
      */
-    private $filterFactory;
+    protected $filterBuilder;
+
+    /**
+     * @var FilterGroupBuilder
+     */
+    protected $groupBuilder;
 
     /**
      * @param Session $customerSession
@@ -68,26 +75,30 @@ class SubscriptionManagement implements SubscriptionManagementInterface
      * @param OrderRepositoryInterface $orderRepository
      * @param OrderManagementInterface $orderManagementInterface
      * @param SearchCriteriaBuilder $searchCriteriaBuilder
+     * @param FilterBuilder $filterBuilder
+     * @param FilterGroupBuilder $filterGroupBuilder
      * @param LoggerInterface $logger
      */
     public function __construct(
-        Session $customerSession,
+        \Magento\Authorization\Model\UserContextInterface $userContext,
         SubscriptionRepositoryInterface $subscriptionRepository,
         SubscriptionLinkRepositoryInterface $subscriptionLinkRepository,
         OrderRepositoryInterface $orderRepository,
         OrderManagementInterface $orderManagementInterface,
         SearchCriteriaBuilder $searchCriteriaBuilder,
-        FilterFactory $filterFactory,
+        FilterBuilder $filterBuilder,
+        FilterGroupBuilder $filterGroupBuilder,
         LoggerInterface $logger
     ) {
-        $this->customerSession = $customerSession;
+        $this->userContext = $userContext;
         $this->subscriptionRepository = $subscriptionRepository;
         $this->subscriptionLinkRepository = $subscriptionLinkRepository;
         $this->orderRepository = $orderRepository;
         $this->orderManagementInterface = $orderManagementInterface;
         $this->searchCriteriaBuilder = $searchCriteriaBuilder;
+        $this->filterBuilder = $filterBuilder;
+        $this->groupBuilder = $filterGroupBuilder;
         $this->logger = $logger;
-        $this->filterFactory = $filterFactory;
     }
 
     /**
@@ -97,10 +108,13 @@ class SubscriptionManagement implements SubscriptionManagementInterface
      */
     public function cancelSubscription($subscriptionId)
     {
+        $customerId = $this->userContext->getUserId();
+        if (!$customerId) {
+            throw new LocalizedException(__('Customer is not authorized for this operation'));
+        }
+
         try {
             $subscription = $this->subscriptionRepository->get((int)$subscriptionId);
-            $customer = $this->customerSession->getCustomer();
-
             $orderIds = $this->subscriptionLinkRepository->getOrderIdsBySubscriptionId((int)$subscriptionId);
             $searchCriteria = $this->searchCriteriaBuilder
                 ->addFilter('entity_id', $orderIds, 'in')
@@ -108,7 +122,7 @@ class SubscriptionManagement implements SubscriptionManagementInterface
             $orders = $this->orderRepository->getList($searchCriteria);
 
             foreach ($orders->getItems() as $order) {
-                if (!$customer->getId() || $customer->getId() != $order->getCustomerId()) {
+                if ($customerId != $order->getCustomerId()) {
                     throw new LocalizedException(__('Customer is not authorized for this operation'));
                 }
                 $subscription->setStatus(self::STATUS_CLOSED);
@@ -134,31 +148,33 @@ class SubscriptionManagement implements SubscriptionManagementInterface
     public function showSubscriptionOrders(SearchCriteriaInterface $searchCriteria): SubscriptionSearchResultInterface
     {
         try {
-            if ($this->customerSession->isLoggedIn()) {
-                $customerId = $this->customerSession->getCustomerId();
-                $filterGroups = $searchCriteria->getFilterGroups();
-                $filter = $this->filterFactory->create();
-                $filter
-                    ->setField('customer_id')
-                    ->setValue($customerId)
-                    ->setConditionType('eq');
-
-                foreach ($filterGroups as $filterGroup) {
-                    $groupFilters = $filterGroup->getFilters();
-                    $groupFilters[] = $filter;
-                    $filterGroup->setFilters($groupFilters);
-                }
-
-                $searchCriteria->setFilterGroups($filterGroups);
+            if ($this->userContext->getUserId()) {
+                $this->filterByCustomer($searchCriteria);
 
                 return $this->subscriptionRepository->getList($searchCriteria);
             }
-
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             $this->logger->error($e->getMessage());
             throw new LocalizedException(__("Subscription orders can't be shown"));
         }
 
         throw new LocalizedException(__("Customer is not logged in"));
+    }
+
+    /**
+     * @param SearchCriteriaInterface $searchCriteria
+     * @return void
+     */
+    private function filterByCustomer(SearchCriteriaInterface $searchCriteria): void
+    {
+        $customerFilter = $this->filterBuilder
+            ->setField('customer_id')
+            ->setValue($this->userContext->getUserId())
+            ->setConditionType('eq')
+            ->create();
+        $customerFilterGroup = $this->groupBuilder->addFilter($customerFilter)->create();
+        $groups = $searchCriteria->getFilterGroups();
+        $groups[] = $customerFilterGroup;
+        $searchCriteria->setFilterGroups($groups);
     }
 }
