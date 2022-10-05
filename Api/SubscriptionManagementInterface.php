@@ -21,5 +21,5 @@ interface SubscriptionManagementInterface
      *
      * @return \Paytrail\PaymentService\Api\Data\SubscriptionSearchResultInterface
      */
-    public function showSubscriptionOrders(SearchCriteriaInterface $searchCriteria);
+    public function showSubscriptions(SearchCriteriaInterface $searchCriteria);
 }

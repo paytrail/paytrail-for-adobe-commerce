@@ -3,9 +3,7 @@
 namespace Paytrail\PaymentService\Model;
 
 use Magento\Authorization\Model\UserContextInterface;
-use Magento\Customer\Model\Session;
 use Magento\Framework\Api\FilterBuilder;
-use Magento\Framework\Api\FilterFactory;
 use Magento\Framework\Api\Search\FilterGroupBuilder;
 use Magento\Framework\Api\SearchCriteriaBuilder;
 use Magento\Framework\Api\SearchCriteriaInterface;
@@ -25,7 +23,7 @@ class SubscriptionManagement implements SubscriptionManagementInterface
     protected const ORDER_PENDING_STATUS = 'pending';
 
     /**
-     * @var \Magento\Authorization\Model\UserContextInterface
+     * @var UserContextInterface
      */
     protected $userContext;
 
@@ -70,11 +68,7 @@ class SubscriptionManagement implements SubscriptionManagementInterface
     protected $groupBuilder;
 
     /**
-     * @var UserContextInterface
-     */
-    private $userContext;
-
-    /**
+     * @param UserContextInterface $userContext
      * @param SubscriptionRepositoryInterface $subscriptionRepository
      * @param SubscriptionLinkRepositoryInterface $subscriptionLinkRepository
      * @param OrderRepositoryInterface $orderRepository
@@ -85,17 +79,15 @@ class SubscriptionManagement implements SubscriptionManagementInterface
      * @param LoggerInterface $logger
      */
     public function __construct(
-        \Magento\Authorization\Model\UserContextInterface $userContext,
-        SubscriptionRepositoryInterface $subscriptionRepository,
+        UserContextInterface                $userContext,
+        SubscriptionRepositoryInterface     $subscriptionRepository,
         SubscriptionLinkRepositoryInterface $subscriptionLinkRepository,
-        OrderRepositoryInterface $orderRepository,
-        OrderManagementInterface $orderManagementInterface,
-        SearchCriteriaBuilder $searchCriteriaBuilder,
-        FilterBuilder $filterBuilder,
-        FilterGroupBuilder $filterGroupBuilder,
-        LoggerInterface $logger
-        LoggerInterface $logger,
-        UserContextInterface $userContext
+        OrderRepositoryInterface            $orderRepository,
+        OrderManagementInterface            $orderManagementInterface,
+        SearchCriteriaBuilder               $searchCriteriaBuilder,
+        FilterBuilder                       $filterBuilder,
+        FilterGroupBuilder                  $filterGroupBuilder,
+        LoggerInterface                     $logger
     ) {
         $this->userContext = $userContext;
         $this->subscriptionRepository = $subscriptionRepository;
@@ -131,7 +123,6 @@ class SubscriptionManagement implements SubscriptionManagementInterface
             $orders = $this->orderRepository->getList($searchCriteria);
 
             foreach ($orders->getItems() as $order) {
-                if (!$customerId || $customerId != $order->getCustomerId()) {
                 if ($customerId != $order->getCustomerId()) {
                     throw new LocalizedException(__('Customer is not authorized for this operation'));
                 }
@@ -155,7 +146,7 @@ class SubscriptionManagement implements SubscriptionManagementInterface
      * @return \Paytrail\PaymentService\Api\Data\SubscriptionSearchResultInterface
      * @throws LocalizedException
      */
-    public function showSubscriptionOrders(SearchCriteriaInterface $searchCriteria): SubscriptionSearchResultInterface
+    public function showSubscriptions(SearchCriteriaInterface $searchCriteria): SubscriptionSearchResultInterface
     {
         try {
             if ($this->userContext->getUserId()) {
