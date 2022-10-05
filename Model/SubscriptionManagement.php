@@ -2,6 +2,7 @@
 
 namespace Paytrail\PaymentService\Model;
 
+use Magento\Authorization\Model\UserContextInterface;
 use Magento\Customer\Model\Session;
 use Magento\Framework\Api\FilterBuilder;
 use Magento\Framework\Api\FilterFactory;
@@ -69,7 +70,11 @@ class SubscriptionManagement implements SubscriptionManagementInterface
     protected $groupBuilder;
 
     /**
-     * @param Session $customerSession
+     * @var UserContextInterface
+     */
+    private $userContext;
+
+    /**
      * @param SubscriptionRepositoryInterface $subscriptionRepository
      * @param SubscriptionLinkRepositoryInterface $subscriptionLinkRepository
      * @param OrderRepositoryInterface $orderRepository
@@ -89,6 +94,8 @@ class SubscriptionManagement implements SubscriptionManagementInterface
         FilterBuilder $filterBuilder,
         FilterGroupBuilder $filterGroupBuilder,
         LoggerInterface $logger
+        LoggerInterface $logger,
+        UserContextInterface $userContext
     ) {
         $this->userContext = $userContext;
         $this->subscriptionRepository = $subscriptionRepository;
@@ -115,6 +122,8 @@ class SubscriptionManagement implements SubscriptionManagementInterface
 
         try {
             $subscription = $this->subscriptionRepository->get((int)$subscriptionId);
+            $customerId = $this->userContext->getUserId();
+
             $orderIds = $this->subscriptionLinkRepository->getOrderIdsBySubscriptionId((int)$subscriptionId);
             $searchCriteria = $this->searchCriteriaBuilder
                 ->addFilter('entity_id', $orderIds, 'in')
@@ -122,6 +131,7 @@ class SubscriptionManagement implements SubscriptionManagementInterface
             $orders = $this->orderRepository->getList($searchCriteria);
 
             foreach ($orders->getItems() as $order) {
+                if (!$customerId || $customerId != $order->getCustomerId()) {
                 if ($customerId != $order->getCustomerId()) {
                     throw new LocalizedException(__('Customer is not authorized for this operation'));
                 }
