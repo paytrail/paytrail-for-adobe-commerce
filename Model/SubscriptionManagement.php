@@ -1,25 +1,21 @@
 <?php
 namespace Paytrail\PaymentService\Model;
 
-use Magento\Customer\Model\Session;
+use Magento\Authorization\Model\UserContextInterface;
 use Magento\Framework\Api\SearchCriteriaBuilder;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Sales\Api\OrderManagementInterface;
 use Magento\Sales\Api\OrderRepositoryInterface;
 use Magento\Sales\Model\Order;
 use Paytrail\PaymentService\Api\SubscriptionLinkRepositoryInterface;
+use Paytrail\PaymentService\Api\SubscriptionManagementInterface;
 use Paytrail\PaymentService\Api\SubscriptionRepositoryInterface;
 use Psr\Log\LoggerInterface;
 
-class SubscriptionManagement
+class SubscriptionManagement implements SubscriptionManagementInterface
 {
     protected const STATUS_CLOSED = 'closed';
     protected const ORDER_PENDING_STATUS = 'pending';
-
-    /**
-     * @var Session
-     */
-    protected $customerSession;
 
     /**
      * @var SubscriptionRepositoryInterface
@@ -52,7 +48,11 @@ class SubscriptionManagement
     protected $logger;
 
     /**
-     * @param Session $customerSession
+     * @var UserContextInterface
+     */
+    private $userContext;
+
+    /**
      * @param SubscriptionRepositoryInterface $subscriptionRepository
      * @param SubscriptionLinkRepositoryInterface $subscriptionLinkRepository
      * @param OrderRepositoryInterface $orderRepository
@@ -61,21 +61,21 @@ class SubscriptionManagement
      * @param LoggerInterface $logger
      */
     public function __construct(
-        Session $customerSession,
         SubscriptionRepositoryInterface $subscriptionRepository,
         SubscriptionLinkRepositoryInterface $subscriptionLinkRepository,
         OrderRepositoryInterface $orderRepository,
         OrderManagementInterface $orderManagementInterface,
         SearchCriteriaBuilder $searchCriteriaBuilder,
-        LoggerInterface $logger
+        LoggerInterface $logger,
+        UserContextInterface $userContext
     ) {
-        $this->customerSession = $customerSession;
         $this->subscriptionRepository = $subscriptionRepository;
         $this->subscriptionLinkRepository = $subscriptionLinkRepository;
         $this->orderRepository = $orderRepository;
         $this->orderManagementInterface = $orderManagementInterface;
         $this->searchCriteriaBuilder = $searchCriteriaBuilder;
         $this->logger = $logger;
+        $this->userContext = $userContext;
     }
 
     /**
@@ -87,7 +87,7 @@ class SubscriptionManagement
     {
         try {
             $subscription = $this->subscriptionRepository->get((int)$subscriptionId);
-            $customer = $this->customerSession->getCustomer();
+            $customerId = $this->userContext->getUserId();
 
             $orderIds = $this->subscriptionLinkRepository->getOrderIdsBySubscriptionId((int)$subscriptionId);
             $searchCriteria = $this->searchCriteriaBuilder
@@ -96,7 +96,7 @@ class SubscriptionManagement
             $orders = $this->orderRepository->getList($searchCriteria);
 
             foreach ($orders->getItems() as $order) {
-                if (!$customer->getId() || $customer->getId() != $order->getCustomerId()) {
+                if (!$customerId || $customerId != $order->getCustomerId()) {
                     throw new LocalizedException(__('Customer is not authorized for this operation'));
                 }
                 $subscription->setStatus(self::STATUS_CLOSED);
