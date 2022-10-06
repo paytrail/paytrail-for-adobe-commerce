@@ -7,12 +7,12 @@ use Magento\Framework\Exception\LocalizedException;
 /**
  * @api
  */
-interface CustomerPaymentMethodsManagementInterface
+interface CustomerTokensManagementInterface
 {
     /**
      * Show payment methods for customer
      *
-     * @return \Paytrail\PaymentService\Api\Data\CustomerPaymentMethodsResultInterface[]
+     * @return \Paytrail\PaymentService\Api\Data\CustomerTokensResultInterface[]
      * @throws LocalizedException
      */
     public function showCustomerPaymentMethods(): array;

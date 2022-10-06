@@ -2,7 +2,7 @@
 
 namespace Paytrail\PaymentService\Api\Data;
 
-interface CustomerPaymentMethodsResultInterface
+interface CustomerTokensResultInterface
 {
     /**
      * @return string
@@ -11,7 +11,7 @@ interface CustomerPaymentMethodsResultInterface
 
     /**
      * @param $entityId
-     * @return \Paytrail\PaymentService\Api\Data\CustomerPaymentMethodsResultInterface
+     * @return \Paytrail\PaymentService\Api\Data\CustomerTokensResultInterface
      */
     public function setEntityId($entityId): self;
 
@@ -22,7 +22,7 @@ interface CustomerPaymentMethodsResultInterface
 
     /**
      * @param $customerId
-     * @return \Paytrail\PaymentService\Api\Data\CustomerPaymentMethodsResultInterface
+     * @return \Paytrail\PaymentService\Api\Data\CustomerTokensResultInterface
      */
     public function setCustomerId($customerId): self;
 
@@ -33,7 +33,7 @@ interface CustomerPaymentMethodsResultInterface
 
     /**
      * @param $type
-     * @return \Paytrail\PaymentService\Api\Data\CustomerPaymentMethodsResultInterface
+     * @return \Paytrail\PaymentService\Api\Data\CustomerTokensResultInterface
      */
     public function setType($type): self;
 
@@ -44,7 +44,7 @@ interface CustomerPaymentMethodsResultInterface
 
     /**
      * @param $code
-     * @return \Paytrail\PaymentService\Api\Data\CustomerPaymentMethodsResultInterface
+     * @return \Paytrail\PaymentService\Api\Data\CustomerTokensResultInterface
      */
     public function setPaymentMethodCode($code): self;
 
@@ -55,7 +55,7 @@ interface CustomerPaymentMethodsResultInterface
 
     /**
      * @param $data
-     * @return \Paytrail\PaymentService\Api\Data\CustomerPaymentMethodsResultInterface
+     * @return \Paytrail\PaymentService\Api\Data\CustomerTokensResultInterface
      */
     public function setCreatedAt($data): self;
 
@@ -66,7 +66,7 @@ interface CustomerPaymentMethodsResultInterface
 
     /**
      * @param $data
-     * @return \Paytrail\PaymentService\Api\Data\CustomerPaymentMethodsResultInterface
+     * @return \Paytrail\PaymentService\Api\Data\CustomerTokensResultInterface
      */
     public function setExpiresAt($data): self;
 
@@ -77,7 +77,7 @@ interface CustomerPaymentMethodsResultInterface
 
     /**
      * @param $cardType
-     * @return \Paytrail\PaymentService\Api\Data\CustomerPaymentMethodsResultInterface
+     * @return \Paytrail\PaymentService\Api\Data\CustomerTokensResultInterface
      */
     public function setCardType($cardType): self;
 
@@ -88,7 +88,7 @@ interface CustomerPaymentMethodsResultInterface
 
     /**
      * @param $maskedCC
-     * @return \Paytrail\PaymentService\Api\Data\CustomerPaymentMethodsResultInterface
+     * @return \Paytrail\PaymentService\Api\Data\CustomerTokensResultInterface
      */
     public function setMaskedCC($maskedCC): self;
 }
