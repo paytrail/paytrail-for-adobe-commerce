@@ -88,16 +88,6 @@ class SubscriptionRepository implements SubscriptionRepositoryInterface
     /**
      * @inheritdoc
      */
-    public function validateSubscriptionsCustomer(SubscriptionInterface $subscription, int $customerId): void
-    {
-        if ((int)$subscription->getCustomerId() !== $customerId) {
-            throw new LocalizedException(__("The subscription doesn't belong to the customer"));
-        }
-    }
-
-    /**
-     * @inheritdoc
-     */
     public function updateSubscriptionsToken(
         SubscriptionInterface $subscription,
         PaymentTokenInterface $paymentToken

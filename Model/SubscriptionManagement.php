@@ -2,21 +2,22 @@
 
 namespace Paytrail\PaymentService\Model;
 
+use Exception;
 use Magento\Authorization\Model\UserContextInterface;
 use Magento\Framework\Api\FilterBuilder;
 use Magento\Framework\Api\Search\FilterGroupBuilder;
-use Exception;
 use Magento\Framework\Api\SearchCriteriaBuilder;
 use Magento\Framework\Api\SearchCriteriaInterface;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Sales\Api\OrderManagementInterface;
 use Magento\Sales\Api\OrderRepositoryInterface;
 use Magento\Sales\Model\Order;
+use Magento\Vault\Api\PaymentTokenRepositoryInterface;
 use Paytrail\PaymentService\Api\Data\SubscriptionSearchResultInterface;
-use Paytrail\PaymentService\Api\PaymentTokenRepositoryInterface;
 use Paytrail\PaymentService\Api\SubscriptionLinkRepositoryInterface;
 use Paytrail\PaymentService\Api\SubscriptionManagementInterface;
 use Paytrail\PaymentService\Api\SubscriptionRepositoryInterface;
+use Paytrail\PaymentService\Model\Validation\CustomerData;
 use Psr\Log\LoggerInterface;
 
 class SubscriptionManagement implements SubscriptionManagementInterface
@@ -60,11 +61,6 @@ class SubscriptionManagement implements SubscriptionManagementInterface
     protected $logger;
 
     /**
-     * @var PaymentTokenRepositoryInterface
-     */
-    private PaymentTokenRepositoryInterface $paymentTokenRepository;
-
-    /**
      * @var FilterBuilder
      */
     protected $filterBuilder;
@@ -75,28 +71,40 @@ class SubscriptionManagement implements SubscriptionManagementInterface
     protected $groupBuilder;
 
     /**
+     * @var PaymentTokenRepositoryInterface
+     */
+    private PaymentTokenRepositoryInterface $paymentTokenRepository;
+
+    /**
+     * @var CustomerData
+     */
+    private CustomerData $customerData;
+
+    /**
      * @param UserContextInterface $userContext
      * @param SubscriptionRepositoryInterface $subscriptionRepository
      * @param SubscriptionLinkRepositoryInterface $subscriptionLinkRepository
      * @param OrderRepositoryInterface $orderRepository
      * @param OrderManagementInterface $orderManagementInterface
      * @param SearchCriteriaBuilder $searchCriteriaBuilder
-     * @param FilterBuilder $filterBuilder
-     * @param FilterGroupBuilder $filterGroupBuilder
      * @param LoggerInterface $logger
      * @param PaymentTokenRepositoryInterface $paymentTokenRepository
+     * @param FilterBuilder $filterBuilder
+     * @param FilterGroupBuilder $filterGroupBuilder
+     * @param CustomerData $customerData
      */
     public function __construct(
-        UserContextInterface                $userContext,
-        SubscriptionRepositoryInterface     $subscriptionRepository,
+        UserContextInterface $userContext,
+        SubscriptionRepositoryInterface $subscriptionRepository,
         SubscriptionLinkRepositoryInterface $subscriptionLinkRepository,
         OrderRepositoryInterface $orderRepository,
         OrderManagementInterface $orderManagementInterface,
         SearchCriteriaBuilder $searchCriteriaBuilder,
         LoggerInterface $logger,
+        FilterBuilder $filterBuilder,
+        FilterGroupBuilder $filterGroupBuilder,
         PaymentTokenRepositoryInterface $paymentTokenRepository,
-        FilterBuilder                       $filterBuilder,
-        FilterGroupBuilder                  $filterGroupBuilder,
+        CustomerData $customerData
     ) {
         $this->userContext = $userContext;
         $this->subscriptionRepository = $subscriptionRepository;
@@ -108,6 +116,7 @@ class SubscriptionManagement implements SubscriptionManagementInterface
         $this->groupBuilder = $filterGroupBuilder;
         $this->logger = $logger;
         $this->paymentTokenRepository = $paymentTokenRepository;
+        $this->customerData = $customerData;
     }
 
     /**
@@ -206,8 +215,8 @@ class SubscriptionManagement implements SubscriptionManagementInterface
 
         $customerId = (int)$this->userContext->getUserId();
 
-        $this->paymentTokenRepository->validateTokensCustomer($paymentToken, $customerId);
-        $this->subscriptionRepository->validateSubscriptionsCustomer($subscription, $customerId);
+        $this->customerData->validateTokensCustomer($paymentToken, $customerId);
+        $this->customerData->validateSubscriptionsCustomer($subscription, $customerId);
 
         $this->subscriptionRepository->updateSubscriptionsToken($subscription, $paymentToken);
 

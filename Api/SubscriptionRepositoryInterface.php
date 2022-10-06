@@ -1,10 +1,10 @@
 <?php
+
 namespace Paytrail\PaymentService\Api;
 
 use Magento\Framework\Api\SearchCriteriaInterface;
 use Magento\Framework\Exception\CouldNotDeleteException;
 use Magento\Framework\Exception\CouldNotSaveException;
-use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Vault\Api\Data\PaymentTokenInterface;
 use Paytrail\PaymentService\Api\Data\SubscriptionInterface;
@@ -19,16 +19,6 @@ interface SubscriptionRepositoryInterface
      * @throws NoSuchEntityException
      */
     public function get(int $entityId): SubscriptionInterface;
-
-    /**
-     * @param SubscriptionInterface $subscription
-     * @param int $customerId
-     * @return void
-     *
-     * @throws NoSuchEntityException
-     * @throws LocalizedException
-     */
-    public function validateSubscriptionsCustomer(SubscriptionInterface $subscription, int $customerId): void;
 
     /**
      * @param SubscriptionInterface $subscription
