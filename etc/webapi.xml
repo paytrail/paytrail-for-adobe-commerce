@@ -15,4 +15,10 @@
             <resource ref="self"/>
         </resources>
     </route>
+    <route url="/V1/paytrail/payment/list" method="GET">
+        <service class="Paytrail\PaymentService\Api\CustomerTokensManagementInterface" method="showCustomerPaymentMethods" />
+        <resources>
+            <resource ref="self"/>
+        </resources>
+    </route>
 </routes>
