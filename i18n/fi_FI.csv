@@ -113,3 +113,4 @@ Hello,Hei
 "Subscription couldn't be canceled","Tilausta ei voitu peruuttaa"
 "Subscription has been canceled correctly","Tilaus on peruutettu"
 "Payment methods can't be shown","Maksutapoja ei voi näyttää"
+"Subscription orders can't be shown","Tilaustilauksia ei voida näyttää"

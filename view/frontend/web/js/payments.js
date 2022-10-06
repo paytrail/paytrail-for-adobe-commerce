@@ -37,7 +37,7 @@ define([
                 return;
             }
 
-            let subscriptionId = $('#payment-methods-modal').attr('data-id');
+            let subscriptionId = $('#payment-change-card-subscription-input').val();
             $.ajax({
                 url: mageUrlBuilder.build(config.addCardRedirectUrl), type: 'post', context: this, data: {
                     'custom_redirect_url': mageUrlBuilder.build(`paytrail/order/payments?open-change-card-modal=1&subscription=${subscriptionId}`),

@@ -1,25 +1,31 @@
 <?php
+
 namespace Paytrail\PaymentService\Model;
 
-use Magento\Customer\Model\Session;
+use Magento\Authorization\Model\UserContextInterface;
+use Magento\Framework\Api\FilterBuilder;
+use Magento\Framework\Api\Search\FilterGroupBuilder;
 use Magento\Framework\Api\SearchCriteriaBuilder;
+use Magento\Framework\Api\SearchCriteriaInterface;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Sales\Api\OrderManagementInterface;
 use Magento\Sales\Api\OrderRepositoryInterface;
 use Magento\Sales\Model\Order;
+use Paytrail\PaymentService\Api\Data\SubscriptionSearchResultInterface;
 use Paytrail\PaymentService\Api\SubscriptionLinkRepositoryInterface;
+use Paytrail\PaymentService\Api\SubscriptionManagementInterface;
 use Paytrail\PaymentService\Api\SubscriptionRepositoryInterface;
 use Psr\Log\LoggerInterface;
 
-class SubscriptionManagement
+class SubscriptionManagement implements SubscriptionManagementInterface
 {
     protected const STATUS_CLOSED = 'closed';
     protected const ORDER_PENDING_STATUS = 'pending';
 
     /**
-     * @var Session
+     * @var UserContextInterface
      */
-    protected $customerSession;
+    protected $userContext;
 
     /**
      * @var SubscriptionRepositoryInterface
@@ -52,29 +58,45 @@ class SubscriptionManagement
     protected $logger;
 
     /**
-     * @param Session $customerSession
+     * @var FilterBuilder
+     */
+    protected $filterBuilder;
+
+    /**
+     * @var FilterGroupBuilder
+     */
+    protected $groupBuilder;
+
+    /**
+     * @param UserContextInterface $userContext
      * @param SubscriptionRepositoryInterface $subscriptionRepository
      * @param SubscriptionLinkRepositoryInterface $subscriptionLinkRepository
      * @param OrderRepositoryInterface $orderRepository
      * @param OrderManagementInterface $orderManagementInterface
      * @param SearchCriteriaBuilder $searchCriteriaBuilder
+     * @param FilterBuilder $filterBuilder
+     * @param FilterGroupBuilder $filterGroupBuilder
      * @param LoggerInterface $logger
      */
     public function __construct(
-        Session $customerSession,
-        SubscriptionRepositoryInterface $subscriptionRepository,
+        UserContextInterface                $userContext,
+        SubscriptionRepositoryInterface     $subscriptionRepository,
         SubscriptionLinkRepositoryInterface $subscriptionLinkRepository,
-        OrderRepositoryInterface $orderRepository,
-        OrderManagementInterface $orderManagementInterface,
-        SearchCriteriaBuilder $searchCriteriaBuilder,
-        LoggerInterface $logger
+        OrderRepositoryInterface            $orderRepository,
+        OrderManagementInterface            $orderManagementInterface,
+        SearchCriteriaBuilder               $searchCriteriaBuilder,
+        FilterBuilder                       $filterBuilder,
+        FilterGroupBuilder                  $filterGroupBuilder,
+        LoggerInterface                     $logger
     ) {
-        $this->customerSession = $customerSession;
+        $this->userContext = $userContext;
         $this->subscriptionRepository = $subscriptionRepository;
         $this->subscriptionLinkRepository = $subscriptionLinkRepository;
         $this->orderRepository = $orderRepository;
         $this->orderManagementInterface = $orderManagementInterface;
         $this->searchCriteriaBuilder = $searchCriteriaBuilder;
+        $this->filterBuilder = $filterBuilder;
+        $this->groupBuilder = $filterGroupBuilder;
         $this->logger = $logger;
     }
 
@@ -85,9 +107,14 @@ class SubscriptionManagement
      */
     public function cancelSubscription($subscriptionId)
     {
+        $customerId = $this->userContext->getUserId();
+        if (!$customerId) {
+            throw new LocalizedException(__('Customer is not authorized for this operation'));
+        }
+
         try {
             $subscription = $this->subscriptionRepository->get((int)$subscriptionId);
-            $customer = $this->customerSession->getCustomer();
+            $customerId = $this->userContext->getUserId();
 
             $orderIds = $this->subscriptionLinkRepository->getOrderIdsBySubscriptionId((int)$subscriptionId);
             $searchCriteria = $this->searchCriteriaBuilder
@@ -96,7 +123,7 @@ class SubscriptionManagement
             $orders = $this->orderRepository->getList($searchCriteria);
 
             foreach ($orders->getItems() as $order) {
-                if (!$customer->getId() || $customer->getId() != $order->getCustomerId()) {
+                if ($customerId != $order->getCustomerId()) {
                     throw new LocalizedException(__('Customer is not authorized for this operation'));
                 }
                 $subscription->setStatus(self::STATUS_CLOSED);
@@ -113,5 +140,42 @@ class SubscriptionManagement
         }
 
         return __('Subscription has been canceled correctly');
+    }
+
+    /**
+     * @return \Paytrail\PaymentService\Api\Data\SubscriptionSearchResultInterface
+     * @throws LocalizedException
+     */
+    public function showSubscriptions(SearchCriteriaInterface $searchCriteria): SubscriptionSearchResultInterface
+    {
+        try {
+            if ($this->userContext->getUserId()) {
+                $this->filterByCustomer($searchCriteria);
+
+                return $this->subscriptionRepository->getList($searchCriteria);
+            }
+        } catch (\Throwable $e) {
+            $this->logger->error($e->getMessage());
+            throw new LocalizedException(__("Subscription orders can't be shown"));
+        }
+
+        throw new LocalizedException(__("Customer is not logged in"));
+    }
+
+    /**
+     * @param SearchCriteriaInterface $searchCriteria
+     * @return void
+     */
+    private function filterByCustomer(SearchCriteriaInterface $searchCriteria): void
+    {
+        $customerFilter = $this->filterBuilder
+            ->setField('customer_id')
+            ->setValue($this->userContext->getUserId())
+            ->setConditionType('eq')
+            ->create();
+        $customerFilterGroup = $this->groupBuilder->addFilter($customerFilter)->create();
+        $groups = $searchCriteria->getFilterGroups();
+        $groups[] = $customerFilterGroup;
+        $searchCriteria->setFilterGroups($groups);
     }
 }

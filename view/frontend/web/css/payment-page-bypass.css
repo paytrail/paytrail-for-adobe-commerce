@@ -183,7 +183,7 @@
 }
 
 .paytrail-order-payments.account .table-wrapper {
-    overflow-x: visible !important;
+    overflow: visible !important;
 }
 
 #payment-methods-modal {
