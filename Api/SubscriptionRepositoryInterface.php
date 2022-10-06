@@ -49,7 +49,7 @@ interface SubscriptionRepositoryInterface
 
     /**
      * @param $searchCriteria
-     * @return \Paytrail\PaymentService\Model\ResourceModel\Subscription\Collection
+     * @return \Paytrail\PaymentService\Api\Data\SubscriptionSearchResultInterface
      */
     public function getList(SearchCriteriaInterface $searchCriteria): SubscriptionSearchResultInterface;
 

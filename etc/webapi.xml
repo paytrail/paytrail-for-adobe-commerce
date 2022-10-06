@@ -8,9 +8,12 @@
         <resources>
             <resource ref="self"/>
         </resources>
-        <data>
-            <parameter name="customerId" force="true">%customer_id%</parameter>
-        </data>
+    </route>
+    <route url="/V1/paytrail/subscription/list" method="GET">
+        <service class="Paytrail\PaymentService\Api\SubscriptionManagementInterface" method="showSubscriptions" />
+        <resources>
+            <resource ref="self"/>
+        </resources>
     </route>
 
     <route url="/V1/paytrail/subscription/change/:subscription_id/:card_id" method="PUT">

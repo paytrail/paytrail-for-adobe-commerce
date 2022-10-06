@@ -112,6 +112,7 @@ Hello,Hei
 "Card for subscription changed successfully","Kortin vaihto toistuvaan tilaukseen onnistui"
 "Subscription couldn't be canceled","Tilausta ei voitu peruuttaa"
 "Subscription has been canceled correctly","Tilaus on peruutettu"
+"Subscription orders can't be shown","Tilaustilauksia ei voida näyttää"
 "Card not found","Korttia ei löydy"
 "The payment token doesn't belong to the customer", "Maksutunnus ei kuulu asiakkaalle"
 "The subscription doesn't belong to the customer", "Tilaus ei kuulu asiakkaalle"
