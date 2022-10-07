@@ -8,11 +8,13 @@ use Magento\Framework\Api\FilterBuilder;
 use Magento\Framework\Api\Search\FilterGroupBuilder;
 use Magento\Framework\Api\SearchCriteriaBuilder;
 use Magento\Framework\Api\SearchCriteriaInterface;
+use Magento\Framework\Exception\CouldNotSaveException;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Sales\Api\OrderManagementInterface;
 use Magento\Sales\Api\OrderRepositoryInterface;
 use Magento\Sales\Model\Order;
 use Magento\Vault\Api\PaymentTokenRepositoryInterface;
+use Paytrail\PaymentService\Api\Data\SubscriptionInterface;
 use Paytrail\PaymentService\Api\Data\SubscriptionSearchResultInterface;
 use Paytrail\PaymentService\Api\SubscriptionLinkRepositoryInterface;
 use Paytrail\PaymentService\Api\SubscriptionManagementInterface;
@@ -218,7 +220,22 @@ class SubscriptionManagement implements SubscriptionManagementInterface
         $this->customerData->validateTokensCustomer($paymentToken, $customerId);
         $this->customerData->validateSubscriptionsCustomer($subscription, $customerId);
 
-        $this->subscriptionRepository->updateSubscriptionsToken($subscription, $paymentToken);
+        $subscription->setSelectedToken($paymentToken->getEntityId());
+
+        return $this->save($subscription);
+    }
+
+    /**
+     * @param SubscriptionInterface $subscription
+     * @return bool
+     */
+    private function save(SubscriptionInterface $subscription): bool
+    {
+        try {
+            $this->subscriptionRepository->save($subscription);
+        } catch (CouldNotSaveException $e) {
+            return false;
+        }
 
         return true;
     }

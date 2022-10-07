@@ -22,15 +22,6 @@ interface SubscriptionRepositoryInterface
 
     /**
      * @param SubscriptionInterface $subscription
-     * @param PaymentTokenInterface $paymentToken
-     * @return void
-     *
-     * @throws CouldNotSaveException
-     */
-    public function updateSubscriptionsToken(SubscriptionInterface $subscription, PaymentTokenInterface $paymentToken): void;
-
-    /**
-     * @param SubscriptionInterface $subscription
      * @return SubscriptionInterface
      *
      * @throws CouldNotSaveException

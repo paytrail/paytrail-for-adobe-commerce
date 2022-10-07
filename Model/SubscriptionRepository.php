@@ -84,15 +84,4 @@ class SubscriptionRepository implements SubscriptionRepositoryInterface
             ));
         }
     }
-
-    /**
-     * @inheritdoc
-     */
-    public function updateSubscriptionsToken(
-        SubscriptionInterface $subscription,
-        PaymentTokenInterface $paymentToken
-    ): void {
-        $subscription->setSelectedToken((int)$paymentToken->getEntityId());
-        $this->save($subscription);
-    }
 }
