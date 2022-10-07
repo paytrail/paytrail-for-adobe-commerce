@@ -195,6 +195,8 @@
                 type="Paytrail\PaymentService\Model\SubscriptionManagement"/>
     <preference for="Paytrail\PaymentService\Api\CardManagementInterface"
                 type="Paytrail\PaymentService\Model\CardManagement"/>
+    <preference for="Paytrail\PaymentService\Api\CustomerTokensManagementInterface"
+                type="Paytrail\PaymentService\Model\Token\CustomerTokensManagement"/>
 
     <!-- Plugins -->
     <type name="Magento\Checkout\Model\Cart">

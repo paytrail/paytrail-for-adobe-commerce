@@ -16,6 +16,13 @@
         </resources>
     </route>
 
+    <route url="/V1/paytrail/payment/list" method="GET">
+        <service class="Paytrail\PaymentService\Api\CustomerTokensManagementInterface" method="showCustomerPaymentMethods" />
+        <resources>
+            <resource ref="self"/>
+        </resources>
+    </route>
+
     <route url="/V1/paytrail/subscription/change/:subscription_id/:card_id" method="PUT">
         <service class="Paytrail\PaymentService\Api\SubscriptionManagementInterface" method="changeSubscription"/>
         <resources>
