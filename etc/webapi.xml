@@ -3,7 +3,7 @@
         xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Webapi:etc/webapi.xsd">
 
     <!-- Subscriptions Service -->
-    <route url="/V1/paytrail/subscription/cancel/:subscription_id" method="GET">
+    <route url="/V1/paytrail/subscription/cancel/:subscription_id" method="PUT">
         <service class="Paytrail\PaymentService\Api\SubscriptionManagementInterface" method="cancelSubscription" />
         <resources>
             <resource ref="self"/>
