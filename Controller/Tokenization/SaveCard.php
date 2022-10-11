@@ -3,14 +3,14 @@
 namespace Paytrail\PaymentService\Controller\Tokenization;
 
 use Magento\Checkout\Model\Session;
-use Magento\Framework\App\ResponseInterface;
-use Magento\Framework\Serialize\SerializerInterface;
-use Magento\Framework\Encryption\EncryptorInterface;
 use Magento\Customer\Model\Session as CustomerSession;
 use Magento\Framework\App\Action\Context;
+use Magento\Framework\App\ResponseInterface;
+use Magento\Framework\Encryption\EncryptorInterface;
+use Magento\Framework\Serialize\SerializerInterface;
 use Magento\Vault\Api\PaymentTokenManagementInterface;
-use Magento\Vault\Model\PaymentTokenFactory;
 use Magento\Vault\Api\PaymentTokenRepositoryInterface;
+use Magento\Vault\Model\PaymentTokenFactory;
 use Paytrail\PaymentService\Gateway\Config\Config;
 use Paytrail\PaymentService\Helper\ApiData;
 use Paytrail\PaymentService\Helper\Data;
@@ -42,7 +42,7 @@ class SaveCard extends \Magento\Framework\App\Action\Action
     /**
      * @var CustomerSession
      */
-    private  $customerSession;
+    private $customerSession;
     /**
      * @var PaymentTokenFactory
      */
@@ -189,12 +189,17 @@ class SaveCard extends \Magento\Framework\App\Action\Action
     protected function getResponseData($tokenizationId)
     {
         $response = $this->apiData->processApiRequest(
-            'token_request', null, null, null, null,  $tokenizationId
+            'token_request',
+            null,
+            null,
+            null,
+            null,
+            $tokenizationId
         );
 
         $errorMsg = $response['error'];
 
-        if (isset($errorMsg)){
+        if (isset($errorMsg)) {
             $this->errorMsg = ($errorMsg);
             $this->opHelper->processError($errorMsg);
         }
@@ -205,7 +210,8 @@ class SaveCard extends \Magento\Framework\App\Action\Action
     /**
      * @param $responseData
      */
-    private function saveToken($responseData) {
+    private function saveToken($responseData)
+    {
         if (!$responseData) {
             $this->messageManager->addErrorMessage('There is a problem communicating with the provider');
             $this->logger->error('There is a problem communicating with the provider. Response data: ' . $responseData);
@@ -237,7 +243,7 @@ class SaveCard extends \Magento\Framework\App\Action\Action
         );
         $vaultPaymentToken->setGatewayToken($gatewayToken);
         $vaultPaymentToken->setTokenDetails($tokenDetails);
-        $vaultPaymentToken->setPublicHash($this->createPublicHash($cardData,$customerId));
+        $vaultPaymentToken->setPublicHash($this->createPublicHash($cardData, $customerId));
         $this->tokenRepository->save($vaultPaymentToken);
     }
 

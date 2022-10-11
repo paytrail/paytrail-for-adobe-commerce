@@ -56,11 +56,6 @@ interface SubscriptionInterface
     public function getUpdatedAt() : string;
 
     /**
-     * @return string
-     */
-    public function getEndDate() : string;
-
-    /**
      * @return int
      */
     public function getRepeatCountLeft() : int;
@@ -110,12 +105,6 @@ interface SubscriptionInterface
      * @return $this
      */
     public function setUpdatedAt(string $updatedAt) : self;
-
-    /**
-     * @param string $endDate
-     * @return $this
-     */
-    public function setEndDate(string $endDate) : self;
 
     /**
      * How many times payment will be processed before it ends.
