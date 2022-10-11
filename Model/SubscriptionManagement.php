@@ -87,8 +87,11 @@ class SubscriptionManagement implements SubscriptionManagementInterface
     {
         try {
             $subscription = $this->subscriptionRepository->get((int)$subscriptionId);
-            $customerId = $this->userContext->getUserId();
+            if ($subscription->getStatus() === self::STATUS_CLOSED) {
+                return (__('Subscription is closed'));
+            }
 
+            $customerId = $this->userContext->getUserId();
             $orderIds = $this->subscriptionLinkRepository->getOrderIdsBySubscriptionId((int)$subscriptionId);
             $searchCriteria = $this->searchCriteriaBuilder
                 ->addFilter('entity_id', $orderIds, 'in')
