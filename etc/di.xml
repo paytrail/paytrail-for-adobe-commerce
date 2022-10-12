@@ -1,204 +1,220 @@
 <?xml version="1.0"?>
-<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
-  <type name="Magento\Sales\Block\Adminhtml\Order\View">
-    <plugin name="paytrail_restore_order_button" type="Paytrail\PaymentService\Plugin\Magento\Sales\Block\Adminhtml\Order\ViewPlugin"/>
-  </type>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
+    <type name="Magento\Sales\Block\Adminhtml\Order\View">
+        <plugin name="paytrail_restore_order_button"
+                type="Paytrail\PaymentService\Plugin\Magento\Sales\Block\Adminhtml\Order\ViewPlugin"/>
+    </type>
 
-  <type name="Magento\Tax\Model\Config">
-    <plugin name="paytrail_payment_service_tax_config_plugin" type="Paytrail\PaymentService\Plugin\Model\TaxConfigPlugin" sortOrder="1" disabled="false" />
-  </type>
+    <type name="Magento\Tax\Model\Config">
+        <plugin name="paytrail_payment_service_tax_config_plugin"
+                type="Paytrail\PaymentService\Plugin\Model\TaxConfigPlugin" sortOrder="1" disabled="false"/>
+    </type>
 
-  <virtualType name="PaytrailAdapter" type="Magento\Payment\Model\Method\Adapter">
-    <arguments>
-      <argument name="code" xsi:type="const">Paytrail\PaymentService\Model\ConfigProvider::CODE</argument>
-      <argument name="formBlockType" xsi:type="string">Paytrail\PaymentService\Block\Form\Paytrail</argument>
-      <argument name="infoBlockType" xsi:type="string">Paytrail\PaymentService\Block\Info\Paytrail</argument>
-      <argument name="valueHandlerPool" xsi:type="object">PaytrailValueHandlerPool</argument>
-      <argument name="commandPool" xsi:type="object">PaytrailCommandPool</argument>
-      <argument name="validatorPool" xsi:type="object">PaytrailValidatorPool</argument>
-    </arguments>
-  </virtualType>
+    <virtualType name="PaytrailAdapter" type="Magento\Payment\Model\Method\Adapter">
+        <arguments>
+            <argument name="code" xsi:type="const">Paytrail\PaymentService\Model\ConfigProvider::CODE</argument>
+            <argument name="formBlockType" xsi:type="string">Paytrail\PaymentService\Block\Form\Paytrail</argument>
+            <argument name="infoBlockType" xsi:type="string">Paytrail\PaymentService\Block\Info\Paytrail</argument>
+            <argument name="valueHandlerPool" xsi:type="object">PaytrailValueHandlerPool</argument>
+            <argument name="commandPool" xsi:type="object">PaytrailCommandPool</argument>
+            <argument name="validatorPool" xsi:type="object">PaytrailValidatorPool</argument>
+        </arguments>
+    </virtualType>
 
-  <type name="Paytrail\PaymentService\Helper\ApiData">
-    <arguments>
-      <argument name="log" xsi:type="object">Paytrail\PaymentService\Logger\PaytrailLogger</argument>
-    </arguments>
-  </type>
+    <type name="Paytrail\PaymentService\Helper\ApiData">
+        <arguments>
+            <argument name="log" xsi:type="object">Paytrail\PaymentService\Logger\PaytrailLogger</argument>
+        </arguments>
+    </type>
 
-  <type name="Paytrail\PaymentService\Model\ReceiptDataProvider">
-    <arguments>
-      <argument name="logger" xsi:type="object">Paytrail\PaymentService\Logger\PaytrailLogger</argument>
-    </arguments>
-  </type>
+    <type name="Paytrail\PaymentService\Model\ReceiptDataProvider">
+        <arguments>
+            <argument name="logger" xsi:type="object">Paytrail\PaymentService\Logger\PaytrailLogger</argument>
+        </arguments>
+    </type>
 
-  <virtualType name="PaytrailConfig" type="Magento\Payment\Gateway\Config\Config">
-    <arguments>
-      <argument name="methodCode" xsi:type="const">Paytrail\PaymentService\Model\ConfigProvider::CODE</argument>
-    </arguments>
-  </virtualType>
-  <virtualType name="PaytrailConfigValueHandler" type="Magento\Payment\Gateway\Config\ConfigValueHandler">
-    <arguments>
-      <argument name="configInterface" xsi:type="object">PaytrailConfig</argument>
-    </arguments>
-  </virtualType>
-  <virtualType name="PaytrailValueHandlerPool" type="Magento\Payment\Gateway\Config\ValueHandlerPool">
-    <arguments>
-      <argument name="handlers" xsi:type="array">
-        <item name="default" xsi:type="string">PaytrailConfigValueHandler</item>
-      </argument>
-    </arguments>
-  </virtualType>
+    <virtualType name="PaytrailConfig" type="Magento\Payment\Gateway\Config\Config">
+        <arguments>
+            <argument name="methodCode" xsi:type="const">Paytrail\PaymentService\Model\ConfigProvider::CODE</argument>
+        </arguments>
+    </virtualType>
+    <virtualType name="PaytrailConfigValueHandler" type="Magento\Payment\Gateway\Config\ConfigValueHandler">
+        <arguments>
+            <argument name="configInterface" xsi:type="object">PaytrailConfig</argument>
+        </arguments>
+    </virtualType>
+    <virtualType name="PaytrailValueHandlerPool" type="Magento\Payment\Gateway\Config\ValueHandlerPool">
+        <arguments>
+            <argument name="handlers" xsi:type="array">
+                <item name="default" xsi:type="string">PaytrailConfigValueHandler</item>
+            </argument>
+        </arguments>
+    </virtualType>
 
-  <virtualType name="PaytrailCommandPool" type="Magento\Payment\Gateway\Command\CommandPool">
-    <arguments>
-      <argument name="commands" xsi:type="array">
-        <item name="initialize" xsi:type="string">Paytrail\PaymentService\Gateway\Command\Initialize</item>
-        <item name="refund" xsi:type="string">PaytrailRefundCommand</item>
-        <item name="vault_authorize" xsi:type="string">PaytrailPaymentServiceVaultAuthorizeCommand</item>
-      </argument>
-    </arguments>
-  </virtualType>
+    <virtualType name="PaytrailCommandPool" type="Magento\Payment\Gateway\Command\CommandPool">
+        <arguments>
+            <argument name="commands" xsi:type="array">
+                <item name="initialize" xsi:type="string">Paytrail\PaymentService\Gateway\Command\Initialize</item>
+                <item name="refund" xsi:type="string">PaytrailRefundCommand</item>
+                <item name="vault_authorize" xsi:type="string">PaytrailPaymentServiceVaultAuthorizeCommand</item>
+            </argument>
+        </arguments>
+    </virtualType>
 
-  <virtualType name="PaytrailPaymentServiceVaultAuthorizeCommand" type="Magento\Payment\Gateway\Command\GatewayCommand">
-    <arguments>
-      <argument name="requestBuilder" xsi:type="object">PaytrailPaymentServiceVaultAuthorizeRequest</argument>
-    </arguments>
-  </virtualType>
+    <virtualType name="PaytrailPaymentServiceVaultAuthorizeCommand"
+                 type="Magento\Payment\Gateway\Command\GatewayCommand">
+        <arguments>
+            <argument name="requestBuilder" xsi:type="object">PaytrailPaymentServiceVaultAuthorizeRequest</argument>
+        </arguments>
+    </virtualType>
 
-  <virtualType name="PaytrailPaymentServiceVaultAuthorizeRequest" type="Magento\Payment\Gateway\Request\BuilderComposite">
-    <arguments>
-      <argument name="builders" xsi:type="array">
-        <item name="refund" xsi:type="string">Paytrail\PaymentService\Gateway\Request\VaultRequestBuilder</item>
-      </argument>
-    </arguments>
-  </virtualType>
+    <virtualType name="PaytrailPaymentServiceVaultAuthorizeRequest"
+                 type="Magento\Payment\Gateway\Request\BuilderComposite">
+        <arguments>
+            <argument name="builders" xsi:type="array">
+                <item name="refund" xsi:type="string">Paytrail\PaymentService\Gateway\Request\VaultRequestBuilder</item>
+            </argument>
+        </arguments>
+    </virtualType>
 
-  <virtualType name="PaytrailVaultFacade" type="Magento\Vault\Model\Method\Vault">
-    <arguments>
-      <argument name="config" xsi:type="object">PaytrailVaultPaymentConfig</argument>
-      <argument name="valueHandlerPool" xsi:type="object">PaytrailValueHandlerPool</argument>
-      <argument name="vaultProvider" xsi:type="object">PaytrailAdapter</argument>
-      <argument name="code" xsi:type="const">Paytrail\PaymentService\Gateway\Config\Config::CC_VAULT_CODE</argument>
-    </arguments>
-  </virtualType>
+    <virtualType name="PaytrailVaultFacade" type="Magento\Vault\Model\Method\Vault">
+        <arguments>
+            <argument name="config" xsi:type="object">PaytrailVaultPaymentConfig</argument>
+            <argument name="valueHandlerPool" xsi:type="object">PaytrailValueHandlerPool</argument>
+            <argument name="vaultProvider" xsi:type="object">PaytrailAdapter</argument>
+            <argument name="code" xsi:type="const">Paytrail\PaymentService\Gateway\Config\Config::CC_VAULT_CODE
+            </argument>
+        </arguments>
+    </virtualType>
 
-  <virtualType name="PaytrailVaultPaymentConfig" type="Magento\Payment\Gateway\Config\Config">
-    <arguments>
-      <argument name="methodCode" xsi:type="const">Paytrail\PaymentService\Gateway\Config\Config::CC_VAULT_CODE</argument>
-    </arguments>
-  </virtualType>
+    <virtualType name="PaytrailVaultPaymentConfig" type="Magento\Payment\Gateway\Config\Config">
+        <arguments>
+            <argument name="methodCode" xsi:type="const">Paytrail\PaymentService\Gateway\Config\Config::CC_VAULT_CODE
+            </argument>
+        </arguments>
+    </virtualType>
 
-  <type name="Magento\Vault\Model\Ui\TokensConfigProvider">
-    <arguments>
-      <argument name="tokenUiComponentProviders" xsi:type="array">
-        <item name="paytrail" xsi:type="object">Paytrail\PaymentService\Model\Ui\TokenUiComponentProvider</item>
-      </argument>
-    </arguments>
-  </type>
+    <type name="Magento\Vault\Model\Ui\TokensConfigProvider">
+        <arguments>
+            <argument name="tokenUiComponentProviders" xsi:type="array">
+                <item name="paytrail" xsi:type="object">Paytrail\PaymentService\Model\Ui\TokenUiComponentProvider</item>
+            </argument>
+        </arguments>
+    </type>
 
-  <virtualType name="PaytrailRefundCommand" type="Magento\Payment\Gateway\Command\GatewayCommand">
-    <arguments>
-      <argument name="requestBuilder" xsi:type="object">PaytrailRefundRequest</argument>
-      <argument name="transferFactory" xsi:type="object">Paytrail\PaymentService\Gateway\Http\TransferFactory</argument>
-      <argument name="client" xsi:type="object">Paytrail\PaymentService\Gateway\Http\Client\TransactionRefund</argument>
-      <argument name="validator" xsi:type="object">Paytrail\PaymentService\Gateway\Validator\RefundResponseValidator</argument>
-      <argument name="handler" xsi:type="object">Paytrail\PaymentService\Gateway\Response\RefundHandler</argument>
-    </arguments>
-  </virtualType>
+    <virtualType name="PaytrailRefundCommand" type="Magento\Payment\Gateway\Command\GatewayCommand">
+        <arguments>
+            <argument name="requestBuilder" xsi:type="object">PaytrailRefundRequest</argument>
+            <argument name="transferFactory" xsi:type="object">Paytrail\PaymentService\Gateway\Http\TransferFactory
+            </argument>
+            <argument name="client" xsi:type="object">Paytrail\PaymentService\Gateway\Http\Client\TransactionRefund
+            </argument>
+            <argument name="validator" xsi:type="object">
+                Paytrail\PaymentService\Gateway\Validator\RefundResponseValidator
+            </argument>
+            <argument name="handler" xsi:type="object">Paytrail\PaymentService\Gateway\Response\RefundHandler</argument>
+        </arguments>
+    </virtualType>
 
-  <virtualType name="PaytrailRefundRequest" type="Magento\Payment\Gateway\Request\BuilderComposite">
-    <arguments>
-      <argument name="builders" xsi:type="array">
-        <item name="refund" xsi:type="string">Paytrail\PaymentService\Gateway\Request\RefundDataBuilder</item>
-      </argument>
-    </arguments>
-  </virtualType>
+    <virtualType name="PaytrailRefundRequest" type="Magento\Payment\Gateway\Request\BuilderComposite">
+        <arguments>
+            <argument name="builders" xsi:type="array">
+                <item name="refund" xsi:type="string">Paytrail\PaymentService\Gateway\Request\RefundDataBuilder</item>
+            </argument>
+        </arguments>
+    </virtualType>
 
-  <virtualType name="PaytrailCountryValidator" type="Paytrail\PaymentService\Gateway\Validator\CountryValidator">
-    <arguments>
-      <argument name="config" xsi:type="object">Paytrail\PaymentService\Gateway\Config\Config</argument>
-    </arguments>
-  </virtualType>
-  <virtualType name="PaytrailValidatorPool" type="Magento\Payment\Gateway\Validator\ValidatorPool">
-    <arguments>
-      <argument name="validators" xsi:type="array">
-        <item name="country" xsi:type="string">PaytrailCountryValidator</item>
-      </argument>
-    </arguments>
-  </virtualType>
+    <virtualType name="PaytrailCountryValidator" type="Paytrail\PaymentService\Gateway\Validator\CountryValidator">
+        <arguments>
+            <argument name="config" xsi:type="object">Paytrail\PaymentService\Gateway\Config\Config</argument>
+        </arguments>
+    </virtualType>
+    <virtualType name="PaytrailValidatorPool" type="Magento\Payment\Gateway\Validator\ValidatorPool">
+        <arguments>
+            <argument name="validators" xsi:type="array">
+                <item name="country" xsi:type="string">PaytrailCountryValidator</item>
+            </argument>
+        </arguments>
+    </virtualType>
 
-  <!-- start log configuration -->
-  <type name="Paytrail\PaymentService\Logger\PaytrailLogger">
-    <arguments>
-      <argument name="handlers" xsi:type="array">
-        <item name="info" xsi:type="object">Paytrail\PaymentService\Logger\Request</item>
-        <item name="notice" xsi:type="object">Paytrail\PaymentService\Logger\Response</item>
-      </argument>
-    </arguments>
-  </type>
+    <!-- start log configuration -->
+    <type name="Paytrail\PaymentService\Logger\PaytrailLogger">
+        <arguments>
+            <argument name="handlers" xsi:type="array">
+                <item name="info" xsi:type="object">Paytrail\PaymentService\Logger\Request</item>
+                <item name="notice" xsi:type="object">Paytrail\PaymentService\Logger\Response</item>
+            </argument>
+        </arguments>
+    </type>
 
-  <type name="Paytrail\PaymentService\Logger\Request\Request">
-    <arguments>
-      <argument name="filesystem" xsi:type="object">Magento\Framework\Filesystem\Driver\File</argument>
-    </arguments>
-  </type>
+    <type name="Paytrail\PaymentService\Logger\Request\Request">
+        <arguments>
+            <argument name="filesystem" xsi:type="object">Magento\Framework\Filesystem\Driver\File</argument>
+        </arguments>
+    </type>
 
-  <type name="Paytrail\PaymentService\Logger\Response\Response">
-    <arguments>
-      <argument name="filesystem" xsi:type="object">Magento\Framework\Filesystem\Driver\File</argument>
-    </arguments>
-  </type>
-  <!-- Subscription -->
-  <!-- Commands -->
-  <type name="Magento\Framework\Console\CommandListInterface">
-    <arguments>
-      <argument name="commands" xsi:type="array">
-        <item name="recurring_payment_bill" xsi:type="object">Paytrail\PaymentService\Console\Command\Bill</item>
-        <item name="recurring_payment_notify" xsi:type="object">Paytrail\PaymentService\Console\Command\Notify</item>
-      </argument>
-    </arguments>
-  </type>
+    <type name="Paytrail\PaymentService\Logger\Response\Response">
+        <arguments>
+            <argument name="filesystem" xsi:type="object">Magento\Framework\Filesystem\Driver\File</argument>
+        </arguments>
+    </type>
+    <!-- Subscription -->
+    <!-- Commands -->
+    <type name="Magento\Framework\Console\CommandListInterface">
+        <arguments>
+            <argument name="commands" xsi:type="array">
+                <item name="recurring_payment_bill" xsi:type="object">Paytrail\PaymentService\Console\Command\Bill
+                </item>
+                <item name="recurring_payment_notify" xsi:type="object">Paytrail\PaymentService\Console\Command\Notify
+                </item>
+            </argument>
+        </arguments>
+    </type>
 
-  <!-- Preferences -->
-  <preference for="Paytrail\PaymentService\Api\SubscriptionRepositoryInterface"
-              type="Paytrail\PaymentService\Model\SubscriptionRepository"/>
-  <preference for="Paytrail\PaymentService\Api\Data\SubscriptionInterface"
-              type="Paytrail\PaymentService\Model\Subscription"/>
-  <preference for="Paytrail\PaymentService\Api\Data\SubscriptionSearchResultInterface"
-              type="Paytrail\PaymentService\Model\ResourceModel\Subscription\Collection"/>
-  <preference for="Paytrail\PaymentService\Api\RecurringProfileRepositoryInterface"
-              type="Paytrail\PaymentService\Model\Subscription\ProfileRepository"/>
-  <preference for="Paytrail\PaymentService\Api\Data\RecurringProfileInterface"
-              type="Paytrail\PaymentService\Model\Subscription\Profile"/>
-  <preference for="Paytrail\PaymentService\Api\Data\RecurringProfileSearchResultInterface"
-              type="Paytrail\PaymentService\Model\ResourceModel\Subscription\Profile\Collection"/>
-  <preference for="Paytrail\PaymentService\Api\SubscriptionLinkRepositoryInterface"
-              type="Paytrail\PaymentService\Model\Subscription\SubscriptionLinkRepository"/>
-  <preference for="Paytrail\PaymentService\Api\Data\SubscriptionLinkInterface"
-              type="Paytrail\PaymentService\Model\Subscription\SubscriptionLink"/>
-  <preference for="Paytrail\PaymentService\Api\Data\SubscriptionLinkSearchResultInterface"
-              type="Paytrail\PaymentService\Model\ResourceModel\Subscription\SubscriptionLink\Collection"/>
-  <preference for="Paytrail\PaymentService\Api\SubscriptionManagementInterface"
-              type="Paytrail\PaymentService\Model\SubscriptionManagement"/>
-  <preference for="Paytrail\PaymentService\Api\CustomerTokensManagementInterface"
-              type="Paytrail\PaymentService\Model\Token\CustomerTokensManagement"/>
+    <!-- Preferences -->
+    <preference for="Paytrail\PaymentService\Api\SubscriptionRepositoryInterface"
+                type="Paytrail\PaymentService\Model\SubscriptionRepository"/>
+    <preference for="Paytrail\PaymentService\Api\Data\SubscriptionInterface"
+                type="Paytrail\PaymentService\Model\Subscription"/>
+    <preference for="Paytrail\PaymentService\Api\Data\SubscriptionSearchResultInterface"
+                type="Paytrail\PaymentService\Model\ResourceModel\Subscription\Collection"/>
+    <preference for="Paytrail\PaymentService\Api\RecurringProfileRepositoryInterface"
+                type="Paytrail\PaymentService\Model\Subscription\ProfileRepository"/>
+    <preference for="Paytrail\PaymentService\Api\Data\RecurringProfileInterface"
+                type="Paytrail\PaymentService\Model\Subscription\Profile"/>
+    <preference for="Paytrail\PaymentService\Api\Data\RecurringProfileSearchResultInterface"
+                type="Paytrail\PaymentService\Model\ResourceModel\Subscription\Profile\Collection"/>
+    <preference for="Paytrail\PaymentService\Api\SubscriptionLinkRepositoryInterface"
+                type="Paytrail\PaymentService\Model\Subscription\SubscriptionLinkRepository"/>
+    <preference for="Paytrail\PaymentService\Api\Data\SubscriptionLinkInterface"
+                type="Paytrail\PaymentService\Model\Subscription\SubscriptionLink"/>
+    <preference for="Paytrail\PaymentService\Api\Data\SubscriptionLinkSearchResultInterface"
+                type="Paytrail\PaymentService\Model\ResourceModel\Subscription\SubscriptionLink\Collection"/>
+    <preference for="Paytrail\PaymentService\Api\SubscriptionManagementInterface"
+                type="Paytrail\PaymentService\Model\SubscriptionManagement"/>
+    <preference for="Paytrail\PaymentService\Api\CardManagementInterface"
+                type="Paytrail\PaymentService\Model\CardManagement"/>
+    <preference for="Paytrail\PaymentService\Api\CustomerTokensManagementInterface"
+                type="Paytrail\PaymentService\Model\Token\CustomerTokensManagement"/>
 
-  <!-- Plugins -->
-  <type name="Magento\Checkout\Model\Cart">
-    <plugin name="prevent_different_scheduled_cart" type="Paytrail\PaymentService\Plugin\PreventDifferentScheduledCart"/>
-  </type>
+    <!-- Plugins -->
+    <type name="Magento\Checkout\Model\Cart">
+        <plugin name="prevent_different_scheduled_cart"
+                type="Paytrail\PaymentService\Plugin\PreventDifferentScheduledCart"/>
+    </type>
 
-  <!-- arguments -->
-  <type name="\Paytrail\PaymentService\Model\Subscription\OrderCloner">
-    <arguments>
-      <argument name="quoteSession" xsi:type="object">Magento\Backend\Model\Session\Quote\Proxy</argument>
-    </arguments>
-  </type>
+    <!-- arguments -->
+    <type name="\Paytrail\PaymentService\Model\Subscription\OrderCloner">
+        <arguments>
+            <argument name="quoteSession" xsi:type="object">Magento\Backend\Model\Session\Quote\Proxy</argument>
+        </arguments>
+    </type>
 
-  <type name="\Paytrail\PaymentService\Console\Command\Notify">
-    <arguments>
-      <argument name="notify" xsi:type="object">\Paytrail\PaymentService\Model\Recurring\Notify\Proxy</argument>
-      <argument name="state" xsi:type="object">\Magento\Framework\App\State\Proxy</argument>
-    </arguments>
-  </type>
+    <type name="\Paytrail\PaymentService\Console\Command\Notify">
+        <arguments>
+            <argument name="notify" xsi:type="object">\Paytrail\PaymentService\Model\Recurring\Notify\Proxy</argument>
+            <argument name="state" xsi:type="object">\Magento\Framework\App\State\Proxy</argument>
+        </arguments>
+    </type>
 </config>

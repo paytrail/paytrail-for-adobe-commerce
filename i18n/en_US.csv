@@ -64,3 +64,6 @@ Instructions,Instructions
 "Select Card","Select Card"
 "Unable to change card","Unable to change card"
 "Card for subscription changed successfully","Card for subscription changed successfully"
+"Card not found","Card not found"
+"The payment token doesn't belong to the customer", "The payment token doesn't belong to the customer"
+"The subscription doesn't belong to the customer", "The subscription doesn't belong to the customer"
