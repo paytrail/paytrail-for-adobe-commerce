@@ -67,3 +67,4 @@ Instructions,Instructions
 "Card not found","Card not found"
 "The payment token doesn't belong to the customer", "The payment token doesn't belong to the customer"
 "The subscription doesn't belong to the customer", "The subscription doesn't belong to the customer"
+"The card has active subscriptions","The card has an active subscriptions"
