@@ -12,6 +12,7 @@ use Magento\Store\Model\StoreManagerInterface;
 use Paytrail\PaymentService\Exceptions\CheckoutException;
 use Paytrail\PaymentService\Gateway\Config\Config as GatewayConfig;
 use Paytrail\PaymentService\Helper\Data as CheckoutHelper;
+use Paytrail\PaymentService\Helper\Email\PendingOrderEmailConfirmation;
 use Paytrail\PaymentService\Logger\PaytrailLogger;
 use Paytrail\PaymentService\Model\Adapter\Adapter;
 use Paytrail\SDK\Model\CallbackUrl;
@@ -110,23 +111,48 @@ class ApiData
      */
     private $paymentStatusRequest;
 
+    /**
+     * @var PendingOrderEmailConfirmation
+     */
+    private $pendingOrderEmailConfirmation;
+
+    /**
+     * @param LoggerInterface $log
+     * @param UrlInterface $urlBuilder
+     * @param RequestInterface $request
+     * @param Json $json
+     * @param Data $helper
+     * @param GatewayConfig $gatewayConfig
+     * @param StoreManagerInterface $storeManager
+     * @param Adapter $paytrailAdapter
+     * @param PaymentRequest $paymentRequest
+     * @param RefundRequest $refundRequest
+     * @param EmailRefundRequest $emailRefundRequest
+     * @param AddCardFormRequest $addCardFormRequest
+     * @param GetTokenRequest $getTokenRequest
+     * @param CitPaymentRequest $citPaymentRequest
+     * @param PaymentStatusRequest $paymentStatusRequest
+     * @param PendingOrderEmailConfirmation $pendingOrderEmailConfirmation
+     * @param RequestData $requestData
+     */
     public function __construct(
-        LoggerInterface $log,
-        UrlInterface $urlBuilder,
-        RequestInterface $request,
-        Json $json,
-        CheckoutHelper $helper,
-        GatewayConfig $gatewayConfig,
-        StoreManagerInterface $storeManager,
-        Adapter $paytrailAdapter,
-        PaymentRequest $paymentRequest,
-        RefundRequest $refundRequest,
-        EmailRefundRequest $emailRefundRequest,
-        AddCardFormRequest $addCardFormRequest,
-        GetTokenRequest $getTokenRequest,
-        CitPaymentRequest $citPaymentRequest,
-        PaymentStatusRequest $paymentStatusRequest,
-        RequestData $requestData
+        LoggerInterface               $log,
+        UrlInterface                  $urlBuilder,
+        RequestInterface              $request,
+        Json                          $json,
+        CheckoutHelper                $helper,
+        GatewayConfig                 $gatewayConfig,
+        StoreManagerInterface         $storeManager,
+        Adapter                       $paytrailAdapter,
+        PaymentRequest                $paymentRequest,
+        RefundRequest                 $refundRequest,
+        EmailRefundRequest            $emailRefundRequest,
+        AddCardFormRequest            $addCardFormRequest,
+        GetTokenRequest               $getTokenRequest,
+        CitPaymentRequest             $citPaymentRequest,
+        PaymentStatusRequest          $paymentStatusRequest,
+        PendingOrderEmailConfirmation $pendingOrderEmailConfirmation,
+        RequestData                   $requestData
     ) {
         $this->log = $log;
         $this->urlBuilder = $urlBuilder;
@@ -143,6 +169,7 @@ class ApiData
         $this->getTokenRequest = $getTokenRequest;
         $this->citPaymentRequest = $citPaymentRequest;
         $this->paymentStatusRequest = $paymentStatusRequest;
+        $this->pendingOrderEmailConfirmation = $pendingOrderEmailConfirmation;
         $this->requestData = $requestData;
     }
 
@@ -164,7 +191,8 @@ class ApiData
         $transactionId = null,
         $methodId = null,
         $tokenizationId = null
-    ) {
+    )
+    {
         $response["data"] = null;
         $response["error"] = null;
 
@@ -191,6 +219,8 @@ class ApiData
                     'transactionId' => $response["data"]->getTransactionId(),
                     'href' => $response["data"]->getHref()
                 ]);
+
+                $this->pendingOrderEmailConfirmation->pendingOrderEmailSend($order);
 
                 $this->log->debugLog(
                     'response',
