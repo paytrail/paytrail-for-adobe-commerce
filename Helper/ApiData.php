@@ -191,8 +191,7 @@ class ApiData
         $transactionId = null,
         $methodId = null,
         $tokenizationId = null
-    )
-    {
+    ) {
         $response["data"] = null;
         $response["error"] = null;
 

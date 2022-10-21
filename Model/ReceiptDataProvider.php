@@ -205,7 +205,8 @@ class ReceiptDataProvider
      * @param ApiData $apiData
      * @param LoggerInterface $logger
      * @param UrlInterface $backendUrl
-     * @param bool $skipHmac
+     * @param PendingOrderEmailConfirmation $pendingOrderEmail
+     * @param $skipHmac
      */
     public function __construct(
         Context                               $context,
