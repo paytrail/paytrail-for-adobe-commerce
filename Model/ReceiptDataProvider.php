@@ -1,6 +1,8 @@
 <?php
+
 namespace Paytrail\PaymentService\Model;
 
+use Magento\Backend\Model\UrlInterface;
 use Magento\Checkout\Model\Session;
 use Magento\Framework\App\Action\Context;
 use Magento\Framework\App\CacheInterface;
@@ -24,6 +26,7 @@ use Paytrail\PaymentService\Gateway\Config\Config;
 use Paytrail\PaymentService\Gateway\Validator\ResponseValidator;
 use Paytrail\PaymentService\Helper\ApiData;
 use Paytrail\PaymentService\Helper\Data as paytrailHelper;
+use Paytrail\PaymentService\Helper\Email\PendingOrderEmailConfirmation;
 use Paytrail\PaymentService\Setup\Recurring;
 use Psr\Log\LoggerInterface;
 
@@ -166,13 +169,18 @@ class ReceiptDataProvider
      */
     protected $logger;
     /**
-     * @var \Magento\Backend\Model\UrlInterface
+     * @var UrlInterface
      */
     private $backendUrl;
     /**
      * @var bool
      */
     private $skipHmac;
+
+    /**
+     * @var PendingOrderEmailConfirmation
+     */
+    private $pendingOrderEmail;
 
     /**
      * ReceiptDataProvider constructor.
@@ -196,32 +204,33 @@ class ReceiptDataProvider
      * @param Config $gatewayConfig
      * @param ApiData $apiData
      * @param LoggerInterface $logger
-     * @param \Magento\Backend\Model\UrlInterface $backendUrl
+     * @param UrlInterface $backendUrl
      * @param bool $skipHmac
      */
     public function __construct(
-        Context $context,
-        Session $session,
-        TransactionRepositoryInterface $transactionRepository,
-        OrderSender $orderSender,
-        TransportBuilder $transportBuilder,
-        ScopeConfigInterface $scopeConfig,
-        OrderManagementInterface $orderManagementInterface,
-        ResponseValidator $responseValidator,
-        OrderRepositoryInterface $orderRepositoryInterface,
-        transactionBuilderInterface $transactionBuilderInterface,
-        CacheInterface $cache,
-        InvoiceService $invoiceService,
+        Context                               $context,
+        Session                               $session,
+        TransactionRepositoryInterface        $transactionRepository,
+        OrderSender                           $orderSender,
+        TransportBuilder                      $transportBuilder,
+        ScopeConfigInterface                  $scopeConfig,
+        OrderManagementInterface              $orderManagementInterface,
+        ResponseValidator                     $responseValidator,
+        OrderRepositoryInterface              $orderRepositoryInterface,
+        transactionBuilderInterface           $transactionBuilderInterface,
+        CacheInterface                        $cache,
+        InvoiceService                        $invoiceService,
         OrderStatusHistoryRepositoryInterface $orderStatusHistoryRepository,
-        TransactionFactory $transactionFactory,
-        paytrailHelper $paytrailHelper,
-        OrderInterface $orderInterface,
-        transactionBuilder $transactionBuilder,
-        Config $gatewayConfig,
-        ApiData $apiData,
-        LoggerInterface $logger,
-        \Magento\Backend\Model\UrlInterface $backendUrl,
-        $skipHmac = false
+        TransactionFactory                    $transactionFactory,
+        paytrailHelper                        $paytrailHelper,
+        OrderInterface                        $orderInterface,
+        transactionBuilder                    $transactionBuilder,
+        Config                                $gatewayConfig,
+        ApiData                               $apiData,
+        LoggerInterface                       $logger,
+        UrlInterface                          $backendUrl,
+        PendingOrderEmailConfirmation         $pendingOrderEmail,
+                                              $skipHmac = false
     ) {
         $this->cache = $cache;
         $this->context = $context;
@@ -245,6 +254,7 @@ class ReceiptDataProvider
         $this->logger = $logger;
         $this->backendUrl = $backendUrl;
         $this->skipHmac = $skipHmac;
+        $this->pendingOrderEmail = $pendingOrderEmail;
     }
 
     /**
@@ -263,9 +273,9 @@ class ReceiptDataProvider
             $this->orderIncrementalId
                 = $params["checkout-reference"];
         }
-        $this->transactionId        =   $params["checkout-transaction-id"];
-        $this->paramsStamp          =   $params['checkout-stamp'];
-        $this->paramsMethod         =   $params['checkout-provider'];
+        $this->transactionId = $params["checkout-transaction-id"];
+        $this->paramsStamp = $params['checkout-stamp'];
+        $this->paramsMethod = $params['checkout-provider'];
 
         $this->session->unsCheckoutRedirectUrl();
 
@@ -349,7 +359,9 @@ class ReceiptDataProvider
         $this->orderRepositoryInterface->save($this->currentOrder);
 
         try {
-            $this->orderSender->send($this->currentOrder);
+            if (!$this->pendingOrderEmail->isPendingOrderEmailEnabled()) {
+                $this->orderSender->send($this->currentOrder);
+            }
         } catch (\Exception $e) {
             $this->logger->error(\sprintf(
                 'Paytrail: Order email sending failed: %s',
@@ -430,9 +442,9 @@ class ReceiptDataProvider
     protected function getDetails()
     {
         return [
-            'orderNo'   => $this->orderIncrementalId,
-            'stamp'     => $this->paramsStamp,
-            'method'    => $this->paramsMethod
+            'orderNo' => $this->orderIncrementalId,
+            'stamp' => $this->paramsStamp,
+            'method' => $this->paramsMethod
         ];
     }
 
@@ -451,9 +463,9 @@ class ReceiptDataProvider
 
     /**
      * @param string[] $params
-     * @throws LocalizedException
-     * @throws CheckoutException
      * @return string|void
+     * @throws CheckoutException
+     * @throws LocalizedException
      */
     protected function verifyPaymentData($params)
     {
@@ -540,7 +552,7 @@ class ReceiptDataProvider
         $transaction = $this->transactionBuilder
             ->setPayment($payment)->setOrder($order)
             ->setTransactionId($transactionId)
-            ->setAdditionalInformation([Transaction::RAW_DETAILS => (array) $details])
+            ->setAdditionalInformation([Transaction::RAW_DETAILS => (array)$details])
             ->setFailSafe(true)
             ->build(Transaction::TYPE_CAPTURE);
         $transaction->setIsClosed(false);
