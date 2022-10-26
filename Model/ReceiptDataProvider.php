@@ -26,7 +26,7 @@ use Paytrail\PaymentService\Gateway\Config\Config;
 use Paytrail\PaymentService\Gateway\Validator\ResponseValidator;
 use Paytrail\PaymentService\Helper\ApiData;
 use Paytrail\PaymentService\Helper\Data as paytrailHelper;
-use Paytrail\PaymentService\Helper\Email\PendingOrderEmailConfirmation;
+use Paytrail\PaymentService\Observer\Email\Order\PendingOrderEmailConfirmation;
 use Paytrail\PaymentService\Setup\Recurring;
 use Psr\Log\LoggerInterface;
 
