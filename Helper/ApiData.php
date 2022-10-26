@@ -12,7 +12,6 @@ use Magento\Store\Model\StoreManagerInterface;
 use Paytrail\PaymentService\Exceptions\CheckoutException;
 use Paytrail\PaymentService\Gateway\Config\Config as GatewayConfig;
 use Paytrail\PaymentService\Helper\Data as CheckoutHelper;
-use Paytrail\PaymentService\Helper\Email\PendingOrderEmailConfirmation;
 use Paytrail\PaymentService\Logger\PaytrailLogger;
 use Paytrail\PaymentService\Model\Adapter\Adapter;
 use Paytrail\SDK\Model\CallbackUrl;
@@ -112,11 +111,6 @@ class ApiData
     private $paymentStatusRequest;
 
     /**
-     * @var PendingOrderEmailConfirmation
-     */
-    private $pendingOrderEmailConfirmation;
-
-    /**
      * @param LoggerInterface $log
      * @param UrlInterface $urlBuilder
      * @param RequestInterface $request
@@ -132,7 +126,6 @@ class ApiData
      * @param GetTokenRequest $getTokenRequest
      * @param CitPaymentRequest $citPaymentRequest
      * @param PaymentStatusRequest $paymentStatusRequest
-     * @param PendingOrderEmailConfirmation $pendingOrderEmailConfirmation
      * @param RequestData $requestData
      */
     public function __construct(
@@ -151,7 +144,6 @@ class ApiData
         GetTokenRequest               $getTokenRequest,
         CitPaymentRequest             $citPaymentRequest,
         PaymentStatusRequest          $paymentStatusRequest,
-        PendingOrderEmailConfirmation $pendingOrderEmailConfirmation,
         RequestData                   $requestData
     ) {
         $this->log = $log;
@@ -169,7 +161,6 @@ class ApiData
         $this->getTokenRequest = $getTokenRequest;
         $this->citPaymentRequest = $citPaymentRequest;
         $this->paymentStatusRequest = $paymentStatusRequest;
-        $this->pendingOrderEmailConfirmation = $pendingOrderEmailConfirmation;
         $this->requestData = $requestData;
     }
 
@@ -218,8 +209,6 @@ class ApiData
                     'transactionId' => $response["data"]->getTransactionId(),
                     'href' => $response["data"]->getHref()
                 ]);
-
-                $this->pendingOrderEmailConfirmation->pendingOrderEmailSend($order);
 
                 $this->log->debugLog(
                     'response',
