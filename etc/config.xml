@@ -53,7 +53,7 @@
           </advanced_paytrail_personalization>
         </paytrail_personalization>
         <checkout_algorithm>sha256</checkout_algorithm>
-        <order_place_redirect_url>1</order_place_redirect_url>
+        <order_place_redirect_url>0</order_place_redirect_url>
       </paytrail>
       <paytrail_cc_vault>
         <model>PaytrailVaultFacade</model>
