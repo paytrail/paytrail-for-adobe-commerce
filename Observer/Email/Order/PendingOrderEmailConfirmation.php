@@ -1,12 +1,13 @@
 <?php
 
-namespace Paytrail\PaymentService\Helper\Email;
+namespace Paytrail\PaymentService\Observer\Email\Order;
 
+use Magento\Framework\Event\ObserverInterface;
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Sales\Model\Order\Email\Sender\OrderSender;
 use Psr\Log\LoggerInterface;
 
-class PendingOrderEmailConfirmation
+class PendingOrderEmailConfirmation implements ObserverInterface
 {
     public const PENDING_ORDER_EMAIL_PATH = 'payment/paytrail/order_place_redirect_url';
 
@@ -32,14 +33,14 @@ class PendingOrderEmailConfirmation
     }
 
     /**
-     * @param $order
+     * @param \Magento\Framework\Event\Observer $observer
      * @return void
      */
-    public function pendingOrderEmailSend($order)
+    public function execute(\Magento\Framework\Event\Observer $observer)
     {
         try {
             if ($this->isPendingOrderEmailEnabled()) {
-                $this->orderSender->send($order);
+                $this->orderSender->send($observer->getEvent()->getOrder());
             }
         } catch (\Exception $e) {
             $this->logger->error(\sprintf(
