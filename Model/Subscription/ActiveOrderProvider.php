@@ -49,7 +49,7 @@ class ActiveOrderProvider
         $select->where(
             'sales_order.status IN (?)',
             $this->orderConfig->getStateDefaultStatus(
-                \Magento\Sales\Model\Order::STATE_NEW
+                \Magento\Sales\Model\Order::STATE_PENDING_PAYMENT
             )
         );
 
