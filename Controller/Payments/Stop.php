@@ -9,11 +9,13 @@ use Magento\Framework\Controller\ResultFactory;
 use Magento\Framework\App\Action;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Registry;
+use Magento\Framework\Validation\ValidationException;
 use Magento\Sales\Api\OrderManagementInterface;
 use Magento\Sales\Api\OrderRepositoryInterface;
 use Magento\Sales\Model\Order;
 use Paytrail\PaymentService\Api\SubscriptionRepositoryInterface;
 use Paytrail\PaymentService\Api\SubscriptionLinkRepositoryInterface;
+use Paytrail\PaymentService\Model\Validation\PreventAdminActions;
 use Psr\Log\LoggerInterface;
 
 class Stop extends Action\Action implements Action\HttpGetActionInterface
@@ -56,6 +58,8 @@ class Stop extends Action\Action implements Action\HttpGetActionInterface
      */
     protected $subscriptionLinkRepositoryInterface;
 
+    private PreventAdminActions $preventAdminActions;
+
     /**
      * @param Context $context
      * @param Session $customerSession
@@ -64,6 +68,7 @@ class Stop extends Action\Action implements Action\HttpGetActionInterface
      * @param OrderManagementInterface $orderManagementInterface
      * @param LoggerInterface $logger
      * @param SubscriptionLinkRepositoryInterface $subscriptionLinkRepositoryInterface
+     * @param PreventAdminActions $preventAdminActions
      */
     public function __construct(
         Context                             $context,
@@ -72,7 +77,8 @@ class Stop extends Action\Action implements Action\HttpGetActionInterface
         OrderRepositoryInterface            $orderRepositoryInterface,
         OrderManagementInterface            $orderManagementInterface,
         LoggerInterface                     $logger,
-        SubscriptionLinkRepositoryInterface $subscriptionLinkRepositoryInterface
+        SubscriptionLinkRepositoryInterface $subscriptionLinkRepositoryInterface,
+        PreventAdminActions $preventAdminActions
     ) {
         parent::__construct($context);
         $this->customerSession = $customerSession;
@@ -81,6 +87,7 @@ class Stop extends Action\Action implements Action\HttpGetActionInterface
         $this->orderManagementInterface = $orderManagementInterface;
         $this->logger = $logger;
         $this->subscriptionLinkRepositoryInterface = $subscriptionLinkRepositoryInterface;
+        $this->preventAdminActions = $preventAdminActions;
     }
 
     /**
@@ -88,6 +95,10 @@ class Stop extends Action\Action implements Action\HttpGetActionInterface
      */
     public function execute()
     {
+        if ($this->preventAdminActions->isAdminAsCustomer()) {
+            throw new ValidationException(__('Admin user is not authorized for this operation'));
+        }
+
         $subscriptionId = $this->getRequest()->getParam('payment_id');
         $resultRedirect = $this->resultFactory->create(ResultFactory::TYPE_REDIRECT);
 
