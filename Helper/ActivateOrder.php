@@ -9,6 +9,7 @@ use Magento\Sales\Api\TransactionRepositoryInterface;
 use Magento\Sales\Model\ResourceModel\Order;
 use Magento\Sales\Model\Service\InvoiceService;
 use Magento\Framework\DB\TransactionFactory;
+use Psr\Log\LoggerInterface;
 
 /**
  * Class ActivateOrder
@@ -19,11 +20,6 @@ class ActivateOrder
      * @var OrderRepositoryInterface
      */
     protected $orderRepository;
-
-    /**
-     * @var Order
-     */
-    protected $orderResourceModel;
     /**
      * @var TransactionRepositoryInterface
      */
@@ -36,6 +32,10 @@ class ActivateOrder
      * @var TransactionFactory
      */
     private $transactionFactory;
+    /**
+     * @var LoggerInterface
+     */
+    private $logger;
 
     /**
      * ActivateOrder constructor.
@@ -43,20 +43,19 @@ class ActivateOrder
      * @param TransactionRepositoryInterface $transactionRepository
      * @param InvoiceService $invoiceService
      * @param TransactionFactory $transactionFactory
-     * @param Order $orderResourceModel
      */
     public function __construct(
         OrderRepositoryInterface $orderRepository,
         TransactionRepositoryInterface $transactionRepository,
         InvoiceService $invoiceService,
         TransactionFactory $transactionFactory,
-        Order $orderResourceModel
+        LoggerInterface $logger
     ) {
-        $this->orderResourceModel = $orderResourceModel;
         $this->orderRepository = $orderRepository;
         $this->transactionRepository = $transactionRepository;
         $this->invoiceService = $invoiceService;
         $this->transactionFactory = $transactionFactory;
+        $this->logger = $logger;
     }
 
     /**
@@ -74,7 +73,7 @@ class ActivateOrder
             $item->setQtyCanceled(0);
         }
 
-        $this->orderResourceModel->save($order);
+        $this->orderRepository->save($order);
         $this->processInvoice($order);
     }
 
@@ -122,30 +121,45 @@ class ActivateOrder
     /**
      * @param $order
      * @throws InputException
+     * @throws \Exception
      */
     protected function processInvoice($order)
     {
         $transactionId = $this->getCaptureTransaction($order);
 
         if ($order->canInvoice()) {
-            try {
-                $invoice = $this->invoiceService->prepareInvoice($order);
-                $invoice->setRequestedCaptureCase(\Magento\Sales\Model\Order\Invoice::CAPTURE_ONLINE);
-                $invoice->setTransactionId($transactionId);
-                $invoice->register();
-                $transactionSave = $this->transactionFactory->create();
-                $transactionSave->addObject(
-                    $invoice
-                )->addObject(
-                    $order
-                )->save();
-            } catch (LocalizedException $exception) {
-                $invoiceFailException = $exception->getMessage();
-            }
+            $invoice = $this->invoiceService->prepareInvoice($order);
+            $invoice->setRequestedCaptureCase(\Magento\Sales\Model\Order\Invoice::CAPTURE_ONLINE);
+            $invoice->setTransactionId($transactionId);
+            $invoice->register();
+            $this->saveInvoiceAndOrder($invoice, $order);
+        }
+    }
 
-            if (isset($invoiceFailException)) {
-                $this->processError($invoiceFailException);
-            }
+    /**
+     * @param \Magento\Sales\Api\Data\InvoiceInterface $invoice
+     * @param $order
+     * @return void
+     * @throws LocalizedException
+     */
+    private function saveInvoiceAndOrder(\Magento\Sales\Api\Data\InvoiceInterface $invoice, $order): void
+    {
+        try {
+            /** @var \Magento\Framework\DB\Transaction $transactionSave */
+            $transactionSave = $this->transactionFactory->create();
+            $transactionSave->addObject(
+                $invoice
+            )->addObject(
+                $order
+            )->save();
+        } catch (\Exception $e) {
+            $message = __(
+                'Paytrail unable to save re-active order from admin: %error',
+                ['error' => $e->getMessage()]
+            );
+            $this->logger->critical($message);
+
+            throw new LocalizedException($message);
         }
     }
 }
