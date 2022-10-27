@@ -91,3 +91,4 @@ Hello,Hei
 "A new Paytrail Payment Service extension version is now available: ","Uusi Paytrail Payment Service -lisäosan versio saatavilla: "
 " You are running the v%1 version. We advise to update your extension."," Sinulla on käytössä versio v%1. Suosittelemme päivittämään uudemman version."
 "Paytrail Payment Service extension version %1 available!","Paytrail Payment Service -lisäosan versio %1 saatavilla!"
+"Error while cancelling order. Please contact customer support with order id: %id to release discount coupons.","Virhe tilauksen peruutuksessa. Ota yhteysasiakaspalveluun tilausnumeron %id kanssa, jotta tilauksen alennuskupongit voidaan palauttaa"
