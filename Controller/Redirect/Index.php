@@ -4,8 +4,11 @@ namespace Paytrail\PaymentService\Controller\Redirect;
 
 use Magento\Checkout\Model\Session;
 use Magento\Framework\App\Action\Context;
+use Magento\Framework\App\ActionInterface;
+use Magento\Framework\App\RequestInterface;
 use Magento\Framework\Controller\Result\Json;
 use Magento\Framework\Controller\Result\JsonFactory;
+use Magento\Framework\Controller\ResultFactory;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\View\Result\PageFactory;
 use Magento\Sales\Api\OrderManagementInterface;
@@ -23,7 +26,7 @@ use Psr\Log\LoggerInterface;
 /**
  * Class Index
  */
-class Index extends \Magento\Framework\App\Action\Action
+class Index implements ActionInterface
 {
     protected $urlBuilder;
 
@@ -38,11 +41,6 @@ class Index extends \Magento\Framework\App\Action\Action
     protected $orderFactory;
 
     /**
-     * @var JsonFactory
-     */
-    protected $jsonFactory;
-
-    /**
      * @var OrderRepositoryInterface
      */
     protected $orderRepositoryInterface;
@@ -51,11 +49,6 @@ class Index extends \Magento\Framework\App\Action\Action
      * @var OrderManagementInterface
      */
     protected $orderManagementInterface;
-
-    /**
-     * @var PageFactory
-     */
-    protected $pageFactory;
 
     /**
      * @var LoggerInterface
@@ -83,45 +76,48 @@ class Index extends \Magento\Framework\App\Action\Action
     protected $errorMsg = null;
 
     /**
+     * @var ResultFactory
+     */
+    private $resultFactory;
+
+    /**
+     * @var RequestInterface
+     */
+    private $request;
+
+    /**
      * Index constructor.
      *
-     * @param Context $context
      * @param Session $checkoutSession
-     * @param OrderFactory $orderFactory
-     * @param JsonFactory $jsonFactory
      * @param OrderRepositoryInterface $orderRepositoryInterface
      * @param OrderManagementInterface $orderManagementInterface
-     * @param PageFactory  $pageFactory
      * @param LoggerInterface $logger
      * @param ApiData $apiData
      * @param paytrailHelper $paytrailHelper
      * @param Config $gatewayConfig
+     * @param ResultFactory $resultFactory
+     * @param RequestInterface $request
      */
     public function __construct(
-        Context $context,
         Session $checkoutSession,
-        OrderFactory $orderFactory,
-        JsonFactory $jsonFactory,
         \Magento\Sales\Api\OrderRepositoryInterface $orderRepositoryInterface,
         OrderManagementInterface $orderManagementInterface,
-        PageFactory $pageFactory,
         LoggerInterface $logger,
         ApiData $apiData,
         paytrailHelper $paytrailHelper,
-        Config $gatewayConfig
+        Config $gatewayConfig,
+        ResultFactory $resultFactory,
+        RequestInterface $request
     ) {
-        $this->urlBuilder = $context->getUrl();
         $this->checkoutSession = $checkoutSession;
-        $this->orderFactory = $orderFactory;
-        $this->jsonFactory = $jsonFactory;
         $this->orderRepositoryInterface = $orderRepositoryInterface;
         $this->orderManagementInterface = $orderManagementInterface;
-        $this->pageFactory = $pageFactory;
         $this->logger = $logger;
         $this->apiData = $apiData;
         $this->paytrailHelper = $paytrailHelper;
         $this->gatewayConfig = $gatewayConfig;
-        parent::__construct($context);
+        $this->resultFactory = $resultFactory;
+        $this->request = $request;
     }
 
     /**
@@ -130,12 +126,12 @@ class Index extends \Magento\Framework\App\Action\Action
     public function execute()
     {
         /** @var Json $resultJson */
-        $resultJson = $this->jsonFactory->create();
+        $resultJson = $this->resultFactory->create(ResultFactory::TYPE_JSON);
 
         $order = null;
         try {
-            if ($this->getRequest()->getParam('is_ajax')) {
-                $selectedPaymentMethodRaw = $this->getRequest()->getParam(
+            if ($this->request->getParam('is_ajax')) {
+                $selectedPaymentMethodRaw = $this->request->getParam(
                     'preselected_payment_method_id'
                 );
                 $selectedPaymentMethodId = strpos($selectedPaymentMethodRaw, '-') !== false
@@ -147,11 +143,7 @@ class Index extends \Magento\Framework\App\Action\Action
                     throw new LocalizedException(__('No payment method selected'));
                 }
 
-                /** @var Order $order */
-                $order = $this->orderFactory->create()->loadByIncrementId(
-                    $this->checkoutSession->getLastRealOrderId()
-                );
-
+                $order = $this->checkoutSession->getLastRealOrder();
                 $responseData = $this->getResponseData($order);
                 $formData = $this->getFormFields(
                     $responseData,
@@ -165,35 +157,30 @@ class Index extends \Magento\Framework\App\Action\Action
                 if ($this->gatewayConfig->getSkipBankSelection()) {
                     $redirect_url = $responseData->getHref();
 
-                    return $resultJson->setData(
-                        [
-                            'success' => true,
-                            'data' => 'redirect',
-                            'redirect' => $redirect_url
-                        ]
-                    );
+                    return $resultJson->setData([
+                        'success' => true,
+                        'data' => 'redirect',
+                        'redirect' => $redirect_url
+                    ]);
                 }
 
-                $block = $this->pageFactory
-                    ->create()
+                $block = $this->resultFactory->create(ResultFactory::TYPE_PAGE)
                     ->getLayout()
                     ->createBlock(\Paytrail\PaymentService\Block\Redirect\Paytrail::class)
                     ->setUrl($formAction)
                     ->setParams($formData);
 
-                return $resultJson->setData(
-                    [
-                        'success' => true,
-                        'data' => $block->toHtml(),
-                    ]
-                );
+                return $resultJson->setData([
+                    'success' => true,
+                    'data' => $block->toHtml(),
+                ]);
             }
         } catch (\Exception $e) {
             // Error will be handled below
             $this->logger->error($e->getMessage());
         }
 
-        if ($order) {
+        if ($order->getId()) {
             $this->orderManagementInterface->cancel($order->getId());
             $order->addCommentToStatusHistory(
                 __('Order canceled. Failed to redirect to Paytrail Payment Service.')
@@ -202,14 +189,11 @@ class Index extends \Magento\Framework\App\Action\Action
         }
 
         $this->checkoutSession->restoreQuote();
-        $resultJson = $this->jsonFactory->create();
 
-        return $resultJson->setData(
-            [
-                'success' => false,
-                'message' => $this->errorMsg
-            ]
-        );
+        return $resultJson->setData([
+            'success' => false,
+            'message' => $this->errorMsg
+        ]);
     }
 
     /**

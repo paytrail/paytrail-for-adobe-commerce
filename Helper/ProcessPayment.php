@@ -4,6 +4,7 @@ namespace Paytrail\PaymentService\Helper;
 
 use Magento\Checkout\Model\Session;
 use Magento\Framework\App\CacheInterface;
+use Magento\Quote\Api\CartRepositoryInterface;
 use Magento\Quote\Model\QuoteRepository;
 use Paytrail\PaymentService\Gateway\Config\Config;
 use Paytrail\PaymentService\Gateway\Validator\ResponseValidator;
@@ -31,7 +32,7 @@ class ProcessPayment
     /**
      * @var QuoteRepository
      */
-    private $quoteRepository;
+    private $cartRepository;
 
     /**
      * @var CacheInterface
@@ -52,22 +53,22 @@ class ProcessPayment
      * ProcessPayment constructor.
      * @param ResponseValidator $responseValidator
      * @param ReceiptDataProvider $receiptDataProvider
-     * @param QuoteRepository $quoteRepository
+     * @param QuoteRepository $cartRepository
      * @param CacheInterface $cache
      * @param Config $gatewayConfig
      * @param Data $paytrailHelper
      */
     public function __construct(
-        ResponseValidator $responseValidator,
-        ReceiptDataProvider $receiptDataProvider,
-        QuoteRepository $quoteRepository,
-        CacheInterface $cache,
-        Config $gatewayConfig,
-        Data $paytrailHelper
+        ResponseValidator       $responseValidator,
+        ReceiptDataProvider     $receiptDataProvider,
+        CartRepositoryInterface $cartRepository,
+        CacheInterface          $cache,
+        Config                  $gatewayConfig,
+        Data                    $paytrailHelper
     ) {
         $this->responseValidator = $responseValidator;
         $this->receiptDataProvider = $receiptDataProvider;
-        $this->quoteRepository = $quoteRepository;
+        $this->cartRepository = $cartRepository;
         $this->cache = $cache;
         $this->gatewayConfig = $gatewayConfig;
         $this->paytrailHelper = $paytrailHelper;
@@ -168,7 +169,7 @@ class ProcessPayment
             /** @var \Magento\Quote\Model\Quote $quote */
             $quote = $session->getQuote();
             $quote->setIsActive(false);
-            $this->quoteRepository->save($quote);
+            $this->cartRepository->save($quote);
         }
 
         return $errors;

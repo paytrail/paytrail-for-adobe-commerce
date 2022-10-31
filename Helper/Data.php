@@ -14,7 +14,7 @@ use Paytrail\PaymentService\Logger\PaytrailLogger;
 /**
  * Class Data
  */
-class Data extends \Magento\Framework\App\Helper\AbstractHelper
+class Data
 {
     const LOGO = 'payment/paytrail/logo';
 
@@ -42,7 +42,6 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
      * @param Config $gatewayConfig
      */
     public function __construct(
-        Context $context,
         Resolver $localeResolver,
         TaxHelper $taxHelper,
         PaytrailLogger $paytrailLogger,
@@ -52,7 +51,6 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
         $this->taxHelper = $taxHelper;
         $this->paytrailLogger = $paytrailLogger;
         $this->gatewayConfig = $gatewayConfig;
-        parent::__construct($context);
     }
 
     /**
