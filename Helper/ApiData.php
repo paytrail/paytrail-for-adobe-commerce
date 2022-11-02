@@ -4,11 +4,9 @@ namespace Paytrail\PaymentService\Helper;
 
 use GuzzleHttp\Exception\RequestException;
 use Magento\Framework\App\RequestInterface;
-use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Framework\Serialize\Serializer\Json;
 use Magento\Framework\UrlInterface;
-use Magento\Framework\Validation\ValidationException;
 use Magento\Sales\Model\Order;
 use Magento\Store\Model\StoreManagerInterface;
 use Paytrail\PaymentService\Exceptions\CheckoutException;
@@ -16,7 +14,6 @@ use Paytrail\PaymentService\Gateway\Config\Config as GatewayConfig;
 use Paytrail\PaymentService\Helper\Data as CheckoutHelper;
 use Paytrail\PaymentService\Logger\PaytrailLogger;
 use Paytrail\PaymentService\Model\Adapter\Adapter;
-use Paytrail\PaymentService\Model\Validation\PreventAdminActions;
 use Paytrail\SDK\Model\CallbackUrl;
 use Paytrail\SDK\Request\EmailRefundRequest;
 use Paytrail\SDK\Request\PaymentRequest;
@@ -114,10 +111,23 @@ class ApiData
     private $paymentStatusRequest;
 
     /**
-     * @var PreventAdminActions
+     * @param LoggerInterface $log
+     * @param UrlInterface $urlBuilder
+     * @param RequestInterface $request
+     * @param Json $json
+     * @param Data $helper
+     * @param GatewayConfig $gatewayConfig
+     * @param StoreManagerInterface $storeManager
+     * @param Adapter $paytrailAdapter
+     * @param PaymentRequest $paymentRequest
+     * @param RefundRequest $refundRequest
+     * @param EmailRefundRequest $emailRefundRequest
+     * @param AddCardFormRequest $addCardFormRequest
+     * @param GetTokenRequest $getTokenRequest
+     * @param CitPaymentRequest $citPaymentRequest
+     * @param PaymentStatusRequest $paymentStatusRequest
+     * @param RequestData $requestData
      */
-    private PreventAdminActions $preventAdminActions;
-
     public function __construct(
         LoggerInterface $log,
         UrlInterface $urlBuilder,
@@ -135,7 +145,6 @@ class ApiData
         CitPaymentRequest $citPaymentRequest,
         PaymentStatusRequest $paymentStatusRequest,
         RequestData $requestData,
-        PreventAdminActions $preventAdminActions
     ) {
         $this->log = $log;
         $this->urlBuilder = $urlBuilder;
@@ -153,7 +162,6 @@ class ApiData
         $this->citPaymentRequest = $citPaymentRequest;
         $this->paymentStatusRequest = $paymentStatusRequest;
         $this->requestData = $requestData;
-        $this->preventAdminActions = $preventAdminActions;
     }
 
     /**
@@ -277,9 +285,6 @@ class ApiData
                     'Successful response for payment providers.'
                 );
             } elseif ($requestType === 'add_card') {
-                if ($this->preventAdminActions->isAdminAsCustomer()) {
-                    throw new ValidationException(__('Admin user is not authorized for this operation'));
-                }
                 $addCardFormRequest = $this->addCardFormRequest;
                 $this->setAddCardFormRequestData($addCardFormRequest);
                 $response['data'] = $paytrailClient->createAddCardFormRequest($addCardFormRequest);
