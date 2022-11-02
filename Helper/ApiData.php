@@ -129,22 +129,22 @@ class ApiData
      * @param RequestData $requestData
      */
     public function __construct(
-        LoggerInterface $log,
-        UrlInterface $urlBuilder,
-        RequestInterface $request,
-        Json $json,
-        CheckoutHelper $helper,
-        GatewayConfig $gatewayConfig,
+        LoggerInterface       $log,
+        UrlInterface          $urlBuilder,
+        RequestInterface      $request,
+        Json                  $json,
+        CheckoutHelper        $helper,
+        GatewayConfig         $gatewayConfig,
         StoreManagerInterface $storeManager,
-        Adapter $paytrailAdapter,
-        PaymentRequest $paymentRequest,
-        RefundRequest $refundRequest,
-        EmailRefundRequest $emailRefundRequest,
-        AddCardFormRequest $addCardFormRequest,
-        GetTokenRequest $getTokenRequest,
-        CitPaymentRequest $citPaymentRequest,
-        PaymentStatusRequest $paymentStatusRequest,
-        RequestData $requestData,
+        Adapter               $paytrailAdapter,
+        PaymentRequest        $paymentRequest,
+        RefundRequest         $refundRequest,
+        EmailRefundRequest    $emailRefundRequest,
+        AddCardFormRequest    $addCardFormRequest,
+        GetTokenRequest       $getTokenRequest,
+        CitPaymentRequest     $citPaymentRequest,
+        PaymentStatusRequest  $paymentStatusRequest,
+        RequestData           $requestData,
     ) {
         $this->log = $log;
         $this->urlBuilder = $urlBuilder;
