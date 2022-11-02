@@ -110,23 +110,41 @@ class ApiData
      */
     private $paymentStatusRequest;
 
+    /**
+     * @param LoggerInterface $log
+     * @param UrlInterface $urlBuilder
+     * @param RequestInterface $request
+     * @param Json $json
+     * @param Data $helper
+     * @param GatewayConfig $gatewayConfig
+     * @param StoreManagerInterface $storeManager
+     * @param Adapter $paytrailAdapter
+     * @param PaymentRequest $paymentRequest
+     * @param RefundRequest $refundRequest
+     * @param EmailRefundRequest $emailRefundRequest
+     * @param AddCardFormRequest $addCardFormRequest
+     * @param GetTokenRequest $getTokenRequest
+     * @param CitPaymentRequest $citPaymentRequest
+     * @param PaymentStatusRequest $paymentStatusRequest
+     * @param RequestData $requestData
+     */
     public function __construct(
-        LoggerInterface $log,
-        UrlInterface $urlBuilder,
-        RequestInterface $request,
-        Json $json,
-        CheckoutHelper $helper,
-        GatewayConfig $gatewayConfig,
-        StoreManagerInterface $storeManager,
-        Adapter $paytrailAdapter,
-        PaymentRequest $paymentRequest,
-        RefundRequest $refundRequest,
-        EmailRefundRequest $emailRefundRequest,
-        AddCardFormRequest $addCardFormRequest,
-        GetTokenRequest $getTokenRequest,
-        CitPaymentRequest $citPaymentRequest,
-        PaymentStatusRequest $paymentStatusRequest,
-        RequestData $requestData
+        LoggerInterface               $log,
+        UrlInterface                  $urlBuilder,
+        RequestInterface              $request,
+        Json                          $json,
+        CheckoutHelper                $helper,
+        GatewayConfig                 $gatewayConfig,
+        StoreManagerInterface         $storeManager,
+        Adapter                       $paytrailAdapter,
+        PaymentRequest                $paymentRequest,
+        RefundRequest                 $refundRequest,
+        EmailRefundRequest            $emailRefundRequest,
+        AddCardFormRequest            $addCardFormRequest,
+        GetTokenRequest               $getTokenRequest,
+        CitPaymentRequest             $citPaymentRequest,
+        PaymentStatusRequest          $paymentStatusRequest,
+        RequestData                   $requestData
     ) {
         $this->log = $log;
         $this->urlBuilder = $urlBuilder;

@@ -17,6 +17,7 @@ use Paytrail\PaymentService\Exceptions\CheckoutException;
 use Paytrail\PaymentService\Helper\ApiData;
 use Paytrail\PaymentService\Helper\Data as paytrailHelper;
 use Paytrail\PaymentService\Gateway\Config\Config;
+use Paytrail\PaymentService\Model\Email\Order\PendingOrderEmailConfirmation;
 use Paytrail\SDK\Model\Provider;
 use Paytrail\SDK\Response\PaymentResponse;
 use Psr\Log\LoggerInterface;
@@ -83,7 +84,10 @@ class Index implements HttpPostActionInterface
      * @var $errorMsg
      */
     protected $errorMsg = null;
+
     private RequestInterface $request;
+
+    private PendingOrderEmailConfirmation $pendingOrderEmailConfirmation;
 
     /**
      * @param Context $context
@@ -98,6 +102,7 @@ class Index implements HttpPostActionInterface
      * @param paytrailHelper $paytrailHelper
      * @param Config $gatewayConfig
      * @param RequestInterface $request
+     * @param PendingOrderEmailConfirmation $pendingOrderEmailConfirmation
      */
     public function __construct(
         Context $context,
@@ -111,7 +116,8 @@ class Index implements HttpPostActionInterface
         ApiData $apiData,
         paytrailHelper $paytrailHelper,
         Config $gatewayConfig,
-        RequestInterface $request
+        RequestInterface $request,
+        PendingOrderEmailConfirmation $pendingOrderEmailConfirmation
     ) {
         $this->urlBuilder = $context->getUrl();
         $this->checkoutSession = $checkoutSession;
@@ -125,6 +131,7 @@ class Index implements HttpPostActionInterface
         $this->paytrailHelper = $paytrailHelper;
         $this->gatewayConfig = $gatewayConfig;
         $this->request = $request;
+        $this->pendingOrderEmailConfirmation = $pendingOrderEmailConfirmation;
     }
 
     /**
@@ -167,6 +174,11 @@ class Index implements HttpPostActionInterface
                     $responseData,
                     $selectedPaymentMethodId
                 );
+
+                // send order confirmation for pending order
+                if ($responseData) {
+                    $this->pendingOrderEmailConfirmation->pendingOrderEmailSend($order);
+                }
 
                 if ($this->gatewayConfig->getSkipBankSelection()) {
                     $redirect_url = $responseData->getHref();
