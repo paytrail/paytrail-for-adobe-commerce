@@ -210,6 +210,11 @@
             <argument name="quoteSession" xsi:type="object">Magento\Backend\Model\Session\Quote\Proxy</argument>
         </arguments>
     </type>
+    <type name="Paytrail\PaymentService\Model\Validation\PreventAdminActions">
+        <arguments>
+            <argument name="customerSession" xsi:type="object">Magento\Customer\Model\Session\Proxy</argument>
+        </arguments>
+    </type>
 
     <type name="\Paytrail\PaymentService\Console\Command\Notify">
         <arguments>
