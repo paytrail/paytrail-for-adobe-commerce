@@ -7,10 +7,12 @@ use Magento\Customer\Model\Session as CustomerSession;
 use Magento\Framework\App\Action\Context;
 use Magento\Framework\Controller\Result\Json;
 use Magento\Framework\Controller\Result\JsonFactory;
+use Magento\Framework\Validation\ValidationException;
 use Paytrail\PaymentService\Exceptions\CheckoutException;
 use Paytrail\PaymentService\Gateway\Config\Config;
 use Paytrail\PaymentService\Helper\ApiData;
 use Paytrail\PaymentService\Helper\Data as opHelper;
+use Paytrail\PaymentService\Model\Validation\PreventAdminActions;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -61,7 +63,13 @@ class AddCard extends \Magento\Framework\App\Action\Action
     protected $customerSession;
 
     /**
+     * @var PreventAdminActions
+     */
+    protected PreventAdminActions $preventAdminActions;
+
+    /**
      * AddCard constructor.
+     *
      * @param Context $context
      * @param Session $checkoutSession
      * @param JsonFactory $jsonFactory
@@ -69,6 +77,8 @@ class AddCard extends \Magento\Framework\App\Action\Action
      * @param ApiData $apiData
      * @param opHelper $opHelper
      * @param Config $gatewayConfig
+     * @param CustomerSession $customerSession
+     * @param PreventAdminActions $preventAdminActions
      */
     public function __construct(
         Context $context,
@@ -78,7 +88,8 @@ class AddCard extends \Magento\Framework\App\Action\Action
         ApiData $apiData,
         opHelper $opHelper,
         Config $gatewayConfig,
-        CustomerSession $customerSession
+        CustomerSession $customerSession,
+        PreventAdminActions $preventAdminActions
     ) {
         $this->urlBuilder = $context->getUrl();
         $this->checkoutSession = $checkoutSession;
@@ -89,6 +100,7 @@ class AddCard extends \Magento\Framework\App\Action\Action
         $this->gatewayConfig = $gatewayConfig;
         $this->customerSession = $customerSession;
         parent::__construct($context);
+        $this->preventAdminActions = $preventAdminActions;
     }
 
     /**
@@ -96,6 +108,10 @@ class AddCard extends \Magento\Framework\App\Action\Action
      */
     public function execute()
     {
+        if ($this->preventAdminActions->isAdminAsCustomer()) {
+            throw new ValidationException(__('Admin user is not authorized for this operation'));
+        }
+
         /** @var Json $resultJson */
         $resultJson = $this->jsonFactory->create();
 
