@@ -75,15 +75,17 @@ class Change extends Action\Action
      */
     public function execute()
     {
+        $resultRedirect = $this->resultFactory->create(ResultFactory::TYPE_REDIRECT);
+        $resultRedirect->setPath('paytrail/order/payments');
+
         if ($this->preventAdminActions->isAdminAsCustomer()) {
-            throw new ValidationException(__('Admin user is not authorized for this operation'));
+            $this->messageManager->addErrorMessage(__('Admin user is not authorized for this operation'));
+
+            return $resultRedirect;
         }
 
         $subscriptionId = $this->getRequest()->getParam('subscription_id');
         $selectedTokenRaw = $this->getRequest()->getParam('selected_token');
-
-        $resultRedirect = $this->resultFactory->create(ResultFactory::TYPE_REDIRECT);
-        $resultRedirect->setPath('paytrail/order/payments');
 
         $selectedToken = $this->paymentToken->getByPublicHash($selectedTokenRaw, (int) $this->customerSession->getCustomerId());
 

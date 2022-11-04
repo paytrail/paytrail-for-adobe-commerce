@@ -8,6 +8,7 @@ use Magento\Framework\App\Action\Context;
 use Magento\Framework\Controller\ResultFactory;
 use Magento\Framework\App\Action;
 use Magento\Framework\Exception\LocalizedException;
+use Magento\Framework\Message\ManagerInterface;
 use Magento\Framework\Registry;
 use Magento\Framework\Validation\ValidationException;
 use Magento\Sales\Api\OrderManagementInterface;
@@ -78,8 +79,10 @@ class Stop extends Action\Action implements Action\HttpGetActionInterface
         OrderManagementInterface            $orderManagementInterface,
         LoggerInterface                     $logger,
         SubscriptionLinkRepositoryInterface $subscriptionLinkRepositoryInterface,
-        PreventAdminActions $preventAdminActions
-    ) {
+        PreventAdminActions                 $preventAdminActions,
+        ManagerInterface                    $messageManager
+    )
+    {
         parent::__construct($context);
         $this->customerSession = $customerSession;
         $this->subscriptionRepositoryInterface = $subscriptionRepositoryInterface;
@@ -88,6 +91,7 @@ class Stop extends Action\Action implements Action\HttpGetActionInterface
         $this->logger = $logger;
         $this->subscriptionLinkRepositoryInterface = $subscriptionLinkRepositoryInterface;
         $this->preventAdminActions = $preventAdminActions;
+        $this->messageManager = $messageManager;
     }
 
     /**
@@ -95,12 +99,15 @@ class Stop extends Action\Action implements Action\HttpGetActionInterface
      */
     public function execute()
     {
-        if ($this->preventAdminActions->isAdminAsCustomer()) {
-            throw new ValidationException(__('Admin user is not authorized for this operation'));
-        }
-
         $subscriptionId = $this->getRequest()->getParam('payment_id');
         $resultRedirect = $this->resultFactory->create(ResultFactory::TYPE_REDIRECT);
+
+        if ($this->preventAdminActions->isAdminAsCustomer()) {
+            $this->messageManager->addErrorMessage(__('Admin user is not authorized for this operation'));
+            $resultRedirect->setPath('paytrail/order/payments');
+
+            return $resultRedirect;
+        }
 
         try {
             $subscription = $this->subscriptionRepositoryInterface->get((int)$subscriptionId);
