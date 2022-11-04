@@ -11,7 +11,6 @@ use Magento\Framework\Controller\ResultFactory;
 use Magento\Framework\App\Action;
 use Magento\Framework\Controller\ResultInterface;
 use Magento\Framework\Exception\LocalizedException;
-use Magento\Framework\Validation\ValidationException;
 use Magento\Vault\Model\ResourceModel\PaymentToken;
 use Paytrail\PaymentService\Api\Data\SubscriptionInterface;
 use Paytrail\PaymentService\Api\SubscriptionRepositoryInterface;
@@ -75,15 +74,17 @@ class Change extends Action\Action
      */
     public function execute()
     {
+        $resultRedirect = $this->resultFactory->create(ResultFactory::TYPE_REDIRECT);
+        $resultRedirect->setPath('paytrail/order/payments');
+
         if ($this->preventAdminActions->isAdminAsCustomer()) {
-            throw new ValidationException(__('Admin user is not authorized for this operation'));
+            $this->messageManager->addErrorMessage(__('Admin user is not authorized for this operation'));
+
+            return $resultRedirect;
         }
 
         $subscriptionId = $this->getRequest()->getParam('subscription_id');
         $selectedTokenRaw = $this->getRequest()->getParam('selected_token');
-
-        $resultRedirect = $this->resultFactory->create(ResultFactory::TYPE_REDIRECT);
-        $resultRedirect->setPath('paytrail/order/payments');
 
         $selectedToken = $this->paymentToken->getByPublicHash($selectedTokenRaw, (int) $this->customerSession->getCustomerId());
 
