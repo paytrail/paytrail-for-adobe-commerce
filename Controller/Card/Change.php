@@ -11,7 +11,6 @@ use Magento\Framework\Controller\ResultFactory;
 use Magento\Framework\App\Action;
 use Magento\Framework\Controller\ResultInterface;
 use Magento\Framework\Exception\LocalizedException;
-use Magento\Framework\Validation\ValidationException;
 use Magento\Vault\Model\ResourceModel\PaymentToken;
 use Paytrail\PaymentService\Api\Data\SubscriptionInterface;
 use Paytrail\PaymentService\Api\SubscriptionRepositoryInterface;
