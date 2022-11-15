@@ -11,12 +11,15 @@ use Magento\Framework\Serialize\Serializer\Json;
 use Magento\Framework\UrlInterface;
 use Magento\Sales\Model\Order;
 use Magento\Sales\Model\Order\Item as OrderItem;
+use Magento\Sales\Model\ResourceModel\Order\Tax\Item as TaxItem;
 use Magento\Store\Model\StoreManagerInterface;
 use Paytrail\PaymentService\Exceptions\CheckoutException;
 use Magento\Tax\Helper\Data as TaxHelper;
 use Paytrail\PaymentService\Helper\Data as CheckoutHelper;
 use Paytrail\PaymentService\Logger\PaytrailLogger;
 use Paytrail\PaymentService\Model\Adapter\Adapter;
+use Paytrail\PaymentService\Model\CompanyRequestData;
+use Paytrail\PaymentService\Model\Payment\DiscountSplitter;
 use Paytrail\SDK\Model\Address;
 use Paytrail\SDK\Model\CallbackUrl;
 use Paytrail\SDK\Model\Customer;
@@ -93,14 +96,19 @@ class ApiData
     private $emailRefundRequest;
 
     /**
-     * @var \Op\Checkout\Model\Payment\DiscountSplitter
+     * @var DiscountSplitter
      */
     private $discountSplitter;
 
     /**
-     * @var \Magento\Sales\Model\ResourceModel\Order\Tax\Item
+     * @var TaxItem
      */
     private $taxItems;
+
+    /**
+     * @var CompanyRequestData
+     */
+    private CompanyRequestData $companyRequestData;
 
     /**
      * @param UrlInterface $urlBuilder
@@ -115,26 +123,28 @@ class ApiData
      * @param PaymentRequest $paymentRequest
      * @param RefundRequest $refundRequest
      * @param EmailRefundRequest $emailRefundRequest
-     * @param \Paytrail\PaymentService\Model\Payment\DiscountSplitter $discountSplitter
-     * @param \Magento\Sales\Model\ResourceModel\Order\Tax\Item $taxItem
+     * @param DiscountSplitter $discountSplitter
+     * @param TaxItem $taxItem
      */
     public function __construct(
-        LoggerInterface $log,
-        UrlInterface $urlBuilder,
-        RequestInterface $request,
-        Json $json,
+        LoggerInterface                     $log,
+        UrlInterface                        $urlBuilder,
+        RequestInterface                    $request,
+        Json                                $json,
         CountryInformationAcquirerInterface $countryInformationAcquirer,
-        TaxHelper $taxHelper,
-        CheckoutHelper $helper,
-        Config $resourceConfig,
-        StoreManagerInterface $storeManager,
-        Adapter $paytrailAdapter,
-        PaymentRequest $paymentRequest,
-        RefundRequest $refundRequest,
-        EmailRefundRequest $emailRefundRequest,
-        \Paytrail\PaymentService\Model\Payment\DiscountSplitter $discountSplitter,
-        \Magento\Sales\Model\ResourceModel\Order\Tax\Item $taxItem
-    ) {
+        TaxHelper                           $taxHelper,
+        CheckoutHelper                      $helper,
+        Config                              $resourceConfig,
+        StoreManagerInterface               $storeManager,
+        Adapter                             $paytrailAdapter,
+        PaymentRequest                      $paymentRequest,
+        RefundRequest                       $refundRequest,
+        EmailRefundRequest                  $emailRefundRequest,
+        DiscountSplitter                    $discountSplitter,
+        TaxItem                             $taxItem,
+        CompanyRequestData                  $companyRequestData
+    )
+    {
         $this->log = $log;
         $this->urlBuilder = $urlBuilder;
         $this->request = $request;
@@ -149,6 +159,7 @@ class ApiData
         $this->emailRefundRequest = $emailRefundRequest;
         $this->discountSplitter = $discountSplitter;
         $this->taxItems = $taxItem;
+        $this->companyRequestData = $companyRequestData;
     }
 
     /**
@@ -166,7 +177,8 @@ class ApiData
         $order = null,
         $amount = null,
         $transactionId = null
-    ) {
+    )
+    {
         $response["data"] = null;
         $response["error"] = null;
 
@@ -203,7 +215,7 @@ class ApiData
                     )
                 );
 
-            // Handle refund requests
+                // Handle refund requests
             } elseif ($requestType === 'refund') {
                 $paytrailRefund = $this->refundRequest;
                 $this->setRefundRequestData($paytrailRefund, $amount);
@@ -218,7 +230,7 @@ class ApiData
                     )
                 );
 
-            // Handle email refund requests
+                // Handle email refund requests
             } elseif ($requestType === 'email_refund') {
                 $paytrailEmailRefund = $this->emailRefundRequest;
                 $this->setEmailRefundRequestData($paytrailEmailRefund, $amount, $order);
@@ -288,6 +300,7 @@ class ApiData
         $paytrailPayment->setCurrency($order->getOrderCurrencyCode())->setAmount(round($order->getGrandTotal() * 100));
 
         $customer = $this->createCustomer($billingAddress);
+        $this->companyRequestData->setCompanyRequestData($customer, $billingAddress);
         $paytrailPayment->setCustomer($customer);
 
         $invoicingAddress = $this->createAddress($order, $billingAddress);
@@ -303,6 +316,8 @@ class ApiData
         $items = $this->getOrderItemLines($order);
 
         $paytrailPayment->setItems($items);
+
+        $this->setCompanyRequestData($paytrailPayment, $billingAddress);
 
         $paytrailPayment->setRedirectUrls($this->createRedirectUrl());
 
@@ -365,8 +380,8 @@ class ApiData
     /**
      * @param Order $order
      * @param $address
-     * @throws NoSuchEntityException
      * @return Address
+     * @throws NoSuchEntityException
      */
     protected function createAddress($order, $address)
     {
@@ -425,7 +440,7 @@ class ApiData
             $diffValue = abs($itemSum - $orderTotal);
 
             if ($diffValue > $itemQty) {
-                throw new \Exception(__('Difference in rounding the prices is too big ' . $orderTotal . ' --- ' . $itemSum ));
+                throw new \Exception(__('Difference in rounding the prices is too big ' . $orderTotal . ' --- ' . $itemSum));
             }
 
             $roundingItem = new Item();
