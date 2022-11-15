@@ -317,8 +317,6 @@ class ApiData
 
         $paytrailPayment->setItems($items);
 
-        $this->setCompanyRequestData($paytrailPayment, $billingAddress);
-
         $paytrailPayment->setRedirectUrls($this->createRedirectUrl());
 
         $paytrailPayment->setCallbackUrls($this->createCallbackUrl());
