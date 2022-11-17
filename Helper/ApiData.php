@@ -18,7 +18,7 @@ use Magento\Tax\Helper\Data as TaxHelper;
 use Paytrail\PaymentService\Helper\Data as CheckoutHelper;
 use Paytrail\PaymentService\Logger\PaytrailLogger;
 use Paytrail\PaymentService\Model\Adapter\Adapter;
-use Paytrail\PaymentService\Model\CompanyRequestData;
+use Paytrail\PaymentService\Model\Company\CompanyRequestData;
 use Paytrail\PaymentService\Model\Payment\DiscountSplitter;
 use Paytrail\SDK\Model\Address;
 use Paytrail\SDK\Model\CallbackUrl;

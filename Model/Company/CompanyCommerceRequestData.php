@@ -1,15 +1,15 @@
 <?php
 
-namespace Paytrail\PaymentService\Model;
+namespace Paytrail\PaymentService\Model\Company;
 
 use Magento\Company\Api\CompanyRepositoryInterface;
 use Magento\Customer\Api\CustomerRepositoryInterface;
 use Magento\Customer\Model\Session;
 
 /**
- * Class CompanyRequestData
+ * Class CompanyCommerceRequestData
  */
-class CompanyRequestData
+class CompanyCommerceRequestData
 {
     /**
      * @var Session
@@ -42,23 +42,20 @@ class CompanyRequestData
         $this->companyRepository = $companyRepository;
     }
 
-    public function setCompanyRequestData($customer, $billingAddress)
+    /**
+     * @param $customer
+     * @return mixed
+     * @throws \Magento\Framework\Exception\LocalizedException
+     * @throws \Magento\Framework\Exception\NoSuchEntityException
+     */
+    public function setCompanyCommerceRequestData($customer)
     {
-        if ($billingAddress->getCompany()) {
-            $customer->setCompanyName($billingAddress->getCompany());
-
-            return $customer;
-        }
-        if ($this->customerSession->isLoggedIn()) {
-            $companyId = $this->customerRepository->get($customer->getEmail())->getExtensionAttributes()->getCompanyAttributes()->getCompanyId() ?? null;
+        $companyId = $this->customerRepository->get($customer->getEmail())->getExtensionAttributes()->getCompanyAttributes()->getCompanyId() ?? null;
             if ($companyId) {
                 $customer->setCompanyName($this->companyRepository->get($companyId)->getCompanyName());
 
                 return $customer;
             }
-
-            return $customer;
-        }
 
         return $customer;
     }
