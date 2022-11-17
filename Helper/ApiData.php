@@ -300,7 +300,6 @@ class ApiData
         $paytrailPayment->setCurrency($order->getOrderCurrencyCode())->setAmount(round($order->getGrandTotal() * 100));
 
         $customer = $this->createCustomer($billingAddress);
-        $this->companyRequestData->setCompanyRequestData($customer, $billingAddress);
         $paytrailPayment->setCustomer($customer);
 
         $invoicingAddress = $this->createAddress($order, $billingAddress);
@@ -371,6 +370,8 @@ class ApiData
             ->setFirstName($billingAddress->getFirstName())
             ->setLastName($billingAddress->getLastname())
             ->setPhone($billingAddress->getTelephone());
+
+        $this->companyRequestData->setCompanyRequestData($customer, $billingAddress);
 
         return $customer;
     }
