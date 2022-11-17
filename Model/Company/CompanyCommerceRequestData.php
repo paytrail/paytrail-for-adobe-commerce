@@ -2,7 +2,7 @@
 
 namespace Paytrail\PaymentService\Model\Company;
 
-use Magento\Company\Api\CompanyRepositoryInterface\Proxy as CompanyRepositoryProxy;
+use Magento\Company\Api\CompanyRepositoryInterface;
 use Magento\Customer\Api\CustomerRepositoryInterface;
 
 /**
@@ -14,19 +14,23 @@ class CompanyCommerceRequestData
      * @var CustomerRepositoryInterface
      */
     private CustomerRepositoryInterface $customerRepository;
-    private CompanyRepositoryProxy $companyRepositoryProxy;
+
+    /**
+     * @var CompanyRepositoryInterface
+     */
+    private CompanyRepositoryInterface $companyRepository;
 
     /**
      * @param CustomerRepositoryInterface $customerRepository
-     * @param CompanyRepositoryProxy $companyRepositoryProxy
+     * @param CompanyRepositoryInterface $companyRepository
      */
     public function __construct(
         CustomerRepositoryInterface $customerRepository,
-        CompanyRepositoryProxy $companyRepositoryProxy
+        CompanyRepositoryInterface $companyRepository
     )
     {
         $this->customerRepository = $customerRepository;
-        $this->companyRepositoryProxy = $companyRepositoryProxy;
+        $this->companyRepository = $companyRepository;
     }
 
     /**
@@ -42,7 +46,7 @@ class CompanyCommerceRequestData
             ->getCompanyAttributes()
             ->getCompanyId();
         if ($companyId) {
-            $customer->setCompanyName($this->companyRepositoryProxy->get($companyId)->getCompanyName());
+            $customer->setCompanyName($this->companyRepository->get($companyId)->getCompanyName());
 
             return $customer;
         }

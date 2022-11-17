@@ -4,6 +4,7 @@ namespace Paytrail\PaymentService\Model\Company;
 
 use Magento\Customer\Model\Session;
 use Magento\Framework\Module\Manager;
+use Paytrail\PaymentService\Model\Company\CompanyCommerceRequestData\Proxy as CompanyCommerceRequestData;
 
 /**
  * Class CompanyRequestData
@@ -16,29 +17,29 @@ class CompanyRequestData
     private Session $customerSession;
 
     /**
-     * @var CompanyCommerceRequestData
-     */
-    private CompanyCommerceRequestData $companyCommerceRequestData;
-
-    /**
      * @var Manager
      */
     private Manager $moduleManager;
 
     /**
+     * @var CompanyCommerceRequestData
+     */
+    private CompanyCommerceRequestData $companyCommerceRequestData;
+
+    /**
      * @param Session $customerSession
-     * @param CompanyCommerceRequestData $companyCommerceRequestData
      * @param Manager $moduleManager
+     * @param CompanyCommerceRequestData $companyCommerceRequestData
      */
     public function __construct(
         Session                    $customerSession,
-        CompanyCommerceRequestData $companyCommerceRequestData,
-        Manager                    $moduleManager
+        Manager                    $moduleManager,
+        CompanyCommerceRequestData $companyCommerceRequestData
     )
     {
         $this->customerSession = $customerSession;
-        $this->companyCommerceRequestData = $companyCommerceRequestData;
         $this->moduleManager = $moduleManager;
+        $this->companyCommerceRequestData = $companyCommerceRequestData;
     }
 
     /**
