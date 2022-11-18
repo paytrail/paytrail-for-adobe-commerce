@@ -2,7 +2,6 @@
 
 namespace Paytrail\PaymentService\Model\Company;
 
-use Magento\Company\Model\CompanyRepository;
 use Magento\Customer\Api\CustomerRepositoryInterface;
 
 /**
@@ -15,19 +14,16 @@ class CompanyCommerceRequestData
      */
     private CustomerRepositoryInterface $customerRepository;
 
-    private $companyRepository;
-
     /**
      * @param CustomerRepositoryInterface $customerRepository
      * @param $companyRepository
      */
     public function __construct(
         CustomerRepositoryInterface $customerRepository,
-        CompanyRepository           $companyRepository
-    )
-    {
+        $object
+    ) {
         $this->customerRepository = $customerRepository;
-        $this->companyRepository = $companyRepository;
+        $this->_object = $object;
     }
 
     /**
@@ -43,7 +39,8 @@ class CompanyCommerceRequestData
             ->getCompanyAttributes()
             ->getCompanyId();
         if ($companyId) {
-            $customer->setCompanyName($this->companyRepository->get($companyId)->getCompanyName());
+
+            $customer->setCompanyName($this->_object->get($companyId)->getCompanyName());
 
             return $customer;
         }
