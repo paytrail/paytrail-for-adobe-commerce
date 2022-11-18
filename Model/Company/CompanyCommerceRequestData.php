@@ -16,7 +16,7 @@ class CompanyCommerceRequestData
 
     /**
      * @param CustomerRepositoryInterface $customerRepository
-     * @param $companyRepository
+     * @param $object
      */
     public function __construct(
         CustomerRepositoryInterface $customerRepository,
@@ -39,7 +39,6 @@ class CompanyCommerceRequestData
             ->getCompanyAttributes()
             ->getCompanyId();
         if ($companyId) {
-
             $customer->setCompanyName($this->_object->get($companyId)->getCompanyName());
 
             return $customer;
