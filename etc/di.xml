@@ -115,7 +115,7 @@
 
   <type name="Paytrail\PaymentService\Model\Company\CompanyCommerceRequestData">
     <arguments>
-      <argument name="companyRepository" xsi:type="object">Magento\Company\Api\CompanyRepositoryInterface</argument>
+      <argument name="companyRepository" xsi:type="object">Magento\Company\Model\CompanyRepository</argument>
     </arguments>
   </type>
 </config>
