@@ -13,8 +13,8 @@ class CompanyRequestData
 {
     /**
      * @var Session
-     *
-    private Session $customerSession;
+     */
+    private $customerSession;
 
     /**
      * @var Manager
