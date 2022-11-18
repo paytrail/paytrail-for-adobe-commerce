@@ -2,7 +2,6 @@
 
 namespace Paytrail\PaymentService\Model\Company;
 
-use Magento\Company\Api\CompanyRepositoryInterface;
 use Magento\Customer\Api\CustomerRepositoryInterface;
 
 /**
@@ -15,20 +14,16 @@ class CompanyCommerceRequestData
      */
     private CustomerRepositoryInterface $customerRepository;
 
-    /**
-     * @var CompanyRepositoryInterface
-     */
-    private CompanyRepositoryInterface $companyRepository;
+    private $companyRepository;
 
     /**
      * @param CustomerRepositoryInterface $customerRepository
-     * @param CompanyRepositoryInterface $companyRepository
+     * @param $companyRepository
      */
     public function __construct(
         CustomerRepositoryInterface $customerRepository,
-        CompanyRepositoryInterface $companyRepository
-    )
-    {
+                                    $companyRepository = null
+    ) {
         $this->customerRepository = $customerRepository;
         $this->companyRepository = $companyRepository;
     }
