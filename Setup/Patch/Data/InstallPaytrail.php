@@ -8,6 +8,9 @@ use Magento\Sales\Setup\SalesSetupFactory;
 
 class InstallPaytrail implements DataPatchInterface
 {
+    public const ORDER_STATE_CUSTOM_CODE = 'pending_paytrail_state';
+    public const ORDER_STATUS_CUSTOM_CODE = 'pending_paytrail';
+
     /**
      * @var ModuleDataSetupInterface
      */
