@@ -8,6 +8,12 @@
         </arguments>
     </type>
 
+    <type name="Paytrail\PaymentService\Controller\Adminhtml\Order\Restore">
+        <arguments>
+            <argument name="session" xsi:type="object">\Magento\Backend\Model\Session\Proxy</argument>
+        </arguments>
+    </type>
+
     <type name="Magento\Sales\Model\ResourceModel\Order\Grid\Collection">
         <plugin name="RecurringToOrderGrid" type="Paytrail\PaymentService\Plugin\RecurringToOrderGrid" />
     </type>

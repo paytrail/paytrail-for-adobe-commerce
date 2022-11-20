@@ -4,30 +4,27 @@ namespace Paytrail\PaymentService\Model;
 
 use Magento\Backend\Model\UrlInterface;
 use Magento\Checkout\Model\Session;
-use Magento\Framework\App\Action\Context;
 use Magento\Framework\App\CacheInterface;
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\DB\TransactionFactory;
 use Magento\Framework\Exception\InputException;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Mail\Template\TransportBuilder;
-use Magento\Sales\Api\Data\OrderInterface;
 use Magento\Sales\Api\OrderManagementInterface;
 use Magento\Sales\Api\OrderRepositoryInterface;
-use Magento\Sales\Api\OrderStatusHistoryRepositoryInterface;
 use Magento\Sales\Api\TransactionRepositoryInterface;
 use Magento\Sales\Model\Order\Email\Sender\OrderSender;
 use Magento\Sales\Model\Order\Payment\Transaction;
 use Magento\Sales\Model\Order\Payment\Transaction\Builder as transactionBuilder;
 use Magento\Sales\Model\Order\Payment\Transaction\BuilderInterface as transactionBuilderInterface;
+use Magento\Sales\Model\OrderFactory;
 use Magento\Sales\Model\Service\InvoiceService;
 use Paytrail\PaymentService\Exceptions\CheckoutException;
 use Paytrail\PaymentService\Gateway\Config\Config;
-use Paytrail\PaymentService\Gateway\Validator\ResponseValidator;
 use Paytrail\PaymentService\Helper\ApiData;
 use Paytrail\PaymentService\Helper\Data as paytrailHelper;
 use Paytrail\PaymentService\Model\Email\Order\PendingOrderEmailConfirmation;
-use Paytrail\PaymentService\Setup\Recurring;
+use Paytrail\PaymentService\Setup\Patch\Data\InstallPaytrail;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -35,12 +32,7 @@ use Psr\Log\LoggerInterface;
  */
 class ReceiptDataProvider
 {
-    const RECEIPT_PROCESSING_CACHE_PREFIX = "receipt_processing_";
-
-    /**
-     * @var Context
-     */
-    protected $context;
+    public const RECEIPT_PROCESSING_CACHE_PREFIX = "receipt_processing_";
 
     /**
      * @var Session
@@ -73,29 +65,14 @@ class ReceiptDataProvider
     protected $orderManagementInterface;
 
     /**
-     * @var ResponseValidator
-     */
-    protected $responseValidator;
-
-    /**
      * @var OrderRepositoryInterface
      */
     protected $orderRepositoryInterface;
 
     /**
-     * @var transactionBuilderInterface
-     */
-    protected $transactionBuilderInterface;
-
-    /**
      * @var InvoiceService
      */
     protected $invoiceService;
-
-    /**
-     * @var OrderStatusHistoryRepositoryInterface
-     */
-    protected $orderStatusHistoryRepository;
 
     /**
      * @var TransactionFactory
@@ -108,12 +85,7 @@ class ReceiptDataProvider
     protected $paytrailHelper;
 
     /**
-     * @var OrderInterface
-     */
-    protected $orderInterface;
-
-    /**
-     * @var transactionBuilder
+     * @var transactionBuilderInterface
      */
     protected $transactionBuilder;
 
@@ -183,77 +155,70 @@ class ReceiptDataProvider
     private $pendingOrderEmail;
 
     /**
+     * @var OrderFactory
+     */
+    private $orderFactory;
+
+    /**
      * ReceiptDataProvider constructor.
-     * @param Context $context
      * @param Session $session
      * @param TransactionRepositoryInterface $transactionRepository
      * @param OrderSender $orderSender
      * @param TransportBuilder $transportBuilder
      * @param ScopeConfigInterface $scopeConfig
      * @param OrderManagementInterface $orderManagementInterface
-     * @param ResponseValidator $responseValidator
      * @param OrderRepositoryInterface $orderRepositoryInterface
-     * @param transactionBuilderInterface $transactionBuilderInterface
      * @param CacheInterface $cache
      * @param InvoiceService $invoiceService
-     * @param OrderStatusHistoryRepositoryInterface $orderStatusHistoryRepository
      * @param TransactionFactory $transactionFactory
      * @param paytrailHelper $paytrailHelper
-     * @param OrderInterface $orderInterface
-     * @param transactionBuilder $transactionBuilder
+     * @param transactionBuilderInterface $transactionBuilder
      * @param Config $gatewayConfig
      * @param ApiData $apiData
      * @param LoggerInterface $logger
      * @param UrlInterface $backendUrl
+     * @param OrderFactory $orderFactory
      * @param PendingOrderEmailConfirmation $pendingOrderEmail
-     * @param $skipHmac
+     * @param boolean $skipHmac
      */
     public function __construct(
-        Context                               $context,
-        Session                               $session,
-        TransactionRepositoryInterface        $transactionRepository,
-        OrderSender                           $orderSender,
-        TransportBuilder                      $transportBuilder,
-        ScopeConfigInterface                  $scopeConfig,
-        OrderManagementInterface              $orderManagementInterface,
-        ResponseValidator                     $responseValidator,
-        OrderRepositoryInterface              $orderRepositoryInterface,
-        transactionBuilderInterface           $transactionBuilderInterface,
-        CacheInterface                        $cache,
-        InvoiceService                        $invoiceService,
-        OrderStatusHistoryRepositoryInterface $orderStatusHistoryRepository,
-        TransactionFactory                    $transactionFactory,
-        paytrailHelper                        $paytrailHelper,
-        OrderInterface                        $orderInterface,
-        transactionBuilder                    $transactionBuilder,
-        Config                                $gatewayConfig,
-        ApiData                               $apiData,
-        LoggerInterface                       $logger,
-        UrlInterface                          $backendUrl,
-        PendingOrderEmailConfirmation         $pendingOrderEmail,
-                                              $skipHmac = false
+        Session                        $session,
+        TransactionRepositoryInterface $transactionRepository,
+        OrderSender                    $orderSender,
+        TransportBuilder               $transportBuilder,
+        ScopeConfigInterface           $scopeConfig,
+        OrderManagementInterface       $orderManagementInterface,
+        OrderRepositoryInterface       $orderRepositoryInterface,
+        CacheInterface                 $cache,
+        InvoiceService                 $invoiceService,
+        TransactionFactory             $transactionFactory,
+        paytrailHelper                 $paytrailHelper,
+        transactionBuilder             $transactionBuilder,
+        Config                         $gatewayConfig,
+        ApiData                        $apiData,
+        LoggerInterface                $logger,
+        UrlInterface                   $backendUrl,
+        OrderFactory                   $orderFactory,
+        PendingOrderEmailConfirmation  $pendingOrderEmail,
+                                       $skipHmac = false
     ) {
         $this->cache = $cache;
-        $this->context = $context;
         $this->session = $session;
         $this->transactionRepository = $transactionRepository;
         $this->orderSender = $orderSender;
         $this->transportBuilder = $transportBuilder;
         $this->scopeConfig = $scopeConfig;
         $this->orderManagementInterface = $orderManagementInterface;
-        $this->responseValidator = $responseValidator;
         $this->orderRepositoryInterface = $orderRepositoryInterface;
-        $this->transactionBuilderInterface = $transactionBuilderInterface;
         $this->invoiceService = $invoiceService;
-        $this->orderStatusHistoryRepository = $orderStatusHistoryRepository;
         $this->transactionFactory = $transactionFactory;
         $this->paytrailHelper = $paytrailHelper;
-        $this->orderInterface = $orderInterface;
         $this->transactionBuilder = $transactionBuilder;
         $this->gatewayConfig = $gatewayConfig;
         $this->apiData = $apiData;
         $this->logger = $logger;
         $this->backendUrl = $backendUrl;
+        $this->orderFactory = $orderFactory;
         $this->skipHmac = $skipHmac;
         $this->pendingOrderEmail = $pendingOrderEmail;
     }
@@ -352,8 +317,8 @@ class ReceiptDataProvider
             $this->currentOrder->setState($orderState)->setStatus($orderState);
             $this->currentOrder->addCommentToStatusHistory(__('Payment has been completed'));
         } else {
-            $this->currentOrder->setState(Recurring::ORDER_STATE_CUSTOM_CODE);
-            $this->currentOrder->setStatus(Recurring::ORDER_STATUS_CUSTOM_CODE);
+            $this->currentOrder->setState(InstallPaytrail::ORDER_STATE_CUSTOM_CODE);
+            $this->currentOrder->setStatus(InstallPaytrail::ORDER_STATUS_CUSTOM_CODE);
             $this->currentOrder->addCommentToStatusHistory(__('Pending payment from Paytrail Payment Service'));
         }
 
@@ -455,7 +420,7 @@ class ReceiptDataProvider
      */
     protected function loadOrder()
     {
-        $order = $this->orderInterface->loadByIncrementId($this->orderIncrementalId);
+        $order = $this->orderFactory->create()->loadByIncrementId($this->orderIncrementalId);
         if (!$order->getId()) {
             $this->paytrailHelper->processError('Order not found');
         }
@@ -567,7 +532,21 @@ class ReceiptDataProvider
     private function cancelOrderById($orderId): void
     {
         if ($this->gatewayConfig->getCancelOrderOnFailedPayment()) {
-            $this->orderManagementInterface->cancel($orderId);
+            try {
+                $this->orderManagementInterface->cancel($orderId);
+            } catch (\Exception $e) {
+                $this->logger->critical(sprintf(
+                    'Paytrail exception during order cancel: %s,\n error trace: %s',
+                    $e->getMessage(),
+                    $e->getTraceAsString()
+                ));
+
+                // Mask and throw end-user friendly exception
+                throw new CheckoutException(__(
+                    'Error while cancelling order. Please contact customer support with order id: %id to release discount coupons.',
+                    ['id' => $orderId]
+                ));
+            }
         }
     }
 }

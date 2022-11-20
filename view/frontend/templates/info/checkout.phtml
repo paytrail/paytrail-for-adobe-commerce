@@ -1,2 +1,3 @@
-<p><?= $this->getPaymentMethodTitle()?></p>
+<?php /** @var $block \Paytrail\PaymentService\Block\Info\Paytrail */ ?>
+<p><?= $block->getPaymentMethodTitle()?></p>
 <?php echo $block->getChildHtml()?>

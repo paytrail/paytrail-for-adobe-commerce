@@ -5,7 +5,7 @@
 
 ***Always perform a backup of your database and source code before installing any extensions.***
 
-This module has been tested on Adobe Commerce / Magento 2.4.2, 2.4.1 and 2.3.X {community|commerce} versions. Support for 2.2.X has ended and compatibility with older versions cannot be guaranteed.
+This module has been tested on Adobe Commerce / Magento 2.4.5, 2.4.4 and 2.3.X {community|commerce} versions. Support for 2.2.X has ended and compatibility with older versions cannot be guaranteed.
 
 Adobe Commerce system requirements per tested version can be found [here](https://devdocs.magento.com/guides/v2.4/install-gde/system-requirements.html). 
 

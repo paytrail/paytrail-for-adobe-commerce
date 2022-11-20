@@ -349,7 +349,7 @@ class ApiData
         $paytrailPayment->setCustomer($this->requestData->createCustomer($billingAddress));
         $paytrailPayment->setInvoicingAddress($this->requestData->createAddress($order, $billingAddress));
 
-        if (!is_null($shippingAddress)) {
+        if ($shippingAddress !== null) {
             $paytrailPayment->setDeliveryAddress($this->requestData->createAddress($order, $shippingAddress));
         }
 

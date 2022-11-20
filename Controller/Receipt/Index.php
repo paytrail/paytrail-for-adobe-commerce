@@ -3,23 +3,20 @@
 namespace Paytrail\PaymentService\Controller\Receipt;
 
 use Magento\Checkout\Model\Session;
-use Magento\Framework\App\Action\Context;
+use Magento\Framework\App\ActionInterface;
 use Magento\Framework\App\RequestInterface;
-use Magento\Framework\Controller\Result\RedirectFactory;
+use Magento\Framework\Controller\ResultFactory;
 use Magento\Framework\Message\ManagerInterface;
-use Magento\Quote\Model\QuoteRepository;
-use Magento\Sales\Api\Data\OrderInterface;
+use Magento\Sales\Model\OrderFactory;
 use Paytrail\PaymentService\Gateway\Config\Config;
 use Paytrail\PaymentService\Gateway\Validator\ResponseValidator;
 use Paytrail\PaymentService\Helper\Data;
 use Paytrail\PaymentService\Helper\ProcessPayment;
-use Paytrail\PaymentService\Model\ReceiptDataProvider;
-use Magento\Framework\App\Action\HttpGetActionInterface;
 
 /**
  * Class Index
  */
-class Index implements HttpGetActionInterface
+class Index implements ActionInterface
 {
     /**
      * @var Session
@@ -30,22 +27,6 @@ class Index implements HttpGetActionInterface
      * @var ResponseValidator
      */
     protected $responseValidator;
-
-    /**
-     * @var ReceiptDataProvider
-     */
-    protected $receiptDataProvider;
-
-    /**
-     * @var QuoteRepository
-     */
-    protected $quoteRepository;
-
-    /**
-     * @var OrderInterface
-     */
-    private $orderInterface;
-
     /**
      * @var ProcessPayment
      */
@@ -58,67 +39,66 @@ class Index implements HttpGetActionInterface
      * @var Data
      */
     private $paytrailHelper;
-    private RequestInterface $request;
-    private Context $context;
-    private RedirectFactory $redirectFactory;
-    private ManagerInterface $messageManager;
+    /**
+     * @var OrderFactory
+     */
+    private $orderFactory;
+    /**
+     * @var RequestInterface
+     */
+    private $request;
+    /**
+     * @var ResultFactory
+     */
+    private $resultFactory;
 
     /**
-     * Index constructor.
-     * @param Context $context
+     * @var ManagerInterface
+     */
+    private $messageManager;
+
+    /**
      * @param Session $session
      * @param ResponseValidator $responseValidator
-     * @param QuoteRepository $quoteRepository
-     * @param ReceiptDataProvider $receiptDataProvider
-     * @param OrderInterface $orderInterface
      * @param ProcessPayment $processPayment
      * @param Config $gatewayConfig
      * @param Data $paytrailHelper
+     * @param OrderFactory $orderFactory
      * @param RequestInterface $request
-     * @param RedirectFactory $redirectFactory
+     * @param ResultFactory $resultFactory
      * @param ManagerInterface $messageManager
      */
     public function __construct(
-        Context $context,
         Session $session,
         ResponseValidator $responseValidator,
-        QuoteRepository $quoteRepository,
-        ReceiptDataProvider $receiptDataProvider,
-        OrderInterface $orderInterface,
         ProcessPayment $processPayment,
         Config $gatewayConfig,
         Data $paytrailHelper,
+        OrderFactory $orderFactory,
         RequestInterface $request,
-        RedirectFactory $redirectFactory,
+        ResultFactory $resultFactory,
         ManagerInterface $messageManager
     ) {
         $this->session = $session;
         $this->responseValidator = $responseValidator;
-        $this->receiptDataProvider = $receiptDataProvider;
-        $this->quoteRepository = $quoteRepository;
-        $this->orderInterface = $orderInterface;
         $this->processPayment = $processPayment;
         $this->gatewayConfig = $gatewayConfig;
         $this->paytrailHelper = $paytrailHelper;
+        $this->orderFactory = $orderFactory;
         $this->request = $request;
-        $this->context = $context;
-        $this->redirectFactory = $redirectFactory;
+        $this->resultFactory = $resultFactory;
         $this->messageManager = $messageManager;
     }
 
     /**
+     * Order status is manipulated by another callback:
+     * @see \Paytrail\PaymentService\Controller\Callback\Index
      * execute method
      */
-    public function execute() // there is also other call which changes order status
+    public function execute()
     {
-
-        /** @var array $successStatuses */
         $successStatuses = ["processing", "pending_paytrail", "pending", "complete"];
-
-        /** @var array $cancelStatuses */
         $cancelStatuses = ["canceled"];
-
-        /** @var string $reference */
         $reference = $this->request->getParam('checkout-reference');
 
         /** @var string $orderNo */
@@ -126,12 +106,10 @@ class Index implements HttpGetActionInterface
             ? $this->paytrailHelper->getIdFromOrderReferenceNumber($reference)
             : $reference;
 
-        /** @var \Magento\Sales\Model\Order $order */
-        $order = $this->orderInterface->loadByIncrementId($orderNo);
-
         sleep(2); //giving callback time to get processed
 
-        /** @var string $status */
+        /** @var \Magento\Sales\Model\Order $order */
+        $order = $this->orderFactory->create()->loadByIncrementId($orderNo);
         $status = $order->getStatus();
 
         /** @var array $failMessages */
@@ -143,28 +121,22 @@ class Index implements HttpGetActionInterface
         }
 
         if ($status == 'pending_payment') { // status could be changed by callback, if not, it needs to be forced
-            $order = $this->orderInterface->loadByIncrementId($orderNo); // refreshing order
+            $order = $this->orderFactory->create()->loadByIncrementId($orderNo); // refreshing order
             $status = $order->getStatus(); // getting current status
         }
 
-        $redirect = $this->redirectFactory->create();
-
+        $result = $this->resultFactory->create(\Magento\Framework\Controller\ResultFactory::TYPE_REDIRECT);
         if (in_array($status, $successStatuses)) {
-            $redirect->setPath('checkout/onepage/success');
-            return $redirect;
+            return $result->setPath('checkout/onepage/success');
         } elseif (in_array($status, $cancelStatuses)) {
-            /** @var string $failMessage */
             foreach ($failMessages as $failMessage) {
                 $this->messageManager->addErrorMessage($failMessage);
             }
-            $redirect->setPath('checkout/cart');
-            return $redirect;
+
+            return $result->setPath('checkout/cart');
         }
 
-        $this->messageManager->addErrorMessage(__(
-            'Order processing has been aborted. Please contact customer service.'
-        ));
-        $redirect->setPath('checkout/cart');
-        return $redirect;
+        $this->messageManager->addErrorMessage(__('Order processing has been aborted. Please contact customer service.'));
+        return $result->setPath('checkout/cart');
     }
 }
