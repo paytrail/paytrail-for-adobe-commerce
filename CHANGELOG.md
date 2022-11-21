@@ -3,6 +3,9 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+## [1.3.1] - 2022-11-18
+- Fix undefined constant error during failed payment requests
+
 ## [1.3.0] - 2022-10-27
 - Summary: Update contains a lot of smaller code quality fixes as highlighted by upgrade compatibility tools by Magento. 1.3.0 addresses over 20 different minor issues in the module
 - New Feature: Improve logging and exception handling in controllers

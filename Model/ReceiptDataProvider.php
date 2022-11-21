@@ -22,7 +22,7 @@ use Paytrail\PaymentService\Exceptions\CheckoutException;
 use Paytrail\PaymentService\Gateway\Config\Config;
 use Paytrail\PaymentService\Helper\ApiData;
 use Paytrail\PaymentService\Helper\Data as paytrailHelper;
-use Paytrail\PaymentService\Setup\Recurring;
+use Paytrail\PaymentService\Setup\Patch\Data\InstallPaytrail;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -300,8 +300,8 @@ class ReceiptDataProvider
             $this->currentOrder->setState($orderState)->setStatus($orderState);
             $this->currentOrder->addCommentToStatusHistory(__('Payment has been completed'));
         } else {
-            $this->currentOrder->setState(Recurring::ORDER_STATE_CUSTOM_CODE);
-            $this->currentOrder->setStatus(Recurring::ORDER_STATUS_CUSTOM_CODE);
+            $this->currentOrder->setState(InstallPaytrail::ORDER_STATE_CUSTOM_CODE);
+            $this->currentOrder->setStatus(InstallPaytrail::ORDER_STATUS_CUSTOM_CODE);
             $this->currentOrder->addCommentToStatusHistory(__('Pending payment from Paytrail Payment Service'));
         }
 
