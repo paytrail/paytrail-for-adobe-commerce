@@ -95,6 +95,11 @@
                     Remember that as long as the order is open product stock in the order is locked.]]></comment>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                 </field>
+                <field id="walley_collector_active_invoice" translate="label" type="select" sortOrder="90" showInDefault="1"
+                       showInWebsite="0" showInStore="0" canRestore="1">
+                    <label>Enable Walley/Collector active invoice</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                </field>
                 <group id="paytrail_personalization" translate="label" type="text" sortOrder="90" showInDefault="1"
                        showInWebsite="1" showInStore="1">
                     <label>Payment page personalization</label>
