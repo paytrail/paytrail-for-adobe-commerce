@@ -19,6 +19,7 @@ use Paytrail\PaymentService\Helper\Data as CheckoutHelper;
 use Paytrail\PaymentService\Logger\PaytrailLogger;
 use Paytrail\PaymentService\Model\Adapter\Adapter;
 use Paytrail\PaymentService\Model\Company\CompanyRequestData;
+use Paytrail\PaymentService\Model\Invoice\InvoiceActivate;
 use Paytrail\PaymentService\Model\Payment\DiscountSplitter;
 use Paytrail\SDK\Model\Address;
 use Paytrail\SDK\Model\CallbackUrl;
@@ -111,6 +112,12 @@ class ApiData
     private CompanyRequestData $companyRequestData;
 
     /**
+     * @var InvoiceActivate
+     */
+    private InvoiceActivate $invoiceActivate;
+
+    /**
+     * @param LoggerInterface $log
      * @param UrlInterface $urlBuilder
      * @param RequestInterface $request
      * @param Json $json
@@ -125,6 +132,8 @@ class ApiData
      * @param EmailRefundRequest $emailRefundRequest
      * @param DiscountSplitter $discountSplitter
      * @param TaxItem $taxItem
+     * @param CompanyRequestData $companyRequestData
+     * @param InvoiceActivate $invoiceActivate
      */
     public function __construct(
         LoggerInterface                     $log,
@@ -142,9 +151,9 @@ class ApiData
         EmailRefundRequest                  $emailRefundRequest,
         DiscountSplitter                    $discountSplitter,
         TaxItem                             $taxItem,
-        CompanyRequestData                  $companyRequestData
-    )
-    {
+        CompanyRequestData                  $companyRequestData,
+        InvoiceActivate                     $invoiceActivate
+    ) {
         $this->log = $log;
         $this->urlBuilder = $urlBuilder;
         $this->request = $request;
@@ -160,6 +169,7 @@ class ApiData
         $this->discountSplitter = $discountSplitter;
         $this->taxItems = $taxItem;
         $this->companyRequestData = $companyRequestData;
+        $this->invoiceActivate = $invoiceActivate;
     }
 
     /**
@@ -319,6 +329,8 @@ class ApiData
         $paytrailPayment->setRedirectUrls($this->createRedirectUrl());
 
         $paytrailPayment->setCallbackUrls($this->createCallbackUrl());
+
+        $this->invoiceActivate->setManualInvoiceActivationFlag($paytrailPayment, $this->request->getParams());
 
         // Log payment data
         $this->log->debugLog('request', $paytrailPayment);
