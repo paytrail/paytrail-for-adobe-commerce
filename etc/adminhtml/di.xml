@@ -13,4 +13,9 @@
             <argument name="session" xsi:type="object">\Magento\Backend\Model\Session\Proxy</argument>
         </arguments>
     </type>
+    <type name="Magento\Shipping\Controller\Adminhtml\Order\Shipment\Save">
+        <plugin name="submit_shipment_after_plugin"
+                type="Paytrail\PaymentService\Plugin\Invoice\SubmitShipmentPlugin"
+                sortOrder="10"/>
+    </type>
 </config>
