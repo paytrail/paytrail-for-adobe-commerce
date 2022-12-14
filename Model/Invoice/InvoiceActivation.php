@@ -1,4 +1,6 @@
 <?php
+declare(strict_types=1);
+
 
 namespace Paytrail\PaymentService\Model\Invoice;
 
@@ -19,10 +21,11 @@ class InvoiceActivation
      * @var ScopeConfigInterface
      */
     private ScopeConfigInterface $scopeConfig;
+
     /**
      * @var string[]
      */
-    private $manualInvoiceOverride;
+    private array $activationOverride;
 
     /**
      * @param ScopeConfigInterface $scopeConfig
@@ -30,10 +33,10 @@ class InvoiceActivation
      */
     public function __construct(
         ScopeConfigInterface $scopeConfig,
-        $activationOverride = []
+        array $activationOverride = []
     ) {
         $this->scopeConfig = $scopeConfig;
-        $this->manualInvoiceOverride = $activationOverride;
+        $this->activationOverride = $activationOverride;
     }
 
     /**
@@ -41,9 +44,9 @@ class InvoiceActivation
      *
      * @param \Paytrail\SDK\Request\PaymentRequest $paytrailPayment
      * @param string $method
-     * @return void
+     * @return \Paytrail\SDK\Request\PaymentRequest
      */
-    public function setManualInvoiceActivationFlag($paytrailPayment, $method)
+    public function setManualInvoiceActivationFlag(&$paytrailPayment, $method)
     {
         if ($this->canUseManualInvoiceActivation()
             && in_array($method, $this->getInvoiceMethods())) {
@@ -60,7 +63,10 @@ class InvoiceActivation
      */
     private function canUseManualInvoiceActivation(): bool
     {
-        return $this->scopeConfig->getValue(self::ACTIVE_INVOICE_CONFIG_PATH);
+        return (bool)$this->scopeConfig->getValue(
+            self::ACTIVE_INVOICE_CONFIG_PATH,
+            \Magento\Store\Model\ScopeInterface::SCOPE_STORE
+        );
     }
 
     /**
@@ -68,8 +74,8 @@ class InvoiceActivation
      *
      * @return string[]
      */
-    private function getInvoiceMethods()
+    private function getInvoiceMethods(): array
     {
-        return array_merge(self::SUB_METHODS_WITH_MANUAL_ACTIVATION_SUPPORT, $this->manualInvoiceOverride);
+        return array_merge(self::SUB_METHODS_WITH_MANUAL_ACTIVATION_SUPPORT, $this->activationOverride);
     }
 }

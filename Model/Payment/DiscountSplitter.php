@@ -7,9 +7,9 @@ use Magento\Framework\Exception\LocalizedException;
 
 class DiscountSplitter
 {
-    const ROUNDING_TYPE_FINAL = 'splitter_unit';
-    const SMALLEST_ACCEPTABLE_DIFFERENCE = 0.0001;
-    const CONFIG_PATH_ROUNDING_ROW_TAX = 'payment/paytrail/rounding_row_tax_percent';
+    private const ROUNDING_TYPE_FINAL = 'splitter_unit';
+    private const SMALLEST_ACCEPTABLE_DIFFERENCE = 0.0001;
+    private const CONFIG_PATH_ROUNDING_ROW_TAX = 'payment/paytrail/rounding_row_tax_percent';
 
     /**
      * @var DiscountGetterInterface[]

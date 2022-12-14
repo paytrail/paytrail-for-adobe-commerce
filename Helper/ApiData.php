@@ -289,6 +289,8 @@ class ApiData
     }
 
     /**
+     * Hydrate Payment request with data.
+     *
      * @param PaymentRequest $paytrailPayment
      * @param Order $order
      * @return mixed
@@ -314,7 +316,11 @@ class ApiData
             $paytrailPayment->setDeliveryAddress($this->createAddress($shippingAddress));
         }
 
-        $this->invoiceActivate->setManualInvoiceActivationFlag($paytrailPayment, $this->request->getParam(''));
+        // Conditionally set manual invoicing flag if selected payment method supports it.
+        $this->invoiceActivate->setManualInvoiceActivationFlag(
+            $paytrailPayment,
+            $this->request->getParam('preselected_payment_method_id')
+        );
 
         // Log payment data
         $this->log->debugLog('request', $paytrailPayment);
