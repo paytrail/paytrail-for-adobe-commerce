@@ -19,7 +19,7 @@ use Paytrail\PaymentService\Helper\Data as CheckoutHelper;
 use Paytrail\PaymentService\Logger\PaytrailLogger;
 use Paytrail\PaymentService\Model\Adapter\Adapter;
 use Paytrail\PaymentService\Model\Company\CompanyRequestData;
-use Paytrail\PaymentService\Model\Invoice\InvoiceActivate;
+use Paytrail\PaymentService\Model\Invoice\InvoiceActivation;
 use Paytrail\PaymentService\Model\Payment\DiscountSplitter;
 use Paytrail\SDK\Model\Address;
 use Paytrail\SDK\Model\CallbackUrl;
@@ -112,9 +112,9 @@ class ApiData
     private CompanyRequestData $companyRequestData;
 
     /**
-     * @var InvoiceActivate
+     * @var InvoiceActivation
      */
-    private InvoiceActivate $invoiceActivate;
+    private InvoiceActivation $invoiceActivate;
 
     /**
      * @param LoggerInterface $log
@@ -124,7 +124,6 @@ class ApiData
      * @param CountryInformationAcquirerInterface $countryInformationAcquirer
      * @param TaxHelper $taxHelper
      * @param Data $helper
-     * @param Config $resourceConfig
      * @param StoreManagerInterface $storeManager
      * @param Adapter $paytrailAdapter
      * @param PaymentRequest $paymentRequest
@@ -133,7 +132,7 @@ class ApiData
      * @param DiscountSplitter $discountSplitter
      * @param TaxItem $taxItem
      * @param CompanyRequestData $companyRequestData
-     * @param InvoiceActivate $invoiceActivate
+     * @param InvoiceActivation $invoiceActivate
      */
     public function __construct(
         LoggerInterface                     $log,
@@ -143,7 +142,6 @@ class ApiData
         CountryInformationAcquirerInterface $countryInformationAcquirer,
         TaxHelper                           $taxHelper,
         CheckoutHelper                      $helper,
-        Config                              $resourceConfig,
         StoreManagerInterface               $storeManager,
         Adapter                             $paytrailAdapter,
         PaymentRequest                      $paymentRequest,
@@ -152,7 +150,7 @@ class ApiData
         DiscountSplitter                    $discountSplitter,
         TaxItem                             $taxItem,
         CompanyRequestData                  $companyRequestData,
-        InvoiceActivate                     $invoiceActivate
+        InvoiceActivation $invoiceActivate
     ) {
         $this->log = $log;
         $this->urlBuilder = $urlBuilder;
@@ -301,36 +299,22 @@ class ApiData
         $billingAddress = $order->getBillingAddress() ?? $order->getShippingAddress();
         $shippingAddress = $order->getShippingAddress();
 
-        $paytrailPayment->setStamp(hash('sha256', time() . $order->getIncrementId()));
-
-        $reference = $this->helper->getReference($order);
-
-        $paytrailPayment->setReference($reference);
-
-        $paytrailPayment->setCurrency($order->getOrderCurrencyCode())->setAmount(round($order->getGrandTotal() * 100));
-
-        $customer = $this->createCustomer($billingAddress);
-        $paytrailPayment->setCustomer($customer);
-
-        $invoicingAddress = $this->createAddress($order, $billingAddress);
-        $paytrailPayment->setInvoicingAddress($invoicingAddress);
+        $paytrailPayment->setStamp(hash('sha256', time() . $order->getIncrementId()))
+            ->setReference($this->helper->getReference($order))
+            ->setCurrency($order->getOrderCurrencyCode())
+            ->setAmount(round($order->getGrandTotal() * 100))
+            ->setCustomer($this->createCustomer($billingAddress))
+            ->setInvoicingAddress($this->createAddress($billingAddress))
+            ->setLanguage($this->helper->getStoreLocaleForPaymentProvider())
+            ->setItems($this->getOrderItemLines($order))
+            ->setRedirectUrls($this->createRedirectUrl())
+            ->setCallbackUrls($this->createCallbackUrl());
 
         if ($shippingAddress !== null) {
-            $deliveryAddress = $this->createAddress($order, $shippingAddress);
-            $paytrailPayment->setDeliveryAddress($deliveryAddress);
+            $paytrailPayment->setDeliveryAddress($this->createAddress($shippingAddress));
         }
 
-        $paytrailPayment->setLanguage($this->helper->getStoreLocaleForPaymentProvider());
-
-        $items = $this->getOrderItemLines($order);
-
-        $paytrailPayment->setItems($items);
-
-        $paytrailPayment->setRedirectUrls($this->createRedirectUrl());
-
-        $paytrailPayment->setCallbackUrls($this->createCallbackUrl());
-
-        $this->invoiceActivate->setManualInvoiceActivationFlag($paytrailPayment, $this->request->getParams());
+        $this->invoiceActivate->setManualInvoiceActivationFlag($paytrailPayment, $this->request->getParam(''));
 
         // Log payment data
         $this->log->debugLog('request', $paytrailPayment);
@@ -394,7 +378,7 @@ class ApiData
      * @return Address
      * @throws NoSuchEntityException
      */
-    protected function createAddress($order, $address)
+    protected function createAddress($address)
     {
         $paytrailAddress = new Address();
 

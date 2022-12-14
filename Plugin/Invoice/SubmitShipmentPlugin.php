@@ -5,7 +5,7 @@ namespace Paytrail\PaymentService\Plugin\Invoice;
 use Magento\Framework\Controller\ResultInterface;
 use Magento\Sales\Api\OrderRepositoryInterface;
 use Magento\Shipping\Controller\Adminhtml\Order\Shipment\Save;
-use Paytrail\PaymentService\Model\Invoice\InvoiceActivate;
+use Paytrail\PaymentService\Model\Invoice\InvoiceActivation;
 use Paytrail\SDK\Client;
 
 class SubmitShipmentPlugin
