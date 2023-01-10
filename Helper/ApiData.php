@@ -185,8 +185,7 @@ class ApiData
         $order = null,
         $amount = null,
         $transactionId = null
-    )
-    {
+    ) {
         $response["data"] = null;
         $response["error"] = null;
 
@@ -260,6 +259,12 @@ class ApiData
                 $this->log->debugLog(
                     'response',
                     'Successful response for payment providers.'
+                );
+            } elseif ($requestType === 'invoice_activation') {
+                $response["data"] = $paytrailClient->activateInvoice($transactionId);
+                $this->log->debugLog(
+                    'response',
+                    'Successful response for invoice activation'
                 );
             }
         } catch (RequestException $e) {
@@ -561,7 +566,7 @@ class ApiData
             }
 
             // When in grouped or bundle product price is dynamic (product_calculations = 0)
-            // then also the child products has prices so we set
+            // then also the child products has prices, so we set
             if ($item->getChildrenItems() && !$item->getProductOptions()['product_calculations']) {
                 $items[] = [
                     'title' => $item->getName(),

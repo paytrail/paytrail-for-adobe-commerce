@@ -48,6 +48,7 @@ class InvoiceActivation
      */
     public function setManualInvoiceActivationFlag(&$paytrailPayment, $method)
     {
+        // TODO check for virtual products before adding the flag.
         if ($this->canUseManualInvoiceActivation()
             && in_array($method, $this->getInvoiceMethods())) {
             $paytrailPayment->setManualInvoiceActivation(true);
