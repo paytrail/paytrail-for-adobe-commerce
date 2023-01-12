@@ -42,23 +42,12 @@ class PaymentActivation implements \Magento\Framework\Event\ObserverInterface
             $info = $transaction->getAdditionalInformation();
 
             if (isset($info['raw_details_info']['method']) && in_array(
-                $info['raw_details_info']['method'],
-                ActivationModel::SUB_METHODS_WITH_MANUAL_ACTIVATION_SUPPORT
-            )) {
+                    $info['raw_details_info']['method'],
+                    ActivationModel::SUB_METHODS_WITH_MANUAL_ACTIVATION_SUPPORT
+                )) {
                 $this->sendActivation($transaction->getTxnId());
             }
         }
-
-        /*
-         * TODO check that this is done
-         * What to do:
-         * 1. Load payment details and verify order details allow for further processing
-         * 2. Generate invoice activation request using the api.
-         *    a. Errors cannot stop shipment process.
-         *    b. Retry flow has to be available
-         *    c. to retry some kind of indication has to be in the order / payment about which one has had activation sent
-         * 3. Update order (?)
-         */
     }
 
     /**
