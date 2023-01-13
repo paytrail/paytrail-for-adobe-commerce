@@ -44,13 +44,15 @@ class InvoiceActivation
      *
      * @param \Paytrail\SDK\Request\PaymentRequest $paytrailPayment
      * @param string $method
+     * @param \Magento\Sales\Model\Order $order
      * @return \Paytrail\SDK\Request\PaymentRequest
      */
-    public function setManualInvoiceActivationFlag(&$paytrailPayment, $method)
+    public function setManualInvoiceActivationFlag(&$paytrailPayment, $method, $order)
     {
-        // TODO check for virtual products before adding the flag.
-        if ($this->canUseManualInvoiceActivation()
-            && in_array($method, $this->getInvoiceMethods())) {
+        if ($this->isManualInvoiceEnabled()
+            && in_array($method, $this->getInvoiceMethods())
+            && $order->getIsVirtual()
+        ) {
             $paytrailPayment->setManualInvoiceActivation(true);
         }
 
@@ -62,7 +64,7 @@ class InvoiceActivation
      *
      * @return bool
      */
-    private function canUseManualInvoiceActivation(): bool
+    private function isManualInvoiceEnabled(): bool
     {
         return (bool)$this->scopeConfig->getValue(
             self::ACTIVE_INVOICE_CONFIG_PATH,

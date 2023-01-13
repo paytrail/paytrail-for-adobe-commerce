@@ -8,6 +8,7 @@ use Magento\Framework\Event\Observer;
 use Magento\Framework\Serialize\SerializerInterface;
 use Paytrail\PaymentService\Helper\ApiData;
 use \Paytrail\PaymentService\Model\Invoice\InvoiceActivation as ActivationModel;
+use Paytrail\PaymentService\Model\ReceiptDataProvider;
 
 class PaymentActivation implements \Magento\Framework\Event\ObserverInterface
 {
@@ -41,10 +42,17 @@ class PaymentActivation implements \Magento\Framework\Event\ObserverInterface
         foreach ($transactionCollection->getItems() as $transaction) {
             $info = $transaction->getAdditionalInformation();
 
-            if (isset($info['raw_details_info']['method']) && in_array(
+            /*
+             * Read only previous api status to indicate if order needs to activate. Reading only config here can
+             * Leave some orders stuck in pending state if admin disables delayed invoice activation when some orders
+             * already are pending activation.
+            */
+            if (isset($info['raw_details_info']['method'])
+                && in_array(
                     $info['raw_details_info']['method'],
                     ActivationModel::SUB_METHODS_WITH_MANUAL_ACTIVATION_SUPPORT
-                )) {
+                ) && $info['raw_details_info']['api_status'] === ReceiptDataProvider::PAYTRAIL_API_PAYMENT_STATUS_PENDING
+            ) {
                 $this->sendActivation($transaction->getTxnId());
             }
         }

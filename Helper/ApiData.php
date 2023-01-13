@@ -324,7 +324,8 @@ class ApiData
         // Conditionally set manual invoicing flag if selected payment method supports it.
         $this->invoiceActivate->setManualInvoiceActivationFlag(
             $paytrailPayment,
-            $this->request->getParam('preselected_payment_method_id')
+            $this->request->getParam('preselected_payment_method_id'),
+            $order
         );
 
         // Log payment data
