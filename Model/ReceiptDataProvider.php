@@ -525,8 +525,8 @@ class ReceiptDataProvider
             ->setTransactionId($transactionId)
             ->setAdditionalInformation([Transaction::RAW_DETAILS => (array) $details])
             ->setFailSafe(true)
-            ->build(Transaction::TYPE_CAPTURE); // TODO transaction type is not fixed after addition of manual invoices
-        $transaction->setIsClosed(0); // TODO this probably should be updated
+            ->build(Transaction::TYPE_CAPTURE);
+        $transaction->setIsClosed(0);
         return $transaction;
     }
 
