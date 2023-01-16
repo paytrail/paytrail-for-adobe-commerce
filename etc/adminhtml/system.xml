@@ -103,6 +103,14 @@
                     made. When you enable this configuration you can can delay the activation and sending of the
                     invoices to customer until you create a shipment for the order. At which point the invoice is sent]]></comment>
                 </field>
+                <field id="shipment_activates_invoice" translate="label" type="select" sortOrder="86" showInDefault="1"
+                       showInWebsite="0" showInStore="0" canRestore="1">
+                    <label>Activate delayed invoice on shipment creation</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <depends>
+                        <field id="activate_invoices_separately">1</field>
+                    </depends>
+                </field>
                 <group id="paytrail_personalization" translate="label" type="text" sortOrder="90" showInDefault="1"
                        showInWebsite="1" showInStore="1">
                     <label>Payment page personalization</label>

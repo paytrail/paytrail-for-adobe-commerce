@@ -51,7 +51,7 @@ class InvoiceActivation
     {
         if ($this->isManualInvoiceEnabled()
             && in_array($method, $this->getInvoiceMethods())
-            && !$order->getIsVirtual()
+            && (!$order->getIsVirtual() || $this->isActivateOnShipment())
         ) {
             $paytrailPayment->setManualInvoiceActivation(true);
         }
@@ -80,5 +80,13 @@ class InvoiceActivation
     private function getInvoiceMethods(): array
     {
         return array_merge(self::SUB_METHODS_WITH_MANUAL_ACTIVATION_SUPPORT, $this->activationOverride);
+    }
+
+    private function isActivateOnShipment()
+    {
+        return $this->scopeConfig->isSetFlag(
+            \Paytrail\PaymentService\Observer\PaymentActivation::ACTIVATE_WITH_SHIPMENT_CONFIG,
+            \Magento\Store\Model\ScopeInterface::SCOPE_STORE
+        );
     }
 }
