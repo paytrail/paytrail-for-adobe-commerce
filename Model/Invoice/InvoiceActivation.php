@@ -51,7 +51,7 @@ class InvoiceActivation
     {
         if ($this->isManualInvoiceEnabled()
             && in_array($method, $this->getInvoiceMethods())
-            && $order->getIsVirtual()
+            && !$order->getIsVirtual()
         ) {
             $paytrailPayment->setManualInvoiceActivation(true);
         }
