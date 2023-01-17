@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Paytrail\PaymentService\Model\Invoice;
 
-use Magento\Framework\App\Config\ScopeConfigInterface;
+
+use Paytrail\SDK\Request\PaymentRequest;
 
 /**
  * Class InvoiceActivate
@@ -18,40 +19,48 @@ class InvoiceActivation
     ];
 
     /**
-     * @var ScopeConfigInterface
+     * @var \Paytrail\PaymentService\Gateway\Config\Config
      */
-    private ScopeConfigInterface $scopeConfig;
+    private \Paytrail\PaymentService\Gateway\Config\Config $config;
 
     /**
+     * Array of sub method codes similar to "collectorb2c", codes added to array will get manual invoicing flag
+     * during payment
+     *
      * @var string[]
      */
     private array $activationOverride;
 
     /**
-     * @param ScopeConfigInterface $scopeConfig
-     * @param string[] $activationOverride
+     * @param \Paytrail\PaymentService\Gateway\Config\Config $config
+     * @param array $activationOverride
      */
     public function __construct(
-        ScopeConfigInterface $scopeConfig,
+        \Paytrail\PaymentService\Gateway\Config\Config $config,
         array $activationOverride = []
     ) {
-        $this->scopeConfig = $scopeConfig;
+        $this->config = $config;
         $this->activationOverride = $activationOverride;
     }
 
     /**
-     * Conditionally sets manual invoice activation flag to payment request based on admin configuration
+     * Conditionally sets manual invoice activation flag to payment request based on admin configuration.
      *
-     * @param \Paytrail\SDK\Request\PaymentRequest $paytrailPayment
+     * Virtual orders do not support manual invoice if shipment activation is enabled as virtual orders get no shipments
+     *
+     * @param PaymentRequest $paytrailPayment
      * @param string $method
      * @param \Magento\Sales\Model\Order $order
-     * @return \Paytrail\SDK\Request\PaymentRequest
+     * @return PaymentRequest
      */
-    public function setManualInvoiceActivationFlag(&$paytrailPayment, $method, $order)
-    {
+    public function setManualInvoiceActivationFlag(
+        PaymentRequest $paytrailPayment,
+        string $method,
+        $order
+    ) : PaymentRequest {
         if ($this->isManualInvoiceEnabled()
             && in_array($method, $this->getInvoiceMethods())
-            && (!$order->getIsVirtual() || $this->isActivateOnShipment())
+            && (!$order->getIsVirtual() || !$this->config->isShipmentActivateInvoice())
         ) {
             $paytrailPayment->setManualInvoiceActivation(true);
         }
@@ -66,10 +75,7 @@ class InvoiceActivation
      */
     private function isManualInvoiceEnabled(): bool
     {
-        return (bool)$this->scopeConfig->getValue(
-            self::ACTIVE_INVOICE_CONFIG_PATH,
-            \Magento\Store\Model\ScopeInterface::SCOPE_STORE
-        );
+        return $this->config->isManualInvoiceEnabled();
     }
 
     /**
@@ -80,13 +86,5 @@ class InvoiceActivation
     private function getInvoiceMethods(): array
     {
         return array_merge(self::SUB_METHODS_WITH_MANUAL_ACTIVATION_SUPPORT, $this->activationOverride);
-    }
-
-    private function isActivateOnShipment()
-    {
-        return $this->scopeConfig->isSetFlag(
-            \Paytrail\PaymentService\Observer\PaymentActivation::ACTIVATE_WITH_SHIPMENT_CONFIG,
-            \Magento\Store\Model\ScopeInterface::SCOPE_STORE
-        );
     }
 }

@@ -33,6 +33,8 @@ class Config extends \Magento\Payment\Gateway\Config\Config
     public const KEY_DEFAULT_ORDER_STATUS = 'order_status';
     public const KEY_NOTIFICATION_EMAIL = 'recipient_email';
     public const KEY_CANCEL_ORDER_ON_FAILED_PAYMENT = 'failed_payment_cancel';
+    public const KEY_MANUAL_INVOICE = 'manual_invoice';
+    public const KEY_ACTIVATE_WITH_SHIPMENT = 'shipment_activates_invoice';
 
     /**
      * @var EncryptorInterface
@@ -60,7 +62,7 @@ class Config extends \Magento\Payment\Gateway\Config\Config
     /**
      * Gets Merchant Id.
      *
-     * @param int|null $storeId
+     * @param null|int|string $storeId
      * @return bool
      */
     public function getMerchantId($storeId = null)
@@ -71,7 +73,7 @@ class Config extends \Magento\Payment\Gateway\Config\Config
     /**
      * Gets Merchant secret.
      *
-     * @param int|null $storeId
+     * @param null|int|string $storeId
      * @return bool
      */
     public function getMerchantSecret($storeId = null)
@@ -83,7 +85,7 @@ class Config extends \Magento\Payment\Gateway\Config\Config
     /**
      * Gets Payment configuration status.
      *
-     * @param int|null $storeId
+     * @param null|int|string $storeId
      * @return bool
      */
     public function isActive($storeId = null)
@@ -94,7 +96,7 @@ class Config extends \Magento\Payment\Gateway\Config\Config
     /**
      * Get payment method title
      *
-     * @param int|null $storeId
+     * @param null|int|string $storeId
      * @return mixed
      */
     public function getTitle($storeId = null)
@@ -103,7 +105,7 @@ class Config extends \Magento\Payment\Gateway\Config\Config
     }
 
     /**
-     * @param null $storeId
+     * @param null|int|string $storeId
      * @return bool
      */
     public function getSkipBankSelection($storeId = null)
@@ -112,7 +114,7 @@ class Config extends \Magento\Payment\Gateway\Config\Config
     }
 
     /**
-     * @param int|null $storeId
+     * @param null|int|string $storeId
      * @return mixed
      */
     public function getPaymentGroupBgColor($storeId = null)
@@ -121,7 +123,7 @@ class Config extends \Magento\Payment\Gateway\Config\Config
     }
 
     /**
-     * @param int|null $storeId
+     * @param null|int|string $storeId
      * @return mixed
      */
     public function getPaymentGroupHighlightBgColor($storeId = null)
@@ -130,7 +132,7 @@ class Config extends \Magento\Payment\Gateway\Config\Config
     }
 
     /**
-     * @param int|null $storeId
+     * @param null|int|string $storeId
      * @return mixed
      */
     public function getPaymentGroupTextColor($storeId = null)
@@ -139,7 +141,7 @@ class Config extends \Magento\Payment\Gateway\Config\Config
     }
 
     /**
-     * @param int|null $storeId
+     * @param null|int|string $storeId
      * @return mixed
      */
     public function getPaymentGroupHighlightTextColor($storeId = null)
@@ -157,7 +159,7 @@ class Config extends \Magento\Payment\Gateway\Config\Config
     }
 
     /**
-     * @param int|null $storeId
+     * @param null|int|string $storeId
      * @return mixed
      */
     public function getPaymentMethodHighlightColor($storeId = null)
@@ -166,7 +168,7 @@ class Config extends \Magento\Payment\Gateway\Config\Config
     }
 
     /**
-     * @param int|null $storeId
+     * @param null|int|string $storeId
      * @return mixed
      */
     public function getPaymentMethodHoverHighlight($storeId = null)
@@ -175,7 +177,7 @@ class Config extends \Magento\Payment\Gateway\Config\Config
     }
 
     /**
-     * @param int|null $storeId
+     * @param null|int|string $storeId
      * @return mixed
      */
     public function getAdditionalCss($storeId = null)
@@ -184,7 +186,7 @@ class Config extends \Magento\Payment\Gateway\Config\Config
     }
 
     /**
-     * @param int|null $storeId
+     * @param null|int|string $storeId
      * @return bool
      */
     public function getGenerateReferenceForOrder($storeId = null)
@@ -193,7 +195,7 @@ class Config extends \Magento\Payment\Gateway\Config\Config
     }
 
     /**
-     * @param int|null $storeId
+     * @param null|int|string $storeId
      * @return bool
      */
     public function getUseRecommendedTaxAlgorithm($storeId = null)
@@ -202,7 +204,7 @@ class Config extends \Magento\Payment\Gateway\Config\Config
     }
 
     /**
-     * @return null|string
+     * @return null|\Magento\Framework\Phrase
      */
     public function getInstructions()
     {
@@ -213,7 +215,7 @@ class Config extends \Magento\Payment\Gateway\Config\Config
     }
 
     /**
-     * @param int|null $storeId
+     * @param null|int|string $storeId
      * @return string
      */
     public function getPaymentTemplate($storeId = null)
@@ -225,6 +227,7 @@ class Config extends \Magento\Payment\Gateway\Config\Config
     }
 
     /**
+     * @param null|int|string $storeId
      * @return mixed
      */
     public function getResponseLog($storeId = null)
@@ -233,6 +236,7 @@ class Config extends \Magento\Payment\Gateway\Config\Config
     }
 
     /**
+     * @param null|int|string $storeId
      * @return mixed
      */
     public function getRequestLog($storeId = null)
@@ -241,6 +245,7 @@ class Config extends \Magento\Payment\Gateway\Config\Config
     }
 
     /**
+     * @param null|int|string $storeId
      * @return mixed
      */
     public function getDefaultOrderStatus($storeId = null)
@@ -249,6 +254,7 @@ class Config extends \Magento\Payment\Gateway\Config\Config
     }
 
     /**
+     * @param null|int|string $storeId
      * @return mixed
      */
     public function getNotificationEmail($storeId = null)
@@ -257,11 +263,33 @@ class Config extends \Magento\Payment\Gateway\Config\Config
     }
 
     /**
-     * @param int|null $storeId
+     * @param null|int|string $storeId
      * @return int
      */
     public function getCancelOrderOnFailedPayment($storeId = null)
     {
         return $this->getValue(self::KEY_CANCEL_ORDER_ON_FAILED_PAYMENT, $storeId);
+    }
+
+    /**
+     * Are manual invoice activations in use
+     *
+     * @param null|int|string $storeId
+     * @return bool
+     */
+    public function isManualInvoiceEnabled($storeId = null)
+    {
+        return (bool)$this->getValue(self::KEY_MANUAL_INVOICE, $storeId);
+    }
+
+    /**
+     * Will creating a shipment to an order activate the order's invoice.
+     *
+     * @param null|int|string $storeId
+     * @return bool
+     */
+    public function isShipmentActivateInvoice($storeId = null)
+    {
+        return (bool)$this->getValue(self::KEY_ACTIVATE_WITH_SHIPMENT, $storeId);
     }
 }

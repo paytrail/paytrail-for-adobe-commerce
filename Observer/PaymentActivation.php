@@ -1,14 +1,12 @@
 <?php
 declare(strict_types=1);
 
-
 namespace Paytrail\PaymentService\Observer;
 
-use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\Event\Observer;
 use Magento\Sales\Model\ResourceModel\Order\Payment\Transaction\CollectionFactory as TransactionCollectionFactory;
 use Paytrail\PaymentService\Helper\ApiData;
-use \Paytrail\PaymentService\Model\Invoice\InvoiceActivation as ActivationModel;
+use Paytrail\PaymentService\Model\Invoice\InvoiceActivation as ActivationModel;
 use Paytrail\PaymentService\Model\ReceiptDataProvider;
 
 class PaymentActivation implements \Magento\Framework\Event\ObserverInterface
@@ -24,34 +22,43 @@ class PaymentActivation implements \Magento\Framework\Event\ObserverInterface
      */
     private ApiData $apiData;
     /**
-     * @var ScopeConfigInterface
+     * @var \Paytrail\PaymentService\Gateway\Config\Config
      */
-    private ScopeConfigInterface $scopeConfig;
+    private \Paytrail\PaymentService\Gateway\Config\Config $config;
 
+    /**
+     * @param TransactionCollectionFactory $collectionFactory
+     * @param ApiData $apiData
+     * @param \Paytrail\PaymentService\Gateway\Config\Config $config
+     */
     public function __construct(
         TransactionCollectionFactory $collectionFactory,
         ApiData $apiData,
-        ScopeConfigInterface $scopeConfig
+        \Paytrail\PaymentService\Gateway\Config\Config $config
     ) {
         $this->collectionFactory = $collectionFactory;
         $this->apiData = $apiData;
-        $this->scopeConfig = $scopeConfig;
+        $this->config = $config;
     }
 
+    /**
+     * @param Observer $observer
+     * @return void
+     */
     public function execute(Observer $observer)
     {
         /** @var \Magento\Sales\Model\Order\Shipment $shipment */
         $shipment = $observer->getEvent()->getShipment();
-        if ($shipment->getOrigData('entity_id') || $this->canActivateOnShipment()) {
+        if ($shipment->getOrigData('entity_id') || !$this->config->isShipmentActivateInvoice()) {
             return; // Observer only processes shipments the first time they're made.
         }
 
-         /** @var \Magento\Sales\Model\ResourceModel\Order\Payment\Transaction\Collection $transactionCollection */
-        $transactionCollection = $this->collectionFactory->create();
-        $transactionCollection->addOrderIdFilter($shipment->getOrderId());
+        /** @var \Magento\Sales\Model\ResourceModel\Order\Payment\Transaction\Collection $transactions */
+        $transactions = $this->collectionFactory->create();
+        $transactions->addOrderIdFilter($shipment->getOrderId());
 
         /** @var \Magento\Sales\Api\Data\TransactionInterface $transaction */
-        foreach ($transactionCollection->getItems() as $transaction) {
+        foreach ($transactions->getItems() as $transaction) {
             $info = $transaction->getAdditionalInformation();
 
             /*
@@ -85,14 +92,6 @@ class PaymentActivation implements \Magento\Framework\Event\ObserverInterface
             null,
             null,
             $txnId
-        );
-    }
-
-    private function canActivateOnShipment()
-    {
-        return $this->scopeConfig->isSetFlag(
-            self::ACTIVATE_WITH_SHIPMENT_CONFIG,
-            \Magento\Store\Model\ScopeInterface::SCOPE_STORE
         );
     }
 }
