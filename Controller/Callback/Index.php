@@ -30,7 +30,7 @@ class Index implements \Magento\Framework\App\ActionInterface
     /**
      * @var ResponseInterface
      */
-    private ResponseInterface $response;
+    private $response;
 
     /**
      * @param Session $session
