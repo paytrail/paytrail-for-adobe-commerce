@@ -2,7 +2,7 @@
 declare(strict_types=1);
 
 
-namespace Paytrail\PaymentService\Model\Invoice;
+namespace Paytrail\PaymentService\Model\Invoice\Activation;
 
 
 use Paytrail\SDK\Request\PaymentRequest;
@@ -10,7 +10,7 @@ use Paytrail\SDK\Request\PaymentRequest;
 /**
  * Class InvoiceActivate
  */
-class InvoiceActivation
+class Flag
 {
     private const ACTIVE_INVOICE_CONFIG_PATH = 'payment/paytrail/activate_invoices_separately';
     public const SUB_METHODS_WITH_MANUAL_ACTIVATION_SUPPORT = [

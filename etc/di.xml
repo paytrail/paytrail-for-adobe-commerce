@@ -3,7 +3,7 @@
   <preference for="Paytrail\PaymentService\Api\RedirectInterface" type="Paytrail\PaymentService\Model\Redirect" />
 
   <type name="Magento\Sales\Block\Adminhtml\Order\View">
-    <plugin name="paytrail_restore_order_button" type="Paytrail\PaymentService\Plugin\Magento\Sales\Block\Adminhtml\Order\ViewPlugin"/>
+    <plugin name="add_paytrail_buttons" type="Paytrail\PaymentService\Plugin\Magento\Sales\Block\Adminhtml\Order\ViewPlugin"/>
   </type>
 
   <type name="Magento\Tax\Model\Config">

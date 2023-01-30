@@ -3,9 +3,9 @@
 namespace Paytrail\PaymentService\Helper;
 
 use GuzzleHttp\Exception\RequestException;
-use Magento\Config\Model\ResourceModel\Config;
 use Magento\Directory\Api\CountryInformationAcquirerInterface;
 use Magento\Framework\App\RequestInterface;
+use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Framework\Serialize\Serializer\Json;
 use Magento\Framework\UrlInterface;
@@ -13,13 +13,13 @@ use Magento\Sales\Model\Order;
 use Magento\Sales\Model\Order\Item as OrderItem;
 use Magento\Sales\Model\ResourceModel\Order\Tax\Item as TaxItem;
 use Magento\Store\Model\StoreManagerInterface;
-use Paytrail\PaymentService\Exceptions\CheckoutException;
 use Magento\Tax\Helper\Data as TaxHelper;
+use Paytrail\PaymentService\Exceptions\CheckoutException;
 use Paytrail\PaymentService\Helper\Data as CheckoutHelper;
 use Paytrail\PaymentService\Logger\PaytrailLogger;
 use Paytrail\PaymentService\Model\Adapter\Adapter;
 use Paytrail\PaymentService\Model\Company\CompanyRequestData;
-use Paytrail\PaymentService\Model\Invoice\InvoiceActivation;
+use Paytrail\PaymentService\Model\Invoice\Activation\Flag;
 use Paytrail\PaymentService\Model\Payment\DiscountSplitter;
 use Paytrail\SDK\Model\Address;
 use Paytrail\SDK\Model\CallbackUrl;
@@ -28,11 +28,10 @@ use Paytrail\SDK\Model\Item;
 use Paytrail\SDK\Request\EmailRefundRequest;
 use Paytrail\SDK\Request\PaymentRequest;
 use Paytrail\SDK\Request\RefundRequest;
-use Magento\Framework\Exception\LocalizedException;
 use Psr\Log\LoggerInterface;
 
 /**
- * Class ApiData
+ * Class ApiData - responsible for communication to Paytrail Api
  */
 class ApiData
 {
@@ -112,9 +111,9 @@ class ApiData
     private CompanyRequestData $companyRequestData;
 
     /**
-     * @var InvoiceActivation
+     * @var Flag
      */
-    private InvoiceActivation $invoiceActivate;
+    private Flag $invoiceActivate;
 
     /**
      * @param LoggerInterface $log
@@ -132,7 +131,7 @@ class ApiData
      * @param DiscountSplitter $discountSplitter
      * @param TaxItem $taxItem
      * @param CompanyRequestData $companyRequestData
-     * @param InvoiceActivation $invoiceActivate
+     * @param Flag $invoiceActivate
      */
     public function __construct(
         LoggerInterface                     $log,
@@ -150,7 +149,7 @@ class ApiData
         DiscountSplitter                    $discountSplitter,
         TaxItem                             $taxItem,
         CompanyRequestData                  $companyRequestData,
-        InvoiceActivation $invoiceActivate
+        Flag                                $invoiceActivate
     ) {
         $this->log = $log;
         $this->urlBuilder = $urlBuilder;
@@ -632,6 +631,12 @@ class ApiData
         return true;
     }
 
+    /**
+     * Creates Shipping item
+     *
+     * @param Order $order
+     * @return array
+     */
     private function getShippingItem(Order $order)
     {
         $taxDetails = [];
