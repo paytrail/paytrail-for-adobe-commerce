@@ -9,6 +9,7 @@ use Magento\Sales\Model\ResourceModel\Order\Payment\Transaction\CollectionFactor
 use Paytrail\PaymentService\Helper\ActivateOrder;
 use Paytrail\PaymentService\Model\Invoice\Activation\Flag;
 use Paytrail\PaymentService\Model\ReceiptDataProvider;
+use Paytrail\PaymentService\Setup\Patch\Data\InstallPaytrail;
 
 class ViewPlugin
 {
@@ -26,17 +27,20 @@ class ViewPlugin
      */
     private $url;
     private CollectionFactory $transactionFactory;
+    private $registry;
 
     public function __construct(
         ActivateOrder $activateOrder,
         RequestInterface $request,
         UrlInterface $url,
-        CollectionFactory $transactionFactory
+        CollectionFactory $transactionFactory,
+        \Magento\Framework\Registry $registry
     ) {
         $this->activateOrder = $activateOrder;
         $this->request = $request;
         $this->url = $url;
         $this->transactionFactory = $transactionFactory;
+        $this->registry = $registry;
     }
 
     public function beforeSetLayout(View $view)
@@ -75,13 +79,18 @@ class ViewPlugin
     }
 
     /**
-     * @param int $orderId
      * @return bool
      */
-    private function isManualInvoiceOrder(int $orderId)
+    private function isManualInvoiceOrder()
     {
+        /** @var \Magento\Sales\Model\Order $order */
+        $order = $this->registry->registry('sales_order');
+        if (!$order || ($this->isStatusValid($order) && $this->isMethodValid($order))) {
+            return false;
+        }
+
         $transactions = $this->transactionFactory->create();
-        $transactions->setOrderFilter($orderId);
+        $transactions->setOrderFilter($order->getId());
 
         foreach ($transactions as $transaction) {
             $info = $transaction->getAdditionalInformation();
@@ -96,5 +105,10 @@ class ViewPlugin
         }
 
         return false;
+    }
+
+    private function isStatusValid(\Magento\Sales\Model\Order $order)
+    {
+        return $order->getStatus() === InstallPaytrail::ORDER_STATUS_CUSTOM_CODE
     }
 }
