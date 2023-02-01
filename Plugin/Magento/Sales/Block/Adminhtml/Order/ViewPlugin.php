@@ -22,11 +22,20 @@ class ViewPlugin
      * @var RequestInterface
      */
     private $request;
+
     /**
      * @var UrlInterface
      */
     private $url;
+
+    /**
+     * @var CollectionFactory
+     */
     private CollectionFactory $transactionFactory;
+
+    /**
+     * @var \Magento\Framework\Registry
+     */
     private $registry;
 
     public function __construct(
@@ -43,6 +52,10 @@ class ViewPlugin
         $this->registry = $registry;
     }
 
+    /**
+     * @param View $view
+     * @return void
+     */
     public function beforeSetLayout(View $view)
     {
         $orderId = (int)$this->request->getParam('order_id');
@@ -52,7 +65,7 @@ class ViewPlugin
                 'onclick' => "confirmSetLocation('Are you sure you want to make changes to this order?', '{$this->getControllerUrl('paytrail_payment/order/restore', $orderId)}')",
             ]);
         }
-        if ($this->isManualInvoiceOrder($orderId)) {
+        if ($this->isManualInvoiceOrder()) {
             $view->addButton('manualInvoice', [
                 'label' => __('Activate Invoice'),
                 'onclick' => "confirmSetLocation('Are you sure you want to activate invoice for this order?', '{$this->getControllerUrl('paytrail_payment/order/activate', $orderId)}')",
@@ -85,7 +98,7 @@ class ViewPlugin
     {
         /** @var \Magento\Sales\Model\Order $order */
         $order = $this->registry->registry('sales_order');
-        if (!$order || ($this->isStatusValid($order) && $this->isMethodValid($order))) {
+        if (!$order || !$this->isStatusValid($order)) {
             return false;
         }
 
@@ -107,8 +120,12 @@ class ViewPlugin
         return false;
     }
 
+    /**
+     * @param \Magento\Sales\Model\Order $order
+     * @return bool
+     */
     private function isStatusValid(\Magento\Sales\Model\Order $order)
     {
-        return $order->getStatus() === InstallPaytrail::ORDER_STATUS_CUSTOM_CODE
+        return $order->getStatus() === InstallPaytrail::ORDER_STATUS_CUSTOM_CODE;
     }
 }
