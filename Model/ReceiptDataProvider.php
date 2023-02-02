@@ -521,7 +521,7 @@ class ReceiptDataProvider
         $paymentDetails['api_status'] = $paymentStatus;
 
         if ($oldTransaction) {
-            $transaction = $oldTransaction->setAdditionalInformation(Transaction::RAW_DETAILS, $paymentDetails);
+            $transaction = $this->updateOldTransaction($oldTransaction, $paymentDetails);
 
             // Backwards compatibility: If transaction exists without api_status, assume OK status since
             // only 'ok' status could create transactions in old version.
@@ -624,5 +624,19 @@ class ReceiptDataProvider
                 $e->getMessage()
             ));
         }
+    }
+
+    /**
+     * @param bool|Transaction $oldTransaction
+     * @param array $paymentDetails
+     * @return Transaction
+     * @throws LocalizedException
+     */
+    private function updateOldTransaction(bool|Transaction $oldTransaction, array $paymentDetails): Transaction
+    {
+        $transaction = $oldTransaction->setAdditionalInformation(Transaction::RAW_DETAILS, $paymentDetails);
+        $this->transactionRepository->save($transaction);
+
+        return $transaction;
     }
 }
