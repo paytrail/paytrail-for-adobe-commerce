@@ -521,13 +521,13 @@ class ReceiptDataProvider
         $paymentDetails['api_status'] = $paymentStatus;
 
         if ($oldTransaction) {
-            $transaction = $this->updateOldTransaction($oldTransaction, $paymentDetails);
-
             // Backwards compatibility: If transaction exists without api_status, assume OK status since
             // only 'ok' status could create transactions in old version.
             $oldStatus = isset($oldTransaction->getAdditionalInformation(Transaction::RAW_DETAILS)['api_status'])
                 ? $oldTransaction->getAdditionalInformation(Transaction::RAW_DETAILS)['api_status']
                 : 'ok';
+
+            $transaction = $this->updateOldTransaction($oldTransaction, $paymentDetails);
         } else {
             $transaction = $this->addPaymentTransaction(
                 $this->currentOrder,
