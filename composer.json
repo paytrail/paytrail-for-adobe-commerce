@@ -17,8 +17,12 @@
   ],
   "require": {
     "php": "^7.3|^8.0",
+    "magento/framework": ">=102.0.0",
     "paytrail/paytrail-php-sdk": "2.3.*",
     "ext-curl": "*"
+  },
+  "require-dev": {
+    "magento/magento-coding-standard": "*"
   },
   "conflict": {
     "markup/module-paytrail": "*"
@@ -34,6 +38,12 @@
       "Paytrail\\PaymentService\\": ""
     }
   },
+  "repositories": [
+    {
+      "type": "composer",
+      "url": "https://repo.magento.com/"
+    }
+  ],
   "keywords": [
     "magento 2",
     "adobe commerce",
