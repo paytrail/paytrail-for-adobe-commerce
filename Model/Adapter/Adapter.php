@@ -44,8 +44,6 @@ class Adapter
     ) {
         $this->gatewayConfig = $gatewayConfig;
         $this->moduleList = $moduleList;
-        $this->merchantId = $gatewayConfig->getMerchantId();
-        $this->merchantSecret = $gatewayConfig->getMerchantSecret();
     }
 
     /**
@@ -58,8 +56,8 @@ class Adapter
         try {
             if (class_exists('Paytrail\SDK\Client')) {
                 $paytrailClient = new Client(
-                    $this->merchantId,
-                    $this->merchantSecret,
+                    $this->gatewayConfig->getMerchantId(),
+                    $this->gatewayConfig->getMerchantSecret(),
                     'paytrail-for-adobe-commerce-' . $this->getExtensionVersion()
                 );
                 return $paytrailClient;
