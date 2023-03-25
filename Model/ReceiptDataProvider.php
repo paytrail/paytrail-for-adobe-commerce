@@ -30,6 +30,7 @@ use Psr\Log\LoggerInterface;
  */
 class ReceiptDataProvider
 {
+    
     const RECEIPT_PROCESSING_CACHE_PREFIX = "receipt_processing_";
 
     /**
