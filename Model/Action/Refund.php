@@ -22,8 +22,6 @@ class Refund
      * @param CheckoutHelper $helper
      * @param Adapter $paytrailAdapter
      * @param RefundRequest $refundRequest
-     * @param UrlInterface $urlBuilder
-     * @param StoreManagerInterface $storeManager
      * @param RefundCallback $refundCallback
      */
     public function __construct(
