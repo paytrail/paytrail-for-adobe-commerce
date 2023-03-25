@@ -1,9 +1,10 @@
 <?php
+
 namespace Paytrail\PaymentService\Gateway\Http\Client;
 
-use Magento\Framework\Exception\LocalizedException;
 use Magento\Payment\Gateway\Http\ClientInterface;
-use Paytrail\PaymentService\Helper\ApiData;
+use Paytrail\PaymentService\Model\Action\EmailRefund;
+use Paytrail\PaymentService\Model\Action\Refund;
 use Paytrail\SDK\Response\RefundResponse;
 use Psr\Log\LoggerInterface;
 use Magento\Payment\Gateway\Http\TransferInterface;
@@ -11,27 +12,18 @@ use Magento\Payment\Gateway\Http\TransferInterface;
 class TransactionRefund implements ClientInterface
 {
     /**
-     * @var ApiData
-     */
-    private $apiData;
-
-    /**
-     * @var LoggerInterface
-     */
-    private $log;
-
-    /**
      * TransactionRefund constructor.
      *
-     * @param ApiData $apiData
+     * @param Refund $refund
+     * @param EmailRefund $emailRefund
      * @param LoggerInterface $log
      */
     public function __construct(
-        ApiData $apiData,
-        LoggerInterface $log
-    ) {
-        $this->apiData = $apiData;
-        $this->log = $log;
+        private Refund          $refund,
+        private EmailRefund     $emailRefund,
+        private LoggerInterface $log
+    )
+    {
     }
 
     /**
@@ -61,12 +53,10 @@ class TransactionRefund implements ClientInterface
      */
     protected function postRefundRequest($request)
     {
-        $response = $this->apiData->processApiRequest(
-            'refund',
+        $response = $this->refund->refund(
             $request['order'],
             $request['amount'],
-            $request['parent_transaction_id']
-        );
+            $request['parent_transaction_id']);
         $error = $response["error"];
 
         if (isset($error)) {
@@ -75,8 +65,7 @@ class TransactionRefund implements ClientInterface
                 . $error
                 . ', Falling back to to email refund.'
             );
-            $emailResponse = $this->apiData->processApiRequest(
-                'email_refund',
+            $emailResponse = $this->emailRefund->emailRefund(
                 $request['order'],
                 $request['amount'],
                 $request['parent_transaction_id']
