@@ -25,6 +25,8 @@ class Initialize implements CommandInterface
     }
 
     /**
+     * Execute function
+     *
      * @param array $commandSubject
      * @return $this|ResultInterface|null
      */
