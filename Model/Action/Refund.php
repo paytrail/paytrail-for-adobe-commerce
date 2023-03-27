@@ -44,8 +44,7 @@ class Refund
         $order = null,
         $amount = null,
         $transactionId = null
-    )
-    {
+    ) {
         $response["data"] = null;
         $response["error"] = null;
 
@@ -82,7 +81,6 @@ class Refund
                     $e->getCode()
                 ));
                 $response["error"] = $e->getMessage();
-                return $response;
             }
         } catch (\Exception $e) {
             $this->log->error(
@@ -93,6 +91,7 @@ class Refund
                 $e->getTrace()
             );
             $response["error"] = $e->getMessage();
+
             return $response;
         }
 
