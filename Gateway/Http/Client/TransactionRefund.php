@@ -22,11 +22,12 @@ class TransactionRefund implements ClientInterface
         private Refund          $refund,
         private EmailRefund     $emailRefund,
         private LoggerInterface $log
-    )
-    {
+    ) {
     }
 
     /**
+     * placeRequest function
+     *
      * @param TransferInterface $transferObject
      * @return array|void
      */
@@ -48,6 +49,8 @@ class TransactionRefund implements ClientInterface
     }
 
     /**
+     * postRefundRequest function
+     *
      * @param $request
      * @return bool
      */

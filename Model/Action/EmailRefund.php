@@ -24,8 +24,7 @@ class EmailRefund
         private Adapter               $paytrailAdapter,
         private EmailRefundRequest    $emailRefundRequest,
         private RefundCallback        $refundCallback
-    )
-    {
+    ) {
     }
 
     /**
