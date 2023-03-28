@@ -8,9 +8,6 @@ use Paytrail\PaymentService\Model\RefundCallback;
 use Paytrail\SDK\Request\EmailRefundRequest;
 use Psr\Log\LoggerInterface;
 
-/**
- * Class EmailRefund
- */
 class EmailRefund
 {
     /**
@@ -94,6 +91,8 @@ class EmailRefund
     }
 
     /**
+     * SetEmailRefundRequestData function
+     *
      * @param EmailRefundRequest $paytrailEmailRefund
      * @param $amount
      * @param $order
