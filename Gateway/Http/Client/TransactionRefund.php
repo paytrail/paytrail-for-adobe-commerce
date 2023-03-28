@@ -63,7 +63,7 @@ class TransactionRefund implements ClientInterface
         );
         $error = $response["error"];
 
-        if (isset($error)) {
+        if ($error) {
             $this->log->error(
                 'Error occurred during refund: '
                 . $error
@@ -75,7 +75,7 @@ class TransactionRefund implements ClientInterface
                 $request['parent_transaction_id']
             );
             $emailError = $emailResponse["error"];
-            if (isset($emailError)) {
+            if ($emailError) {
                 $this->log->error(
                     'Error occurred during email refund: '
                     . $emailError
