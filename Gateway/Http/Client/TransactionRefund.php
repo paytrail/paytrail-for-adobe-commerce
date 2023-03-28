@@ -26,7 +26,7 @@ class TransactionRefund implements ClientInterface
     }
 
     /**
-     * placeRequest function
+     * PlaceRequest function
      *
      * @param TransferInterface $transferObject
      * @return array|void
@@ -49,7 +49,7 @@ class TransactionRefund implements ClientInterface
     }
 
     /**
-     * postRefundRequest function
+     * PostRefundRequest function
      *
      * @param $request
      * @return bool
@@ -59,7 +59,8 @@ class TransactionRefund implements ClientInterface
         $response = $this->refund->refund(
             $request['order'],
             $request['amount'],
-            $request['parent_transaction_id']);
+            $request['parent_transaction_id']
+        );
         $error = $response["error"];
 
         if (isset($error)) {

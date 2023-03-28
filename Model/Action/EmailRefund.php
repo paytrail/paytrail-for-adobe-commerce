@@ -28,6 +28,8 @@ class EmailRefund
     }
 
     /**
+     * EmailRefund function
+     *
      * @param $order
      * @param $amount
      * @param $transactionId
