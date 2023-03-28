@@ -12,9 +12,6 @@ use Paytrail\PaymentService\Model\RefundCallback;
 use Paytrail\SDK\Request\RefundRequest;
 use Psr\Log\LoggerInterface;
 
-/**
- * Class Refund
- */
 class Refund
 {
     /**
@@ -30,11 +27,12 @@ class Refund
         private Adapter               $paytrailAdapter,
         private RefundRequest         $refundRequest,
         private RefundCallback        $refundCallback
-    )
-    {
+    ) {
     }
 
     /**
+     * Refund function
+     *
      * @param $order
      * @param $amount
      * @param $transactionId
@@ -99,6 +97,8 @@ class Refund
     }
 
     /**
+     * SetRefundRequestData function
+     *
      * @param RefundRequest $paytrailRefund
      * @param $amount
      * @throws CheckoutException
