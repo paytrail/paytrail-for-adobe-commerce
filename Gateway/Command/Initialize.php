@@ -9,9 +9,6 @@ use Magento\Payment\Gateway\Helper\SubjectReader;
 use Magento\Payment\Model\InfoInterface;
 use Magento\Sales\Model\Order;
 
-/**
- * Class Initialize
- */
 class Initialize implements CommandInterface
 {
     /**
