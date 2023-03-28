@@ -89,8 +89,6 @@ class Refund
                 $e->getTrace()
             );
             $response["error"] = $e->getMessage();
-
-            return $response;
         }
 
         return $response;
