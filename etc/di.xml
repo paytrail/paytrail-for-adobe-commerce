@@ -51,13 +51,44 @@
     </arguments>
   </virtualType>
 
+  <type name="Magento\Payment\Gateway\Command\CommandManagerPool">
+    <arguments>
+      <argument name="executors" xsi:type="array">
+        <item name="paytrail" xsi:type="string">PaytrailCommandManager</item>
+        <item name="paytrail_payment" xsi:type="string">PaytrailPaymentCommandManager</item>
+      </argument>
+    </arguments>
+  </type>
+
+  <!--  Command section for initialize action-->
   <virtualType name="PaytrailCommandPool" type="Magento\Payment\Gateway\Command\CommandPool">
     <arguments>
       <argument name="commands" xsi:type="array">
         <item name="initialize" xsi:type="string">Paytrail\PaymentService\Gateway\Command\Initialize</item>
         <item name="refund" xsi:type="string">PaytrailRefundCommand</item>
+      </argument>
+    </arguments>
+  </virtualType>
+
+  <virtualType name="PaytrailCommandManager" type="Magento\Payment\Gateway\Command\CommandManager">
+    <arguments>
+      <argument name="commandPool" xsi:type="object">PaytrailCommandPool</argument>
+    </arguments>
+  </virtualType>
+
+  <!-- Command section for payment action  -->
+  <virtualType name="PaytrailPaymentCommandPool" type="Magento\Payment\Gateway\Command\CommandPool">
+    <arguments>
+      <argument name="commands" xsi:type="array">
+        <item name="initialize" xsi:type="string">Paytrail\PaymentService\Gateway\Command\Initialize</item>
         <item name="payment" xsi:type="string">PaytrailPaymentCommand</item>
       </argument>
+    </arguments>
+  </virtualType>
+
+  <virtualType name="PaytrailPaymentCommandManager" type="Magento\Payment\Gateway\Command\CommandManager">
+    <arguments>
+      <argument name="commandPool" xsi:type="object">PaytrailPaymentCommandPool</argument>
     </arguments>
   </virtualType>
 
@@ -79,6 +110,7 @@
     </arguments>
   </virtualType>
 
+  <!-- Command section for refund action -->
   <virtualType name="PaytrailRefundCommand" type="Magento\Payment\Gateway\Command\GatewayCommand">
     <arguments>
       <argument name="requestBuilder" xsi:type="object">PaytrailRefundRequest</argument>
