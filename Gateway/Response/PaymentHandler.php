@@ -1,0 +1,51 @@
+<?php
+
+namespace Paytrail\PaymentService\Gateway\Response;
+
+use Magento\Framework\Message\ManagerInterface;
+use Magento\Payment\Gateway\Helper\SubjectReader;
+use Magento\Payment\Gateway\Response\HandlerInterface;
+
+class PaymentHandler implements HandlerInterface
+{
+    /**
+     * @var ManagerInterface
+     */
+    private $messageManager;
+
+    /**
+     * @var SubjectReader
+     */
+    private $subjectReader;
+
+    /**
+     * RefundHandler constructor.
+     *
+     * @param ManagerInterface $messageManager
+     * @param SubjectReader $subjectReader
+     */
+    public function __construct(
+        ManagerInterface $messageManager,
+        SubjectReader $subjectReader
+    ) {
+        $this->messageManager = $messageManager;
+        $this->subjectReader = $subjectReader;
+    }
+
+    /**
+     * @param array $handlingSubject
+     * @param array $response
+     */
+    public function handle(array $handlingSubject, array $response)
+    {
+        $payment = $this->subjectReader->readPayment($handlingSubject);
+
+//        $payment = $payment->getPayment();
+//        $transactionId = $payment->getTransactionId() . "-" . time();
+//        $payment->setIsTransactionClosed(true);
+//        $payment->setTransactionId($transactionId);
+//        $payment->setShouldCloseParentTransaction(false);
+//
+//        $this->messageManager->addSuccessMessage(__('Paytrail refund successful.'));
+    }
+}
