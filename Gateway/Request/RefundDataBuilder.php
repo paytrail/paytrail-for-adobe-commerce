@@ -1,4 +1,5 @@
 <?php
+
 namespace Paytrail\PaymentService\Gateway\Request;
 
 use Magento\Framework\Exception\LocalizedException;
@@ -24,6 +25,7 @@ class RefundDataBuilder implements BuilderInterface
      * @var LoggerInterface
      */
     private $log;
+
     /**
      * @var SubjectReader
      */
@@ -33,9 +35,9 @@ class RefundDataBuilder implements BuilderInterface
      * RefundDataBuilder constructor.
      *
      * @param StoreManagerInterface $storeManager
-     * @param Data $paytrailHelper
-     * @param SubjectReader $subjectReader
-     * @param LoggerInterface $log
+     * @param Data                  $paytrailHelper
+     * @param SubjectReader         $subjectReader
+     * @param LoggerInterface       $log
      */
     public function __construct(
         StoreManagerInterface $storeManager,
@@ -44,24 +46,25 @@ class RefundDataBuilder implements BuilderInterface
         LoggerInterface $log
     ) {
         $this->paytrailHelper = $paytrailHelper;
-        $this->storeManager = $storeManager;
-        $this->log = $log;
-        $this->subjectReader = $subjectReader;
+        $this->storeManager   = $storeManager;
+        $this->log            = $log;
+        $this->subjectReader  = $subjectReader;
     }
 
     /**
      * @param array $buildSubject
+     *
      * @return array
      * @throws LocalizedException
      */
     public function build(array $buildSubject)
     {
         $paymentDataObject = $this->subjectReader->readPayment($buildSubject);
-        $amount = $this->subjectReader->readAmount($buildSubject);
+        $amount            = $this->subjectReader->readAmount($buildSubject);
 
-        $order = $paymentDataObject->getOrder();
+        $order      = $paymentDataObject->getOrder();
         $orderItems = $order->getItems();
-        $payment = $paymentDataObject->getPayment();
+        $payment    = $paymentDataObject->getPayment();
 
         $errMsg = null;
 
@@ -83,15 +86,17 @@ class RefundDataBuilder implements BuilderInterface
         }
 
         return [
-            'transaction_id' => $payment->getTransactionId(),
+            'payment'               => $payment,
+            'transaction_id'        => $payment->getTransactionId(),
             'parent_transaction_id' => $payment->getParentTransactionId(),
-            'amount' => $amount,
-            'order' => $order
+            'amount'                => $amount,
+            'order'                 => $order
         ];
     }
 
     /**
      * @param $items
+     *
      * @return array
      */
     protected function getTaxRates($items)

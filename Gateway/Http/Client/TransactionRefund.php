@@ -3,25 +3,25 @@
 namespace Paytrail\PaymentService\Gateway\Http\Client;
 
 use Magento\Payment\Gateway\Http\ClientInterface;
-use Paytrail\PaymentService\Model\Action\EmailRefund;
 use Paytrail\PaymentService\Model\Action\Refund;
 use Paytrail\SDK\Response\RefundResponse;
-use Psr\Log\LoggerInterface;
+use \Paytrail\PaymentService\Logger\PaytrailLogger;
 use Magento\Payment\Gateway\Http\TransferInterface;
+use Magento\Payment\Gateway\Command\CommandManagerPoolInterface;
 
 class TransactionRefund implements ClientInterface
 {
     /**
      * TransactionRefund constructor.
      *
-     * @param Refund $refund
-     * @param EmailRefund $emailRefund
-     * @param LoggerInterface $log
+     * @param Refund                      $refund
+     * @param PaytrailLogger              $log
+     * @param CommandManagerPoolInterface $commandManagerPool
      */
     public function __construct(
-        private Refund          $refund,
-        private EmailRefund     $emailRefund,
-        private LoggerInterface $log
+        private readonly Refund $refund,
+        private readonly PaytrailLogger $log,
+        private readonly CommandManagerPoolInterface $commandManagerPool,
     ) {
     }
 
@@ -29,9 +29,10 @@ class TransactionRefund implements ClientInterface
      * PlaceRequest function
      *
      * @param TransferInterface $transferObject
-     * @return array|void
+     *
+     * @return array
      */
-    public function placeRequest(TransferInterface $transferObject)
+    public function placeRequest(TransferInterface $transferObject): array
     {
         $request = $transferObject->getBody();
 
@@ -42,9 +43,12 @@ class TransactionRefund implements ClientInterface
         /** @var RefundResponse $response */
         $response = $this->postRefundRequest($request);
 
-        if ($response) {
+        if (is_bool($response)) {
+            $data['status'] = $response ? 'ok' : 'error';
+        } else {
             $data['status'] = $response->getStatus();
         }
+
         return $data;
     }
 
@@ -52,38 +56,45 @@ class TransactionRefund implements ClientInterface
      * PostRefundRequest function
      *
      * @param $request
+     *
      * @return bool
      */
-    protected function postRefundRequest($request)
+    protected function postRefundRequest($request): bool
     {
         $response = $this->refund->refund(
             $request['order'],
             $request['amount'],
             $request['parent_transaction_id']
         );
+        
         $error = $response["error"];
-
+        
         if ($error) {
             $this->log->error(
                 'Error occurred during refund: '
-                . $error
+                . 'test'
                 . ', Falling back to to email refund.'
             );
-            $emailResponse = $this->emailRefund->emailRefund(
-                $request['order'],
-                $request['amount'],
-                $request['parent_transaction_id']
-            );
-            $emailError = $emailResponse["error"];
-            if ($emailError) {
+
+            try {
+                $commandExecutor = $this->commandManagerPool->get($request['payment']->getMethodInstance()->getCode());
+                $commandExecutor->executeByCode(
+                    'email_refund',
+                    $request['payment'],
+                    [
+                        'amount' => $request['amount'],
+                    ]
+                );
+            } catch (\Exception $e) {
                 $this->log->error(
                     'Error occurred during email refund: '
-                    . $emailError
+                    . $e->getMessage()
                 );
+
                 return false;
             }
-            return $emailResponse["data"];
+
+            return true;
         }
-        return $response["data"];
     }
 }
