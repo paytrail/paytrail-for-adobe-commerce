@@ -49,7 +49,7 @@ class EmailRefundHandler implements HandlerInterface
         $payment->setTransactionId($transactionId);
         $payment->setShouldCloseParentTransaction(false);
 
-        $this->messageManager->addSuccessMessage(__('Paytrail refund successful.'));
+        $this->messageManager->addSuccessMessage(__('Paytrail Email Refund message successfully sent.'));
         
         return $response;
     }

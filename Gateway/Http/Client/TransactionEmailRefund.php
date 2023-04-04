@@ -19,15 +19,13 @@ class TransactionEmailRefund implements ClientInterface
     /**
      * TransactionRefund constructor.
      *
-     * @param PaytrailLogger                                 $log
-     * @param ArrayResultFactory                             $resultFactory
-     * @param \Paytrail\PaymentService\Model\Adapter\Adapter $paytrailAdapter
-     * @param \Paytrail\SDK\Request\EmailRefundRequest       $emailRefundRequest
-     * @param \Paytrail\PaymentService\Model\RefundCallback  $refundCallback
+     * @param PaytrailLogger     $log
+     * @param Adapter            $paytrailAdapter
+     * @param EmailRefundRequest $emailRefundRequest
+     * @param RefundCallback     $refundCallback
      */
     public function __construct(
         private readonly PaytrailLogger $log,
-        private readonly ArrayResultFactory $resultFactory,
         private readonly Adapter $paytrailAdapter,
         private readonly EmailRefundRequest $emailRefundRequest,
         private readonly RefundCallback $refundCallback
@@ -39,27 +37,17 @@ class TransactionEmailRefund implements ClientInterface
      *
      * @param TransferInterface $transferObject
      *
-     * @return ResultInterface|bool
+     * @return array|false
      */
     public function placeRequest(TransferInterface $transferObject)
     {
         $request       = $transferObject->getBody();
-        $emailResponse = $this->emailRefund(
+
+        return $this->emailRefund(
             $request['order'],
             $request['amount'],
             $request['parent_transaction_id']
         );
-
-        if ($emailResponse["error"]) {
-            $this->log->error(
-                'Error occurred during email refund: '
-                . $emailResponse["error"]
-            );
-
-            return false;
-        }
-
-        return  $emailResponse;
     }
 
     /**
@@ -76,8 +64,7 @@ class TransactionEmailRefund implements ClientInterface
         float $amount = null,
         string $transactionId = null
     ) {
-        $emailRefundResponse  = null;
-        $response["error"] = null;
+        $response= [];
 
         try {
             $paytrailClient = $this->paytrailAdapter->initPaytrailMerchantClient();
@@ -95,11 +82,12 @@ class TransactionEmailRefund implements ClientInterface
             $this->setEmailRefundRequestData($this->emailRefundRequest, $amount, $order);
 
             $emailRefundResponse = $paytrailClient->emailRefund($this->emailRefundRequest, $transactionId);
+            $response = $this->formatResponse($emailRefundResponse);
 
             $this->log->debugLog(
                 'response',
                 sprintf(
-                    'Successful response for email refund. Transaction Id: %s',
+                    'Response for email_refund. Transaction Id: %s',
                     $emailRefundResponse->getTransactionId()
                 )
             );
@@ -110,7 +98,7 @@ class TransactionEmailRefund implements ClientInterface
                     $e->getMessage(),
                     $e->getCode()
                 ));
-                $response["error"] = $e->getMessage();
+                $response["error"]  = $e->getMessage();
             }
         } catch (\Exception $e) {
             $this->log->error(
@@ -120,10 +108,10 @@ class TransactionEmailRefund implements ClientInterface
                 ),
                 $e->getTrace()
             );
-            $response["error"] = $e->getMessage();
+            $response["error"]  = $e->getMessage();
         }
 
-        return array_merge($this->formatResponse($emailRefundResponse), $response);
+        return $response;
     }
 
     /**
@@ -156,9 +144,9 @@ class TransactionEmailRefund implements ClientInterface
     public function formatResponse(EmailRefundResponse $response): array
     {
         return [
-            'status' => $response->getStatus(),
-            'provider'   => $response->getProvider(),
-            'transaction_id'  => $response->getTransactionId()
+            'status'         => $response->getStatus(),
+            'provider'       => $response->getProvider(),
+            'transaction_id' => $response->getTransactionId()
         ];
     }
 }

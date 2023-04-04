@@ -41,10 +41,10 @@ class RefundHandler implements HandlerInterface
 
         $payment = $payment->getPayment();
         $transactionId = $payment->getTransactionId() . "-" . time();
-        $payment->setIsTransactionClosed(false);
+        $payment->setIsTransactionClosed(true);
         $payment->setTransactionId($transactionId);
         $payment->setShouldCloseParentTransaction(false);
 
-        $this->messageManager->addSuccessMessage(__('Paytrail email refund successful.'));
+        $this->messageManager->addSuccessMessage(__('Paytrail refund successful.'));
     }
 }
