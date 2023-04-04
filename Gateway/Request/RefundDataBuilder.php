@@ -5,59 +5,34 @@ namespace Paytrail\PaymentService\Gateway\Request;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Payment\Gateway\Helper\SubjectReader;
 use Magento\Payment\Gateway\Request\BuilderInterface;
-use Magento\Store\Model\StoreManagerInterface;
 use Paytrail\PaymentService\Helper\Data;
 use Psr\Log\LoggerInterface;
 
 class RefundDataBuilder implements BuilderInterface
 {
     /**
-     * @var StoreManagerInterface
-     */
-    private $storeManager;
-
-    /**
-     * @var Data
-     */
-    private $paytrailHelper;
-
-    /**
-     * @var LoggerInterface
-     */
-    private $log;
-
-    /**
-     * @var SubjectReader
-     */
-    private $subjectReader;
-
-    /**
      * RefundDataBuilder constructor.
      *
-     * @param StoreManagerInterface $storeManager
      * @param Data                  $paytrailHelper
      * @param SubjectReader         $subjectReader
      * @param LoggerInterface       $log
      */
     public function __construct(
-        StoreManagerInterface $storeManager,
-        Data $paytrailHelper,
-        SubjectReader $subjectReader,
-        LoggerInterface $log
+        private readonly Data $paytrailHelper,
+        private readonly SubjectReader $subjectReader,
+        private readonly LoggerInterface $log
     ) {
-        $this->paytrailHelper = $paytrailHelper;
-        $this->storeManager   = $storeManager;
-        $this->log            = $log;
-        $this->subjectReader  = $subjectReader;
     }
 
     /**
+     * Build request
+     *
      * @param array $buildSubject
      *
      * @return array
      * @throws LocalizedException
      */
-    public function build(array $buildSubject)
+    public function build(array $buildSubject): array
     {
         $paymentDataObject = $this->subjectReader->readPayment($buildSubject);
         $amount            = $this->subjectReader->readAmount($buildSubject);
@@ -95,11 +70,13 @@ class RefundDataBuilder implements BuilderInterface
     }
 
     /**
-     * @param $items
+     * Get unique tax rates from order items
+     *
+     * @param array $items
      *
      * @return array
      */
-    protected function getTaxRates($items)
+    private function getTaxRates(array $items): array
     {
         $rates = [];
         foreach ($items as $item) {
