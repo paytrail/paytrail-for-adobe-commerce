@@ -9,8 +9,6 @@ use Paytrail\PaymentService\Model\RefundCallback;
 use Paytrail\SDK\Request\EmailRefundRequest;
 use \Paytrail\PaymentService\Logger\PaytrailLogger;
 use Magento\Payment\Gateway\Http\TransferInterface;
-use Magento\Payment\Gateway\Command\Result\ArrayResultFactory;
-use Magento\Payment\Gateway\Command\ResultInterface;
 use \Paytrail\PaymentService\Model\Adapter\Adapter;
 use Paytrail\SDK\Response\EmailRefundResponse;
 
@@ -37,9 +35,9 @@ class TransactionEmailRefund implements ClientInterface
      *
      * @param TransferInterface $transferObject
      *
-     * @return array|false
+     * @return array
      */
-    public function placeRequest(TransferInterface $transferObject)
+    public function placeRequest(TransferInterface $transferObject): array
     {
         $request       = $transferObject->getBody();
 
@@ -137,7 +135,7 @@ class TransactionEmailRefund implements ClientInterface
     /**
      * Format Response for Validator
      *
-     * @param array $response
+     * @param \Paytrail\SDK\Response\EmailRefundResponse $response
      *
      * @return array
      */
@@ -150,4 +148,3 @@ class TransactionEmailRefund implements ClientInterface
         ];
     }
 }
-

@@ -11,6 +11,13 @@ use Paytrail\PaymentService\Logger\PaytrailLogger;
 
 class RefundResponseValidator extends AbstractValidator
 {
+    /**
+     * Constructor
+     *
+     * @param \Paytrail\PaymentService\Logger\PaytrailLogger            $log
+     * @param \Magento\Payment\Gateway\Validator\ResultInterfaceFactory $resultFactory
+     * @param \Magento\Payment\Gateway\Helper\SubjectReader             $subjectReader
+     */
     public function __construct(
         private readonly PaytrailLogger $log,
         private readonly ResultInterfaceFactory $resultFactory,
