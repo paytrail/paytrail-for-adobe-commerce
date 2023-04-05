@@ -11,11 +11,14 @@ use Magento\Framework\Controller\Result\JsonFactory;
 use Magento\Framework\Controller\ResultFactory;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\View\Result\PageFactory;
+use Magento\Payment\Gateway\Command\CommandManagerInterface;
+use Magento\Payment\Gateway\Command\CommandManagerPoolInterface;
 use Magento\Sales\Api\OrderManagementInterface;
 use Magento\Sales\Api\OrderRepositoryInterface;
 use Magento\Sales\Model\Order;
 use Magento\Sales\Model\OrderFactory;
 use Paytrail\PaymentService\Exceptions\CheckoutException;
+use Paytrail\PaymentService\Gateway\Command\Payment;
 use Paytrail\PaymentService\Helper\ApiData;
 use Paytrail\PaymentService\Helper\Data as paytrailHelper;
 use Paytrail\PaymentService\Gateway\Config\Config;
@@ -85,6 +88,10 @@ class Index implements ActionInterface
      */
     private $request;
 
+    private Payment $payment;
+
+    private \Magento\Payment\Gateway\Command\CommandManagerPoolInterface $commandManagerPool;
+
     /**
      * Index constructor.
      *
@@ -107,7 +114,9 @@ class Index implements ActionInterface
         paytrailHelper $paytrailHelper,
         Config $gatewayConfig,
         ResultFactory $resultFactory,
-        RequestInterface $request
+        RequestInterface $request,
+        Payment $payment,
+        CommandManagerPoolInterface $commandManagerPool
     ) {
         $this->checkoutSession = $checkoutSession;
         $this->orderRepositoryInterface = $orderRepositoryInterface;
@@ -118,6 +127,8 @@ class Index implements ActionInterface
         $this->gatewayConfig = $gatewayConfig;
         $this->resultFactory = $resultFactory;
         $this->request = $request;
+        $this->payment = $payment;
+        $this->commandManagerPool = $commandManagerPool;
     }
 
     /**
@@ -237,15 +248,23 @@ class Index implements ActionInterface
     }
 
     /**
-     * @param Order $order
-     * @param string $methodId
-     * @return PaymentResponse
+     * @param $order
+     * @return mixed
      * @throws CheckoutException
+     * @throws \Magento\Framework\Exception\NotFoundException
+     * @throws \Magento\Payment\Gateway\Command\CommandException
      */
     protected function getResponseData($order)
     {
         $response = $this->apiData->processApiRequest('payment', $order);
-
+        $commandExecutor = $this->commandManagerPool->get('paytrail');
+        $response = $commandExecutor->executeByCode(
+            'payment',
+            null,
+            [
+                'order' => $order
+            ]
+        );
         $errorMsg = $response['error'];
 
         if (isset($errorMsg)) {

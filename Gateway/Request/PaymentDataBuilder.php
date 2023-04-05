@@ -2,108 +2,39 @@
 
 namespace Paytrail\PaymentService\Gateway\Request;
 
-use Magento\Framework\Exception\LocalizedException;
-use Magento\Payment\Gateway\Helper\SubjectReader;
+use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Payment\Gateway\Request\BuilderInterface;
-use Magento\Store\Model\StoreManagerInterface;
-use Paytrail\PaymentService\Helper\Data;
-use Psr\Log\LoggerInterface;
+use Paytrail\PaymentService\Model\Payment\PaymentDataProvider;
+use Paytrail\SDK\Request\PaymentRequest;
 
 class PaymentDataBuilder implements BuilderInterface
 {
     /**
-     * @var StoreManagerInterface
-     */
-    private $storeManager;
-
-    /**
-     * @var Data
-     */
-    private $paytrailHelper;
-
-    /**
-     * @var LoggerInterface
-     */
-    private $log;
-    /**
-     * @var SubjectReader
-     */
-    private $subjectReader;
-
-    /**
      * PaymentDataBuilder constructor.
      *
-     * @param StoreManagerInterface $storeManager
-     * @param Data $paytrailHelper
-     * @param SubjectReader $subjectReader
-     * @param LoggerInterface $log
+     * @param PaymentRequest $paymentRequest
+     * @param PaymentDataProvider $paymentDataProvider
      */
     public function __construct(
-        StoreManagerInterface $storeManager,
-        Data $paytrailHelper,
-        SubjectReader $subjectReader,
-        LoggerInterface $log
+        private PaymentRequest      $paymentRequest,
+        private PaymentDataProvider $paymentDataProvider,
     ) {
-        $this->paytrailHelper = $paytrailHelper;
-        $this->storeManager = $storeManager;
-        $this->log = $log;
-        $this->subjectReader = $subjectReader;
     }
 
     /**
      * @param array $buildSubject
      * @return array
-     * @throws LocalizedException
+     * @throws NoSuchEntityException
      */
-    public function build(array $buildSubject)
+    public function build(array $buildSubject): array
     {
-        $paymentDataObject = $this->subjectReader->readPayment($buildSubject);
-        $amount = $this->subjectReader->readAmount($buildSubject);
+        $paytrailPayment = $this->paymentRequest;
+        $paymentData = [];
+        $paymentData[] = $this->paymentDataProvider->setPaymentRequestData(
+            $paytrailPayment,
+            $buildSubject['order']
+        );
 
-        $order = $paymentDataObject->getOrder();
-        $orderItems = $order->getItems();
-        $payment = $paymentDataObject->getPayment();
-
-        $errMsg = null;
-
-        if ($amount <= 0) {
-            $errMsg = 'Invalid amount for refund.';
-        }
-
-        if (!$payment->getTransactionId()) {
-            $errMsg = 'Invalid transaction ID.';
-        }
-
-        if (count($this->getTaxRates($orderItems)) !== 1) {
-            $errMsg = 'Cannot refund order with multiple tax rates. Please refund offline.';
-        }
-
-        if (isset($errMsg)) {
-            $this->log->error($errMsg);
-            $this->paytrailHelper->processError($errMsg);
-        }
-
-        return [
-            'transaction_id' => $payment->getTransactionId(),
-            'parent_transaction_id' => $payment->getParentTransactionId(),
-            'amount' => $amount,
-            'order' => $order
-        ];
-    }
-
-    /**
-     * @param $items
-     * @return array
-     */
-    protected function getTaxRates($items)
-    {
-        $rates = [];
-        foreach ($items as $item) {
-            if ($item['price'] > 0) {
-                $rates[] = round($item['vat'] * 100);
-            }
-        }
-
-        return array_unique($rates, SORT_NUMERIC);
+        return $paymentData;
     }
 }

@@ -2,10 +2,11 @@
 
 namespace Paytrail\PaymentService\Gateway\Http\Client;
 
+use Magento\Framework\Serialize\Serializer\Json;
 use Magento\Payment\Gateway\Http\ClientInterface;
-use Paytrail\PaymentService\Model\Action\EmailRefund;
-use Paytrail\PaymentService\Model\Action\Refund;
-use Paytrail\SDK\Response\RefundResponse;
+use Paytrail\PaymentService\Logger\PaytrailLogger;
+use Paytrail\PaymentService\Model\Adapter\Adapter;
+use Paytrail\SDK\Request\PaymentRequest;
 use Psr\Log\LoggerInterface;
 use Magento\Payment\Gateway\Http\TransferInterface;
 
@@ -14,14 +15,16 @@ class TransactionPayment implements ClientInterface
     /**
      * TransactionPayment constructor.
      *
-     * @param Refund $refund
-     * @param EmailRefund $emailRefund
-     * @param LoggerInterface $log
+     * @param Adapter $paytrailAdapter
+     * @param PaymentRequest $paymentRequest
+     * @param Json $json
+     * @param PaytrailLogger $log
      */
     public function __construct(
-        private Refund          $refund,
-        private EmailRefund     $emailRefund,
-        private LoggerInterface $log
+        private Adapter $paytrailAdapter,
+        private PaymentRequest $paymentRequest,
+        private Json $json,
+        private PaytrailLogger $log
     ) {
     }
 
@@ -35,31 +38,8 @@ class TransactionPayment implements ClientInterface
     {
         $request = $transferObject->getBody();
 
-        $data = [
-            'status' => false
-        ];
-
-        /** @var RefundResponse $response */
-        $response = $this->postRefundRequest($request);
-
-        if ($response) {
-            $data['status'] = $response->getStatus();
-        }
-        return $data;
-    }
-
-    /**
-     * PostRefundRequest function
-     *
-     * @param $request
-     * @return bool
-     */
-    protected function postRefundRequest($request)
-    {
-        $response = $this->refund->refund(
-            $request['order'],
-            $request['amount'],
-            $request['parent_transaction_id']
+        $response = $this->payment(
+            array_first($request)
         );
         $error = $response["error"];
 
@@ -69,21 +49,48 @@ class TransactionPayment implements ClientInterface
                 . $error
                 . ', Falling back to to email refund.'
             );
-            $emailResponse = $this->emailRefund->emailRefund(
-                $request['order'],
-                $request['amount'],
-                $request['parent_transaction_id']
-            );
-            $emailError = $emailResponse["error"];
-            if ($emailError) {
-                $this->log->error(
-                    'Error occurred during email refund: '
-                    . $emailError
-                );
-                return false;
-            }
-            return $emailResponse["data"];
         }
         return $response["data"];
+    }
+
+    /**
+     * Payment function
+     *
+     * @return array
+     * @throws \Magento\Framework\Exception\LocalizedException
+     * @throws \Paytrail\SDK\Exception\HmacException
+     * @throws \Paytrail\SDK\Exception\ValidationException
+     */
+    public function payment($paytrailPayment)
+    {
+        $paytrailClient = $this->paytrailAdapter->initPaytrailMerchantClient();
+
+        $this->log->debugLog(
+            'request',
+            \sprintf(
+                'Creating %s request to Paytrail API %s',
+                'payment',
+                isset($order) ? 'With order id: ' . $order->getId() : ''
+            )
+        );
+
+        // Handle payment requests
+            $response["data"] = $paytrailClient->createPayment($paytrailPayment);
+
+            $loggedData = $this->json->serialize([
+                'transactionId' => $response["data"]->getTransactionId(),
+                'href' => $response["data"]->getHref()
+            ]);
+
+            $this->log->debugLog(
+                'response',
+                sprintf(
+                    'Successful response for order id: %s with data: %s',
+                    $paytrailPayment->getId(),
+                    $loggedData
+                )
+            );
+
+        return $response;
     }
 }
