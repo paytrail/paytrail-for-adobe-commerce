@@ -43,7 +43,6 @@ class TransactionEmailRefund implements ClientInterface
 
         return $this->emailRefund(
             $request['order'],
-            $request['amount'],
             $request['parent_transaction_id']
         );
     }

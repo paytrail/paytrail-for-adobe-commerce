@@ -5,13 +5,11 @@ namespace Paytrail\PaymentService\Gateway\Http\Client;
 use GuzzleHttp\Exception\RequestException;
 use Magento\Payment\Gateway\Data\OrderAdapterInterface;
 use Magento\Payment\Gateway\Http\ClientInterface;
-use Paytrail\PaymentService\Exceptions\CheckoutException;
 use Paytrail\PaymentService\Model\Adapter\Adapter;
-use Paytrail\PaymentService\Model\RefundCallback;
-use Paytrail\SDK\Request\RefundRequest;
 use \Paytrail\PaymentService\Logger\PaytrailLogger;
 use Magento\Payment\Gateway\Http\TransferInterface;
 use Magento\Payment\Gateway\Command\CommandManagerPoolInterface;
+use Paytrail\SDK\Request\RefundRequest;
 
 class TransactionRefund implements ClientInterface
 {
@@ -28,8 +26,6 @@ class TransactionRefund implements ClientInterface
         private readonly PaytrailLogger $log,
         private readonly CommandManagerPoolInterface $commandManagerPool,
         private readonly Adapter $paytrailAdapter,
-        private readonly RefundRequest $refundRequest,
-        private readonly RefundCallback $refundCallback
     ) {
     }
 
@@ -44,8 +40,8 @@ class TransactionRefund implements ClientInterface
     {
         $request  = $transferObject->getBody();
         $response = $this->refund(
+            $request['refund_request'],
             $request['order'],
-            $request['amount'],
             $request['parent_transaction_id']
         );
 
@@ -79,15 +75,15 @@ class TransactionRefund implements ClientInterface
     /**
      * Refund function
      *
+     * @param \Paytrail\SDK\Request\RefundRequest                      $refundRequest
      * @param \Magento\Payment\Gateway\Data\OrderAdapterInterface|null $order
-     * @param float|null                                               $amount
      * @param string|null                                              $transactionId
      *
      * @return array
      */
     public function refund(
+        RefundRequest $refundRequest,
         OrderAdapterInterface $order = null,
-        float $amount = null,
         string $transactionId = null
     ): array {
         $response = [];
@@ -103,12 +99,8 @@ class TransactionRefund implements ClientInterface
                     isset($order) ? 'With order id: ' . $order->getId() : ''
                 )
             );
-
-            // Handle request
-            $paytrailRefund = $this->refundRequest;
-            $this->setRefundRequestData($paytrailRefund, $amount);
-
-            $response = $paytrailClient->refund($paytrailRefund, $transactionId);
+            
+            $response = $paytrailClient->refund($refundRequest, $transactionId);
 
             $this->log->debugLog(
                 'response',
@@ -140,25 +132,5 @@ class TransactionRefund implements ClientInterface
         return $response;
     }
 
-    /**
-     * SetRefundRequestData function
-     *
-     * @param RefundRequest $paytrailRefund
-     * @param float         $amount
-     *
-     * @throws CheckoutException
-     */
-    private function setRefundRequestData(RefundRequest $paytrailRefund, float $amount): void
-    {
-        if ($amount <= 0) {
-            $message = 'Refund amount must be above 0';
-            $this->log->logData(\Monolog\Logger::ERROR, $message);
-            throw new CheckoutException(__($message));
-        }
-
-        $paytrailRefund->setAmount(round($amount * 100));
-
-        $callback = $this->refundCallback->createRefundCallback();
-        $paytrailRefund->setCallbackUrls($callback);
-    }
+   
 }
