@@ -22,6 +22,8 @@ class PaymentDataBuilder implements BuilderInterface
     }
 
     /**
+     * @inheritdoc
+     *
      * @param array $buildSubject
      * @return array
      * @throws NoSuchEntityException
@@ -29,12 +31,13 @@ class PaymentDataBuilder implements BuilderInterface
     public function build(array $buildSubject): array
     {
         $paytrailPayment = $this->paymentRequest;
-        $paymentData = [];
-        $paymentData[] = $this->paymentDataProvider->setPaymentRequestData(
-            $paytrailPayment,
-            $buildSubject['order']
-        );
 
-        return $paymentData;
+        return [
+            'order' => $buildSubject['order'],
+            'request_data' => $this->paymentDataProvider->setPaymentRequestData(
+                $paytrailPayment,
+                $buildSubject['order']
+            )
+        ];
     }
 }
