@@ -26,7 +26,7 @@ class TransactionPayment implements ClientInterface
     }
 
     /**
-     * PlaceRequest function
+     * @inheritdoc
      *
      * @param TransferInterface $transferObject
      * @return array|void

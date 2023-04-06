@@ -18,7 +18,7 @@ class PaymentHandler implements HandlerInterface
     }
 
     /**
-     * PaymentHandle function
+     * @inheritdoc
      *
      * @param array $handlingSubject
      * @param array $response
