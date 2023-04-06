@@ -45,12 +45,14 @@ class PaymentDataProvider
     }
 
     /**
-     * @param $paytrailPayment
+     * SetPaymentRequestData function
+     *
+     * @param PaymentRequest $paytrailPayment
      * @param $order
      * @return PaymentRequest
      * @throws NoSuchEntityException
      */
-    public function setPaymentRequestData($paytrailPayment, $order): PaymentRequest
+    public function setPaymentRequestData(PaymentRequest $paytrailPayment, $order): PaymentRequest
     {
         $billingAddress = $order->getBillingAddress() ?? $order->getShippingAddress();
         $shippingAddress = $order->getShippingAddress();
@@ -91,6 +93,8 @@ class PaymentDataProvider
     }
 
     /**
+     * CreateCustomer function
+     *
      * @param \Magento\Sales\Api\Data\OrderAddressInterface $billingAddress
      * @return Customer
      */
@@ -109,12 +113,14 @@ class PaymentDataProvider
     }
 
     /**
-     * @param Order $order
+     * CreateAddress function
+     *
      * @param $address
      * @return Address
      * @throws NoSuchEntityException
+     * @throws \Paytrail\SDK\Exception\ValidationException
      */
-    protected function createAddress($order, $address)
+    protected function createAddress($address)
     {
         $paytrailAddress = new Address();
 
@@ -141,10 +147,11 @@ class PaymentDataProvider
     }
 
     /**
-     * @param Order $order
-     * @param string $methodId
-     * @return array
-     * @throws \Exception
+     * GetOrderItemLines function
+     *
+     * @param $order
+     * @return array|Item[]
+     * @throws LocalizedException
      */
     protected function getOrderItemLines($order)
     {
@@ -190,10 +197,12 @@ class PaymentDataProvider
     }
 
     /**
-     * @param OrderItem $item
+     * CreateOrderItems function
+     *
+     * @param $item
      * @return Item
      */
-    protected function createOrderItems($item)
+    protected function createOrderItems($item): Item
     {
         $paytrailItem = new Item();
 
@@ -208,12 +217,13 @@ class PaymentDataProvider
     }
 
     /**
-     * @param Order $order
-     * @param string $methodId
-     * @return array|null
+     * ItemArgs function
+     *
+     * @param $order
+     * @return array
      * @throws LocalizedException
      */
-    protected function itemArgs($order)
+    protected function itemArgs($order): array
     {
         $items = [];
 
@@ -262,10 +272,12 @@ class PaymentDataProvider
     }
 
     /**
+     * etShippingItem function
+     *
      * @param Order $order
      * @return array
      */
-    private function getShippingItem(Order $order)
+    private function getShippingItem(Order $order): array
     {
         $taxDetails = [];
         $price = 0;
