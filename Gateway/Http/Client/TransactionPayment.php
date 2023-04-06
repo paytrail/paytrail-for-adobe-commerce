@@ -2,12 +2,11 @@
 
 namespace Paytrail\PaymentService\Gateway\Http\Client;
 
+use GuzzleHttp\Exception\RequestException;
 use Magento\Framework\Serialize\Serializer\Json;
 use Magento\Payment\Gateway\Http\ClientInterface;
 use Paytrail\PaymentService\Logger\PaytrailLogger;
 use Paytrail\PaymentService\Model\Adapter\Adapter;
-use Paytrail\SDK\Request\PaymentRequest;
-use Psr\Log\LoggerInterface;
 use Magento\Payment\Gateway\Http\TransferInterface;
 
 class TransactionPayment implements ClientInterface
@@ -16,14 +15,12 @@ class TransactionPayment implements ClientInterface
      * TransactionPayment constructor.
      *
      * @param Adapter $paytrailAdapter
-     * @param PaymentRequest $paymentRequest
      * @param Json $json
      * @param PaytrailLogger $log
      */
     public function __construct(
-        private Adapter $paytrailAdapter,
-        private PaymentRequest $paymentRequest,
-        private Json $json,
+        private Adapter        $paytrailAdapter,
+        private Json           $json,
         private PaytrailLogger $log
     ) {
     }
@@ -39,7 +36,8 @@ class TransactionPayment implements ClientInterface
         $request = $transferObject->getBody();
 
         $response = $this->payment(
-            array_first($request)
+            $request['request_data'],
+            $request['order']
         );
         $error = $response["error"];
 
@@ -50,31 +48,34 @@ class TransactionPayment implements ClientInterface
                 . ', Falling back to to email refund.'
             );
         }
-        return $response["data"];
+        return $response;
     }
 
     /**
      * Payment function
      *
+     * @param $paytrailPayment
+     * @param $order
      * @return array
-     * @throws \Magento\Framework\Exception\LocalizedException
-     * @throws \Paytrail\SDK\Exception\HmacException
-     * @throws \Paytrail\SDK\Exception\ValidationException
      */
-    public function payment($paytrailPayment)
+    public function payment($paytrailPayment, $order): array
     {
-        $paytrailClient = $this->paytrailAdapter->initPaytrailMerchantClient();
+        $response["data"] = null;
+        $response["error"] = null;
 
-        $this->log->debugLog(
-            'request',
-            \sprintf(
-                'Creating %s request to Paytrail API %s',
-                'payment',
-                isset($order) ? 'With order id: ' . $order->getId() : ''
-            )
-        );
+        try {
+            $paytrailClient = $this->paytrailAdapter->initPaytrailMerchantClient();
 
-        // Handle payment requests
+            $this->log->debugLog(
+                'request',
+                \sprintf(
+                    'Creating %s request to Paytrail API %s',
+                    'payment',
+                    isset($order) ? 'With order id: ' . $order->getId() : ''
+                )
+            );
+
+            // Handle payment requests
             $response["data"] = $paytrailClient->createPayment($paytrailPayment);
 
             $loggedData = $this->json->serialize([
@@ -86,10 +87,32 @@ class TransactionPayment implements ClientInterface
                 'response',
                 sprintf(
                     'Successful response for order id: %s with data: %s',
-                    $paytrailPayment->getId(),
+                    $order->getId(),
                     $loggedData
                 )
             );
+        } catch (RequestException $e) {
+            $this->log->error(\sprintf(
+                'Connection error to Paytrail Payment Service API: %s Error Code: %s',
+                $e->getMessage(),
+                $e->getCode()
+            ));
+
+            if ($e->hasResponse()) {
+                $response["error"] = $e->getMessage();
+                return $response;
+            }
+        } catch (\Exception $e) {
+            $this->log->error(
+                \sprintf(
+                    'A problem occurred during Paytrail Api connection: %s',
+                    $e->getMessage()
+                ),
+                $e->getTrace()
+            );
+            $response["error"] = $e->getMessage();
+            return $response;
+        }
 
         return $response;
     }
