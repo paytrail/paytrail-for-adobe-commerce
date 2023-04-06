@@ -30,11 +30,11 @@ class Payment implements CommandInterface
      * Executes command basing on business object
      *
      * @param array $commandSubject
-     * @return array|\Magento\Payment\Gateway\Command\ResultInterface|null
+     * @return array
      * @throws ClientException
      * @throws ConverterException
      */
-    public function execute(array $commandSubject)
+    public function execute(array $commandSubject): array
     {
         $transferO = $this->transferFactory->create(
             $this->requestBuilder->build($commandSubject)
