@@ -5,11 +5,9 @@ namespace Paytrail\PaymentService\Model\Payment;
 use Magento\Directory\Api\CountryInformationAcquirerInterface;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Exception\NoSuchEntityException;
-use Magento\Payment\Gateway\Helper\SubjectReader;
 use Magento\Sales\Model\Order;
 use Magento\Sales\Model\Order\Item as OrderItem;
 use Magento\Sales\Model\ResourceModel\Order\Tax\Item as TaxItem;
-use Magento\Store\Model\StoreManagerInterface;
 use Magento\Tax\Helper\Data as TaxHelper;
 use Paytrail\PaymentService\Helper\Data as Helper;
 use Paytrail\PaymentService\Logger\PaytrailLogger;
@@ -25,9 +23,6 @@ class PaymentDataProvider
     /**
      * PaymentDataProvider constructor.
      *
-     * @param StoreManagerInterface $storeManager
-     * @param SubjectReader $subjectReader
-     * @param PaymentRequest $paymentRequest
      * @param Helper $helper
      * @param CompanyRequestData $companyRequestData
      * @param CountryInformationAcquirerInterface $countryInfo

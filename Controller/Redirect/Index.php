@@ -18,9 +18,6 @@ use Paytrail\SDK\Model\Provider;
 use Paytrail\SDK\Response\PaymentResponse;
 use Psr\Log\LoggerInterface;
 
-/**
- * Class Index
- */
 class Index implements ActionInterface
 {
     /**
@@ -139,7 +136,7 @@ class Index implements ActionInterface
      * @param $paymentMethodId
      * @return array
      */
-    protected function getFormFields($responseData, $paymentMethodId = null)
+    protected function getFormFields($responseData, $paymentMethodId = null): array
     {
         $formFields = [];
 
@@ -162,7 +159,7 @@ class Index implements ActionInterface
      * @param $paymentMethodId
      * @return string
      */
-    protected function getFormAction($responseData, $paymentMethodId = null)
+    protected function getFormAction($responseData, $paymentMethodId = null): string
     {
         $returnUrl = '';
 
