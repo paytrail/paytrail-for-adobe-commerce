@@ -68,11 +68,11 @@ class PaymentDataProvider
         $customer = $this->createCustomer($billingAddress);
         $paytrailPayment->setCustomer($customer);
 
-        $invoicingAddress = $this->createAddress($order, $billingAddress);
+        $invoicingAddress = $this->createAddress($billingAddress);
         $paytrailPayment->setInvoicingAddress($invoicingAddress);
 
         if ($shippingAddress !== null) {
-            $deliveryAddress = $this->createAddress($order, $shippingAddress);
+            $deliveryAddress = $this->createAddress($shippingAddress);
             $paytrailPayment->setDeliveryAddress($deliveryAddress);
         }
 
@@ -272,7 +272,7 @@ class PaymentDataProvider
     }
 
     /**
-     * etShippingItem function
+     * GetShippingItem function
      *
      * @param Order $order
      * @return array
