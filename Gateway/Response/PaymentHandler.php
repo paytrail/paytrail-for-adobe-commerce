@@ -13,7 +13,7 @@ class PaymentHandler implements HandlerInterface
      * @param ManagerInterface $messageManager
      */
     public function __construct(
-        private ManagerInterface $messageManager,
+        private readonly ManagerInterface $messageManager,
     ) {
     }
 

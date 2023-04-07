@@ -16,8 +16,8 @@ class PaymentDataBuilder implements BuilderInterface
      * @param PaymentDataProvider $paymentDataProvider
      */
     public function __construct(
-        private PaymentRequest      $paymentRequest,
-        private PaymentDataProvider $paymentDataProvider,
+        private readonly PaymentRequest      $paymentRequest,
+        private readonly PaymentDataProvider $paymentDataProvider,
     ) {
     }
 

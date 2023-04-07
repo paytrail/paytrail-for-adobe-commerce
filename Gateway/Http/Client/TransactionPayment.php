@@ -19,9 +19,9 @@ class TransactionPayment implements ClientInterface
      * @param PaytrailLogger $log
      */
     public function __construct(
-        private Adapter        $paytrailAdapter,
-        private Json           $json,
-        private PaytrailLogger $log
+        private readonly Adapter $paytrailAdapter,
+        private readonly Json $json,
+        private readonly PaytrailLogger $log
     ) {
     }
 
@@ -48,6 +48,7 @@ class TransactionPayment implements ClientInterface
                 . ', Falling back to to email refund.'
             );
         }
+
         return $response;
     }
 
