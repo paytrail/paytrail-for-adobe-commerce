@@ -15,7 +15,7 @@ use Paytrail\SDK\Response\EmailRefundResponse;
 class TransactionEmailRefund implements ClientInterface
 {
     /**
-     * TransactionRefund constructor.
+     * TransactionEmailRefund constructor.
      *
      * @param PaytrailLogger     $log
      * @param Adapter            $paytrailAdapter
@@ -60,7 +60,7 @@ class TransactionEmailRefund implements ClientInterface
         OrderAdapterInterface $order = null,
         float $amount = null,
         string $transactionId = null
-    ) {
+    ):array {
         $response= [];
 
         try {
