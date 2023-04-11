@@ -6,19 +6,13 @@ use Magento\Checkout\Model\ConfigProviderInterface;
 use Magento\Checkout\Model\Session;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Exception\NoSuchEntityException;
-use Magento\Framework\Locale\Resolver;
-use Magento\Framework\View\Asset\Repository as AssetRepository;
+use Magento\Payment\Gateway\Command\CommandManagerPoolInterface;
 use Magento\Payment\Helper\Data as PaymentHelper;
 use Magento\Store\Model\StoreManagerInterface;
 use Paytrail\PaymentService\Gateway\Config\Config;
-use Paytrail\PaymentService\Helper\ApiData as apiData;
 use Paytrail\PaymentService\Helper\Data as paytrailHelper;
-use Paytrail\PaymentService\Model\Adapter\Adapter;
 use Psr\Log\LoggerInterface;
 
-/**
- * Class ConfigProvider
- */
 class ConfigProvider implements ConfigProviderInterface
 {
     const CODE = 'paytrail';
@@ -27,73 +21,28 @@ class ConfigProvider implements ConfigProviderInterface
     protected $methodCodes = [
         self::CODE,
     ];
-    protected $paytrailHelper;
-    protected $apidata;
-    /**
-     * @var Session
-     */
-    protected $checkoutSession;
-    /**
-     * @var Config
-     */
-    private $gatewayConfig;
-    /**
-     * @var AssetRepository
-     */
-    private $assetRepository;
-    /**
-     * @var StoreManagerInterface
-     */
-    private $storeManager;
-    /**
-     * @var Resolver
-     */
-    private $localeResolver;
-    /**
-     * @var Adapter
-     */
-    private $paytrailAdapter;
-    /**
-     * @var LoggerInterface
-     */
-    private $log;
 
     /**
      * ConfigProvider constructor
      *
      * @param paytrailHelper $paytrailHelper
-     * @param apiData $apidata
      * @param PaymentHelper $paymentHelper
      * @param Session $checkoutSession
      * @param Config $gatewayConfig
-     * @param AssetRepository $assetRepository
      * @param StoreManagerInterface $storeManager
-     * @param Resolver $localeResolver
-     * @param Adapter $paytrailAdapter
+     * @param CommandManagerPoolInterface $commandManagerPool
      * @param LoggerInterface $log
      * @throws LocalizedException
      */
     public function __construct(
-        paytrailHelper $paytrailHelper,
-        apiData $apidata,
-        PaymentHelper $paymentHelper,
-        Session $checkoutSession,
-        Config $gatewayConfig,
-        AssetRepository $assetRepository,
-        StoreManagerInterface $storeManager,
-        Resolver $localeResolver,
-        Adapter $paytrailAdapter,
-        LoggerInterface $log
+        private paytrailHelper $paytrailHelper,
+        private PaymentHelper $paymentHelper,
+        private Session $checkoutSession,
+        private Config $gatewayConfig,
+        private StoreManagerInterface $storeManager,
+        private CommandManagerPoolInterface $commandManagerPool,
+        private LoggerInterface $log
     ) {
-        $this->paytrailHelper = $paytrailHelper;
-        $this->apidata = $apidata;
-        $this->checkoutSession = $checkoutSession;
-        $this->gatewayConfig = $gatewayConfig;
-        $this->assetRepository = $assetRepository;
-        $this->storeManager = $storeManager;
-        $this->localeResolver = $localeResolver;
-        $this->paytrailAdapter = $paytrailAdapter;
-        $this->log = $log;
         foreach ($this->methodCodes as $code) {
             $this->methods[$code] = $paymentHelper->getMethodInstance($code);
         }
@@ -185,17 +134,18 @@ class ConfigProvider implements ConfigProviderInterface
     {
         $orderValue = $this->checkoutSession->getQuote()->getGrandTotal();
 
-        $response = $this->apidata->processApiRequest(
-            'payment_providers',
+        $commandExecutor = $this->commandManagerPool->get('paytrail');
+        $response = $commandExecutor->executeByCode(
+            'method_provider',
             null,
-            round($orderValue * 100)
+            ['amount' => $orderValue]
         );
 
         $errorMsg = $response['error'];
 
         if (isset($errorMsg)) {
             $this->log->error(
-                'Error occurred during email refund: '
+                'Error occurred during providing payment methods: '
                 . $errorMsg
             );
             $this->paytrailHelper->processError($errorMsg);
