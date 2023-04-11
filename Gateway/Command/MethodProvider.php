@@ -26,6 +26,8 @@ class MethodProvider implements CommandInterface
     }
 
     /**
+     * Executes command basing on business object
+     *
      * @param array $commandSubject
      * @return array|ResultInterface|null
      * @throws \Magento\Payment\Gateway\Http\ClientException

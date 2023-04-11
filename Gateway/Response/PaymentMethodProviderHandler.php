@@ -8,14 +8,6 @@ use Magento\Payment\Gateway\Response\HandlerInterface;
 class PaymentMethodProviderHandler implements HandlerInterface
 {
     /**
-     * @param ManagerInterface $messageManager
-     */
-    public function __construct(
-        private readonly ManagerInterface $messageManager,
-    ) {
-    }
-
-    /**
      * @inheritdoc
      *
      * @param array $handlingSubject
@@ -24,8 +16,6 @@ class PaymentMethodProviderHandler implements HandlerInterface
      */
     public function handle(array $handlingSubject, array $response)
     {
-        $this->messageManager->addSuccessMessage(__('Paytrail payment method provider is proceeding.'));
-
         return $response['data'];
     }
 }
