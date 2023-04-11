@@ -16,6 +16,8 @@ class PaymentMethodProviderHandler implements HandlerInterface
     }
 
     /**
+     * @inheritdoc
+     *
      * @param array $handlingSubject
      * @param array $response
      * @return mixed|void
@@ -23,6 +25,7 @@ class PaymentMethodProviderHandler implements HandlerInterface
     public function handle(array $handlingSubject, array $response)
     {
         $this->messageManager->addSuccessMessage(__('Paytrail payment method provider is proceeding.'));
+
         return $response['data'];
     }
 }
