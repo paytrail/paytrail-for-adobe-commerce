@@ -18,7 +18,7 @@ class EmailRefundHandler implements HandlerInterface
     private SubjectReader $subjectReader;
 
     /**
-     * RefundHandler constructor.
+     * EmailRefundHandler constructor.
      *
      * @param ManagerInterface $messageManager
      * @param SubjectReader $subjectReader
@@ -39,7 +39,7 @@ class EmailRefundHandler implements HandlerInterface
      *
      * @return array
      */
-    public function handle(array $handlingSubject, array $response)
+    public function handle(array $handlingSubject, array $response): array
     {
         $payment = $this->subjectReader->readPayment($handlingSubject);
 
