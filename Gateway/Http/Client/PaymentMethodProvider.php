@@ -21,7 +21,7 @@ class PaymentMethodProvider implements ClientInterface
     }
 
     /**
-     * PlaceRequest function
+     * @inheritdoc
      *
      * @param TransferInterface $transferObject
      * @return array|void
