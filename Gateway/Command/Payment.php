@@ -19,10 +19,10 @@ class Payment implements CommandInterface
      * @param HandlerInterface $handler
      */
     public function __construct(
-        private TransferFactoryInterface $transferFactory,
-        private BuilderInterface         $requestBuilder,
-        private ClientInterface          $client,
-        private HandlerInterface         $handler
+        private readonly TransferFactoryInterface $transferFactory,
+        private readonly BuilderInterface $requestBuilder,
+        private readonly ClientInterface $client,
+        private readonly HandlerInterface $handler
     ) {
     }
 
