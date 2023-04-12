@@ -19,6 +19,7 @@ use Paytrail\PaymentService\Helper\Data as CheckoutHelper;
 use Paytrail\PaymentService\Logger\PaytrailLogger;
 use Paytrail\PaymentService\Model\Adapter\Adapter;
 use Paytrail\PaymentService\Model\Company\CompanyRequestData;
+use Paytrail\PaymentService\Model\Invoice\InvoiceActivation;
 use Paytrail\PaymentService\Model\Payment\DiscountSplitter;
 use Paytrail\SDK\Model\Address;
 use Paytrail\SDK\Model\CallbackUrl;
@@ -111,13 +112,18 @@ class ApiData
     private CompanyRequestData $companyRequestData;
 
     /**
+     * @var InvoiceActivation
+     */
+    private InvoiceActivation $invoiceActivate;
+
+    /**
+     * @param LoggerInterface $log
      * @param UrlInterface $urlBuilder
      * @param RequestInterface $request
      * @param Json $json
      * @param CountryInformationAcquirerInterface $countryInformationAcquirer
      * @param TaxHelper $taxHelper
      * @param Data $helper
-     * @param Config $resourceConfig
      * @param StoreManagerInterface $storeManager
      * @param Adapter $paytrailAdapter
      * @param PaymentRequest $paymentRequest
@@ -125,6 +131,8 @@ class ApiData
      * @param EmailRefundRequest $emailRefundRequest
      * @param DiscountSplitter $discountSplitter
      * @param TaxItem $taxItem
+     * @param CompanyRequestData $companyRequestData
+     * @param InvoiceActivation $invoiceActivate
      */
     public function __construct(
         LoggerInterface                     $log,
@@ -134,7 +142,6 @@ class ApiData
         CountryInformationAcquirerInterface $countryInformationAcquirer,
         TaxHelper                           $taxHelper,
         CheckoutHelper                      $helper,
-        Config                              $resourceConfig,
         StoreManagerInterface               $storeManager,
         Adapter                             $paytrailAdapter,
         PaymentRequest                      $paymentRequest,
@@ -142,9 +149,9 @@ class ApiData
         EmailRefundRequest                  $emailRefundRequest,
         DiscountSplitter                    $discountSplitter,
         TaxItem                             $taxItem,
-        CompanyRequestData                  $companyRequestData
-    )
-    {
+        CompanyRequestData                  $companyRequestData,
+        InvoiceActivation $invoiceActivate
+    ) {
         $this->log = $log;
         $this->urlBuilder = $urlBuilder;
         $this->request = $request;
@@ -160,6 +167,7 @@ class ApiData
         $this->discountSplitter = $discountSplitter;
         $this->taxItems = $taxItem;
         $this->companyRequestData = $companyRequestData;
+        $this->invoiceActivate = $invoiceActivate;
     }
 
     /**
@@ -177,8 +185,7 @@ class ApiData
         $order = null,
         $amount = null,
         $transactionId = null
-    )
-    {
+    ) {
         $response["data"] = null;
         $response["error"] = null;
 
@@ -253,6 +260,12 @@ class ApiData
                     'response',
                     'Successful response for payment providers.'
                 );
+            } elseif ($requestType === 'invoice_activation') {
+                $response["data"] = $paytrailClient->activateInvoice($transactionId);
+                $this->log->debugLog(
+                    'response',
+                    'Successful response for invoice activation'
+                );
             }
         } catch (RequestException $e) {
             $this->log->error(\sprintf(
@@ -281,6 +294,8 @@ class ApiData
     }
 
     /**
+     * Hydrate Payment request with data.
+     *
      * @param PaymentRequest $paytrailPayment
      * @param Order $order
      * @return mixed
@@ -291,34 +306,26 @@ class ApiData
         $billingAddress = $order->getBillingAddress() ?? $order->getShippingAddress();
         $shippingAddress = $order->getShippingAddress();
 
-        $paytrailPayment->setStamp(hash('sha256', time() . $order->getIncrementId()));
-
-        $reference = $this->helper->getReference($order);
-
-        $paytrailPayment->setReference($reference);
-
-        $paytrailPayment->setCurrency($order->getOrderCurrencyCode())->setAmount(round($order->getGrandTotal() * 100));
-
-        $customer = $this->createCustomer($billingAddress);
-        $paytrailPayment->setCustomer($customer);
-
-        $invoicingAddress = $this->createAddress($order, $billingAddress);
-        $paytrailPayment->setInvoicingAddress($invoicingAddress);
+        $paytrailPayment->setStamp(hash('sha256', time() . $order->getIncrementId()))
+            ->setReference($this->helper->getReference($order))
+            ->setCurrency($order->getOrderCurrencyCode())
+            ->setAmount(round($order->getGrandTotal() * 100))
+            ->setCustomer($this->createCustomer($billingAddress))
+            ->setInvoicingAddress($this->createAddress($billingAddress))
+            ->setLanguage($this->helper->getStoreLocaleForPaymentProvider())
+            ->setItems($this->getOrderItemLines($order))
+            ->setRedirectUrls($this->createRedirectUrl())
+            ->setCallbackUrls($this->createCallbackUrl());
 
         if ($shippingAddress !== null) {
-            $deliveryAddress = $this->createAddress($order, $shippingAddress);
-            $paytrailPayment->setDeliveryAddress($deliveryAddress);
+            $paytrailPayment->setDeliveryAddress($this->createAddress($shippingAddress));
         }
 
-        $paytrailPayment->setLanguage($this->helper->getStoreLocaleForPaymentProvider());
-
-        $items = $this->getOrderItemLines($order);
-
-        $paytrailPayment->setItems($items);
-
-        $paytrailPayment->setRedirectUrls($this->createRedirectUrl());
-
-        $paytrailPayment->setCallbackUrls($this->createCallbackUrl());
+        // Conditionally set manual invoicing flag if selected payment method supports it.
+        $this->invoiceActivate->setManualInvoiceActivationFlag(
+            $paytrailPayment,
+            $this->request->getParam('preselected_payment_method_id')
+        );
 
         // Log payment data
         $this->log->debugLog('request', $paytrailPayment);
@@ -382,7 +389,7 @@ class ApiData
      * @return Address
      * @throws NoSuchEntityException
      */
-    protected function createAddress($order, $address)
+    protected function createAddress($address)
     {
         $paytrailAddress = new Address();
 
@@ -559,7 +566,7 @@ class ApiData
             }
 
             // When in grouped or bundle product price is dynamic (product_calculations = 0)
-            // then also the child products has prices so we set
+            // then also the child products has prices, so we set
             if ($item->getChildrenItems() && !$item->getProductOptions()['product_calculations']) {
                 $items[] = [
                     'title' => $item->getName(),
