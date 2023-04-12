@@ -66,6 +66,7 @@
         <item name="initialize" xsi:type="string">Paytrail\PaymentService\Gateway\Command\Initialize</item>
         <item name="refund" xsi:type="string">PaytrailRefundCommand</item>
         <item name="payment" xsi:type="string">Paytrail\PaymentService\Gateway\Command\Payment</item>
+        <item name="method_provider" xsi:type="string">Paytrail\PaymentService\Gateway\Command\MethodProvider</item>
       </argument>
     </arguments>
   </virtualType>
@@ -97,6 +98,35 @@
       <argument name="builders" xsi:type="array">
         <item name="paymentBuilder" xsi:type="string">Paytrail\PaymentService\Gateway\Request\PaymentDataBuilder</item>
       </argument>
+    </arguments>
+  </type>
+
+  <virtualType name="PaytrailCommandManager" type="Magento\Payment\Gateway\Command\CommandManager">
+    <arguments>
+      <argument name="commandPool" xsi:type="object">PaytrailCommandPool</argument>
+    </arguments>
+  </virtualType>
+
+  <type name="Paytrail\PaymentService\Gateway\Command\MethodProvider">
+    <arguments>
+      <argument name="requestBuilder" xsi:type="object">PaytrailPaymentMethodProviderRequest</argument>
+      <argument name="transferFactory" xsi:type="object">Paytrail\PaymentService\Gateway\Http\TransferFactory</argument>
+      <argument name="client" xsi:type="object">Paytrail\PaymentService\Gateway\Http\Client\PaymentMethodProvider</argument>
+      <argument name="handler" xsi:type="object">Paytrail\PaymentService\Gateway\Response\PaymentMethodProviderHandler</argument>
+    </arguments>
+  </type>
+
+  <virtualType name="PaytrailPaymentMethodProviderRequest" type="Magento\Payment\Gateway\Request\BuilderComposite">
+    <arguments>
+      <argument name="builders" xsi:type="array">
+        <item name="paymentBuilder" xsi:type="string">Paytrail\PaymentService\Gateway\Request\PaymentMethodProviderDataBuilder</item>
+      </argument>
+    </arguments>
+  </virtualType>
+
+  <virtualType name="PaytrailConfigProvider" type="Paytrail\PaymentService\Model\ConfigProvider">
+    <arguments>
+      <argument name="commandManager" xsi:type="object">PaytrailPaymentMethodProviderCommandManager</argument>
     </arguments>
   </virtualType>
 
