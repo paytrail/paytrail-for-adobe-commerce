@@ -21,6 +21,8 @@ class UrlDataProvider
     }
 
     /**
+     * CreateRedirectUrl function
+     *
      * @return CallbackUrl
      */
     public function createRedirectUrl()
@@ -34,6 +36,8 @@ class UrlDataProvider
     }
 
     /**
+     * CreateCallbackUrl function
+     *
      * @return CallbackUrl
      */
     public function createCallbackUrl()
@@ -47,7 +51,9 @@ class UrlDataProvider
     }
 
     /**
-     * @param $param
+     * GetCallbackUrl function
+     *
+     * @param string $param
      * @return string
      */
     protected function getCallbackUrl($param)
