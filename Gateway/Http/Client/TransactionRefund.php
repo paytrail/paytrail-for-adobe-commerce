@@ -19,8 +19,6 @@ class TransactionRefund implements ClientInterface
      * @param \Paytrail\PaymentService\Logger\PaytrailLogger               $log
      * @param \Magento\Payment\Gateway\Command\CommandManagerPoolInterface $commandManagerPool
      * @param \Paytrail\PaymentService\Model\Adapter\Adapter               $paytrailAdapter
-     * @param \Paytrail\SDK\Request\RefundRequest                          $refundRequest
-     * @param \Paytrail\PaymentService\Model\RefundCallback                $refundCallback
      */
     public function __construct(
         private readonly PaytrailLogger $log,
@@ -99,7 +97,7 @@ class TransactionRefund implements ClientInterface
                     isset($order) ? 'With order id: ' . $order->getId() : ''
                 )
             );
-            
+
             $response = $paytrailClient->refund($refundRequest, $transactionId);
 
             $this->log->debugLog(
@@ -132,5 +130,5 @@ class TransactionRefund implements ClientInterface
         return $response;
     }
 
-   
+
 }
