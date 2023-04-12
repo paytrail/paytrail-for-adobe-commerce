@@ -129,6 +129,4 @@ class TransactionRefund implements ClientInterface
 
         return $response;
     }
-
-
 }
