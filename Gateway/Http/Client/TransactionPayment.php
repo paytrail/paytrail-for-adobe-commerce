@@ -5,9 +5,11 @@ namespace Paytrail\PaymentService\Gateway\Http\Client;
 use GuzzleHttp\Exception\RequestException;
 use Magento\Framework\Serialize\Serializer\Json;
 use Magento\Payment\Gateway\Http\ClientInterface;
+use Magento\Sales\Model\Order;
 use Paytrail\PaymentService\Logger\PaytrailLogger;
 use Paytrail\PaymentService\Model\Adapter\Adapter;
 use Magento\Payment\Gateway\Http\TransferInterface;
+use Paytrail\SDK\Request\PaymentRequest;
 
 class TransactionPayment implements ClientInterface
 {
@@ -55,8 +57,8 @@ class TransactionPayment implements ClientInterface
     /**
      * Payment function
      *
-     * @param $paytrailPayment
-     * @param $order
+     * @param PaymentRequest $paytrailPayment
+     * @param Order $order
      * @return array
      */
     public function payment($paytrailPayment, $order): array

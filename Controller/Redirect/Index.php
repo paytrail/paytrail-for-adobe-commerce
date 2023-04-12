@@ -133,7 +133,7 @@ class Index implements ActionInterface
      * GetFormFields function
      *
      * @param PaymentResponse $responseData
-     * @param $paymentMethodId
+     * @param string $paymentMethodId
      * @return array
      */
     protected function getFormFields($responseData, $paymentMethodId = null): array
@@ -156,7 +156,7 @@ class Index implements ActionInterface
      * GetFormAction function
      *
      * @param PaymentResponse $responseData
-     * @param $paymentMethodId
+     * @param string $paymentMethodId
      * @return string
      */
     protected function getFormAction($responseData, $paymentMethodId = null): string
@@ -176,7 +176,7 @@ class Index implements ActionInterface
     /**
      * GetResponseData function
      *
-     * @param $order
+     * @param \Magento\Sales\Model\Order $order
      * @return mixed
      * @throws CheckoutException
      * @throws \Magento\Framework\Exception\NotFoundException

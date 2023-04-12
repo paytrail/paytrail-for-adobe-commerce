@@ -5,6 +5,7 @@ namespace Paytrail\PaymentService\Model\Payment;
 use Magento\Directory\Api\CountryInformationAcquirerInterface;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Exception\NoSuchEntityException;
+use Magento\Sales\Api\Data\OrderAddressInterface;
 use Magento\Sales\Model\Order;
 use Magento\Sales\Model\Order\Item as OrderItem;
 use Magento\Sales\Model\ResourceModel\Order\Tax\Item as TaxItem;
@@ -48,7 +49,7 @@ class PaymentDataProvider
      * SetPaymentRequestData function
      *
      * @param PaymentRequest $paytrailPayment
-     * @param $order
+     * @param Order $order
      * @return PaymentRequest
      * @throws NoSuchEntityException
      */
@@ -95,7 +96,7 @@ class PaymentDataProvider
     /**
      * CreateCustomer function
      *
-     * @param \Magento\Sales\Api\Data\OrderAddressInterface $billingAddress
+     * @param OrderAddressInterface $billingAddress
      * @return Customer
      */
     protected function createCustomer($billingAddress)
@@ -115,7 +116,7 @@ class PaymentDataProvider
     /**
      * CreateAddress function
      *
-     * @param $address
+     * @param Order\Address $address
      * @return Address
      * @throws NoSuchEntityException
      * @throws \Paytrail\SDK\Exception\ValidationException
@@ -149,7 +150,7 @@ class PaymentDataProvider
     /**
      * GetOrderItemLines function
      *
-     * @param $order
+     * @param Order $order
      * @return array|Item[]
      * @throws LocalizedException
      */
@@ -199,7 +200,7 @@ class PaymentDataProvider
     /**
      * CreateOrderItems function
      *
-     * @param $item
+     * @param array $item
      * @return Item
      */
     protected function createOrderItems($item): Item
@@ -219,7 +220,7 @@ class PaymentDataProvider
     /**
      * ItemArgs function
      *
-     * @param $order
+     * @param Order $order
      * @return array
      * @throws LocalizedException
      */
