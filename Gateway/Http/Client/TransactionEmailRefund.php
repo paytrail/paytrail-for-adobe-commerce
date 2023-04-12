@@ -112,7 +112,7 @@ class TransactionEmailRefund implements ClientInterface
     }
 
     /**
-     * CreateRefundCallback function
+     * SetEmailRefundRequestData function
      *
      * @param EmailRefundRequest    $paytrailEmailRefund
      * @param float                 $amount
