@@ -3,87 +3,27 @@
 namespace Paytrail\PaymentService\Controller\Redirect;
 
 use Magento\Checkout\Model\Session;
-use Magento\Framework\App\Action\Context;
 use Magento\Framework\App\ActionInterface;
 use Magento\Framework\App\RequestInterface;
 use Magento\Framework\Controller\Result\Json;
-use Magento\Framework\Controller\Result\JsonFactory;
 use Magento\Framework\Controller\ResultFactory;
 use Magento\Framework\Exception\LocalizedException;
-use Magento\Framework\View\Result\PageFactory;
+use Magento\Payment\Gateway\Command\CommandManagerPoolInterface;
 use Magento\Sales\Api\OrderManagementInterface;
 use Magento\Sales\Api\OrderRepositoryInterface;
-use Magento\Sales\Model\Order;
-use Magento\Sales\Model\OrderFactory;
 use Paytrail\PaymentService\Exceptions\CheckoutException;
-use Paytrail\PaymentService\Helper\ApiData;
-use Paytrail\PaymentService\Helper\Data as paytrailHelper;
+use Paytrail\PaymentService\Helper\Data as PaytrailHelper;
 use Paytrail\PaymentService\Gateway\Config\Config;
 use Paytrail\SDK\Model\Provider;
 use Paytrail\SDK\Response\PaymentResponse;
 use Psr\Log\LoggerInterface;
 
-/**
- * Class Index
- */
 class Index implements ActionInterface
 {
-    protected $urlBuilder;
-
-    /**
-     * @var Session
-     */
-    protected $checkoutSession;
-
-    /**
-     * @var OrderFactory
-     */
-    protected $orderFactory;
-
-    /**
-     * @var OrderRepositoryInterface
-     */
-    protected $orderRepositoryInterface;
-
-    /**
-     * @var OrderManagementInterface
-     */
-    protected $orderManagementInterface;
-
-    /**
-     * @var LoggerInterface
-     */
-    protected $logger;
-
-    /**
-     * @var ApiData
-     */
-    protected $apiData;
-
-    /**
-     * @var paytrailHelper
-     */
-    protected $paytrailHelper;
-
-    /**
-     * @var Config
-     */
-    protected $gatewayConfig;
-
     /**
      * @var $errorMsg
      */
     protected $errorMsg = null;
-
-    /**
-     * @var ResultFactory
-     */
-    private $resultFactory;
-
-    /**
-     * @var RequestInterface
-     */
-    private $request;
 
     /**
      * Index constructor.
@@ -92,35 +32,28 @@ class Index implements ActionInterface
      * @param OrderRepositoryInterface $orderRepositoryInterface
      * @param OrderManagementInterface $orderManagementInterface
      * @param LoggerInterface $logger
-     * @param ApiData $apiData
-     * @param paytrailHelper $paytrailHelper
+     * @param PaytrailHelper $paytrailHelper
      * @param Config $gatewayConfig
      * @param ResultFactory $resultFactory
      * @param RequestInterface $request
+     * @param CommandManagerPoolInterface $commandManagerPool
      */
     public function __construct(
-        Session $checkoutSession,
-        \Magento\Sales\Api\OrderRepositoryInterface $orderRepositoryInterface,
-        OrderManagementInterface $orderManagementInterface,
-        LoggerInterface $logger,
-        ApiData $apiData,
-        paytrailHelper $paytrailHelper,
-        Config $gatewayConfig,
-        ResultFactory $resultFactory,
-        RequestInterface $request
+        protected Session                     $checkoutSession,
+        protected OrderRepositoryInterface    $orderRepositoryInterface,
+        protected OrderManagementInterface    $orderManagementInterface,
+        protected LoggerInterface             $logger,
+        protected paytrailHelper              $paytrailHelper,
+        protected Config                      $gatewayConfig,
+        protected ResultFactory               $resultFactory,
+        protected RequestInterface            $request,
+        protected CommandManagerPoolInterface $commandManagerPool
     ) {
-        $this->checkoutSession = $checkoutSession;
-        $this->orderRepositoryInterface = $orderRepositoryInterface;
-        $this->orderManagementInterface = $orderManagementInterface;
-        $this->logger = $logger;
-        $this->apiData = $apiData;
-        $this->paytrailHelper = $paytrailHelper;
-        $this->gatewayConfig = $gatewayConfig;
-        $this->resultFactory = $resultFactory;
-        $this->request = $request;
     }
 
     /**
+     * Execute function
+     *
      * @return mixed
      */
     public function execute()
@@ -197,11 +130,13 @@ class Index implements ActionInterface
     }
 
     /**
+     * GetFormFields function
+     *
      * @param PaymentResponse $responseData
-     * @param $paymentMethodId
+     * @param string $paymentMethodId
      * @return array
      */
-    protected function getFormFields($responseData, $paymentMethodId = null)
+    protected function getFormFields($responseData, $paymentMethodId = null): array
     {
         $formFields = [];
 
@@ -218,11 +153,13 @@ class Index implements ActionInterface
     }
 
     /**
+     * GetFormAction function
+     *
      * @param PaymentResponse $responseData
-     * @param $paymentMethodId
+     * @param string $paymentMethodId
      * @return string
      */
-    protected function getFormAction($responseData, $paymentMethodId = null)
+    protected function getFormAction($responseData, $paymentMethodId = null): string
     {
         $returnUrl = '';
 
@@ -237,20 +174,28 @@ class Index implements ActionInterface
     }
 
     /**
-     * @param Order $order
-     * @param string $methodId
-     * @return PaymentResponse
+     * GetResponseData function
+     *
+     * @param \Magento\Sales\Model\Order $order
+     * @return mixed
      * @throws CheckoutException
+     * @throws \Magento\Framework\Exception\NotFoundException
+     * @throws \Magento\Payment\Gateway\Command\CommandException
      */
     protected function getResponseData($order)
     {
-        $response = $this->apiData->processApiRequest('payment', $order);
+        $commandExecutor = $this->commandManagerPool->get('paytrail');
+        $response = $commandExecutor->executeByCode(
+            'payment',
+            null,
+            [
+                'order' => $order
+            ]
+        );
 
-        $errorMsg = $response['error'];
-
-        if (isset($errorMsg)) {
-            $this->errorMsg = ($errorMsg);
-            $this->paytrailHelper->processError($errorMsg);
+        if ($response['error']) {
+            $this->errorMsg = ($response['error']);
+            $this->paytrailHelper->processError($response['error']);
         }
 
         return $response["data"];
