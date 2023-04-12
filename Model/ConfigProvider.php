@@ -10,7 +10,7 @@ use Magento\Payment\Gateway\Command\CommandManagerPoolInterface;
 use Magento\Payment\Helper\Data as PaymentHelper;
 use Magento\Store\Model\StoreManagerInterface;
 use Paytrail\PaymentService\Gateway\Config\Config;
-use Paytrail\PaymentService\Helper\Data as paytrailHelper;
+use Paytrail\PaymentService\Helper\Data as PaytrailHelper;
 use Psr\Log\LoggerInterface;
 
 class ConfigProvider implements ConfigProviderInterface
@@ -18,6 +18,9 @@ class ConfigProvider implements ConfigProviderInterface
     public const CODE = 'paytrail';
     private const CREDITCARD_GROUP_ID = 'creditcard';
 
+    /**
+     * @var string[]
+     */
     protected $methodCodes = [
         self::CODE,
     ];
@@ -25,7 +28,7 @@ class ConfigProvider implements ConfigProviderInterface
     /**
      * ConfigProvider constructor
      *
-     * @param paytrailHelper $paytrailHelper
+     * @param PaytrailHelper $paytrailHelper
      * @param PaymentHelper $paymentHelper
      * @param Session $checkoutSession
      * @param Config $gatewayConfig
@@ -35,7 +38,7 @@ class ConfigProvider implements ConfigProviderInterface
      * @throws LocalizedException
      */
     public function __construct(
-        private paytrailHelper              $paytrailHelper,
+        private PaytrailHelper              $paytrailHelper,
         private PaymentHelper               $paymentHelper,
         private Session                     $checkoutSession,
         private Config                      $gatewayConfig,
@@ -99,7 +102,7 @@ class ConfigProvider implements ConfigProviderInterface
     /**
      * Create payment page styles from the values entered in Paytrail configuration.
      *
-     * @param $storeId
+     * @param string $storeId
      * @return string
      */
     protected function wrapPaymentMethodStyles($storeId)
@@ -137,6 +140,8 @@ class ConfigProvider implements ConfigProviderInterface
     }
 
     /**
+     * GetPaymentRedirectUrl function
+     *
      * @return string
      */
     protected function getPaymentRedirectUrl()
@@ -178,7 +183,7 @@ class ConfigProvider implements ConfigProviderInterface
     /**
      * Create array for payment providers and groups containing unique method id
      *
-     * @param $responseData
+     * @param array $responseData
      * @return array
      */
     protected function handlePaymentProviderGroupData($responseData)
@@ -204,8 +209,8 @@ class ConfigProvider implements ConfigProviderInterface
     /**
      * Add payment method data to group
      *
-     * @param $responseData
-     * @param $groupId
+     * @param array $responseData
+     * @param string $groupId
      * @return array
      */
     protected function addProviderDataToGroup($responseData, $groupId)
@@ -214,7 +219,7 @@ class ConfigProvider implements ConfigProviderInterface
 
         foreach ($responseData as $key => $method) {
             if ($method->getGroup() == $groupId) {
-                $id = $groupId === self::CREDITCARD_GROUP_ID ? $method->getId() . '-' . $i++ : $method->getId();
+                $id = $groupId === self::CREDITCARD_GROUP_ID ? $method->getId() . '-' . ($i++) : $method->getId();
                 $methods[] = [
                     'checkoutId' => $method->getId(),
                     'id' => $id,
