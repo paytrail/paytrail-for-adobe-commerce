@@ -6,10 +6,10 @@ use Magento\Framework\Message\ManagerInterface;
 use Magento\Payment\Gateway\Helper\SubjectReader;
 use Magento\Payment\Gateway\Response\HandlerInterface;
 
-class RefundHandler implements HandlerInterface
+class EmailRefundHandler implements HandlerInterface
 {
     /**
-     * RefundHandler constructor.
+     * EmailRefundHandler constructor.
      *
      * @param ManagerInterface $messageManager
      * @param SubjectReader    $subjectReader
@@ -25,8 +25,10 @@ class RefundHandler implements HandlerInterface
      *
      * @param array $handlingSubject
      * @param array $response
+     *
+     * @return array
      */
-    public function handle(array $handlingSubject, array $response): void
+    public function handle(array $handlingSubject, array $response): array
     {
         $payment = $this->subjectReader->readPayment($handlingSubject);
 
@@ -36,6 +38,8 @@ class RefundHandler implements HandlerInterface
         $payment->setTransactionId($transactionId);
         $payment->setShouldCloseParentTransaction(false);
 
-        $this->messageManager->addSuccessMessage(__('Paytrail refund successful.'));
+        $this->messageManager->addSuccessMessage(__('Paytrail Email Refund message successfully sent.'));
+
+        return $response;
     }
 }

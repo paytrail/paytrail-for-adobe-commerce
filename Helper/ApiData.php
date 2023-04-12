@@ -343,20 +343,7 @@ class ApiData
         $paytrailRefund->setCallbackUrls($callback);
     }
 
-    /**
-     * @param EmailRefundRequest $paytrailEmailRefund
-     * @param $amount
-     * @param $order
-     */
-    protected function setEmailRefundRequestData($paytrailEmailRefund, $amount, $order)
-    {
-        $paytrailEmailRefund->setEmail($order->getBillingAddress()->getEmail());
-
-        $paytrailEmailRefund->setAmount(round($amount * 100));
-
-        $callback = $this->createRefundCallback();
-        $paytrailEmailRefund->setCallbackUrls($callback);
-    }
+   
 
     /**
      * @param \Magento\Sales\Api\Data\OrderAddressInterface $billingAddress
