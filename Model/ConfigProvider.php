@@ -6,100 +6,54 @@ use Magento\Checkout\Model\ConfigProviderInterface;
 use Magento\Checkout\Model\Session;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Exception\NoSuchEntityException;
-use Magento\Framework\Locale\Resolver;
-use Magento\Framework\View\Asset\Repository as AssetRepository;
+use Magento\Payment\Gateway\Command\CommandManagerPoolInterface;
 use Magento\Payment\Helper\Data as PaymentHelper;
 use Magento\Store\Model\StoreManagerInterface;
 use Paytrail\PaymentService\Gateway\Config\Config;
-use Paytrail\PaymentService\Helper\ApiData as apiData;
-use Paytrail\PaymentService\Helper\Data as paytrailHelper;
-use Paytrail\PaymentService\Model\Adapter\Adapter;
+use Paytrail\PaymentService\Helper\Data as PaytrailHelper;
 use Psr\Log\LoggerInterface;
 
-/**
- * Class ConfigProvider
- */
 class ConfigProvider implements ConfigProviderInterface
 {
-    const CODE = 'paytrail';
-    const CREDITCARD_GROUP_ID = 'creditcard';
+    public const CODE = 'paytrail';
+    private const CREDITCARD_GROUP_ID = 'creditcard';
 
+    /**
+     * @var string[]
+     */
     protected $methodCodes = [
         self::CODE,
     ];
-    protected $paytrailHelper;
-    protected $apidata;
-    /**
-     * @var Session
-     */
-    protected $checkoutSession;
-    /**
-     * @var Config
-     */
-    private $gatewayConfig;
-    /**
-     * @var AssetRepository
-     */
-    private $assetRepository;
-    /**
-     * @var StoreManagerInterface
-     */
-    private $storeManager;
-    /**
-     * @var Resolver
-     */
-    private $localeResolver;
-    /**
-     * @var Adapter
-     */
-    private $paytrailAdapter;
-    /**
-     * @var LoggerInterface
-     */
-    private $log;
 
     /**
      * ConfigProvider constructor
      *
-     * @param paytrailHelper $paytrailHelper
-     * @param apiData $apidata
+     * @param PaytrailHelper $paytrailHelper
      * @param PaymentHelper $paymentHelper
      * @param Session $checkoutSession
      * @param Config $gatewayConfig
-     * @param AssetRepository $assetRepository
      * @param StoreManagerInterface $storeManager
-     * @param Resolver $localeResolver
-     * @param Adapter $paytrailAdapter
+     * @param CommandManagerPoolInterface $commandManagerPool
      * @param LoggerInterface $log
      * @throws LocalizedException
      */
     public function __construct(
-        paytrailHelper $paytrailHelper,
-        apiData $apidata,
-        PaymentHelper $paymentHelper,
-        Session $checkoutSession,
-        Config $gatewayConfig,
-        AssetRepository $assetRepository,
-        StoreManagerInterface $storeManager,
-        Resolver $localeResolver,
-        Adapter $paytrailAdapter,
-        LoggerInterface $log
+        private PaytrailHelper              $paytrailHelper,
+        private PaymentHelper               $paymentHelper,
+        private Session                     $checkoutSession,
+        private Config                      $gatewayConfig,
+        private StoreManagerInterface       $storeManager,
+        private CommandManagerPoolInterface $commandManagerPool,
+        private LoggerInterface             $log
     ) {
-        $this->paytrailHelper = $paytrailHelper;
-        $this->apidata = $apidata;
-        $this->checkoutSession = $checkoutSession;
-        $this->gatewayConfig = $gatewayConfig;
-        $this->assetRepository = $assetRepository;
-        $this->storeManager = $storeManager;
-        $this->localeResolver = $localeResolver;
-        $this->paytrailAdapter = $paytrailAdapter;
-        $this->log = $log;
         foreach ($this->methodCodes as $code) {
             $this->methods[$code] = $paymentHelper->getMethodInstance($code);
         }
     }
 
     /**
+     * GetConfig function
+     *
      * @return array
      * @throws NoSuchEntityException
      */
@@ -148,25 +102,46 @@ class ConfigProvider implements ConfigProviderInterface
     /**
      * Create payment page styles from the values entered in Paytrail configuration.
      *
-     * @param $storeId
+     * @param string $storeId
      * @return string
      */
     protected function wrapPaymentMethodStyles($storeId)
     {
-        $styles = '.paytrail-group-collapsible{ background-color:' . $this->gatewayConfig->getPaymentGroupBgColor($storeId) . '; margin-top:1%; margin-bottom:2%;}';
-        $styles .= '.paytrail-group-collapsible.active{ background-color:' . $this->gatewayConfig->getPaymentGroupHighlightBgColor($storeId) . ';}';
-        $styles .= '.paytrail-group-collapsible span{ color:' . $this->gatewayConfig->getPaymentGroupTextColor($storeId) . ';}';
-        $styles .= '.paytrail-group-collapsible li{ color:' . $this->gatewayConfig->getPaymentGroupTextColor($storeId) . '}';
-        $styles .= '.paytrail-group-collapsible.active span{ color:' . $this->gatewayConfig->getPaymentGroupHighlightTextColor($storeId) . ';}';
-        $styles .= '.paytrail-group-collapsible.active li{ color:' . $this->gatewayConfig->getPaymentGroupHighlightTextColor($storeId) . '}';
-        $styles .= '.paytrail-group-collapsible:hover:not(.active) {background-color:' . $this->gatewayConfig->getPaymentGroupHoverColor() . '}';
-        $styles .= '.paytrail-payment-methods .paytrail-payment-method.active{ border-color:' . $this->gatewayConfig->getPaymentMethodHighlightColor($storeId) . ';border-width:2px;}';
-        $styles .= '.paytrail-payment-methods .paytrail-payment-method:hover, .paytrail-payment-methods .paytrail-payment-method:not(.active):hover { border-color:' . $this->gatewayConfig->getPaymentMethodHoverHighlight($storeId) . ';}';
+        $styles = '.paytrail-group-collapsible{ background-color:' .
+            $this->gatewayConfig->getPaymentGroupBgColor($storeId) .
+            '; margin-top:1%; margin-bottom:2%;}';
+        $styles .= '.paytrail-group-collapsible.active{ background-color:' .
+            $this->gatewayConfig->getPaymentGroupHighlightBgColor($storeId) .
+            ';}';
+        $styles .= '.paytrail-group-collapsible span{ color:' .
+            $this->gatewayConfig->getPaymentGroupTextColor($storeId) .
+            ';}';
+        $styles .= '.paytrail-group-collapsible li{ color:' .
+            $this->gatewayConfig->getPaymentGroupTextColor($storeId) .
+            '}';
+        $styles .= '.paytrail-group-collapsible.active span{ color:' .
+            $this->gatewayConfig->getPaymentGroupHighlightTextColor($storeId) .
+            ';}';
+        $styles .= '.paytrail-group-collapsible.active li{ color:' .
+            $this->gatewayConfig->getPaymentGroupHighlightTextColor($storeId) .
+            '}';
+        $styles .= '.paytrail-group-collapsible:hover:not(.active) {background-color:' .
+            $this->gatewayConfig->getPaymentGroupHoverColor() .
+            '}';
+        $styles .= '.paytrail-payment-methods .paytrail-payment-method.active{ border-color:' .
+            $this->gatewayConfig->getPaymentMethodHighlightColor($storeId) .
+            ';border-width:2px;}';
+        $styles .= '.paytrail-payment-methods .paytrail-payment-method:hover, 
+            .paytrail-payment-methods .paytrail-payment-method:not(.active):hover { border-color:' .
+            $this->gatewayConfig->getPaymentMethodHoverHighlight($storeId) .
+            ';}';
         $styles .= $this->gatewayConfig->getAdditionalCss($storeId);
         return $styles;
     }
 
     /**
+     * GetPaymentRedirectUrl function
+     *
      * @return string
      */
     protected function getPaymentRedirectUrl()
@@ -185,17 +160,18 @@ class ConfigProvider implements ConfigProviderInterface
     {
         $orderValue = $this->checkoutSession->getQuote()->getGrandTotal();
 
-        $response = $this->apidata->processApiRequest(
-            'payment_providers',
+        $commandExecutor = $this->commandManagerPool->get('paytrail');
+        $response = $commandExecutor->executeByCode(
+            'method_provider',
             null,
-            round($orderValue * 100)
+            ['amount' => $orderValue]
         );
 
         $errorMsg = $response['error'];
 
         if (isset($errorMsg)) {
             $this->log->error(
-                'Error occurred during email refund: '
+                'Error occurred during providing payment methods: '
                 . $errorMsg
             );
             $this->paytrailHelper->processError($errorMsg);
@@ -207,7 +183,7 @@ class ConfigProvider implements ConfigProviderInterface
     /**
      * Create array for payment providers and groups containing unique method id
      *
-     * @param $responseData
+     * @param array $responseData
      * @return array
      */
     protected function handlePaymentProviderGroupData($responseData)
@@ -233,8 +209,8 @@ class ConfigProvider implements ConfigProviderInterface
     /**
      * Add payment method data to group
      *
-     * @param $responseData
-     * @param $groupId
+     * @param array $responseData
+     * @param string $groupId
      * @return array
      */
     protected function addProviderDataToGroup($responseData, $groupId)
@@ -243,7 +219,7 @@ class ConfigProvider implements ConfigProviderInterface
 
         foreach ($responseData as $key => $method) {
             if ($method->getGroup() == $groupId) {
-                $id = $groupId === self::CREDITCARD_GROUP_ID ? $method->getId() . '-' . $i++ : $method->getId();
+                $id = $groupId === self::CREDITCARD_GROUP_ID ? $method->getId() . '-' . ($i++) : $method->getId();
                 $methods[] = [
                     'checkoutId' => $method->getId(),
                     'id' => $id,
