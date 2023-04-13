@@ -68,7 +68,6 @@
 
         <constraint xsi:type="unique" referenceId="PAYTRAIL_SUBSCRIPTION_LINK_ORDER_ID_SUBSCRIPTION_ID">
             <column name="order_id"/>
-            <column name="subscription_id"/>
         </constraint>
     </table>
 </schema>
