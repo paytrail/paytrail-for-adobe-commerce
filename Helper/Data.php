@@ -16,30 +16,22 @@ use Paytrail\PaymentService\Logger\PaytrailLogger;
  */
 class Data
 {
-    const LOGO = 'payment/paytrail/logo';
+    public const LOGO = 'payment/paytrail/logo';
+    
+    private Resolver $localeResolver;
+    
+    private TaxHelper $taxHelper;
+    
+    private Config $gatewayConfig;
+    
+    private PaytrailLogger $paytrailLogger;
 
     /**
-     * @var Resolver
-     */
-    private $localeResolver;
-    /**
-     * @var TaxHelper
-     */
-    private $taxHelper;
-    /**
-     * @var Config
-     */
-    private $gatewayConfig;
-
-    /** @var PaytrailLogger */
-    private $paytrailLogger;
-
-    /**
-     * @param Context $context
-     * @param Resolver $localeResolver
-     * @param TaxHelper $taxHelper
+     * @param Context        $context
+     * @param Resolver       $localeResolver
+     * @param TaxHelper      $taxHelper
      * @param PaytrailLogger $paytrailLogger
-     * @param Config $gatewayConfig
+     * @param Config         $gatewayConfig
      */
     public function __construct(
         Resolver $localeResolver,
@@ -48,9 +40,9 @@ class Data
         Config $gatewayConfig
     ) {
         $this->localeResolver = $localeResolver;
-        $this->taxHelper = $taxHelper;
+        $this->taxHelper      = $taxHelper;
         $this->paytrailLogger = $paytrailLogger;
-        $this->gatewayConfig = $gatewayConfig;
+        $this->gatewayConfig  = $gatewayConfig;
     }
 
     /**
@@ -73,33 +65,43 @@ class Data
         if ($this->localeResolver->getLocale() === 'sv_SE') {
             $locale = 'SV';
         }
+
         return $locale;
     }
 
     /**
      * Calculate Finnish reference number from order increment id
+     * according to Finnish reference number algorithm
+     * if increment id is not numeric - letters will be converted to numbers -> (ord($letter) % 10)
+     *
      * @param string $incrementId
+     *
      * @return string
      */
-    public function calculateOrderReferenceNumber($incrementId)
+    public function calculateOrderReferenceNumber(string $incrementId): string
     {
-        $prefixedId = '1' . $incrementId;
-
-        $sum = 0;
-        $length = strlen($prefixedId);
+        $prefixedId    = '1' . $incrementId;
+        $newPrefixedId = '';
+        $sum           = 0;
+        $length        = strlen($prefixedId);
 
         for ($i = 0; $i < $length; ++$i) {
-            $sum += substr($prefixedId, -1 - $i, 1) * [7, 3, 1][$i % 3];
+            $substr        = substr($prefixedId, -1 - $i, 1);
+            $numSubstring  = is_numeric($substr) ? (int)$substr : (ord($substr) % 10);
+            $newPrefixedId = $numSubstring . $newPrefixedId;
+            $sum           += $numSubstring * [7, 3, 1][$i % 3];
         }
-        $num = (10 - $sum % 10) % 10;
-        $referenceNum = $prefixedId . $num;
+        $num          = (10 - $sum % 10) % 10;
+        $referenceNum = $newPrefixedId . $num;
 
-        return trim(chunk_split($referenceNum, 5, ' '));
+        return $referenceNum;
     }
 
     /**
      * Get order increment id from checkout reference number
+     *
      * @param string $reference
+     *
      * @return string|null
      */
     public function getIdFromOrderReferenceNumber($reference)
@@ -110,17 +112,17 @@ class Data
     /**
      * @param string $logType
      * @param string $level
-     * @param mixed $data
+     * @param mixed  $data
      *
      * @deprecated implementation replaced by dedicated logger class
-     * @see \Paytrail\PaymentService\Logger\PaytrailLogger::logData
+     * @see        \Paytrail\PaymentService\Logger\PaytrailLogger::logData
      */
     public function logCheckoutData($logType, $level, $data)
     {
         if (
             $level !== 'error' &&
             (($logType === 'request' && $this->gatewayConfig->getRequestLog() == false)
-            || ($logType === 'response' && $this->gatewayConfig->getResponseLog() == false))
+                || ($logType === 'response' && $this->gatewayConfig->getResponseLog() == false))
         ) {
             return;
         }
@@ -131,6 +133,7 @@ class Data
 
     /**
      * @param $errorMessage
+     *
      * @throws CheckoutException
      */
     public function processError($errorMessage)
@@ -149,6 +152,7 @@ class Data
 
     /**
      * @param Order $order
+     *
      * @return string reference number
      */
     public function getReference($order)
