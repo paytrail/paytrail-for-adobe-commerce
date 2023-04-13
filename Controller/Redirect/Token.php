@@ -2,11 +2,16 @@
 
 namespace Paytrail\PaymentService\Controller\Redirect;
 
+use Magento\Customer\Model\Customer;
 use Magento\Customer\Model\Session as CustomerSession;
 use Magento\Framework\App\Action\HttpPostActionInterface;
 use Magento\Framework\App\RequestInterface;
 use Magento\Checkout\Model\Session;
+use Magento\Framework\App\ResponseInterface;
+use Magento\Framework\Controller\Result\Json;
 use Magento\Framework\Controller\Result\JsonFactory;
+use Magento\Framework\Controller\ResultInterface;
+use Magento\Framework\Exception\CouldNotSaveException;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Quote\Model\QuoteRepository;
 use Magento\Sales\Api\OrderManagementInterface;
@@ -152,10 +157,10 @@ class Token implements HttpPostActionInterface
     /**
      * Execute function
      *
-     * @return \Magento\Framework\App\ResponseInterface|\Magento\Framework\Controller\Result\Json|\Magento\Framework\Controller\ResultInterface
+     * @return ResponseInterface|Json|ResultInterface
      * @throws CheckoutException
      * @throws LocalizedException
-     * @throws \Magento\Framework\Exception\CouldNotSaveException
+     * @throws CouldNotSaveException
      */
     public function execute() // there is also other call which changes order status
     {
@@ -259,7 +264,7 @@ class Token implements HttpPostActionInterface
      *
      * @param Order $order
      * @param string $tokenId
-     * @param \Magento\Customer\Model\Customer $customer
+     * @param Customer $customer
      * @return mixed
      * @throws CheckoutException
      */
