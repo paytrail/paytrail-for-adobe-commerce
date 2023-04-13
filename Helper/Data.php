@@ -17,13 +17,13 @@ use Paytrail\PaymentService\Logger\PaytrailLogger;
 class Data
 {
     public const LOGO = 'payment/paytrail/logo';
-    
+
     private Resolver $localeResolver;
-    
+
     private TaxHelper $taxHelper;
-    
+
     private Config $gatewayConfig;
-    
+
     private PaytrailLogger $paytrailLogger;
 
     /**
@@ -81,7 +81,9 @@ class Data
      */
     public function calculateOrderReferenceNumber(string $incrementId): string
     {
-        $prefixedId    = '1' . $incrementId;
+        $prefixedId    = ($incrementId[0] == 0 || !is_numeric($incrementId[0]))
+            ? '1' . $incrementId
+            : $incrementId;
         $newPrefixedId = '';
         $sum           = 0;
         $length        = strlen($prefixedId);
@@ -94,7 +96,7 @@ class Data
         }
         $num          = (10 - $sum % 10) % 10;
         $referenceNum = $newPrefixedId . $num;
-        
+
         if ($referenceNum > 9999999999999999999) {
             throw new CheckoutException('Order reference number is too long');
         }
