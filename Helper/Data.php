@@ -77,6 +77,7 @@ class Data
      * @param string $incrementId
      *
      * @return string
+     * @throws \Paytrail\PaymentService\Exceptions\CheckoutException
      */
     public function calculateOrderReferenceNumber(string $incrementId): string
     {
@@ -93,8 +94,12 @@ class Data
         }
         $num          = (10 - $sum % 10) % 10;
         $referenceNum = $newPrefixedId . $num;
+        
+        if ($referenceNum > 9999999999999999999) {
+            throw new CheckoutException('Order reference number is too long');
+        }
 
-        return $referenceNum;
+        return trim(chunk_split($referenceNum, 5, ' '));
     }
 
     /**
