@@ -176,6 +176,17 @@ class Token implements HttpPostActionInterface
         $order = $order->loadByIncrementId(
             $this->checkoutSession->getLastRealOrderId()
         );
+        
+        $resultJson = $this->jsonFactory->create();
+        if ($order->getStatus() === Order::STATE_PROCESSING) {
+            $this->errorMsg = __('Payment already processed');
+            return $resultJson->setData(
+                [
+                    'success' => false,
+                    'message' => $this->errorMsg
+                ]
+            );
+        }
 
         $customer = $this->customerSession->getCustomer();
         try {
@@ -200,7 +211,6 @@ class Token implements HttpPostActionInterface
             }
 
             $this->checkoutSession->restoreQuote();
-            $resultJson = $this->jsonFactory->create();
 
             return $resultJson->setData(
                 [
