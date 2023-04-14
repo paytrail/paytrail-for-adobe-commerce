@@ -177,11 +177,6 @@ class Token implements HttpPostActionInterface
             $this->checkoutSession->getLastRealOrderId()
         );
 
-        if ($order->getStatus() === Order::STATE_PROCESSING) {
-            $this->errorMsg = __('Payment already processed');
-            throw new CheckoutException($this->errorMsg);
-        }
-
         $customer = $this->customerSession->getCustomer();
         try {
             $responseData = $this->getTokenResponseData($order, $selectedTokenId, $customer);
