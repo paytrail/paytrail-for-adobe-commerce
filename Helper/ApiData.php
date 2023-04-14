@@ -14,6 +14,7 @@ use Paytrail\PaymentService\Gateway\Config\Config as GatewayConfig;
 use Paytrail\PaymentService\Helper\Data as CheckoutHelper;
 use Paytrail\PaymentService\Logger\PaytrailLogger;
 use Paytrail\PaymentService\Model\Adapter\Adapter;
+use Paytrail\PaymentService\Model\FinnishReferenceNumber;
 use Paytrail\SDK\Model\CallbackUrl;
 use Paytrail\SDK\Request\EmailRefundRequest;
 use Paytrail\SDK\Request\PaymentRequest;
@@ -30,6 +31,11 @@ use Psr\Log\LoggerInterface;
  */
 class ApiData
 {
+    /**
+     * @var \Paytrail\PaymentService\Model\FinnishReferenceNumber
+     */
+    protected FinnishReferenceNumber $finnishReferenceNumber;
+
     /**
      * @var CheckoutHelper
      */
@@ -144,7 +150,8 @@ class ApiData
         GetTokenRequest               $getTokenRequest,
         CitPaymentRequest             $citPaymentRequest,
         PaymentStatusRequest          $paymentStatusRequest,
-        RequestData                   $requestData
+        RequestData                   $requestData,
+        FinnishReferenceNumber        $finnishReferenceNumber
     ) {
         $this->log = $log;
         $this->urlBuilder = $urlBuilder;
@@ -162,6 +169,7 @@ class ApiData
         $this->citPaymentRequest = $citPaymentRequest;
         $this->paymentStatusRequest = $paymentStatusRequest;
         $this->requestData = $requestData;
+        $this->finnishReferenceNumber = $finnishReferenceNumber;
     }
 
     /**
@@ -343,7 +351,7 @@ class ApiData
             time() . $order->getIncrementId()
         ));
 
-        $paytrailPayment->setReference($this->helper->getReference($order));
+        $paytrailPayment->setReference($this->finnishReferenceNumber->getReference($order));
         $paytrailPayment->setCurrency($order->getOrderCurrencyCode());
         $paytrailPayment->setAmount(round($order->getGrandTotal() * 100));
         $paytrailPayment->setCustomer($this->requestData->createCustomer($billingAddress));

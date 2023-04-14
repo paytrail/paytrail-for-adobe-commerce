@@ -71,4 +71,8 @@
             <column name="subscription_id"/>
         </constraint>
     </table>
+
+    <table name="sales_order">
+        <column xsi:type="varchar" name="finnish_reference_number" nullable="true" comment="Finnish Reference Number"/>
+    </table>
 </schema>

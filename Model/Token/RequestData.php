@@ -15,6 +15,7 @@ use Magento\Tax\Helper\Data as TaxHelper;
 use Magento\Vault\Api\PaymentTokenManagementInterface;
 use Paytrail\PaymentService\Gateway\Config\Config;
 use Paytrail\PaymentService\Helper\Data;
+use Paytrail\PaymentService\Model\FinnishReferenceNumber;
 use Paytrail\PaymentService\Model\Payment\DiscountSplitter;
 use Paytrail\SDK\Model\Address;
 use Paytrail\SDK\Model\CallbackUrl;
@@ -23,6 +24,11 @@ use Paytrail\SDK\Model\Item;
 
 class RequestData
 {
+    /**
+     * @var \Paytrail\PaymentService\Model\FinnishReferenceNumber
+     */
+    private FinnishReferenceNumber $finnishReferenceNumber;
+
     /**
      * @var OrderRepositoryInterface
      */
@@ -95,7 +101,8 @@ class RequestData
         UrlInterface $urlBuilder,
         RequestInterface $request,
         TaxItems $taxItems,
-        PaymentTokenManagementInterface $paymentTokenManagement
+        PaymentTokenManagementInterface $paymentTokenManagement,
+        FinnishReferenceNumber $finnishReferenceNumber
     ) {
         $this->orderRepositoryInterface = $orderRepositoryInterface;
         $this->gatewayConfig = $gatewayConfig;
@@ -107,6 +114,7 @@ class RequestData
         $this->request = $request;
         $this->taxItems = $taxItems;
         $this->paymentTokenManagement = $paymentTokenManagement;
+        $this->finnishReferenceNumber = $finnishReferenceNumber;
     }
 
     /**
@@ -124,7 +132,7 @@ class RequestData
 
         $paytrailPayment->setStamp(hash($this->gatewayConfig->getCheckoutAlgorithm(), time() . $order->getIncrementId()));
 
-        $reference = $this->helper->getReference($order);
+        $reference = $this->finnishReferenceNumber->getReference($order);
 
         $paytrailPayment->setReference($reference);
 

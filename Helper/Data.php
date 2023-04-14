@@ -2,10 +2,7 @@
 
 namespace Paytrail\PaymentService\Helper;
 
-use Magento\Framework\App\Helper\Context;
 use Magento\Framework\Locale\Resolver;
-use Magento\Sales\Model\Order;
-use Magento\Tax\Helper\Data as TaxHelper;
 use Paytrail\PaymentService\Exceptions\CheckoutException;
 use Paytrail\PaymentService\Exceptions\TransactionSuccessException;
 use Paytrail\PaymentService\Gateway\Config\Config;
@@ -13,50 +10,58 @@ use Paytrail\PaymentService\Logger\PaytrailLogger;
 
 /**
  * Class Data
+ * Helper to get data from config
  */
 class Data
 {
     public const LOGO = 'payment/paytrail/logo';
 
+    /**
+     * @var Resolver
+     */
     private Resolver $localeResolver;
 
-    private TaxHelper $taxHelper;
-
+    /**
+     * @var Config
+     */
     private Config $gatewayConfig;
 
+    /**
+     * @var PaytrailLogger
+     */
     private PaytrailLogger $paytrailLogger;
 
     /**
-     * @param Context        $context
-     * @param Resolver       $localeResolver
-     * @param TaxHelper      $taxHelper
-     * @param PaytrailLogger $paytrailLogger
-     * @param Config         $gatewayConfig
+     * @param \Magento\Framework\Locale\Resolver             $localeResolver
+     * @param \Paytrail\PaymentService\Logger\PaytrailLogger $paytrailLogger
+     * @param \Paytrail\PaymentService\Gateway\Config\Config $gatewayConfig
      */
     public function __construct(
         Resolver $localeResolver,
-        TaxHelper $taxHelper,
         PaytrailLogger $paytrailLogger,
         Config $gatewayConfig
     ) {
         $this->localeResolver = $localeResolver;
-        $this->taxHelper      = $taxHelper;
         $this->paytrailLogger = $paytrailLogger;
         $this->gatewayConfig  = $gatewayConfig;
     }
 
     /**
+     * Get valid algorithms
+     *
      * @return array
      */
-    public function getValidAlgorithms()
+    public function getValidAlgorithms(): array
     {
         return ["sha256", "sha512"];
     }
 
     /**
+     * Get Store locale for payment provider
+     * 
      * @return string
      */
-    public function getStoreLocaleForPaymentProvider()
+    public function getStoreLocaleForPaymentProvider(): string
     {
         $locale = 'EN';
         if ($this->localeResolver->getLocale() === 'fi_FI') {
@@ -117,17 +122,18 @@ class Data
     }
 
     /**
+     * Log data to file
+     *
      * @param string $logType
      * @param string $level
      * @param mixed  $data
      *
-     * @deprecated implementation replaced by dedicated logger class
-     * @see        \Paytrail\PaymentService\Logger\PaytrailLogger::logData
+     * @deprecated   implementation replaced by dedicated logger class
+     * @see          \Paytrail\PaymentService\Logger\PaytrailLogger::logData
      */
-    public function logCheckoutData($logType, $level, $data)
+    public function logCheckoutData($logType, $level, $data): void
     {
-        if (
-            $level !== 'error' &&
+        if ($level !== 'error' &&
             (($logType === 'request' && $this->gatewayConfig->getRequestLog() == false)
                 || ($logType === 'response' && $this->gatewayConfig->getResponseLog() == false))
         ) {
@@ -139,33 +145,25 @@ class Data
     }
 
     /**
-     * @param $errorMessage
+     * Process error
+     *
+     * @param string $errorMessage
      *
      * @throws CheckoutException
      */
-    public function processError($errorMessage)
+    public function processError($errorMessage): void
     {
         $this->paytrailLogger->logData(\Monolog\Logger::ERROR, $errorMessage);
         throw new CheckoutException(__($errorMessage));
     }
 
     /**
+     * Process success
+     *
      * @throws TransactionSuccessException
      */
-    public function processSuccess()
+    public function processSuccess(): void
     {
         throw new TransactionSuccessException(__('Success'));
-    }
-
-    /**
-     * @param Order $order
-     *
-     * @return string reference number
-     */
-    public function getReference($order)
-    {
-        return $this->gatewayConfig->getGenerateReferenceForOrder()
-            ? $this->calculateOrderReferenceNumber($order->getIncrementId())
-            : $order->getIncrementId();
     }
 }
