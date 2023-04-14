@@ -96,9 +96,9 @@ class FinnishReferenceNumber
         if ($referenceNum > 9999999999999999999) {
             throw new CheckoutException('Order reference number is too long');
         }
-        
+
         $asString = trim(chunk_split($referenceNum, 5, ' '));
-        
+
         $order->setFinnishReferenceNumber($asString);
         $this->orderRepository->save($order);
 
@@ -116,7 +116,7 @@ class FinnishReferenceNumber
         if ($order->getFinnishReferenceNumber()) {
             return $order->getFinnishReferenceNumber();
         }
-        
+
         if (!$this->gatewayConfig->getGenerateReferenceForOrder() && $order->getIncrementId()) {
             return $order->getIncrementId();
         }
