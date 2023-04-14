@@ -2,35 +2,30 @@
 
 namespace Paytrail\PaymentService\Controller\Redirect;
 
+use Magento\Customer\Model\Customer;
 use Magento\Customer\Model\Session as CustomerSession;
 use Magento\Framework\App\Action\HttpPostActionInterface;
 use Magento\Framework\App\RequestInterface;
 use Magento\Checkout\Model\Session;
-use Magento\Framework\App\Action\Context;
-use Magento\Framework\Controller\Result\ForwardFactory;
+use Magento\Framework\App\ResponseInterface;
+use Magento\Framework\Controller\Result\Json;
 use Magento\Framework\Controller\Result\JsonFactory;
-use Magento\Framework\Controller\Result\RedirectFactory;
+use Magento\Framework\Controller\ResultInterface;
+use Magento\Framework\Exception\CouldNotSaveException;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Quote\Model\QuoteRepository;
-use Magento\Sales\Api\Data\OrderInterface;
-use Magento\Sales\Api\Data\OrderPaymentInterface;
 use Magento\Sales\Api\OrderManagementInterface;
 use Magento\Sales\Api\OrderRepositoryInterface;
+use Magento\Sales\Model\Order;
 use Magento\Sales\Model\OrderFactory;
 use Paytrail\PaymentService\Exceptions\CheckoutException;
 use Paytrail\PaymentService\Gateway\Config\Config;
 use Paytrail\PaymentService\Gateway\Validator\ResponseValidator;
 use Paytrail\PaymentService\Helper\ApiData;
 use Paytrail\PaymentService\Helper\Data;
-use Paytrail\PaymentService\Helper\ProcessPayment;
 use Paytrail\PaymentService\Model\ReceiptDataProvider;
 use Paytrail\PaymentService\Model\Subscription\SubscriptionCreate;
-use Paytrail\SDK\Model\Provider;
-use Paytrail\SDK\Response\PaymentResponse;
 
-/**
- * Class Index
- */
 class Token implements HttpPostActionInterface
 {
     /**
@@ -54,16 +49,6 @@ class Token implements HttpPostActionInterface
     protected $quoteRepository;
 
     /**
-     * @var OrderInterface
-     */
-    private $orderInterface;
-
-    /**
-     * @var ProcessPayment
-     */
-    private $processPayment;
-
-    /**
      * @var Config
      */
     private $gatewayConfig;
@@ -77,28 +62,52 @@ class Token implements HttpPostActionInterface
      * @var Data
      */
     private $opHelper;
-    private RequestInterface $request;
-    private Context $context;
-    private OrderFactory $orderFactory;
-    private Session $checkoutSession;
-    private CustomerSession $customerSession;
-    private ApiData $apiData;
-    private JsonFactory $jsonFactory;
-    private OrderRepositoryInterface $orderRepository;
-    private OrderManagementInterface $orderManagementInterface;
-    private OrderPaymentInterface $orderPaymentInterface;
-    private ForwardFactory $forwardFactory;
-    private RedirectFactory $redirectFactory;
 
     /**
-     * Index constructor.
-     * @param Context $context
+     * @var RequestInterface
+     */
+    private RequestInterface $request;
+
+    /**
+     * @var OrderFactory
+     */
+    private OrderFactory $orderFactory;
+
+    /**
+     * @var Session
+     */
+    private Session $checkoutSession;
+
+    /**
+     * @var CustomerSession
+     */
+    private CustomerSession $customerSession;
+
+    /**
+     * @var ApiData
+     */
+    private ApiData $apiData;
+
+    /**
+     * @var JsonFactory
+     */
+    private JsonFactory $jsonFactory;
+
+    /**
+     * @var OrderRepositoryInterface
+     */
+    private OrderRepositoryInterface $orderRepository;
+
+    /**
+     * @var OrderManagementInterface
+     */
+    private OrderManagementInterface $orderManagementInterface;
+
+    /**
      * @param Session $session
      * @param ResponseValidator $responseValidator
      * @param QuoteRepository $quoteRepository
      * @param ReceiptDataProvider $receiptDataProvider
-     * @param OrderInterface $orderInterface
-     * @param ProcessPayment $processPayment
      * @param Config $gatewayConfig
      * @param Data $opHelper
      * @param RequestInterface $request
@@ -109,43 +118,32 @@ class Token implements HttpPostActionInterface
      * @param JsonFactory $jsonFactory
      * @param OrderRepositoryInterface $orderRepository
      * @param OrderManagementInterface $orderManagementInterface
-     * @param OrderPaymentInterface $orderPaymentInterface
-     * @param ForwardFactory $forwardFactory
-     * @param RedirectFactory $redirectFactory
+     * @param SubscriptionCreate $subscriptionCreate
      */
     public function __construct(
-        Context $context,
-        Session $session,
-        ResponseValidator $responseValidator,
-        QuoteRepository $quoteRepository,
-        ReceiptDataProvider $receiptDataProvider,
-        OrderInterface $orderInterface,
-        ProcessPayment $processPayment,
-        Config $gatewayConfig,
-        Data $opHelper,
-        RequestInterface $request,
-        OrderFactory $orderFactory,
-        Session $checkoutSession,
-        CustomerSession $customerSession,
-        ApiData $apiData,
-        JsonFactory $jsonFactory,
+        Session                  $session,
+        ResponseValidator        $responseValidator,
+        QuoteRepository          $quoteRepository,
+        ReceiptDataProvider      $receiptDataProvider,
+        Config                   $gatewayConfig,
+        Data                     $opHelper,
+        RequestInterface         $request,
+        OrderFactory             $orderFactory,
+        Session                  $checkoutSession,
+        CustomerSession          $customerSession,
+        ApiData                  $apiData,
+        JsonFactory              $jsonFactory,
         OrderRepositoryInterface $orderRepository,
         OrderManagementInterface $orderManagementInterface,
-        OrderPaymentInterface $orderPaymentInterface,
-        ForwardFactory $forwardFactory,
-        RedirectFactory $redirectFactory,
-        SubscriptionCreate $subscriptionCreate
+        SubscriptionCreate       $subscriptionCreate
     ) {
         $this->session = $session;
         $this->responseValidator = $responseValidator;
         $this->receiptDataProvider = $receiptDataProvider;
         $this->quoteRepository = $quoteRepository;
-        $this->orderInterface = $orderInterface;
-        $this->processPayment = $processPayment;
         $this->gatewayConfig = $gatewayConfig;
         $this->opHelper = $opHelper;
         $this->request = $request;
-        $this->context = $context;
         $this->orderFactory = $orderFactory;
         $this->checkoutSession = $checkoutSession;
         $this->customerSession = $customerSession;
@@ -153,14 +151,16 @@ class Token implements HttpPostActionInterface
         $this->jsonFactory = $jsonFactory;
         $this->orderRepository = $orderRepository;
         $this->orderManagementInterface = $orderManagementInterface;
-        $this->orderPaymentInterface = $orderPaymentInterface;
-        $this->forwardFactory = $forwardFactory;
-        $this->redirectFactory = $redirectFactory;
         $this->subscriptionCreate = $subscriptionCreate;
     }
 
     /**
-     * execute method
+     * Execute function
+     *
+     * @return ResponseInterface|Json|ResultInterface
+     * @throws CheckoutException
+     * @throws LocalizedException
+     * @throws CouldNotSaveException
      */
     public function execute() // there is also other call which changes order status
     {
@@ -177,6 +177,11 @@ class Token implements HttpPostActionInterface
             $this->checkoutSession->getLastRealOrderId()
         );
 
+        if ($order->getStatus() === Order::STATE_PROCESSING) {
+            $this->errorMsg = __('Payment already processed');
+            throw new CheckoutException($this->errorMsg);
+        }
+
         $customer = $this->customerSession->getCustomer();
         try {
             $responseData = $this->getTokenResponseData($order, $selectedTokenId, $customer);
@@ -191,7 +196,7 @@ class Token implements HttpPostActionInterface
             }
         } catch (CheckoutException $exception) {
             $this->errorMsg = __('Error processing token payment');
-              if ($order) {
+            if ($order) {
                 $this->orderManagementInterface->cancel($order->getId());
                 $order->addCommentToStatusHistory(
                     __('Order canceled. Failed to process token payment.')
@@ -208,25 +213,28 @@ class Token implements HttpPostActionInterface
                     'message' => $this->errorMsg
                 ]
             );
-
         }
 
-        $redirect_url = $responseData->getThreeDSecureUrl();
+        $redirectUrl = $responseData->getThreeDSecureUrl();
         $resultJson = $this->jsonFactory->create();
 
-        if(!empty($redirect_url))
-        {
+        if ($redirectUrl) {
             return $resultJson->setData(
                 [
                     'success' => true,
                     'data' => 'redirect',
-                    'redirect' => $redirect_url
+                    'redirect' => $redirectUrl
                 ]
             );
         }
 
         /* fetch payment response using transaction id */
-        $response = $this->apiData->processApiRequest('get_payment_data', null, null, $responseData->getTransactionId());
+        $response = $this->apiData->processApiRequest(
+            'get_payment_data',
+            null,
+            null,
+            $responseData->getTransactionId()
+        );
 
         $receiptData = [
             'checkout-account' => $this->gatewayConfig->getMerchantId(),
@@ -246,14 +254,17 @@ class Token implements HttpPostActionInterface
                 'success' => true,
                 'data' => 'redirect',
                 'reference' => $response['data']->getReference(),
-                'redirect' => $redirect_url
+                'redirect' => $redirectUrl
             ]
         );
     }
 
     /**
-     * @param $order
-     * @param $tokenId
+     * GetTokenResponseData function
+     *
+     * @param Order $order
+     * @param string $tokenId
+     * @param Customer $customer
      * @return mixed
      * @throws CheckoutException
      */
@@ -270,51 +281,11 @@ class Token implements HttpPostActionInterface
 
         $errorMsg = $response['error'];
 
-        if (isset($errorMsg)){
+        if (isset($errorMsg)) {
             $this->errorMsg = ($errorMsg);
             $this->opHelper->processError($errorMsg);
         }
 
         return $response["data"];
-    }
-
-    /**
-     * @param PaymentResponse $responseData
-     * @param $paymentMethodId
-     * @return array
-     */
-    protected function getFormFields($responseData, $paymentMethodId = null)
-    {
-        $formFields = [];
-
-        /** @var Provider $provider */
-        foreach ($responseData->getProviders() as $provider) {
-            if ($provider->getId() == $paymentMethodId) {
-                foreach ($provider->getParameters() as $parameter) {
-                    $formFields[$parameter->name] = $parameter->value;
-                }
-            }
-        }
-
-        return $formFields;
-    }
-
-    /**
-     * @param PaymentResponse $responseData
-     * @param $paymentMethodId
-     * @return string
-     */
-    protected function getFormAction($responseData, $paymentMethodId = null)
-    {
-        $returnUrl = '';
-
-        /** @var Provider $provider */
-        foreach ($responseData->getProviders() as $provider) {
-            if ($provider->getId() == $paymentMethodId) {
-                $returnUrl = $provider->getUrl();
-            }
-        }
-
-        return $returnUrl;
     }
 }
