@@ -7,124 +7,103 @@ use Magento\Framework\App\ActionInterface;
 use Magento\Framework\App\RequestInterface;
 use Magento\Framework\Controller\ResultFactory;
 use Magento\Framework\Message\ManagerInterface;
-use Magento\Sales\Model\OrderFactory;
-use Paytrail\PaymentService\Gateway\Config\Config;
-use Paytrail\PaymentService\Gateway\Validator\ResponseValidator;
-use Paytrail\PaymentService\Helper\Data;
 use Paytrail\PaymentService\Helper\ProcessPayment;
+use Paytrail\PaymentService\Model\FinnishReferenceNumber;
 
 /**
  * Class Index
+ * 
+ * Receipt Controller
  */
 class Index implements ActionInterface
 {
     /**
      * @var Session
      */
-    protected $session;
+    protected Session $session;
 
     /**
-     * @var ResponseValidator
+     * @var FinnishReferenceNumber
      */
-    protected $responseValidator;
+    protected FinnishReferenceNumber $referenceNumber;
+
     /**
      * @var ProcessPayment
      */
-    private $processPayment;
-    /**
-     * @var Config
-     */
-    private $gatewayConfig;
-    /**
-     * @var Data
-     */
-    private $paytrailHelper;
-    /**
-     * @var OrderFactory
-     */
-    private $orderFactory;
+    private ProcessPayment $processPayment;
+
     /**
      * @var RequestInterface
      */
-    private $request;
+    private RequestInterface $request;
+
     /**
      * @var ResultFactory
      */
-    private $resultFactory;
+    private ResultFactory $resultFactory;
 
     /**
      * @var ManagerInterface
      */
-    private $messageManager;
+    private ManagerInterface $messageManager;
 
     /**
-     * @param Session $session
-     * @param ResponseValidator $responseValidator
-     * @param ProcessPayment $processPayment
-     * @param Config $gatewayConfig
-     * @param Data $paytrailHelper
-     * @param OrderFactory $orderFactory
-     * @param RequestInterface $request
-     * @param ResultFactory $resultFactory
-     * @param ManagerInterface $messageManager
+     * @param Session                                               $session
+     * @param ProcessPayment                                        $processPayment
+     * @param RequestInterface                                      $request
+     * @param ResultFactory                                         $resultFactory
+     * @param ManagerInterface                                      $messageManager
+     * @param \Paytrail\PaymentService\Model\FinnishReferenceNumber $referenceNumber
      */
     public function __construct(
         Session $session,
-        ResponseValidator $responseValidator,
         ProcessPayment $processPayment,
-        Config $gatewayConfig,
-        Data $paytrailHelper,
-        OrderFactory $orderFactory,
         RequestInterface $request,
         ResultFactory $resultFactory,
-        ManagerInterface $messageManager
+        ManagerInterface $messageManager,
+        FinnishReferenceNumber $referenceNumber
     ) {
-        $this->session = $session;
-        $this->responseValidator = $responseValidator;
+        $this->session           = $session;
         $this->processPayment = $processPayment;
-        $this->gatewayConfig = $gatewayConfig;
-        $this->paytrailHelper = $paytrailHelper;
-        $this->orderFactory = $orderFactory;
         $this->request = $request;
         $this->resultFactory = $resultFactory;
         $this->messageManager = $messageManager;
+        $this->referenceNumber = $referenceNumber;
     }
 
     /**
      * Order status is manipulated by another callback:
+     *
+     * @throws \Exception
      * @see \Paytrail\PaymentService\Controller\Callback\Index
-     * execute method
      */
     public function execute()
     {
         $successStatuses = ["processing", "pending_paytrail", "pending", "complete"];
-        $cancelStatuses = ["canceled"];
-        $reference = $this->request->getParam('checkout-reference');
-
-        /** @var string $orderNo */
-        $orderNo = $this->gatewayConfig->getGenerateReferenceForOrder()
-            ? $this->paytrailHelper->getIdFromOrderReferenceNumber($reference)
-            : $reference;
+        $cancelStatuses  = ["canceled"];
+        $reference       = $this->request->getParam('checkout-reference');
 
         sleep(2); //giving callback time to get processed
 
-        /** @var \Magento\Sales\Model\Order $order */
-        $order = $this->orderFactory->create()->loadByIncrementId($orderNo);
+        $order = $this->referenceNumber->getOrderByReference($reference);
+
         $status = $order->getStatus();
 
         /** @var array $failMessages */
         $failMessages = [];
 
         if ($status == 'pending_payment' || in_array($status, $cancelStatuses)) {
-            // order status could be changed by callback, if not, status change needs to be forced by processing the payment
+            // order status could be changed by callback, if not,
+            // status change needs to be forced by processing the payment
             $failMessages = $this->processPayment->process($this->request->getParams(), $this->session);
         }
 
         if ($status == 'pending_payment') { // status could be changed by callback, if not, it needs to be forced
-            $order = $this->orderFactory->create()->loadByIncrementId($orderNo); // refreshing order
+            $order  = $this->referenceNumber->getOrderByReference($reference); // refreshing order
             $status = $order->getStatus(); // getting current status
         }
 
+        /** @var \Magento\Framework\Controller\Result\Redirect $result */
         $result = $this->resultFactory->create(\Magento\Framework\Controller\ResultFactory::TYPE_REDIRECT);
         if (in_array($status, $successStatuses)) {
             return $result->setPath('checkout/onepage/success');
@@ -136,7 +115,10 @@ class Index implements ActionInterface
             return $result->setPath('checkout/cart');
         }
 
-        $this->messageManager->addErrorMessage(__('Order processing has been aborted. Please contact customer service.'));
+        $this->messageManager->addErrorMessage(
+            __('Order processing has been aborted. Please contact customer service.')
+        );
+
         return $result->setPath('checkout/cart');
     }
 }

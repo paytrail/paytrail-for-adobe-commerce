@@ -90,6 +90,11 @@ class ReceiptDataProvider
     protected $transactionBuilder;
 
     /**
+     * @var \Paytrail\PaymentService\Model\FinnishReferenceNumber
+     */
+    protected FinnishReferenceNumber $finnishReferenceNumber;
+
+    /**
      * @var |Magento\Framework\App\CacheInterface
      */
     private $cache;
@@ -161,25 +166,27 @@ class ReceiptDataProvider
 
     /**
      * ReceiptDataProvider constructor.
-     * @param Session $session
-     * @param TransactionRepositoryInterface $transactionRepository
-     * @param OrderSender $orderSender
-     * @param TransportBuilder $transportBuilder
-     * @param ScopeConfigInterface $scopeConfig
-     * @param OrderManagementInterface $orderManagementInterface
-     * @param OrderRepositoryInterface $orderRepositoryInterface
-     * @param CacheInterface $cache
-     * @param InvoiceService $invoiceService
-     * @param TransactionFactory $transactionFactory
-     * @param paytrailHelper $paytrailHelper
-     * @param transactionBuilderInterface $transactionBuilder
-     * @param Config $gatewayConfig
-     * @param ApiData $apiData
-     * @param LoggerInterface $logger
-     * @param UrlInterface $backendUrl
-     * @param OrderFactory $orderFactory
-     * @param PendingOrderEmailConfirmation $pendingOrderEmail
-     * @param boolean $skipHmac
+     *
+     * @param Session                                                $session
+     * @param TransactionRepositoryInterface                         $transactionRepository
+     * @param OrderSender                                            $orderSender
+     * @param TransportBuilder                                       $transportBuilder
+     * @param ScopeConfigInterface                                   $scopeConfig
+     * @param OrderManagementInterface                               $orderManagementInterface
+     * @param OrderRepositoryInterface                               $orderRepositoryInterface
+     * @param CacheInterface                                         $cache
+     * @param InvoiceService                                         $invoiceService
+     * @param TransactionFactory                                     $transactionFactory
+     * @param paytrailHelper                                         $paytrailHelper
+     * @param \Magento\Sales\Model\Order\Payment\Transaction\Builder $transactionBuilder
+     * @param Config                                                 $gatewayConfig
+     * @param ApiData                                                $apiData
+     * @param LoggerInterface                                        $logger
+     * @param UrlInterface                                           $backendUrl
+     * @param OrderFactory                                           $orderFactory
+     * @param PendingOrderEmailConfirmation                          $pendingOrderEmail
+     * @param \Paytrail\PaymentService\Model\FinnishReferenceNumber  $finnishReferenceNumber
+     * @param boolean                                                $skipHmac
      */
     public function __construct(
         Session                        $session,
@@ -200,7 +207,8 @@ class ReceiptDataProvider
         UrlInterface                   $backendUrl,
         OrderFactory                   $orderFactory,
         PendingOrderEmailConfirmation  $pendingOrderEmail,
-                                       $skipHmac = false
+        FinnishReferenceNumber $finnishReferenceNumber,
+        $skipHmac = false
     ) {
         $this->cache = $cache;
         $this->session = $session;
@@ -221,20 +229,23 @@ class ReceiptDataProvider
         $this->orderFactory = $orderFactory;
         $this->skipHmac = $skipHmac;
         $this->pendingOrderEmail = $pendingOrderEmail;
+        $this->finnishReferenceNumber = $finnishReferenceNumber;
     }
 
     /**
      * @param array $params
+     *
      * @throws CheckoutException
      * @throws LocalizedException
+     * @throws \Exception
      */
     public function execute(array $params)
     {
         if ($this->gatewayConfig->getGenerateReferenceForOrder()) {
             $this->orderIncrementalId
-                = $this->paytrailHelper->getIdFromOrderReferenceNumber(
-                $params["checkout-reference"]
-            );
+                = $this->finnishReferenceNumber->getIdFromOrderReferenceNumber(
+                    $params["checkout-reference"]
+                );
         } else {
             $this->orderIncrementalId
                 = $params["checkout-reference"];
