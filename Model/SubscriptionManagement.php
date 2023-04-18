@@ -15,10 +15,10 @@ use Magento\Sales\Api\OrderRepositoryInterface;
 use Magento\Sales\Model\Order;
 use Magento\Vault\Api\PaymentTokenRepositoryInterface;
 use Paytrail\PaymentService\Api\Data\SubscriptionInterface;
-use Paytrail\PaymentService\Api\Data\SubscriptionSearchResultInterface;
 use Paytrail\PaymentService\Api\SubscriptionLinkRepositoryInterface;
 use Paytrail\PaymentService\Api\SubscriptionManagementInterface;
 use Paytrail\PaymentService\Api\SubscriptionRepositoryInterface;
+use Paytrail\PaymentService\Model\Api\ShowSubscriptionsDataProvider;
 use Paytrail\PaymentService\Model\Validation\CustomerData;
 use Psr\Log\LoggerInterface;
 
@@ -80,7 +80,12 @@ class SubscriptionManagement implements SubscriptionManagementInterface
     /**
      * @var CustomerData
      */
-    private CustomerData $customerData;
+    private $customerData;
+
+    /**
+     * @var ShowSubscriptionsDataProvider
+     */
+    private $showSubscriptionsDataProvider;
 
     /**
      * @param UserContextInterface $userContext
@@ -90,23 +95,25 @@ class SubscriptionManagement implements SubscriptionManagementInterface
      * @param OrderManagementInterface $orderManagementInterface
      * @param SearchCriteriaBuilder $searchCriteriaBuilder
      * @param LoggerInterface $logger
-     * @param PaymentTokenRepositoryInterface $paymentTokenRepository
      * @param FilterBuilder $filterBuilder
      * @param FilterGroupBuilder $filterGroupBuilder
+     * @param PaymentTokenRepositoryInterface $paymentTokenRepository
      * @param CustomerData $customerData
+     * @param ShowSubscriptionsDataProvider $showSubscriptionsDataProvider
      */
     public function __construct(
-        UserContextInterface $userContext,
-        SubscriptionRepositoryInterface $subscriptionRepository,
+        UserContextInterface                $userContext,
+        SubscriptionRepositoryInterface     $subscriptionRepository,
         SubscriptionLinkRepositoryInterface $subscriptionLinkRepository,
-        OrderRepositoryInterface $orderRepository,
-        OrderManagementInterface $orderManagementInterface,
-        SearchCriteriaBuilder $searchCriteriaBuilder,
-        LoggerInterface $logger,
-        FilterBuilder $filterBuilder,
-        FilterGroupBuilder $filterGroupBuilder,
-        PaymentTokenRepositoryInterface $paymentTokenRepository,
-        CustomerData $customerData
+        OrderRepositoryInterface            $orderRepository,
+        OrderManagementInterface            $orderManagementInterface,
+        SearchCriteriaBuilder               $searchCriteriaBuilder,
+        LoggerInterface                     $logger,
+        FilterBuilder                       $filterBuilder,
+        FilterGroupBuilder                  $filterGroupBuilder,
+        PaymentTokenRepositoryInterface     $paymentTokenRepository,
+        CustomerData                        $customerData,
+        ShowSubscriptionsDataProvider $showSubscriptionsDataProvider
     ) {
         $this->userContext = $userContext;
         $this->subscriptionRepository = $subscriptionRepository;
@@ -119,6 +126,7 @@ class SubscriptionManagement implements SubscriptionManagementInterface
         $this->logger = $logger;
         $this->paymentTokenRepository = $paymentTokenRepository;
         $this->customerData = $customerData;
+        $this->showSubscriptionsDataProvider = $showSubscriptionsDataProvider;
     }
 
     /**
@@ -167,16 +175,39 @@ class SubscriptionManagement implements SubscriptionManagementInterface
     }
 
     /**
-     * @return \Paytrail\PaymentService\Api\Data\SubscriptionSearchResultInterface
+     * @param SearchCriteriaInterface $searchCriteria
+     * @return array
      * @throws LocalizedException
      */
-    public function showSubscriptions(SearchCriteriaInterface $searchCriteria): SubscriptionSearchResultInterface
+    public function showSubscriptions(SearchCriteriaInterface $searchCriteria): array
     {
+        $subscriptions = [];
         try {
             if ($this->userContext->getUserId()) {
                 $this->filterByCustomer($searchCriteria);
+                $subscriptionCollection = $this->subscriptionRepository->getList($searchCriteria)->getItems();
+                $paymentToken = $this->showSubscriptionsDataProvider->getMaskedCCById($searchCriteria);
 
-                return $this->subscriptionRepository->getList($searchCriteria);
+                foreach ($subscriptionCollection as $subscription) {
+                    $orderData = $this->showSubscriptionsDataProvider
+                        ->getOrderDataFromSubscriptionId($subscription->getId());
+                    $subscriptions[] = [
+                        'entity_id' => $subscription->getId(),
+                        'customer_id' => $subscription->getCustomerId(),
+                        'status' => $subscription->getStatus(),
+                        'next_order_date' => $subscription->getNextOrderDate(),
+                        'recurring_profile_id' => $subscription->getRecurringProfileId(),
+                        'updated_at' => $subscription->getUpdatedAt(),
+                        'repeat_count_left' => $subscription->getRepeatCountLeft(),
+                        'retry_count' => $subscription->getRetryCount(),
+                        'selected_token' => $subscription->getSelectedToken(),
+                        'masked_cc' => $paymentToken[$subscription->getSelectedToken()],
+                        'grand_total' => $orderData['grand_total'],
+                        'last_order_increment_id' => $orderData['increment_id']
+                    ];
+                }
+
+                return $subscriptions;
             }
         } catch (\Throwable $e) {
             $this->logger->error($e->getMessage());
