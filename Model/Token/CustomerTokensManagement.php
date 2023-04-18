@@ -6,10 +6,10 @@ use Magento\Authorization\Model\UserContextInterface;
 use Magento\Framework\Api\SearchCriteriaBuilder;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Serialize\Serializer\Json;
+use Magento\Payment\Model\CcConfigProvider;
 use Magento\Vault\Api\PaymentTokenManagementInterface;
 use Magento\Vault\Model\PaymentTokenFactory;
 use Paytrail\PaymentService\Api\CustomerTokensManagementInterface;
-use Paytrail\PaymentService\Model\CardIconProvider;
 use Psr\Log\LoggerInterface;
 
 class CustomerTokensManagement implements CustomerTokensManagementInterface
@@ -50,9 +50,9 @@ class CustomerTokensManagement implements CustomerTokensManagementInterface
     protected $logger;
 
     /**
-     * @var CardIconProvider
+     * @var CcConfigProvider
      */
-    private CardIconProvider $cardIconProvider;
+    protected $ccConfigProvider;
 
     /**
      * @param UserContextInterface $userContext
@@ -62,7 +62,7 @@ class CustomerTokensManagement implements CustomerTokensManagementInterface
      * @param PaymentTokenFactory $paymentTokenFactory
      * @param CustomerTokensResultFactory $customerTokensResultFactory
      * @param LoggerInterface $logger
-     * @param CardIconProvider $cardIconProvider
+     * @param CcConfigProvider $ccConfigProvider
      */
     public function __construct(
         UserContextInterface            $userContext,
@@ -72,9 +72,8 @@ class CustomerTokensManagement implements CustomerTokensManagementInterface
         PaymentTokenFactory             $paymentTokenFactory,
         CustomerTokensResultFactory     $customerTokensResultFactory,
         LoggerInterface                 $logger,
-        CardIconProvider                $cardIconProvider
+        CcConfigProvider                $ccConfigProvider
     ) {
-        $this->cardIconProvider = $cardIconProvider;
         $this->userContext = $userContext;
         $this->paymentTokenManagement = $paymentTokenManagement;
         $this->searchCriteriaBuilder = $searchCriteriaBuilder;
@@ -82,6 +81,7 @@ class CustomerTokensManagement implements CustomerTokensManagementInterface
         $this->paymentTokenFactory = $paymentTokenFactory;
         $this->customerTokensResultFactory = $customerTokensResultFactory;
         $this->logger = $logger;
+        $this->ccConfigProvider = $ccConfigProvider;
     }
 
     /**
@@ -111,9 +111,8 @@ class CustomerTokensManagement implements CustomerTokensManagementInterface
                         ->setCreatedAt($token->getCreatedAt())
                         ->setExpiresAt($token->getExpiresAt())
                         ->setCardType($this->jsonSerializer->unserialize($token->getTokenDetails())['type'])
-                        ->setCardIcon($this->cardIconProvider->getIconForType(
-                            $this->jsonSerializer->unserialize($token->getTokenDetails())['type']
-                        )['url'])
+                        ->setCardIcon($this->ccConfigProvider
+                            ->getIcons()[$this->jsonSerializer->unserialize($token->getTokenDetails())['type']]['url'])
                         ->setMaskedCC($this->jsonSerializer->unserialize($token->getTokenDetails())['maskedCC']);
                     $i++;
                 }

@@ -10,12 +10,32 @@ use Paytrail\PaymentService\Api\SubscriptionLinkRepositoryInterface;
 
 class ShowSubscriptionsDataProvider
 {
-    private PaymentTokenRepositoryInterface $paymentTokenRepository;
-    private SubscriptionLinkRepositoryInterface $subscriptionLinkRepository;
-    private OrderRepositoryInterface $orderRepository;
-    private Json $jsonSerializer;
+    /**
+     * @var PaymentTokenRepositoryInterface 
+     */
+    private $paymentTokenRepository;
 
+    /**
+     * @var SubscriptionLinkRepositoryInterface 
+     */
+    private $subscriptionLinkRepository;
 
+    /**
+     * @var OrderRepositoryInterface 
+     */
+    private $orderRepository;
+
+    /**
+     * @var Json 
+     */
+    private $jsonSerializer;
+
+    /**
+     * @param PaymentTokenRepositoryInterface $paymentTokenRepository
+     * @param SubscriptionLinkRepositoryInterface $subscriptionLinkRepository
+     * @param OrderRepositoryInterface $orderRepository
+     * @param Json $jsonSerializer
+     */
     public function __construct(
         PaymentTokenRepositoryInterface $paymentTokenRepository,
         SubscriptionLinkRepositoryInterface $subscriptionLinkRepository,
