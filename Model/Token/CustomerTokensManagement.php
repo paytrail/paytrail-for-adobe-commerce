@@ -9,6 +9,7 @@ use Magento\Framework\Serialize\Serializer\Json;
 use Magento\Vault\Api\PaymentTokenManagementInterface;
 use Magento\Vault\Model\PaymentTokenFactory;
 use Paytrail\PaymentService\Api\CustomerTokensManagementInterface;
+use Paytrail\PaymentService\Model\CardIconProvider;
 use Psr\Log\LoggerInterface;
 
 class CustomerTokensManagement implements CustomerTokensManagementInterface
@@ -49,6 +50,11 @@ class CustomerTokensManagement implements CustomerTokensManagementInterface
     protected $logger;
 
     /**
+     * @var CardIconProvider
+     */
+    private CardIconProvider $cardIconProvider;
+
+    /**
      * @param UserContextInterface $userContext
      * @param PaymentTokenManagementInterface $paymentTokenManagement
      * @param SearchCriteriaBuilder $searchCriteriaBuilder
@@ -56,6 +62,7 @@ class CustomerTokensManagement implements CustomerTokensManagementInterface
      * @param PaymentTokenFactory $paymentTokenFactory
      * @param CustomerTokensResultFactory $customerTokensResultFactory
      * @param LoggerInterface $logger
+     * @param CardIconProvider $cardIconProvider
      */
     public function __construct(
         UserContextInterface            $userContext,
@@ -64,8 +71,10 @@ class CustomerTokensManagement implements CustomerTokensManagementInterface
         Json                            $jsonSerializer,
         PaymentTokenFactory             $paymentTokenFactory,
         CustomerTokensResultFactory     $customerTokensResultFactory,
-        LoggerInterface                 $logger
+        LoggerInterface                 $logger,
+        CardIconProvider                $cardIconProvider
     ) {
+        $this->cardIconProvider = $cardIconProvider;
         $this->userContext = $userContext;
         $this->paymentTokenManagement = $paymentTokenManagement;
         $this->searchCriteriaBuilder = $searchCriteriaBuilder;
@@ -96,11 +105,15 @@ class CustomerTokensManagement implements CustomerTokensManagementInterface
                     $paymentTokens[$i]
                         ->setEntityId($token->getId())
                         ->setCustomerId($customerId)
+                        ->setPublicHash((string)$token->getPublicHash())
                         ->setType($token->getType())
                         ->setPaymentMethodCode($token->getPaymentMethodCode())
                         ->setCreatedAt($token->getCreatedAt())
                         ->setExpiresAt($token->getExpiresAt())
                         ->setCardType($this->jsonSerializer->unserialize($token->getTokenDetails())['type'])
+                        ->setCardIcon($this->cardIconProvider->getIconForType(
+                            $this->jsonSerializer->unserialize($token->getTokenDetails())['type']
+                        )['url'])
                         ->setMaskedCC($this->jsonSerializer->unserialize($token->getTokenDetails())['maskedCC']);
                     $i++;
                 }
