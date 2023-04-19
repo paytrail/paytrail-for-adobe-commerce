@@ -29,6 +29,17 @@ interface CustomerTokensResultInterface
     /**
      * @return string
      */
+    public function getPublicHash(): string;
+
+    /**
+     * @param $publicHash
+     * @return \Paytrail\PaymentService\Api\Data\CustomerTokensResultInterface
+     */
+    public function setPublicHash($publicHash): self;
+
+    /**
+     * @return string
+     */
     public function getType(): string;
 
     /**
@@ -91,4 +102,15 @@ interface CustomerTokensResultInterface
      * @return \Paytrail\PaymentService\Api\Data\CustomerTokensResultInterface
      */
     public function setMaskedCC($maskedCC): self;
+
+    /**
+     * @return string
+     */
+    public function getCardIcon(): string;
+
+    /**
+     * @param $cardIcon
+     * @return \Paytrail\PaymentService\Api\Data\CustomerTokensResultInterface
+     */
+    public function setCardIcon($cardIcon): self;
 }
