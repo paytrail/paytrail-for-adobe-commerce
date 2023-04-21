@@ -15,6 +15,7 @@ use Paytrail\PaymentService\Exceptions\CheckoutException;
 use Paytrail\PaymentService\Helper\ApiData;
 use Paytrail\PaymentService\Helper\Data as paytrailHelper;
 use Paytrail\PaymentService\Gateway\Config\Config;
+use Paytrail\PaymentService\Model\ConfigProvider;
 use Paytrail\PaymentService\Model\Email\Order\PendingOrderEmailConfirmation;
 use Paytrail\SDK\Model\Provider;
 use Paytrail\SDK\Response\PaymentResponse;
@@ -138,7 +139,7 @@ class Index implements HttpPostActionInterface
                     'preselected_payment_method_id'
                 );
                 $selectedPaymentMethodId = preg_replace(
-                    '/[0-9]{1,2}$/',
+                    '/' . ConfigProvider::ID_INCREMENT_SEPARATOR . '[0-9]{1,3}$/',
                     '',
                     $selectedPaymentMethodRaw
                 );

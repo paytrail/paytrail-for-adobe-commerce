@@ -26,6 +26,7 @@ class ConfigProvider implements ConfigProviderInterface
 {
     const CODE = 'paytrail';
     const VAULT_CODE = 'paytrail_cc_vault';
+    public const ID_INCREMENT_SEPARATOR = '__';
 
     protected $methodCodes = [
         self::CODE,
@@ -361,7 +362,7 @@ class ConfigProvider implements ConfigProviderInterface
             if ($method->getGroup() == $groupId) {
                 $methods[] = [
                     'checkoutId' => $method->getId(),
-                    'id' => $method->getId() . $i++,
+                    'id' => $method->getId() . self::ID_INCREMENT_SEPARATOR .  $i++,
                     'name' => $method->getName(),
                     'group' => $method->getGroup(),
                     'icon' => $method->getIcon(),
