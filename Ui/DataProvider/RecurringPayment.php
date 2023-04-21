@@ -36,6 +36,15 @@ class RecurringPayment extends \Magento\Ui\DataProvider\AbstractDataProvider
         return $collection->toArray();
     }
 
+    public function addFilter(\Magento\Framework\Api\Filter $filter)
+    {
+        if ($filter->getField() == 'entity_id') {
+            $filter->setField('main_table.entity_id');
+        }
+
+        parent::addFilter($filter);
+    }
+
     public function getCollection()
     {
         if (!$this->collection) {
