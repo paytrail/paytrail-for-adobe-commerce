@@ -2,14 +2,25 @@
 
 namespace Paytrail\PaymentService\Ui\DataProvider;
 
-use Magento\Backend\Model\UrlInterface;
+use Magento\Framework\Api\Filter;
+use Magento\Framework\Model\ResourceModel\Db\Collection\AbstractCollection;
+use Magento\Ui\DataProvider\AbstractDataProvider;
+use Paytrail\PaymentService\Model\ResourceModel\Subscription\Collection;
 use Paytrail\PaymentService\Model\ResourceModel\Subscription\CollectionFactory;
 
-class RecurringPayment extends \Magento\Ui\DataProvider\AbstractDataProvider
+class RecurringPayment extends AbstractDataProvider
 {
     /** @var CollectionFactory */
     private $collectionFactory;
 
+    /**
+     * @param $name
+     * @param $primaryFieldName
+     * @param $requestFieldName
+     * @param CollectionFactory $collectionFactory
+     * @param array $meta
+     * @param array $data
+     */
     public function __construct(
         $name,
         $primaryFieldName,
@@ -23,12 +34,15 @@ class RecurringPayment extends \Magento\Ui\DataProvider\AbstractDataProvider
             $primaryFieldName,
             $requestFieldName,
             $meta,
-            $data
+            $data   
         );
 
         $this->collectionFactory = $collectionFactory;
     }
 
+    /**
+     * @return array
+     */
     public function getData()
     {
         $collection = $this->getCollection();
@@ -36,7 +50,11 @@ class RecurringPayment extends \Magento\Ui\DataProvider\AbstractDataProvider
         return $collection->toArray();
     }
 
-    public function addFilter(\Magento\Framework\Api\Filter $filter)
+    /**
+     * @param Filter $filter
+     * @return mixed|void
+     */
+    public function addFilter(Filter $filter)
     {
         if ($filter->getField() == 'entity_id') {
             $filter->setField('main_table.entity_id');
@@ -45,6 +63,9 @@ class RecurringPayment extends \Magento\Ui\DataProvider\AbstractDataProvider
         parent::addFilter($filter);
     }
 
+    /**
+     * @return AbstractCollection|Collection
+     */
     public function getCollection()
     {
         if (!$this->collection) {
