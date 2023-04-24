@@ -2,40 +2,58 @@
 
 namespace Paytrail\PaymentService\Ui\DataProvider;
 
+use Magento\Framework\Model\ResourceModel\Db\Collection\AbstractCollection;
 use Magento\Framework\Serialize\SerializerInterface;
+use Magento\Ui\DataProvider\AbstractDataProvider;
+use Paytrail\PaymentService\Model\ResourceModel\Subscription\Profile\Collection;
+use Paytrail\PaymentService\Model\ResourceModel\Subscription\Profile\CollectionFactory;
 
-class RecurringProfileForm extends \Magento\Ui\DataProvider\AbstractDataProvider
+class RecurringProfileForm extends AbstractDataProvider
 {
     /** @var array */
     private $loadedData;
 
     /**
-     * @var \Paytrail\PaymentService\Model\ResourceModel\Subscription\Profile\CollectionFactory
+     * @var CollectionFactory
      */
     private $collectionFactory;
+    
     /**
      * @var SerializerInterface
      */
     private $serializer;
+    
     /**
      * @var array|bool|float|int|string|null
      */
     private $schedule;
 
+    /**
+     * @param $name
+     * @param $primaryFieldName
+     * @param $requestFieldName
+     * @param CollectionFactory $collectionFactory
+     * @param SerializerInterface $serializer
+     * @param array $meta
+     * @param array $data
+     */
     public function __construct(
-                                                                                $name,
-                                                                                $primaryFieldName,
-                                                                                $requestFieldName,
-        \Paytrail\PaymentService\Model\ResourceModel\Subscription\Profile\CollectionFactory $collectionFactory,
-        SerializerInterface                                                     $serializer,
-        array                                                                   $meta = [],
-        array                                                                   $data = []
+        $name,
+        $primaryFieldName,
+        $requestFieldName,
+        CollectionFactory $collectionFactory,
+        SerializerInterface $serializer,
+        array $meta = [],
+        array $data = []
     ) {
         parent::__construct($name, $primaryFieldName, $requestFieldName, $meta, $data);
         $this->collectionFactory = $collectionFactory;
         $this->serializer = $serializer;
     }
 
+    /**
+     * @return array
+     */
     public function getData()
     {
         if (isset($this->loadedData)) {
@@ -52,6 +70,9 @@ class RecurringProfileForm extends \Magento\Ui\DataProvider\AbstractDataProvider
         return $this->loadedData;
     }
 
+    /**
+     * @return AbstractCollection|Collection
+     */
     public function getCollection()
     {
         if (!$this->collection) {
@@ -63,7 +84,8 @@ class RecurringProfileForm extends \Magento\Ui\DataProvider\AbstractDataProvider
 
     /**
      * @param string $value
-     * @param \Paytrail\PaymentService\Api\Data\RecurringProfileInterface $recurringProfile
+     * @param $recurringProfile
+     * @return mixed|string|null
      */
     private function parseSchedule(string $value, $recurringProfile)
     {

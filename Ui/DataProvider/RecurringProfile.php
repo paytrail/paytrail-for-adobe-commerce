@@ -2,25 +2,41 @@
 
 namespace Paytrail\PaymentService\Ui\DataProvider;
 
-class RecurringProfile extends \Magento\Ui\DataProvider\AbstractDataProvider
+use Magento\Framework\Model\ResourceModel\Db\Collection\AbstractCollection;
+use Magento\Ui\DataProvider\AbstractDataProvider;
+use Paytrail\PaymentService\Model\ResourceModel\Subscription\Profile\Collection;
+use Paytrail\PaymentService\Model\ResourceModel\Subscription\Profile\CollectionFactory;
+
+class RecurringProfile extends AbstractDataProvider
 {
     /**
-     * @var \Paytrail\PaymentService\Model\ResourceModel\Subscription\Profile\CollectionFactory
+     * @var CollectionFactory
      */
     private $collectionFactory;
 
+    /**
+     * @param $name
+     * @param $primaryFieldName
+     * @param $requestFieldName
+     * @param CollectionFactory $collectionFactory
+     * @param array $meta
+     * @param array $data
+     */
     public function __construct(
-                                                                                $name,
-                                                                                $primaryFieldName,
-                                                                                $requestFieldName,
-        \Paytrail\PaymentService\Model\ResourceModel\Subscription\Profile\CollectionFactory $collectionFactory,
-        array                                                                   $meta = [],
-        array                                                                   $data = []
+        $name,
+        $primaryFieldName,
+        $requestFieldName,
+        CollectionFactory $collectionFactory,
+        array $meta = [],
+        array $data = []
     ) {
         parent::__construct($name, $primaryFieldName, $requestFieldName, $meta, $data);
         $this->collectionFactory = $collectionFactory;
     }
 
+    /**
+     * @return array
+     */
     public function getData()
     {
         $collection = $this->getCollection();
@@ -28,6 +44,9 @@ class RecurringProfile extends \Magento\Ui\DataProvider\AbstractDataProvider
         return $collection->toArray();
     }
 
+    /**
+     * @return AbstractCollection|Collection
+     */
     public function getCollection()
     {
         if (!$this->collection) {
