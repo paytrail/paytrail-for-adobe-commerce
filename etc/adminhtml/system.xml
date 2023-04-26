@@ -95,6 +95,14 @@
                     Remember that as long as the order is open product stock in the order is locked.]]></comment>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                 </field>
+                <field id="activate_invoices_separately" translate="label" type="select" sortOrder="85" showInDefault="1"
+                       showInWebsite="0" showInStore="0" canRestore="1">
+                    <label>Enable delayed invoice sending</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <comment><![CDATA[By default invoices are activated and sent to customer imidiately when an order is
+                    made. When you enable this configuration you can can delay the activation and sending of the
+                    invoices to customer until you create a shipment for the order. At which point the invoice is sent]]></comment>
+                </field>
                 <field id="order_place_redirect_url" translate="label" type="select" sortOrder="90" showInDefault="1" showInWebsite="1"
                        showInStore="0" canRestore="1">
                     <label>Enable Order confirmation email for pending order</label>

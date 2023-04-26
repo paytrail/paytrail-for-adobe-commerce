@@ -8,12 +8,18 @@ use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Framework\Serialize\Serializer\Json;
 use Magento\Framework\UrlInterface;
 use Magento\Sales\Model\Order;
+use Magento\Sales\Model\Order\Item as OrderItem;
+use Magento\Sales\Model\ResourceModel\Order\Tax\Item as TaxItem;
 use Magento\Store\Model\StoreManagerInterface;
 use Paytrail\PaymentService\Exceptions\CheckoutException;
+use Magento\Tax\Helper\Data as TaxHelper;
 use Paytrail\PaymentService\Gateway\Config\Config as GatewayConfig;
 use Paytrail\PaymentService\Helper\Data as CheckoutHelper;
 use Paytrail\PaymentService\Logger\PaytrailLogger;
 use Paytrail\PaymentService\Model\Adapter\Adapter;
+use Paytrail\PaymentService\Model\Company\CompanyRequestData;
+use Paytrail\PaymentService\Model\Invoice\InvoiceActivation;
+use Paytrail\PaymentService\Model\Payment\DiscountSplitter;
 use Paytrail\PaymentService\Model\FinnishReferenceNumber;
 use Paytrail\SDK\Model\CallbackUrl;
 use Paytrail\SDK\Request\EmailRefundRequest;
@@ -107,6 +113,11 @@ class ApiData
     private $getTokenRequest;
 
     /**
+     * @var TaxItem
+     */
+    private $taxItems;
+
+    /**
      * @var CitPaymentRequest
      */
     private $citPaymentRequest;
@@ -117,35 +128,73 @@ class ApiData
     private $paymentStatusRequest;
 
     /**
-     * @param LoggerInterface $log
-     * @param UrlInterface $urlBuilder
-     * @param RequestInterface $request
-     * @param Json $json
-     * @param Data $helper
-     * @param GatewayConfig $gatewayConfig
-     * @param StoreManagerInterface $storeManager
-     * @param Adapter $paytrailAdapter
-     * @param PaymentRequest $paymentRequest
-     * @param RefundRequest $refundRequest
-     * @param EmailRefundRequest $emailRefundRequest
-     * @param AddCardFormRequest $addCardFormRequest
-     * @param GetTokenRequest $getTokenRequest
-     * @param CitPaymentRequest $citPaymentRequest
-     * @param PaymentStatusRequest $paymentStatusRequest
-     * @param RequestData $requestData
+     * @var CompanyRequestData
+     */
+    private CompanyRequestData $companyRequestData;
+
+    /**
+     * @var InvoiceActivation
+     */
+    private InvoiceActivation $invoiceActivate;
+
+    /**
+     * @var \Paytrail\PaymentService\Helper\CountryInformationAcquirerInterface
+     */
+    private CountryInformationAcquirerInterface $countryInfo;
+
+    /**
+     * @var \Magento\Tax\Helper\Data
+     */
+    private TaxHelper $taxHelper;
+
+    /**
+     * @var \Paytrail\PaymentService\Model\Payment\DiscountSplitter
+     */
+    private DiscountSplitter $discountSplitter;
+
+    /**
+     * @param LoggerInterface                                                     $log
+     * @param UrlInterface                                                        $urlBuilder
+     * @param RequestInterface                                                    $request
+     * @param Json                                                                $json
+     * @param \Paytrail\PaymentService\Helper\CountryInformationAcquirerInterface $countryInformationAcquirer
+     * @param \Magento\Tax\Helper\Data                                            $taxHelper
+     * @param Data                                                                $helper
+     * @param StoreManagerInterface                                               $storeManager
+     * @param Adapter                                                             $paytrailAdapter
+     * @param PaymentRequest                                                      $paymentRequest
+     * @param RefundRequest                                                       $refundRequest
+     * @param EmailRefundRequest                                                  $emailRefundRequest
+     * @param DiscountSplitter                                                    $discountSplitter
+     * @param TaxItem                                                             $taxItem
+     * @param CompanyRequestData                                                  $companyRequestData
+     * @param InvoiceActivation                                                   $invoiceActivate
+     * @param GatewayConfig                                                       $gatewayConfig
+     * @param AddCardFormRequest                                                  $addCardFormRequest
+     * @param GetTokenRequest                                                     $getTokenRequest
+     * @param CitPaymentRequest                                                   $citPaymentRequest
+     * @param PaymentStatusRequest                                                $paymentStatusRequest
+     * @param RequestData                                                         $requestData
+     * @param \Paytrail\PaymentService\Model\FinnishReferenceNumber               $finnishReferenceNumber
      */
     public function __construct(
-        LoggerInterface               $log,
-        UrlInterface                  $urlBuilder,
-        RequestInterface              $request,
-        Json                          $json,
-        CheckoutHelper                $helper,
+        PaytrailLogger                     $log,
+        UrlInterface                        $urlBuilder,
+        RequestInterface                    $request,
+        Json                                $json,
+        CountryInformationAcquirerInterface $countryInformationAcquirer,
+        TaxHelper                           $taxHelper,
+        CheckoutHelper                      $helper,
+        StoreManagerInterface               $storeManager,
+        Adapter                             $paytrailAdapter,
+        PaymentRequest                      $paymentRequest,
+        RefundRequest                       $refundRequest,
+        EmailRefundRequest                  $emailRefundRequest,
+        DiscountSplitter                    $discountSplitter,
+        TaxItem                             $taxItem,
+        CompanyRequestData                  $companyRequestData,
+        InvoiceActivation $invoiceActivate,
         GatewayConfig                 $gatewayConfig,
-        StoreManagerInterface         $storeManager,
-        Adapter                       $paytrailAdapter,
-        PaymentRequest                $paymentRequest,
-        RefundRequest                 $refundRequest,
-        EmailRefundRequest            $emailRefundRequest,
         AddCardFormRequest            $addCardFormRequest,
         GetTokenRequest               $getTokenRequest,
         CitPaymentRequest             $citPaymentRequest,
@@ -157,6 +206,8 @@ class ApiData
         $this->urlBuilder = $urlBuilder;
         $this->request = $request;
         $this->json = $json;
+        $this->countryInfo = $countryInformationAcquirer;
+        $this->taxHelper = $taxHelper;
         $this->helper = $helper;
         $this->gatewayConfig = $gatewayConfig;
         $this->paytrailAdapter = $paytrailAdapter;
@@ -164,6 +215,10 @@ class ApiData
         $this->refundRequest = $refundRequest;
         $this->storeManager = $storeManager;
         $this->emailRefundRequest = $emailRefundRequest;
+        $this->discountSplitter = $discountSplitter;
+        $this->taxItems = $taxItem;
+        $this->companyRequestData = $companyRequestData;
+        $this->invoiceActivate = $invoiceActivate;
         $this->addCardFormRequest = $addCardFormRequest;
         $this->getTokenRequest = $getTokenRequest;
         $this->citPaymentRequest = $citPaymentRequest;
@@ -248,6 +303,7 @@ class ApiData
                 $paymentStatus->setTransactionId($transactionId);
                 $response["data"] = $paytrailClient->getPaymentStatus($paymentStatus);
 
+                // Handle refund requests
                 $this->log->debugLog(
                     'response',
                     sprintf(
@@ -256,8 +312,8 @@ class ApiData
                         $this->json->serialize($response["data"])
                     )
                 );
-            } elseif ($requestType === 'refund') {
                 // Handle refund requests
+            } elseif ($requestType === 'refund') {
                 $paytrailRefund = $this->refundRequest;
                 $this->setRefundRequestData($paytrailRefund, $amount);
 
@@ -270,6 +326,8 @@ class ApiData
                         $response["data"]->getTransactionId()
                     )
                 );
+
+                // Handle email refund requests
             } elseif ($requestType === 'email_refund') {
                 $paytrailEmailRefund = $this->emailRefundRequest;
                 $this->setEmailRefundRequestData($paytrailEmailRefund, $amount, $order);
@@ -291,6 +349,12 @@ class ApiData
                 $this->log->debugLog(
                     'response',
                     'Successful response for payment providers.'
+                );
+            } elseif ($requestType === 'invoice_activation') {
+                $response["data"] = $paytrailClient->activateInvoice($transactionId);
+                $this->log->debugLog(
+                    'response',
+                    'Successful response for invoice activation'
                 );
             } elseif ($requestType === 'add_card') {
                 $addCardFormRequest = $this->addCardFormRequest;
@@ -336,6 +400,8 @@ class ApiData
     }
 
     /**
+     * Hydrate Payment request with data.
+     *
      * @param PaymentRequest $paytrailPayment
      * @param Order $order
      * @return mixed
@@ -346,25 +412,29 @@ class ApiData
         $billingAddress = $order->getBillingAddress() ?? $order->getShippingAddress();
         $shippingAddress = $order->getShippingAddress();
 
-        $paytrailPayment->setStamp(hash(
-            $this->gatewayConfig->getCheckoutAlgorithm(),
-            time() . $order->getIncrementId()
-        ));
-
-        $paytrailPayment->setReference($this->finnishReferenceNumber->getReference($order));
-        $paytrailPayment->setCurrency($order->getOrderCurrencyCode());
-        $paytrailPayment->setAmount(round($order->getGrandTotal() * 100));
-        $paytrailPayment->setCustomer($this->requestData->createCustomer($billingAddress));
-        $paytrailPayment->setInvoicingAddress($this->requestData->createAddress($order, $billingAddress));
-
+        $paytrailPayment->setStamp(
+            hash($this->gatewayConfig->getCheckoutAlgorithm(), 
+            time() . $order->getIncrementId())
+            )
+            ->setReference($this->finnishReferenceNumber->getReference($order))
+            ->setCurrency($order->getOrderCurrencyCode())
+            ->setAmount(round($order->getGrandTotal() * 100))
+            ->setCustomer($this->requestData->createCustomer($billingAddress))
+            ->setInvoicingAddress($this->requestData->createAddress($order, $billingAddress))
+            ->setLanguage($this->helper->getStoreLocaleForPaymentProvider())
+            ->setItems($this->requestData->getOrderItemLines($order))
+            ->setRedirectUrls($this->createRedirectUrl())
+            ->setCallbackUrls($this->createCallbackUrl());
+        
         if ($shippingAddress !== null) {
             $paytrailPayment->setDeliveryAddress($this->requestData->createAddress($order, $shippingAddress));
         }
 
-        $paytrailPayment->setLanguage($this->helper->getStoreLocaleForPaymentProvider());
-        $paytrailPayment->setItems($this->requestData->getOrderItemLines($order));
-        $paytrailPayment->setRedirectUrls($this->createRedirectUrl());
-        $paytrailPayment->setCallbackUrls($this->createCallbackUrl());
+        // Conditionally set manual invoicing flag if selected payment method supports it.
+        $this->invoiceActivate->setManualInvoiceActivationFlag(
+            $paytrailPayment,
+            $this->request->getParam('preselected_payment_method_id')
+        );
 
         // Log payment data
         $this->log->debugLog('request', $paytrailPayment);
@@ -405,6 +475,60 @@ class ApiData
     }
 
     /**
+     * @param \Magento\Sales\Api\Data\OrderAddressInterface $billingAddress
+     * @return Customer
+     */
+    protected function createCustomer($billingAddress)
+    {
+        $customer = new Customer();
+
+        $customer->setEmail($billingAddress->getEmail())
+            ->setFirstName($billingAddress->getFirstName())
+            ->setLastName($billingAddress->getLastname())
+            ->setPhone($billingAddress->getTelephone());
+
+        $this->companyRequestData->setCompanyRequestData($customer, $billingAddress);
+
+        return $customer;
+    }
+
+    /**
+     * @param Order $order
+     * @param $address
+     * @return Address
+     * @throws NoSuchEntityException
+     */
+    protected function createAddress($address)
+    {
+        $paytrailAddress = new Address();
+
+        $country = $this->countryInfo->getCountryInfo(
+            $address->getCountryId()
+        )
+            ->getTwoLetterAbbreviation();
+        $streetAddressRows = $address->getStreet();
+        $streetAddress = $streetAddressRows[0];
+        if (mb_strlen($streetAddress, 'utf-8') > 50) {
+            $streetAddress = mb_substr($streetAddress, 0, 50, 'utf-8');
+        }
+
+        $paytrailAddress->setStreetAddress($streetAddress)
+            ->setPostalCode($address->getPostcode())
+            ->setCity($address->getCity())
+            ->setCountry($country);
+
+        if (!empty($address->getRegion())) {
+            $paytrailAddress->setCounty($address->getRegion());
+        }
+
+        return $paytrailAddress;
+    }
+
+    /**
+     * @param Order $order
+     * @param string $methodId
+     * @return array
+     * @throws \Exception
      * @param AddCardFormRequest $addCardFormRequest
      */
     protected function setAddCardFormRequestData($addCardFormRequest)
@@ -478,12 +602,10 @@ class ApiData
         $routeParams = [
             '_secure' => $this->request->isSecure(),
         ];
-
         if ($this->request->getParam('custom_redirect_url')) {
             $routeParams['custom_redirect_url'] = $this->request->getParam('custom_redirect_url');
         }
-
-        return $this->urlBuilder->getUrl('paytrail/' . $param, $routeParams);
+            return $this->urlBuilder->getUrl('paytrail/' . $param, $routeParams);
     }
 
     /**
