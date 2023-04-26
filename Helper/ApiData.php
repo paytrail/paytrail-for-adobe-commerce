@@ -8,18 +8,13 @@ use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Framework\Serialize\Serializer\Json;
 use Magento\Framework\UrlInterface;
 use Magento\Sales\Model\Order;
-use Magento\Sales\Model\Order\Item as OrderItem;
-use Magento\Sales\Model\ResourceModel\Order\Tax\Item as TaxItem;
 use Magento\Store\Model\StoreManagerInterface;
-use Paytrail\PaymentService\Exceptions\CheckoutException;
-use Magento\Tax\Helper\Data as TaxHelper;
 use Paytrail\PaymentService\Gateway\Config\Config as GatewayConfig;
 use Paytrail\PaymentService\Helper\Data as CheckoutHelper;
 use Paytrail\PaymentService\Logger\PaytrailLogger;
 use Paytrail\PaymentService\Model\Adapter\Adapter;
 use Paytrail\PaymentService\Model\Company\CompanyRequestData;
 use Paytrail\PaymentService\Model\Invoice\InvoiceActivation;
-use Paytrail\PaymentService\Model\Payment\DiscountSplitter;
 use Paytrail\PaymentService\Model\FinnishReferenceNumber;
 use Paytrail\SDK\Model\CallbackUrl;
 use Paytrail\SDK\Request\EmailRefundRequest;
@@ -30,17 +25,13 @@ use Paytrail\SDK\Request\CitPaymentRequest;
 use Paytrail\SDK\Request\GetTokenRequest;
 use Paytrail\SDK\Request\PaymentStatusRequest;
 use Paytrail\PaymentService\Model\Token\RequestData;
-use Psr\Log\LoggerInterface;
 
-/**
- * Class ApiData
- */
 class ApiData
 {
     /**
      * @var \Paytrail\PaymentService\Model\FinnishReferenceNumber
      */
-    protected FinnishReferenceNumber $finnishReferenceNumber;
+    private FinnishReferenceNumber $referenceNumber;
 
     /**
      * @var CheckoutHelper
@@ -113,11 +104,6 @@ class ApiData
     private $getTokenRequest;
 
     /**
-     * @var TaxItem
-     */
-    private $taxItems;
-
-    /**
      * @var CitPaymentRequest
      */
     private $citPaymentRequest;
@@ -138,115 +124,89 @@ class ApiData
     private InvoiceActivation $invoiceActivate;
 
     /**
-     * @var \Paytrail\PaymentService\Helper\CountryInformationAcquirerInterface
-     */
-    private CountryInformationAcquirerInterface $countryInfo;
-
-    /**
-     * @var \Magento\Tax\Helper\Data
-     */
-    private TaxHelper $taxHelper;
-
-    /**
-     * @var \Paytrail\PaymentService\Model\Payment\DiscountSplitter
-     */
-    private DiscountSplitter $discountSplitter;
-
-    /**
-     * @param LoggerInterface                                                     $log
-     * @param UrlInterface                                                        $urlBuilder
-     * @param RequestInterface                                                    $request
-     * @param Json                                                                $json
-     * @param \Paytrail\PaymentService\Helper\CountryInformationAcquirerInterface $countryInformationAcquirer
-     * @param \Magento\Tax\Helper\Data                                            $taxHelper
-     * @param Data                                                                $helper
-     * @param StoreManagerInterface                                               $storeManager
-     * @param Adapter                                                             $paytrailAdapter
-     * @param PaymentRequest                                                      $paymentRequest
-     * @param RefundRequest                                                       $refundRequest
-     * @param EmailRefundRequest                                                  $emailRefundRequest
-     * @param DiscountSplitter                                                    $discountSplitter
-     * @param TaxItem                                                             $taxItem
-     * @param CompanyRequestData                                                  $companyRequestData
-     * @param InvoiceActivation                                                   $invoiceActivate
-     * @param GatewayConfig                                                       $gatewayConfig
-     * @param AddCardFormRequest                                                  $addCardFormRequest
-     * @param GetTokenRequest                                                     $getTokenRequest
-     * @param CitPaymentRequest                                                   $citPaymentRequest
-     * @param PaymentStatusRequest                                                $paymentStatusRequest
-     * @param RequestData                                                         $requestData
-     * @param \Paytrail\PaymentService\Model\FinnishReferenceNumber               $finnishReferenceNumber
+     * @param PaytrailLogger         $log
+     * @param UrlInterface           $urlBuilder
+     * @param RequestInterface       $request
+     * @param Json                   $json
+     * @param Data                   $helper
+     * @param StoreManagerInterface  $storeManager
+     * @param Adapter                $paytrailAdapter
+     * @param PaymentRequest         $paymentRequest
+     * @param RefundRequest          $refundRequest
+     * @param EmailRefundRequest     $emailRefundRequest
+     * @param CompanyRequestData     $companyRequestData
+     * @param InvoiceActivation      $invoiceActivate
+     * @param GatewayConfig          $gatewayConfig
+     * @param AddCardFormRequest     $addCardFormRequest
+     * @param GetTokenRequest        $getTokenRequest
+     * @param CitPaymentRequest      $citPaymentRequest
+     * @param PaymentStatusRequest   $paymentStatusRequest
+     * @param RequestData            $requestData
+     * @param FinnishReferenceNumber $referenceNumber
      */
     public function __construct(
-        PaytrailLogger                     $log,
-        UrlInterface                        $urlBuilder,
-        RequestInterface                    $request,
-        Json                                $json,
-        CountryInformationAcquirerInterface $countryInformationAcquirer,
-        TaxHelper                           $taxHelper,
-        CheckoutHelper                      $helper,
-        StoreManagerInterface               $storeManager,
-        Adapter                             $paytrailAdapter,
-        PaymentRequest                      $paymentRequest,
-        RefundRequest                       $refundRequest,
-        EmailRefundRequest                  $emailRefundRequest,
-        DiscountSplitter                    $discountSplitter,
-        TaxItem                             $taxItem,
-        CompanyRequestData                  $companyRequestData,
+        PaytrailLogger $log,
+        UrlInterface $urlBuilder,
+        RequestInterface $request,
+        Json $json,
+        CheckoutHelper $helper,
+        StoreManagerInterface $storeManager,
+        Adapter $paytrailAdapter,
+        PaymentRequest $paymentRequest,
+        RefundRequest $refundRequest,
+        EmailRefundRequest $emailRefundRequest,
+        CompanyRequestData $companyRequestData,
         InvoiceActivation $invoiceActivate,
-        GatewayConfig                 $gatewayConfig,
-        AddCardFormRequest            $addCardFormRequest,
-        GetTokenRequest               $getTokenRequest,
-        CitPaymentRequest             $citPaymentRequest,
-        PaymentStatusRequest          $paymentStatusRequest,
-        RequestData                   $requestData,
-        FinnishReferenceNumber        $finnishReferenceNumber
+        GatewayConfig $gatewayConfig,
+        AddCardFormRequest $addCardFormRequest,
+        GetTokenRequest $getTokenRequest,
+        CitPaymentRequest $citPaymentRequest,
+        PaymentStatusRequest $paymentStatusRequest,
+        RequestData $requestData,
+        FinnishReferenceNumber $referenceNumber
     ) {
-        $this->log = $log;
-        $this->urlBuilder = $urlBuilder;
-        $this->request = $request;
-        $this->json = $json;
-        $this->countryInfo = $countryInformationAcquirer;
-        $this->taxHelper = $taxHelper;
-        $this->helper = $helper;
-        $this->gatewayConfig = $gatewayConfig;
-        $this->paytrailAdapter = $paytrailAdapter;
-        $this->paymentRequest = $paymentRequest;
-        $this->refundRequest = $refundRequest;
-        $this->storeManager = $storeManager;
-        $this->emailRefundRequest = $emailRefundRequest;
-        $this->discountSplitter = $discountSplitter;
-        $this->taxItems = $taxItem;
-        $this->companyRequestData = $companyRequestData;
-        $this->invoiceActivate = $invoiceActivate;
-        $this->addCardFormRequest = $addCardFormRequest;
-        $this->getTokenRequest = $getTokenRequest;
-        $this->citPaymentRequest = $citPaymentRequest;
+        $this->log                  = $log;
+        $this->urlBuilder           = $urlBuilder;
+        $this->request              = $request;
+        $this->json                 = $json;
+        $this->helper               = $helper;
+        $this->gatewayConfig        = $gatewayConfig;
+        $this->paytrailAdapter      = $paytrailAdapter;
+        $this->paymentRequest       = $paymentRequest;
+        $this->refundRequest        = $refundRequest;
+        $this->storeManager         = $storeManager;
+        $this->emailRefundRequest   = $emailRefundRequest;
+        $this->companyRequestData   = $companyRequestData;
+        $this->invoiceActivate      = $invoiceActivate;
+        $this->addCardFormRequest   = $addCardFormRequest;
+        $this->getTokenRequest      = $getTokenRequest;
+        $this->citPaymentRequest    = $citPaymentRequest;
         $this->paymentStatusRequest = $paymentStatusRequest;
-        $this->requestData = $requestData;
-        $this->finnishReferenceNumber = $finnishReferenceNumber;
+        $this->requestData          = $requestData;
+        $this->referenceNumber      = $referenceNumber;
     }
 
     /**
      * Process Api request
      *
-     * @param string $requestType
-     * @param Order|null $order
-     * @param int|float $amount
-     * @param mixed $transactionId
-     * @param mixed $methodId
-     * @param mixed $tokenizationId
+     * @param string         $requestType
+     * @param Order|null     $order
+     * @param int|float|null $amount
+     * @param mixed          $transactionId
+     * @param mixed          $methodId
+     * @param mixed          $tokenizationId
+     *
      * @return mixed
      */
     public function processApiRequest(
-        $requestType,
-        $order = null,
-        $amount = null,
-        $transactionId = null,
-        $methodId = null,
-        $tokenizationId = null
-    ) {
-        $response["data"] = null;
+        string $requestType,
+        Order|null $order = null,
+        int|float|null $amount = null,
+        mixed $transactionId = null,
+        mixed $methodId = null,
+        mixed $tokenizationId = null
+    ): mixed {
+        $response["data"]  = null;
         $response["error"] = null;
 
         try {
@@ -270,7 +230,7 @@ class ApiData
 
                 $loggedData = $this->json->serialize([
                     'transactionId' => $response["data"]->getTransactionId(),
-                    'href' => $response["data"]->getHref()
+                    'href'          => $response["data"]->getHref()
                 ]);
 
                 $this->log->debugLog(
@@ -283,12 +243,13 @@ class ApiData
                 );
             } elseif ($requestType === "token_payment") {
                 // token payment using Customer Initialized Transaction
-                $paytrailPayment = $this->citPaymentRequest;
-                $paytrailPayment = $this->requestData->setTokenPaymentRequestData($paytrailPayment, $order, $methodId, $tokenizationId);
+                $paytrailPayment  = $this->citPaymentRequest;
+                $paytrailPayment  = $this->requestData->setTokenPaymentRequestData($paytrailPayment, $order, $methodId,
+                    $tokenizationId);
                 $response["data"] = $paytrailClient->createCitPaymentCharge($paytrailPayment);
-                $loggedData = $this->json->serialize([
+                $loggedData       = $this->json->serialize([
                     'transactionId' => $response["data"]->getTransactionId(),
-                    '3ds' => $response["data"]->getThreeDSecureUrl()
+                    '3ds'           => $response["data"]->getThreeDSecureUrl()
                 ]);
                 $this->log->debugLog(
                     'response',
@@ -326,7 +287,6 @@ class ApiData
                         $response["data"]->getTransactionId()
                     )
                 );
-
                 // Handle email refund requests
             } elseif ($requestType === 'email_refund') {
                 $paytrailEmailRefund = $this->emailRefundRequest;
@@ -382,6 +342,7 @@ class ApiData
                     $e->getCode()
                 ));
                 $response["error"] = $e->getMessage();
+
                 return $response;
             }
         } catch (\Exception $e) {
@@ -393,6 +354,7 @@ class ApiData
                 $e->getTrace()
             );
             $response["error"] = $e->getMessage();
+
             return $response;
         }
 
@@ -403,20 +365,24 @@ class ApiData
      * Hydrate Payment request with data.
      *
      * @param PaymentRequest $paytrailPayment
-     * @param Order $order
-     * @return mixed
+     * @param Order          $order
+     *
+     * @return PaymentRequest
      * @throws \Exception
      */
-    protected function setPaymentRequestData($paytrailPayment, $order)
+    protected function setPaymentRequestData(PaymentRequest $paytrailPayment, Order $order): PaymentRequest
     {
-        $billingAddress = $order->getBillingAddress() ?? $order->getShippingAddress();
+        $billingAddress  = $order->getBillingAddress() ?? $order->getShippingAddress();
         $shippingAddress = $order->getShippingAddress();
 
-        $paytrailPayment->setStamp(
-            hash($this->gatewayConfig->getCheckoutAlgorithm(), 
-            time() . $order->getIncrementId())
+        $paytrailPayment
+            ->setStamp(
+                hash(
+                    $this->gatewayConfig->getCheckoutAlgorithm(),
+                    time() . $order->getIncrementId()
+                )
             )
-            ->setReference($this->finnishReferenceNumber->getReference($order))
+            ->setReference($this->referenceNumber->getReference($order))
             ->setCurrency($order->getOrderCurrencyCode())
             ->setAmount(round($order->getGrandTotal() * 100))
             ->setCustomer($this->requestData->createCustomer($billingAddress))
@@ -425,7 +391,7 @@ class ApiData
             ->setItems($this->requestData->getOrderItemLines($order))
             ->setRedirectUrls($this->createRedirectUrl())
             ->setCallbackUrls($this->createCallbackUrl());
-        
+
         if ($shippingAddress !== null) {
             $paytrailPayment->setDeliveryAddress($this->requestData->createAddress($order, $shippingAddress));
         }
@@ -443,11 +409,14 @@ class ApiData
     }
 
     /**
-     * @param RefundRequest $paytrailRefund
-     * @param $amount
-     * @throws CheckoutException
+     * Set refund request data.
+     *
+     * @param RefundRequest  $paytrailRefund
+     * @param float|int|null $amount
+     *
+     * @throws \Paytrail\PaymentService\Exceptions\CheckoutException
      */
-    protected function setRefundRequestData($paytrailRefund, $amount)
+    private function setRefundRequestData(RefundRequest $paytrailRefund, float|int|null $amount): void
     {
         if ($amount <= 0) {
             $this->helper->processError('Refund amount must be above 0');
@@ -460,12 +429,19 @@ class ApiData
     }
 
     /**
-     * @param EmailRefundRequest $paytrailEmailRefund
-     * @param $amount
-     * @param $order
+     * SetEmailRefundRequestData method
+     *
+     * @param EmailRefundRequest         $paytrailEmailRefund
+     * @param float|int|null             $amount
+     * @param \Magento\Sales\Model\Order $order
+     *
+     * @return void
      */
-    protected function setEmailRefundRequestData($paytrailEmailRefund, $amount, $order)
-    {
+    private function setEmailRefundRequestData(
+        EmailRefundRequest $paytrailEmailRefund,
+        float|int|null $amount,
+        Order $order
+    ): void {
         $paytrailEmailRefund->setEmail($order->getBillingAddress()->getEmail());
 
         $paytrailEmailRefund->setAmount(round($amount * 100));
@@ -475,65 +451,15 @@ class ApiData
     }
 
     /**
-     * @param \Magento\Sales\Api\Data\OrderAddressInterface $billingAddress
-     * @return Customer
-     */
-    protected function createCustomer($billingAddress)
-    {
-        $customer = new Customer();
-
-        $customer->setEmail($billingAddress->getEmail())
-            ->setFirstName($billingAddress->getFirstName())
-            ->setLastName($billingAddress->getLastname())
-            ->setPhone($billingAddress->getTelephone());
-
-        $this->companyRequestData->setCompanyRequestData($customer, $billingAddress);
-
-        return $customer;
-    }
-
-    /**
-     * @param Order $order
-     * @param $address
-     * @return Address
-     * @throws NoSuchEntityException
-     */
-    protected function createAddress($address)
-    {
-        $paytrailAddress = new Address();
-
-        $country = $this->countryInfo->getCountryInfo(
-            $address->getCountryId()
-        )
-            ->getTwoLetterAbbreviation();
-        $streetAddressRows = $address->getStreet();
-        $streetAddress = $streetAddressRows[0];
-        if (mb_strlen($streetAddress, 'utf-8') > 50) {
-            $streetAddress = mb_substr($streetAddress, 0, 50, 'utf-8');
-        }
-
-        $paytrailAddress->setStreetAddress($streetAddress)
-            ->setPostalCode($address->getPostcode())
-            ->setCity($address->getCity())
-            ->setCountry($country);
-
-        if (!empty($address->getRegion())) {
-            $paytrailAddress->setCounty($address->getRegion());
-        }
-
-        return $paytrailAddress;
-    }
-
-    /**
-     * @param Order $order
-     * @param string $methodId
-     * @return array
-     * @throws \Exception
+     * SetAddCardFormRequestData function
+     *
      * @param AddCardFormRequest $addCardFormRequest
+     *
+     * @throws \Exception
      */
-    protected function setAddCardFormRequestData($addCardFormRequest)
+    private function setAddCardFormRequestData(AddCardFormRequest $addCardFormRequest): void
     {
-        $datetime = new \DateTime();
+        $datetime    = new \DateTime();
         $saveCardUrl = $this->gatewayConfig->getSaveCardUrl();
 
         $addCardFormRequest->setCheckoutAccount($this->gatewayConfig->getMerchantId());
@@ -547,9 +473,11 @@ class ApiData
     }
 
     /**
+     * Create callback url for refund.
+     *
      * @return CallbackUrl
      */
-    protected function createRefundCallback()
+    protected function createRefundCallback(): CallbackUrl
     {
         $callback = new CallbackUrl();
 
@@ -568,9 +496,11 @@ class ApiData
     }
 
     /**
+     * Create redirect url.
+     *
      * @return CallbackUrl
      */
-    protected function createRedirectUrl()
+    private function createRedirectUrl(): CallbackUrl
     {
         $callback = new CallbackUrl();
 
@@ -581,9 +511,11 @@ class ApiData
     }
 
     /**
+     * Create callback url.
+     *
      * @return CallbackUrl
      */
-    protected function createCallbackUrl()
+    private function createCallbackUrl(): CallbackUrl
     {
         $callback = new CallbackUrl();
 
@@ -594,10 +526,13 @@ class ApiData
     }
 
     /**
-     * @param $param
+     * Get callback url.
+     *
+     * @param string $param
+     *
      * @return string
      */
-    protected function getCallbackUrl($param)
+    protected function getCallbackUrl(string $param): string
     {
         $routeParams = [
             '_secure' => $this->request->isSecure(),
@@ -605,15 +540,19 @@ class ApiData
         if ($this->request->getParam('custom_redirect_url')) {
             $routeParams['custom_redirect_url'] = $this->request->getParam('custom_redirect_url');
         }
-            return $this->urlBuilder->getUrl('paytrail/' . $param, $routeParams);
+
+        return $this->urlBuilder->getUrl('paytrail/' . $param, $routeParams);
     }
 
     /**
-     * @param $params
-     * @param $signature
+     * Validate Hmac
+     *
+     * @param array  $params
+     * @param string $signature
+     *
      * @return bool
      */
-    public function validateHmac($params, $signature)
+    public function validateHmac(array $params, string $signature): bool
     {
         try {
             $this->log->debugLog(
@@ -631,6 +570,7 @@ class ApiData
                 'Paytrail PaymentService error: Hmac validation failed for transaction %s',
                 $params["checkout-transaction-id"]
             ));
+
             return false;
         }
         $this->log->debugLog(
@@ -640,6 +580,7 @@ class ApiData
                 $params["checkout-transaction-id"]
             )
         );
+
         return true;
     }
 }
