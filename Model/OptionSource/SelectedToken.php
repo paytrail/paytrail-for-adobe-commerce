@@ -90,7 +90,7 @@ class SelectedToken implements \Magento\Framework\Data\OptionSourceInterface
         $subscriptionId = (int)$this->request->getParams()['id'];
         $orderIds = $this->subscriptionLinkRepoInterface->getOrderIdsBySubscriptionId($subscriptionId);
 
-        return array_first($orderIds);
+        return reset($orderIds);
     }
 
     /**

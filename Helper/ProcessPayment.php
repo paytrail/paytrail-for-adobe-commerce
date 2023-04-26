@@ -4,10 +4,12 @@ namespace Paytrail\PaymentService\Helper;
 
 use Magento\Checkout\Model\Session;
 use Magento\Framework\App\CacheInterface;
+use Magento\Quote\Api\CartRepositoryInterface;
 use Magento\Quote\Model\QuoteRepository;
 use Paytrail\PaymentService\Gateway\Config\Config;
 use Paytrail\PaymentService\Gateway\Validator\ResponseValidator;
 use Paytrail\PaymentService\Exceptions\CheckoutException;
+use Paytrail\PaymentService\Model\FinnishReferenceNumber;
 use Paytrail\PaymentService\Model\ReceiptDataProvider;
 use Paytrail\PaymentService\Exceptions\TransactionSuccessException;
 
@@ -17,6 +19,11 @@ use Paytrail\PaymentService\Exceptions\TransactionSuccessException;
 class ProcessPayment
 {
     const PAYMENT_PROCESSING_CACHE_PREFIX = "paytrail-processing-payment-";
+
+    /**
+     * @var FinnishReferenceNumber
+     */
+    protected FinnishReferenceNumber $finnishReferenceNumber;
 
     /**
      * @var ResponseValidator
@@ -31,7 +38,7 @@ class ProcessPayment
     /**
      * @var QuoteRepository
      */
-    private $quoteRepository;
+    private $cartRepository;
 
     /**
      * @var CacheInterface
@@ -52,31 +59,35 @@ class ProcessPayment
      * ProcessPayment constructor.
      * @param ResponseValidator $responseValidator
      * @param ReceiptDataProvider $receiptDataProvider
-     * @param QuoteRepository $quoteRepository
+     * @param QuoteRepository $cartRepository
      * @param CacheInterface $cache
      * @param Config $gatewayConfig
      * @param Data $paytrailHelper
      */
     public function __construct(
-        ResponseValidator $responseValidator,
-        ReceiptDataProvider $receiptDataProvider,
-        QuoteRepository $quoteRepository,
-        CacheInterface $cache,
-        Config $gatewayConfig,
-        Data $paytrailHelper
+        ResponseValidator       $responseValidator,
+        ReceiptDataProvider     $receiptDataProvider,
+        CartRepositoryInterface $cartRepository,
+        CacheInterface          $cache,
+        Config                  $gatewayConfig,
+        Data                    $paytrailHelper,
+        FinnishReferenceNumber $finnishReferenceNumber
     ) {
         $this->responseValidator = $responseValidator;
         $this->receiptDataProvider = $receiptDataProvider;
-        $this->quoteRepository = $quoteRepository;
+        $this->cartRepository = $cartRepository;
         $this->cache = $cache;
         $this->gatewayConfig = $gatewayConfig;
         $this->paytrailHelper = $paytrailHelper;
+        $this->finnishReferenceNumber = $finnishReferenceNumber;
     }
 
     /**
-     * @param array $params
+     * @param array   $params
      * @param Session $session
+     *
      * @return array
+     * @throws \Exception
      */
     public function process($params, $session)
     {
@@ -90,7 +101,7 @@ class ProcessPayment
 
             /** @var string $failMessage */
             foreach ($validationResponse->getFailsDescription() as $failMessage) {
-                array_push($errors, $failMessage);
+                $errors[] = $failMessage;
             }
 
             $session->restoreQuote(); // should it be restored?
@@ -103,10 +114,9 @@ class ProcessPayment
 
         /** @var string $orderNo */
         $orderNo = $this->gatewayConfig->getGenerateReferenceForOrder()
-            ? $this->paytrailHelper->getIdFromOrderReferenceNumber($reference)
+            ? $this->finnishReferenceNumber->getIdFromOrderReferenceNumber($reference)
             : $reference;
 
-        /** @var int $count */
         $count = 0;
         while ($this->isPaymentLocked($orderNo) && $count < 5) {
             $count++;
@@ -168,7 +178,7 @@ class ProcessPayment
             /** @var \Magento\Quote\Model\Quote $quote */
             $quote = $session->getQuote();
             $quote->setIsActive(false);
-            $this->quoteRepository->save($quote);
+            $this->cartRepository->save($quote);
         }
 
         return $errors;

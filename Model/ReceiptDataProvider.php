@@ -1,30 +1,30 @@
 <?php
+
 namespace Paytrail\PaymentService\Model;
 
+use Magento\Backend\Model\UrlInterface;
 use Magento\Checkout\Model\Session;
-use Magento\Framework\App\Action\Context;
 use Magento\Framework\App\CacheInterface;
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\DB\TransactionFactory;
 use Magento\Framework\Exception\InputException;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Mail\Template\TransportBuilder;
-use Magento\Sales\Api\Data\OrderInterface;
 use Magento\Sales\Api\OrderManagementInterface;
 use Magento\Sales\Api\OrderRepositoryInterface;
-use Magento\Sales\Api\OrderStatusHistoryRepositoryInterface;
 use Magento\Sales\Api\TransactionRepositoryInterface;
 use Magento\Sales\Model\Order\Email\Sender\OrderSender;
 use Magento\Sales\Model\Order\Payment\Transaction;
 use Magento\Sales\Model\Order\Payment\Transaction\Builder as transactionBuilder;
 use Magento\Sales\Model\Order\Payment\Transaction\BuilderInterface as transactionBuilderInterface;
+use Magento\Sales\Model\OrderFactory;
 use Magento\Sales\Model\Service\InvoiceService;
 use Paytrail\PaymentService\Exceptions\CheckoutException;
 use Paytrail\PaymentService\Gateway\Config\Config;
-use Paytrail\PaymentService\Gateway\Validator\ResponseValidator;
 use Paytrail\PaymentService\Helper\ApiData;
 use Paytrail\PaymentService\Helper\Data as paytrailHelper;
-use Paytrail\PaymentService\Setup\Recurring;
+use Paytrail\PaymentService\Model\Email\Order\PendingOrderEmailConfirmation;
+use Paytrail\PaymentService\Setup\Patch\Data\InstallPaytrail;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -32,12 +32,7 @@ use Psr\Log\LoggerInterface;
  */
 class ReceiptDataProvider
 {
-    const RECEIPT_PROCESSING_CACHE_PREFIX = "receipt_processing_";
-
-    /**
-     * @var Context
-     */
-    protected $context;
+    public const RECEIPT_PROCESSING_CACHE_PREFIX = "receipt_processing_";
 
     /**
      * @var Session
@@ -70,29 +65,14 @@ class ReceiptDataProvider
     protected $orderManagementInterface;
 
     /**
-     * @var ResponseValidator
-     */
-    protected $responseValidator;
-
-    /**
      * @var OrderRepositoryInterface
      */
     protected $orderRepositoryInterface;
 
     /**
-     * @var transactionBuilderInterface
-     */
-    protected $transactionBuilderInterface;
-
-    /**
      * @var InvoiceService
      */
     protected $invoiceService;
-
-    /**
-     * @var OrderStatusHistoryRepositoryInterface
-     */
-    protected $orderStatusHistoryRepository;
 
     /**
      * @var TransactionFactory
@@ -105,14 +85,14 @@ class ReceiptDataProvider
     protected $paytrailHelper;
 
     /**
-     * @var OrderInterface
-     */
-    protected $orderInterface;
-
-    /**
-     * @var transactionBuilder
+     * @var transactionBuilderInterface
      */
     protected $transactionBuilder;
+
+    /**
+     * @var \Paytrail\PaymentService\Model\FinnishReferenceNumber
+     */
+    protected FinnishReferenceNumber $finnishReferenceNumber;
 
     /**
      * @var |Magento\Framework\App\CacheInterface
@@ -166,7 +146,7 @@ class ReceiptDataProvider
      */
     protected $logger;
     /**
-     * @var \Magento\Backend\Model\UrlInterface
+     * @var UrlInterface
      */
     private $backendUrl;
     /**
@@ -175,97 +155,104 @@ class ReceiptDataProvider
     private $skipHmac;
 
     /**
+     * @var PendingOrderEmailConfirmation
+     */
+    private $pendingOrderEmail;
+
+    /**
+     * @var OrderFactory
+     */
+    private $orderFactory;
+
+    /**
      * ReceiptDataProvider constructor.
-     * @param Context $context
-     * @param Session $session
-     * @param TransactionRepositoryInterface $transactionRepository
-     * @param OrderSender $orderSender
-     * @param TransportBuilder $transportBuilder
-     * @param ScopeConfigInterface $scopeConfig
-     * @param OrderManagementInterface $orderManagementInterface
-     * @param ResponseValidator $responseValidator
-     * @param OrderRepositoryInterface $orderRepositoryInterface
-     * @param transactionBuilderInterface $transactionBuilderInterface
-     * @param CacheInterface $cache
-     * @param InvoiceService $invoiceService
-     * @param OrderStatusHistoryRepositoryInterface $orderStatusHistoryRepository
-     * @param TransactionFactory $transactionFactory
-     * @param paytrailHelper $paytrailHelper
-     * @param OrderInterface $orderInterface
-     * @param transactionBuilder $transactionBuilder
-     * @param Config $gatewayConfig
-     * @param ApiData $apiData
-     * @param LoggerInterface $logger
-     * @param \Magento\Backend\Model\UrlInterface $backendUrl
-     * @param bool $skipHmac
+     *
+     * @param Session                                                $session
+     * @param TransactionRepositoryInterface                         $transactionRepository
+     * @param OrderSender                                            $orderSender
+     * @param TransportBuilder                                       $transportBuilder
+     * @param ScopeConfigInterface                                   $scopeConfig
+     * @param OrderManagementInterface                               $orderManagementInterface
+     * @param OrderRepositoryInterface                               $orderRepositoryInterface
+     * @param CacheInterface                                         $cache
+     * @param InvoiceService                                         $invoiceService
+     * @param TransactionFactory                                     $transactionFactory
+     * @param paytrailHelper                                         $paytrailHelper
+     * @param \Magento\Sales\Model\Order\Payment\Transaction\Builder $transactionBuilder
+     * @param Config                                                 $gatewayConfig
+     * @param ApiData                                                $apiData
+     * @param LoggerInterface                                        $logger
+     * @param UrlInterface                                           $backendUrl
+     * @param OrderFactory                                           $orderFactory
+     * @param PendingOrderEmailConfirmation                          $pendingOrderEmail
+     * @param \Paytrail\PaymentService\Model\FinnishReferenceNumber  $finnishReferenceNumber
+     * @param boolean                                                $skipHmac
      */
     public function __construct(
-        Context $context,
-        Session $session,
+        Session                        $session,
         TransactionRepositoryInterface $transactionRepository,
-        OrderSender $orderSender,
-        TransportBuilder $transportBuilder,
-        ScopeConfigInterface $scopeConfig,
-        OrderManagementInterface $orderManagementInterface,
-        ResponseValidator $responseValidator,
-        OrderRepositoryInterface $orderRepositoryInterface,
-        transactionBuilderInterface $transactionBuilderInterface,
-        CacheInterface $cache,
-        InvoiceService $invoiceService,
-        OrderStatusHistoryRepositoryInterface $orderStatusHistoryRepository,
-        TransactionFactory $transactionFactory,
-        paytrailHelper $paytrailHelper,
-        OrderInterface $orderInterface,
-        transactionBuilder $transactionBuilder,
-        Config $gatewayConfig,
-        ApiData $apiData,
-        LoggerInterface $logger,
-        \Magento\Backend\Model\UrlInterface $backendUrl,
+        OrderSender                    $orderSender,
+        TransportBuilder               $transportBuilder,
+        ScopeConfigInterface           $scopeConfig,
+        OrderManagementInterface       $orderManagementInterface,
+        OrderRepositoryInterface       $orderRepositoryInterface,
+        CacheInterface                 $cache,
+        InvoiceService                 $invoiceService,
+        TransactionFactory             $transactionFactory,
+        paytrailHelper                 $paytrailHelper,
+        transactionBuilder             $transactionBuilder,
+        Config                         $gatewayConfig,
+        ApiData                        $apiData,
+        LoggerInterface                $logger,
+        UrlInterface                   $backendUrl,
+        OrderFactory                   $orderFactory,
+        PendingOrderEmailConfirmation  $pendingOrderEmail,
+        FinnishReferenceNumber $finnishReferenceNumber,
         $skipHmac = false
     ) {
         $this->cache = $cache;
-        $this->context = $context;
         $this->session = $session;
         $this->transactionRepository = $transactionRepository;
         $this->orderSender = $orderSender;
         $this->transportBuilder = $transportBuilder;
         $this->scopeConfig = $scopeConfig;
         $this->orderManagementInterface = $orderManagementInterface;
-        $this->responseValidator = $responseValidator;
         $this->orderRepositoryInterface = $orderRepositoryInterface;
-        $this->transactionBuilderInterface = $transactionBuilderInterface;
         $this->invoiceService = $invoiceService;
-        $this->orderStatusHistoryRepository = $orderStatusHistoryRepository;
         $this->transactionFactory = $transactionFactory;
         $this->paytrailHelper = $paytrailHelper;
-        $this->orderInterface = $orderInterface;
         $this->transactionBuilder = $transactionBuilder;
         $this->gatewayConfig = $gatewayConfig;
         $this->apiData = $apiData;
         $this->logger = $logger;
         $this->backendUrl = $backendUrl;
+        $this->orderFactory = $orderFactory;
         $this->skipHmac = $skipHmac;
+        $this->pendingOrderEmail = $pendingOrderEmail;
+        $this->finnishReferenceNumber = $finnishReferenceNumber;
     }
 
     /**
      * @param array $params
+     *
      * @throws CheckoutException
      * @throws LocalizedException
+     * @throws \Exception
      */
     public function execute(array $params)
     {
         if ($this->gatewayConfig->getGenerateReferenceForOrder()) {
             $this->orderIncrementalId
-                = $this->paytrailHelper->getIdFromOrderReferenceNumber(
-                $params["checkout-reference"]
-            );
+                = $this->finnishReferenceNumber->getIdFromOrderReferenceNumber(
+                    $params["checkout-reference"]
+                );
         } else {
             $this->orderIncrementalId
                 = $params["checkout-reference"];
         }
-        $this->transactionId        =   $params["checkout-transaction-id"];
-        $this->paramsStamp          =   $params['checkout-stamp'];
-        $this->paramsMethod         =   $params['checkout-provider'];
+        $this->transactionId = $params["checkout-transaction-id"];
+        $this->paramsStamp = $params['checkout-stamp'];
+        $this->paramsMethod = $params['checkout-provider'];
 
         $this->session->unsCheckoutRedirectUrl();
 
@@ -341,15 +328,17 @@ class ReceiptDataProvider
             $this->currentOrder->setState($orderState)->setStatus($orderState);
             $this->currentOrder->addCommentToStatusHistory(__('Payment has been completed'));
         } else {
-            $this->currentOrder->setState(Recurring::ORDER_STATE_CUSTOM_CODE);
-            $this->currentOrder->setStatus(Recurring::ORDER_STATUS_CUSTOM_CODE);
+            $this->currentOrder->setState(InstallPaytrail::ORDER_STATE_CUSTOM_CODE);
+            $this->currentOrder->setStatus(InstallPaytrail::ORDER_STATUS_CUSTOM_CODE);
             $this->currentOrder->addCommentToStatusHistory(__('Pending payment from Paytrail Payment Service'));
         }
 
         $this->orderRepositoryInterface->save($this->currentOrder);
 
         try {
-            $this->orderSender->send($this->currentOrder);
+            if (!$this->pendingOrderEmail->isPendingOrderEmailEnabled()) {
+                $this->orderSender->send($this->currentOrder);
+            }
         } catch (\Exception $e) {
             $this->logger->error(\sprintf(
                 'Paytrail: Order email sending failed: %s',
@@ -430,9 +419,9 @@ class ReceiptDataProvider
     protected function getDetails()
     {
         return [
-            'orderNo'   => $this->orderIncrementalId,
-            'stamp'     => $this->paramsStamp,
-            'method'    => $this->paramsMethod
+            'orderNo' => $this->orderIncrementalId,
+            'stamp' => $this->paramsStamp,
+            'method' => $this->paramsMethod
         ];
     }
 
@@ -442,7 +431,7 @@ class ReceiptDataProvider
      */
     protected function loadOrder()
     {
-        $order = $this->orderInterface->loadByIncrementId($this->orderIncrementalId);
+        $order = $this->orderFactory->create()->loadByIncrementId($this->orderIncrementalId);
         if (!$order->getId()) {
             $this->paytrailHelper->processError('Order not found');
         }
@@ -451,9 +440,9 @@ class ReceiptDataProvider
 
     /**
      * @param string[] $params
-     * @throws LocalizedException
-     * @throws CheckoutException
      * @return string|void
+     * @throws CheckoutException
+     * @throws LocalizedException
      */
     protected function verifyPaymentData($params)
     {
@@ -540,7 +529,7 @@ class ReceiptDataProvider
         $transaction = $this->transactionBuilder
             ->setPayment($payment)->setOrder($order)
             ->setTransactionId($transactionId)
-            ->setAdditionalInformation([Transaction::RAW_DETAILS => (array) $details])
+            ->setAdditionalInformation([Transaction::RAW_DETAILS => (array)$details])
             ->setFailSafe(true)
             ->build(Transaction::TYPE_CAPTURE);
         $transaction->setIsClosed(false);
@@ -554,7 +543,21 @@ class ReceiptDataProvider
     private function cancelOrderById($orderId): void
     {
         if ($this->gatewayConfig->getCancelOrderOnFailedPayment()) {
-            $this->orderManagementInterface->cancel($orderId);
+            try {
+                $this->orderManagementInterface->cancel($orderId);
+            } catch (\Exception $e) {
+                $this->logger->critical(sprintf(
+                    'Paytrail exception during order cancel: %s,\n error trace: %s',
+                    $e->getMessage(),
+                    $e->getTraceAsString()
+                ));
+
+                // Mask and throw end-user friendly exception
+                throw new CheckoutException(__(
+                    'Error while cancelling order. Please contact customer support with order id: %id to release discount coupons.',
+                    ['id' => $orderId]
+                ));
+            }
         }
     }
 }

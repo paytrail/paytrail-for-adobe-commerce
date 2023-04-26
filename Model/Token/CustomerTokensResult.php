@@ -47,6 +47,25 @@ class CustomerTokensResult extends AbstractModel implements CustomerTokensResult
     /**
      * @return string
      */
+    public function getPublicHash(): string
+    {
+        return $this->getData('public_hash');
+    }
+
+    /**
+     * @param $publicHash
+     * @return \Paytrail\PaymentService\Api\Data\CustomerTokensResultInterface
+     */
+    public function setPublicHash($publicHash): self
+    {
+        $this->setData('public_hash', $publicHash);
+
+        return $this;
+    }
+
+    /**
+     * @return string
+     */
     public function getType(): string
     {
         return $this->getData('type');
@@ -154,6 +173,25 @@ class CustomerTokensResult extends AbstractModel implements CustomerTokensResult
     public function setMaskedCC($maskedCC): self
     {
         $this->setData('maskedCC', $maskedCC);
+
+        return $this;
+    }
+
+    /**
+     * @return string
+     */
+    public function getCardIcon(): string
+    {
+        return $this->getData('card_icon');
+    }
+
+    /**
+     * @param $cardIcon
+     * @return \Paytrail\PaymentService\Api\Data\CustomerTokensResultInterface
+     */
+    public function setCardIcon($cardIcon): self
+    {
+        $this->setData('card_icon', $cardIcon);
 
         return $this;
     }

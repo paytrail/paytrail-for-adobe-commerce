@@ -17,7 +17,7 @@
   ],
   "require": {
     "php": "^7.3|^8.0",
-    "paytrail/paytrail-php-sdk": ">=2.0",
+    "paytrail/paytrail-php-sdk": "2.3.*",
     "ext-curl": "*",
     "nesbot/carbon": "^2.57.0"
   },
@@ -25,7 +25,7 @@
     "markup/module-paytrail": "*"
   },
   "type": "magento2-module",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "license": "MIT",
   "autoload": {
     "files": [
@@ -39,6 +39,7 @@
     "magento 2",
     "adobe commerce",
     "payment gateway",
-    "paytrail"
+    "paytrail",
+    "Recurring Payment"
   ]
 }

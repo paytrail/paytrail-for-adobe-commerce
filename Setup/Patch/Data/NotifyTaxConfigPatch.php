@@ -1,18 +1,11 @@
 <?php
-/**
- * Copyright © Magento, Inc. All rights reserved.
- * See COPYING.txt for license details.
- */
 
 declare(strict_types=1);
 
 namespace Paytrail\PaymentService\Setup\Patch\Data;
 
-use Magento\Analytics\Model\Config\Backend\CollectionTime;
-use Magento\Analytics\Model\SubscriptionStatusProvider;
+
 use Magento\Backend\Model\UrlInterface;
-use Magento\Framework\App\Config\ScopeConfigInterface;
-use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Notification\NotifierInterface;
 use Magento\Framework\Setup\Patch\DataPatchInterface;
 use Magento\Framework\Setup\Patch\PatchInterface;
@@ -26,17 +19,11 @@ class NotifyTaxConfigPatch implements DataPatchInterface
      * @var NotifierInterface
      */
     private $notifier;
-    /**
-     * @var UrlInterface
-     */
-    private $url;
 
     public function __construct(
-        NotifierInterface $notifier,
-        UrlInterface $url
+        NotifierInterface $notifier
     ) {
         $this->notifier = $notifier;
-        $this->url = $url;
     }
 
     public static function getDependencies()

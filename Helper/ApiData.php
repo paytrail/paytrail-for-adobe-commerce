@@ -14,6 +14,7 @@ use Paytrail\PaymentService\Gateway\Config\Config as GatewayConfig;
 use Paytrail\PaymentService\Helper\Data as CheckoutHelper;
 use Paytrail\PaymentService\Logger\PaytrailLogger;
 use Paytrail\PaymentService\Model\Adapter\Adapter;
+use Paytrail\PaymentService\Model\FinnishReferenceNumber;
 use Paytrail\SDK\Model\CallbackUrl;
 use Paytrail\SDK\Request\EmailRefundRequest;
 use Paytrail\SDK\Request\PaymentRequest;
@@ -30,6 +31,11 @@ use Psr\Log\LoggerInterface;
  */
 class ApiData
 {
+    /**
+     * @var \Paytrail\PaymentService\Model\FinnishReferenceNumber
+     */
+    protected FinnishReferenceNumber $finnishReferenceNumber;
+
     /**
      * @var CheckoutHelper
      */
@@ -110,23 +116,42 @@ class ApiData
      */
     private $paymentStatusRequest;
 
+    /**
+     * @param LoggerInterface $log
+     * @param UrlInterface $urlBuilder
+     * @param RequestInterface $request
+     * @param Json $json
+     * @param Data $helper
+     * @param GatewayConfig $gatewayConfig
+     * @param StoreManagerInterface $storeManager
+     * @param Adapter $paytrailAdapter
+     * @param PaymentRequest $paymentRequest
+     * @param RefundRequest $refundRequest
+     * @param EmailRefundRequest $emailRefundRequest
+     * @param AddCardFormRequest $addCardFormRequest
+     * @param GetTokenRequest $getTokenRequest
+     * @param CitPaymentRequest $citPaymentRequest
+     * @param PaymentStatusRequest $paymentStatusRequest
+     * @param RequestData $requestData
+     */
     public function __construct(
-        LoggerInterface $log,
-        UrlInterface $urlBuilder,
-        RequestInterface $request,
-        Json $json,
-        CheckoutHelper $helper,
-        GatewayConfig $gatewayConfig,
-        StoreManagerInterface $storeManager,
-        Adapter $paytrailAdapter,
-        PaymentRequest $paymentRequest,
-        RefundRequest $refundRequest,
-        EmailRefundRequest $emailRefundRequest,
-        AddCardFormRequest $addCardFormRequest,
-        GetTokenRequest $getTokenRequest,
-        CitPaymentRequest $citPaymentRequest,
-        PaymentStatusRequest $paymentStatusRequest,
-        RequestData $requestData
+        LoggerInterface               $log,
+        UrlInterface                  $urlBuilder,
+        RequestInterface              $request,
+        Json                          $json,
+        CheckoutHelper                $helper,
+        GatewayConfig                 $gatewayConfig,
+        StoreManagerInterface         $storeManager,
+        Adapter                       $paytrailAdapter,
+        PaymentRequest                $paymentRequest,
+        RefundRequest                 $refundRequest,
+        EmailRefundRequest            $emailRefundRequest,
+        AddCardFormRequest            $addCardFormRequest,
+        GetTokenRequest               $getTokenRequest,
+        CitPaymentRequest             $citPaymentRequest,
+        PaymentStatusRequest          $paymentStatusRequest,
+        RequestData                   $requestData,
+        FinnishReferenceNumber        $finnishReferenceNumber
     ) {
         $this->log = $log;
         $this->urlBuilder = $urlBuilder;
@@ -144,6 +169,7 @@ class ApiData
         $this->citPaymentRequest = $citPaymentRequest;
         $this->paymentStatusRequest = $paymentStatusRequest;
         $this->requestData = $requestData;
+        $this->finnishReferenceNumber = $finnishReferenceNumber;
     }
 
     /**
@@ -325,13 +351,13 @@ class ApiData
             time() . $order->getIncrementId()
         ));
 
-        $paytrailPayment->setReference($this->helper->getReference($order));
+        $paytrailPayment->setReference($this->finnishReferenceNumber->getReference($order));
         $paytrailPayment->setCurrency($order->getOrderCurrencyCode());
         $paytrailPayment->setAmount(round($order->getGrandTotal() * 100));
         $paytrailPayment->setCustomer($this->requestData->createCustomer($billingAddress));
         $paytrailPayment->setInvoicingAddress($this->requestData->createAddress($order, $billingAddress));
 
-        if (!is_null($shippingAddress)) {
+        if ($shippingAddress !== null) {
             $paytrailPayment->setDeliveryAddress($this->requestData->createAddress($order, $shippingAddress));
         }
 

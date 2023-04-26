@@ -3,9 +3,13 @@
 namespace Paytrail\PaymentService\Ui\DataProvider;
 
 use Magento\Backend\Model\Url;
-use Magento\Framework\Serialize\SerializerInterface;
+use Magento\Framework\Api\Filter;
+use Magento\Ui\DataProvider\AbstractDataProvider;
+use Paytrail\PaymentService\Model\ResourceModel\Subscription\Collection;
+use Paytrail\PaymentService\Model\ResourceModel\Subscription\CollectionFactory;
+use Paytrail\PaymentService\Model\Subscription;
 
-class RecurringPaymentForm extends \Magento\Ui\DataProvider\AbstractDataProvider
+class RecurringPaymentForm extends AbstractDataProvider
 {
     /**
      * @var array
@@ -13,32 +17,36 @@ class RecurringPaymentForm extends \Magento\Ui\DataProvider\AbstractDataProvider
     private $loadedData;
 
     /**
-     * @var \Paytrail\PaymentService\Model\ResourceModel\Subscription\CollectionFactory
+     * @var CollectionFactory
      */
     private $collectionFactory;
+
     /**
      * @var Url
      */
     private $url;
-    /**
-     * @var SerializerInterface
-     */
-    private $serializer;
 
+    /**
+     * @param string $name
+     * @param string $primaryFieldName
+     * @param string $requestFieldName
+     * @param CollectionFactory $collectionFactory
+     * @param Url $url
+     * @param array $meta
+     * @param array $data
+     */
     public function __construct(
-                                                                        $name,
-                                                                        $primaryFieldName,
-                                                                        $requestFieldName,
-        \Paytrail\PaymentService\Model\ResourceModel\Subscription\CollectionFactory $collectionFactory,
-        SerializerInterface                                             $serializer,
-        Url                                                             $url,
-        array                                                           $meta = [],
-        array                                                           $data = []
+        string $name,
+        string $primaryFieldName,
+        string $requestFieldName,
+        CollectionFactory $collectionFactory,
+        Url $url,
+        array $meta = [],
+        array $data = []
     ) {
         parent::__construct($name, $primaryFieldName, $requestFieldName, $meta, $data);
         $this->collectionFactory = $collectionFactory;
         $this->url = $url;
-        $this->serializer = $serializer;
     }
 
     /**
@@ -59,7 +67,11 @@ class RecurringPaymentForm extends \Magento\Ui\DataProvider\AbstractDataProvider
         return $this->loadedData;
     }
 
-    public function addFilter(\Magento\Framework\Api\Filter $filter)
+    /**
+     * @param Filter $filter
+     * @return mixed|void
+     */
+    public function addFilter(Filter $filter)
     {
         if ($filter->getField() == 'entity_id') {
             $filter->setField('main_table.entity_id');
@@ -69,7 +81,7 @@ class RecurringPaymentForm extends \Magento\Ui\DataProvider\AbstractDataProvider
     }
 
     /**
-     * @return \Paytrail\PaymentService\Model\ResourceModel\Subscription\Collection
+     * @return Collection
      */
     public function getCollection()
     {
@@ -82,7 +94,7 @@ class RecurringPaymentForm extends \Magento\Ui\DataProvider\AbstractDataProvider
     }
 
     /**
-     * @param \Paytrail\PaymentService\Model\Subscription $subscription
+     * @param Subscription $subscription
      */
     private function prepareLinks($subscription)
     {
@@ -96,6 +108,9 @@ class RecurringPaymentForm extends \Magento\Ui\DataProvider\AbstractDataProvider
         );
     }
 
+    /**
+     * @return void
+     */
     private function joinProfilesToCollection()
     {
         $this->collection->join(
@@ -105,6 +120,12 @@ class RecurringPaymentForm extends \Magento\Ui\DataProvider\AbstractDataProvider
         );
     }
 
+    /**
+     * @param string $path
+     * @param array $params
+     * @param string $linkText
+     * @return array
+     */
     private function createLinkData(string $path, array $params, string $linkText)
     {
         return [

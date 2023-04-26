@@ -43,7 +43,7 @@ class DiscountSplitter
      * @return array
      * @throws LocalizedException
      */
-    public function process(array $items, \Magento\Sales\Model\Order $order)
+    public function process(array $items, \Magento\Sales\Model\Order $order): array
     {
         $discountTotal = $this->getDiscountsFromOrder($order);
         if (!$discountTotal) {
@@ -85,8 +85,9 @@ class DiscountSplitter
      * @param array $items
      * @param float $discountedTotal
      * @param float $itemDiscountedTotal
+     * @throws LocalizedException
      */
-    private function correctRoundingErrors(array &$items, float $discountedTotal, float $itemDiscountedTotal)
+    private function correctRoundingErrors(array &$items, float $discountedTotal, float $itemDiscountedTotal): void
     {
         $delta = round($discountedTotal - $itemDiscountedTotal, 2);
         if ($delta == 0) {
@@ -110,7 +111,8 @@ class DiscountSplitter
 
     /**
      * @param \Magento\Sales\Model\Order $order
-     * @return float
+     * @return float|int
+     * @throws LocalizedException
      */
     private function getDiscountsFromOrder(\Magento\Sales\Model\Order $order)
     {
@@ -148,7 +150,7 @@ class DiscountSplitter
 
     /**
      * @param array $items
-     * @return float
+     * @return float|int
      * @throws LocalizedException
      */
     private function getItemTotal(array $items)
@@ -173,8 +175,9 @@ class DiscountSplitter
      * @param float $delta
      * @param array $items
      * @return float new delta value after negative delta was embedded
+     * @throws LocalizedException
      */
-    private function embedNegativeDelta(float $delta, array &$items, $discountedTotal)
+    private function embedNegativeDelta(float $delta, array &$items, $discountedTotal): float
     {
         $lowestAmountIndex = 0;
         foreach ($items as $index => $item) {

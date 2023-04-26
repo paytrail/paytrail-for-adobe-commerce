@@ -68,7 +68,10 @@
 
         <constraint xsi:type="unique" referenceId="PAYTRAIL_SUBSCRIPTION_LINK_ORDER_ID_SUBSCRIPTION_ID">
             <column name="order_id"/>
-            <column name="subscription_id"/>
         </constraint>
+    </table>
+
+    <table name="sales_order">
+        <column xsi:type="varchar" name="finnish_reference_number" nullable="true" comment="Finnish Reference Number"/>
     </table>
 </schema>

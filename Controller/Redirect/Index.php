@@ -3,12 +3,10 @@
 namespace Paytrail\PaymentService\Controller\Redirect;
 
 use Magento\Checkout\Model\Session;
-use Magento\Framework\App\Action\Context;
 use Magento\Framework\App\RequestInterface;
 use Magento\Framework\Controller\Result\Json;
-use Magento\Framework\Controller\Result\JsonFactory;
+use Magento\Framework\Controller\ResultFactory;
 use Magento\Framework\Exception\LocalizedException;
-use Magento\Framework\View\Result\PageFactory;
 use Magento\Sales\Api\OrderManagementInterface;
 use Magento\Sales\Api\OrderRepositoryInterface;
 use Magento\Sales\Model\Order;
@@ -17,6 +15,8 @@ use Paytrail\PaymentService\Exceptions\CheckoutException;
 use Paytrail\PaymentService\Helper\ApiData;
 use Paytrail\PaymentService\Helper\Data as paytrailHelper;
 use Paytrail\PaymentService\Gateway\Config\Config;
+use Paytrail\PaymentService\Model\ConfigProvider;
+use Paytrail\PaymentService\Model\Email\Order\PendingOrderEmailConfirmation;
 use Paytrail\SDK\Model\Provider;
 use Paytrail\SDK\Response\PaymentResponse;
 use Psr\Log\LoggerInterface;
@@ -40,11 +40,6 @@ class Index implements HttpPostActionInterface
     protected $orderFactory;
 
     /**
-     * @var JsonFactory
-     */
-    protected $jsonFactory;
-
-    /**
      * @var OrderRepositoryInterface
      */
     protected $orderRepositoryInterface;
@@ -53,11 +48,6 @@ class Index implements HttpPostActionInterface
      * @var OrderManagementInterface
      */
     protected $orderManagementInterface;
-
-    /**
-     * @var PageFactory
-     */
-    protected $pageFactory;
 
     /**
      * @var LoggerInterface
@@ -83,48 +73,55 @@ class Index implements HttpPostActionInterface
      * @var $errorMsg
      */
     protected $errorMsg = null;
-    private RequestInterface $request;
 
     /**
-     * @param Context $context
+     * @var ResultFactory
+     */
+    private $resultFactory;
+
+    /**
+     * @var RequestInterface
+     */
+    private $request;
+
+    private PendingOrderEmailConfirmation $pendingOrderEmailConfirmation;
+
+    /**
+     * Index constructor.
+     *
      * @param Session $checkoutSession
-     * @param OrderFactory $orderFactory
-     * @param JsonFactory $jsonFactory
      * @param OrderRepositoryInterface $orderRepositoryInterface
      * @param OrderManagementInterface $orderManagementInterface
-     * @param PageFactory $pageFactory
      * @param LoggerInterface $logger
      * @param ApiData $apiData
      * @param paytrailHelper $paytrailHelper
      * @param Config $gatewayConfig
+     * @param ResultFactory $resultFactory
      * @param RequestInterface $request
+     * @param PendingOrderEmailConfirmation $pendingOrderEmailConfirmation
      */
     public function __construct(
-        Context $context,
         Session $checkoutSession,
-        OrderFactory $orderFactory,
-        JsonFactory $jsonFactory,
-        OrderRepositoryInterface $orderRepositoryInterface,
+        \Magento\Sales\Api\OrderRepositoryInterface $orderRepositoryInterface,
         OrderManagementInterface $orderManagementInterface,
-        PageFactory $pageFactory,
         LoggerInterface $logger,
         ApiData $apiData,
         paytrailHelper $paytrailHelper,
         Config $gatewayConfig,
-        RequestInterface $request
+        ResultFactory $resultFactory,
+        RequestInterface $request,
+        PendingOrderEmailConfirmation $pendingOrderEmailConfirmation
     ) {
-        $this->urlBuilder = $context->getUrl();
         $this->checkoutSession = $checkoutSession;
-        $this->orderFactory = $orderFactory;
-        $this->jsonFactory = $jsonFactory;
         $this->orderRepositoryInterface = $orderRepositoryInterface;
         $this->orderManagementInterface = $orderManagementInterface;
-        $this->pageFactory = $pageFactory;
         $this->logger = $logger;
         $this->apiData = $apiData;
         $this->paytrailHelper = $paytrailHelper;
         $this->gatewayConfig = $gatewayConfig;
+        $this->resultFactory = $resultFactory;
         $this->request = $request;
+        $this->pendingOrderEmailConfirmation = $pendingOrderEmailConfirmation;
     }
 
     /**
@@ -133,7 +130,7 @@ class Index implements HttpPostActionInterface
     public function execute()
     {
         /** @var Json $resultJson */
-        $resultJson = $this->jsonFactory->create();
+        $resultJson = $this->resultFactory->create(ResultFactory::TYPE_JSON);
 
         $order = null;
         try {
@@ -142,7 +139,7 @@ class Index implements HttpPostActionInterface
                     'preselected_payment_method_id'
                 );
                 $selectedPaymentMethodId = preg_replace(
-                    '/[0-9]{1,2}$/',
+                    '/' . ConfigProvider::ID_INCREMENT_SEPARATOR . '[0-9]{1,3}$/',
                     '',
                     $selectedPaymentMethodRaw
                 );
@@ -152,12 +149,7 @@ class Index implements HttpPostActionInterface
                     throw new LocalizedException(__('No payment method selected'));
                 }
 
-                /** @var Order $order */
-                $order = $this->orderFactory->create();
-                $order = $order->loadByIncrementId(
-                    $this->checkoutSession->getLastRealOrderId()
-                );
-
+                $order = $this->checkoutSession->getLastRealOrder();
                 $responseData = $this->getResponseData($order);
                 $formData = $this->getFormFields(
                     $responseData,
@@ -168,38 +160,38 @@ class Index implements HttpPostActionInterface
                     $selectedPaymentMethodId
                 );
 
+                // send order confirmation for pending order
+                if ($responseData) {
+                    $this->pendingOrderEmailConfirmation->pendingOrderEmailSend($order);
+                }
+
                 if ($this->gatewayConfig->getSkipBankSelection()) {
                     $redirect_url = $responseData->getHref();
 
-                    return $resultJson->setData(
-                        [
-                            'success' => true,
-                            'data' => 'redirect',
-                            'redirect' => $redirect_url
-                        ]
-                    );
+                    return $resultJson->setData([
+                        'success' => true,
+                        'data' => 'redirect',
+                        'redirect' => $redirect_url
+                    ]);
                 }
 
-                $block = $this->pageFactory
-                    ->create()
+                $block = $this->resultFactory->create(ResultFactory::TYPE_PAGE)
                     ->getLayout()
                     ->createBlock(\Paytrail\PaymentService\Block\Redirect\Paytrail::class)
                     ->setUrl($formAction)
                     ->setParams($formData);
 
-                return $resultJson->setData(
-                    [
-                        'success' => true,
-                        'data' => $block->toHtml(),
-                    ]
-                );
+                return $resultJson->setData([
+                    'success' => true,
+                    'data' => $block->toHtml(),
+                ]);
             }
         } catch (\Exception $e) {
             // Error will be handled below
             $this->logger->error($e->getMessage());
         }
 
-        if ($order) {
+        if ($order->getId()) {
             $this->orderManagementInterface->cancel($order->getId());
             $order->addCommentToStatusHistory(
                 __('Order canceled. Failed to redirect to Paytrail Payment Service.')
@@ -208,14 +200,11 @@ class Index implements HttpPostActionInterface
         }
 
         $this->checkoutSession->restoreQuote();
-        $resultJson = $this->jsonFactory->create();
 
-        return $resultJson->setData(
-            [
-                'success' => false,
-                'message' => $this->errorMsg
-            ]
-        );
+        return $resultJson->setData([
+            'success' => false,
+            'message' => $this->errorMsg
+        ]);
     }
 
     /**

@@ -2,10 +2,7 @@
 
 namespace Paytrail\PaymentService\Helper;
 
-use Magento\Framework\App\Helper\Context;
 use Magento\Framework\Locale\Resolver;
-use Magento\Sales\Model\Order;
-use Magento\Tax\Helper\Data as TaxHelper;
 use Paytrail\PaymentService\Exceptions\CheckoutException;
 use Paytrail\PaymentService\Exceptions\TransactionSuccessException;
 use Paytrail\PaymentService\Gateway\Config\Config;
@@ -13,60 +10,58 @@ use Paytrail\PaymentService\Logger\PaytrailLogger;
 
 /**
  * Class Data
+ * Helper to get data from config
  */
-class Data extends \Magento\Framework\App\Helper\AbstractHelper
+class Data
 {
-    const LOGO = 'payment/paytrail/logo';
+    public const LOGO = 'payment/paytrail/logo';
 
     /**
      * @var Resolver
      */
-    private $localeResolver;
-    /**
-     * @var TaxHelper
-     */
-    private $taxHelper;
+    private Resolver $localeResolver;
+
     /**
      * @var Config
      */
-    private $gatewayConfig;
-
-    /** @var PaytrailLogger */
-    private $paytrailLogger;
+    private Config $gatewayConfig;
 
     /**
-     * @param Context $context
-     * @param Resolver $localeResolver
-     * @param TaxHelper $taxHelper
-     * @param PaytrailLogger $paytrailLogger
-     * @param Config $gatewayConfig
+     * @var PaytrailLogger
+     */
+    private PaytrailLogger $paytrailLogger;
+
+    /**
+     * @param \Magento\Framework\Locale\Resolver             $localeResolver
+     * @param \Paytrail\PaymentService\Logger\PaytrailLogger $paytrailLogger
+     * @param \Paytrail\PaymentService\Gateway\Config\Config $gatewayConfig
      */
     public function __construct(
-        Context $context,
         Resolver $localeResolver,
-        TaxHelper $taxHelper,
         PaytrailLogger $paytrailLogger,
         Config $gatewayConfig
     ) {
         $this->localeResolver = $localeResolver;
-        $this->taxHelper = $taxHelper;
         $this->paytrailLogger = $paytrailLogger;
-        $this->gatewayConfig = $gatewayConfig;
-        parent::__construct($context);
+        $this->gatewayConfig  = $gatewayConfig;
     }
 
     /**
+     * Get valid algorithms
+     *
      * @return array
      */
-    public function getValidAlgorithms()
+    public function getValidAlgorithms(): array
     {
         return ["sha256", "sha512"];
     }
 
     /**
+     * Get Store locale for payment provider
+     * 
      * @return string
      */
-    public function getStoreLocaleForPaymentProvider()
+    public function getStoreLocaleForPaymentProvider(): string
     {
         $locale = 'EN';
         if ($this->localeResolver->getLocale() === 'fi_FI') {
@@ -75,33 +70,50 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
         if ($this->localeResolver->getLocale() === 'sv_SE') {
             $locale = 'SV';
         }
+
         return $locale;
     }
 
     /**
      * Calculate Finnish reference number from order increment id
+     * according to Finnish reference number algorithm
+     * if increment id is not numeric - letters will be converted to numbers -> (ord($letter) % 10)
+     *
      * @param string $incrementId
+     *
      * @return string
+     * @throws \Paytrail\PaymentService\Exceptions\CheckoutException
      */
-    public function calculateOrderReferenceNumber($incrementId)
+    public function calculateOrderReferenceNumber(string $incrementId): string
     {
-        $prefixedId = '1' . $incrementId;
-
-        $sum = 0;
-        $length = strlen($prefixedId);
+        $prefixedId    = ($incrementId[0] == 0 || !is_numeric($incrementId[0]))
+            ? '1' . $incrementId
+            : $incrementId;
+        $newPrefixedId = '';
+        $sum           = 0;
+        $length        = strlen($prefixedId);
 
         for ($i = 0; $i < $length; ++$i) {
-            $sum += substr($prefixedId, -1 - $i, 1) * [7, 3, 1][$i % 3];
+            $substr        = substr($prefixedId, -1 - $i, 1);
+            $numSubstring  = is_numeric($substr) ? (int)$substr : (ord($substr) % 10);
+            $newPrefixedId = $numSubstring . $newPrefixedId;
+            $sum           += $numSubstring * [7, 3, 1][$i % 3];
         }
-        $num = (10 - $sum % 10) % 10;
-        $referenceNum = $prefixedId . $num;
+        $num          = (10 - $sum % 10) % 10;
+        $referenceNum = $newPrefixedId . $num;
+
+        if ($referenceNum > 9999999999999999999) {
+            throw new CheckoutException('Order reference number is too long');
+        }
 
         return trim(chunk_split($referenceNum, 5, ' '));
     }
 
     /**
      * Get order increment id from checkout reference number
+     *
      * @param string $reference
+     *
      * @return string|null
      */
     public function getIdFromOrderReferenceNumber($reference)
@@ -110,19 +122,20 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
     }
 
     /**
+     * Log data to file
+     *
      * @param string $logType
      * @param string $level
-     * @param mixed $data
+     * @param mixed  $data
      *
-     * @deprecated implementation replaced by dedicated logger class
-     * @see \Paytrail\PaymentService\Logger\PaytrailLogger::logData
+     * @deprecated   implementation replaced by dedicated logger class
+     * @see          \Paytrail\PaymentService\Logger\PaytrailLogger::logData
      */
-    public function logCheckoutData($logType, $level, $data)
+    public function logCheckoutData($logType, $level, $data): void
     {
-        if (
-            $level !== 'error' &&
+        if ($level !== 'error' &&
             (($logType === 'request' && $this->gatewayConfig->getRequestLog() == false)
-            || ($logType === 'response' && $this->gatewayConfig->getResponseLog() == false))
+                || ($logType === 'response' && $this->gatewayConfig->getResponseLog() == false))
         ) {
             return;
         }
@@ -132,31 +145,25 @@ class Data extends \Magento\Framework\App\Helper\AbstractHelper
     }
 
     /**
-     * @param $errorMessage
+     * Process error
+     *
+     * @param string $errorMessage
+     *
      * @throws CheckoutException
      */
-    public function processError($errorMessage)
+    public function processError($errorMessage): void
     {
         $this->paytrailLogger->logData(\Monolog\Logger::ERROR, $errorMessage);
         throw new CheckoutException(__($errorMessage));
     }
 
     /**
+     * Process success
+     *
      * @throws TransactionSuccessException
      */
-    public function processSuccess()
+    public function processSuccess(): void
     {
         throw new TransactionSuccessException(__('Success'));
-    }
-
-    /**
-     * @param Order $order
-     * @return string reference number
-     */
-    public function getReference($order)
-    {
-        return $this->gatewayConfig->getGenerateReferenceForOrder()
-            ? $this->calculateOrderReferenceNumber($order->getIncrementId())
-            : $order->getIncrementId();
     }
 }

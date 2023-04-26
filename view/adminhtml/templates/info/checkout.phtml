@@ -1,2 +1,6 @@
-<img src="<?php echo $this->getPaytrailLogo(); ?>">
+<?php
+/** @var $block \Paytrail\PaymentService\Block\Info\Paytrail */
+?>
+
+<img src="<?php echo $block->getPaytrailLogo(); ?>">
 <?php echo $block->getChildHtml()?>

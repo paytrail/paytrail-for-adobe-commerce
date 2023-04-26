@@ -203,11 +203,21 @@
         <plugin name="prevent_different_scheduled_cart"
                 type="Paytrail\PaymentService\Plugin\PreventDifferentScheduledCart"/>
     </type>
+    <type name="Magento\Checkout\Model\PaymentInformationManagement">
+        <plugin name="prevent_admin_as_customer_save_payment_before"
+                type="Paytrail\PaymentService\Plugin\Magento\Checkout\Model\PaymentInformationManagementPlugin"
+                sortOrder="10"/>
+    </type>
 
     <!-- arguments -->
     <type name="\Paytrail\PaymentService\Model\Subscription\OrderCloner">
         <arguments>
             <argument name="quoteSession" xsi:type="object">Magento\Backend\Model\Session\Quote\Proxy</argument>
+        </arguments>
+    </type>
+    <type name="Paytrail\PaymentService\Model\Validation\PreventAdminActions">
+        <arguments>
+            <argument name="customerSession" xsi:type="object">Magento\Customer\Model\Session\Proxy</argument>
         </arguments>
     </type>
 
