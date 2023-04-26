@@ -99,6 +99,7 @@ class Index implements ActionInterface
      */
     public function execute()
     {
+        xdebug_break();
         $successStatuses = ["processing", "pending_paytrail", "pending", "complete"];
         $cancelStatuses = ["canceled"];
         $reference = $this->request->getParam('checkout-reference');

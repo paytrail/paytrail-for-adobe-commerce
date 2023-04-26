@@ -1,4 +1,5 @@
 <?php
+
 namespace Paytrail\PaymentService\Model;
 
 use Magento\Backend\Model\UrlInterface;
@@ -22,6 +23,7 @@ use Paytrail\PaymentService\Exceptions\CheckoutException;
 use Paytrail\PaymentService\Gateway\Config\Config;
 use Paytrail\PaymentService\Helper\ApiData;
 use Paytrail\PaymentService\Helper\Data as paytrailHelper;
+use Paytrail\PaymentService\Model\Receipt\OrderService;
 use Paytrail\PaymentService\Setup\Patch\Data\InstallPaytrail;
 use Psr\Log\LoggerInterface;
 
@@ -186,7 +188,8 @@ class ReceiptDataProvider
         ApiData $apiData,
         LoggerInterface $logger,
         UrlInterface $backendUrl,
-        OrderFactory $orderFactory
+        OrderFactory $orderFactory,
+        private OrderService $orderService
     ) {
         $this->cache = $cache;
         $this->session = $session;
@@ -229,18 +232,18 @@ class ReceiptDataProvider
 
         $this->session->unsCheckoutRedirectUrl();
 
-        $this->currentOrder = $this->loadOrder();
+        $this->currentOrder = $this->orderService->loadOrder($this->orderIncrementalId);
         $this->orderId = $this->currentOrder->getId();
 
         /** @var int $count */
         $count = 0;
 
-        while ($this->isOrderLocked($this->orderId) && $count < 3) {
+        while ($this->orderService->isOrderLocked($this->orderId) && $count < 3) {
             sleep(1);
             $count++;
         }
 
-        $this->lockProcessingOrder($this->orderId);
+        $this->orderService->lockProcessingOrder($this->orderId);
 
         $this->currentOrderPayment = $this->currentOrder->getPayment();
 
@@ -251,71 +254,9 @@ class ReceiptDataProvider
             $this->processPayment();
             $this->processInvoice();
         }
-        $this->processOrder($paymentVerified);
+        $this->orderService->processOrder($paymentVerified, $this->currentOrder);
 
-        $this->unlockProcessingOrder($this->orderId);
-    }
-
-    /**
-     * @param int $orderId
-     */
-    protected function lockProcessingOrder($orderId)
-    {
-        /** @var string $identifier */
-        $identifier = self::RECEIPT_PROCESSING_CACHE_PREFIX . $orderId;
-
-        $this->cache->save("locked", $identifier);
-    }
-
-    /**
-     * @param int $orderId
-     */
-    protected function unlockProcessingOrder($orderId)
-    {
-        /** @var string $identifier */
-        $identifier = self::RECEIPT_PROCESSING_CACHE_PREFIX . $orderId;
-
-        $this->cache->remove($identifier);
-    }
-
-    /**
-     * @param int $orderId
-     * @return bool
-     */
-    protected function isOrderLocked($orderId)
-    {
-        /** @var string $identifier */
-        $identifier = self::RECEIPT_PROCESSING_CACHE_PREFIX . $orderId;
-
-        return $this->cache->load($identifier) ? true : false;
-    }
-
-    /**
-     * @param $paymentVerified
-     */
-    protected function processOrder($paymentVerified)
-    {
-        $orderState = $this->gatewayConfig->getDefaultOrderStatus();
-
-        if ($paymentVerified === 'ok') {
-            $this->currentOrder->setState($orderState)->setStatus($orderState);
-            $this->currentOrder->addCommentToStatusHistory(__('Payment has been completed'));
-        } else {
-            $this->currentOrder->setState(InstallPaytrail::ORDER_STATE_CUSTOM_CODE);
-            $this->currentOrder->setStatus(InstallPaytrail::ORDER_STATUS_CUSTOM_CODE);
-            $this->currentOrder->addCommentToStatusHistory(__('Pending payment from Paytrail Payment Service'));
-        }
-
-        $this->orderRepositoryInterface->save($this->currentOrder);
-
-        try {
-            $this->orderSender->send($this->currentOrder);
-        } catch (\Exception $e) {
-            $this->logger->error(\sprintf(
-                'Paytrail: Order email sending failed: %s',
-                $e->getMessage()
-            ));
-        }
+        $this->orderService->unlockProcessingOrder($this->orderId);
     }
 
     /**
@@ -394,19 +335,6 @@ class ReceiptDataProvider
             'stamp'     => $this->paramsStamp,
             'method'    => $this->paramsMethod
         ];
-    }
-
-    /**
-     * @return mixed
-     * @throws CheckoutException
-     */
-    protected function loadOrder()
-    {
-        $order = $this->orderFactory->create()->loadByIncrementId($this->orderIncrementalId);
-        if (!$order->getId()) {
-            $this->paytrailHelper->processError('Order not found');
-        }
-        return $order;
     }
 
     /**
