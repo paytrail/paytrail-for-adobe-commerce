@@ -1,4 +1,6 @@
 # Paytrail for Adobe Commerce
+<img src="https://www.paytrail.com/hubfs/paytrail-for-adobe-commerce/adobe-technology-partner.png" width="250">
+
 [Paytrail](https://www.paytrail.com) payment service for [Adobe Commerce](https://www.magento.com) (formerly known as Magento 2)
 
 **WARNING: This module is not compatible with Markup/Paytrail module. Using both modules will cause errors.**
