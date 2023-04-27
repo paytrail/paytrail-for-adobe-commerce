@@ -26,9 +26,6 @@ use Psr\Log\LoggerInterface;
 
 class ReceiptDataProvider
 {
-    
-    const RECEIPT_PROCESSING_CACHE_PREFIX = "receipt_processing_";
-
     /**
      * @var Session
      */
@@ -177,7 +174,8 @@ class ReceiptDataProvider
         LoggerInterface $logger,
         UrlInterface $backendUrl,
         OrderFactory $orderFactory,
-        private \Paytrail\PaymentService\Model\Receipt\OrderLockService $orderLockService
+        private \Paytrail\PaymentService\Model\Receipt\OrderLockService $orderLockService,
+        private \Paytrail\PaymentService\Model\Receipt\ProcessService $processService
     ) {
         $this->session = $session;
         $this->transactionRepository = $transactionRepository;
@@ -236,68 +234,14 @@ class ReceiptDataProvider
 
         /** @var string|void $paymentVerified */
         $paymentVerified = $this->verifyPaymentData($params);
-        $this->processTransaction();
+        $this->processService->processTransaction($this->transactionId, $this->currentOrder, $this->orderId);
         if ($paymentVerified === 'ok') {
             $this->processPayment();
-            $this->processInvoice();
+            $this->processService->processInvoice($this->currentOrder);
         }
-        $this->processOrder($paymentVerified);
+        $this->processService->processOrder($paymentVerified, $this->currentOrder);
 
         $this->orderLockService->unlockProcessingOrder($this->orderId);
-    }
-
-    /**
-     * @param $paymentVerified
-     */
-    protected function processOrder($paymentVerified)
-    {
-        $orderState = $this->gatewayConfig->getDefaultOrderStatus();
-
-        if ($paymentVerified === 'ok') {
-            $this->currentOrder->setState($orderState)->setStatus($orderState);
-            $this->currentOrder->addCommentToStatusHistory(__('Payment has been completed'));
-        } else {
-            $this->currentOrder->setState(InstallPaytrail::ORDER_STATE_CUSTOM_CODE);
-            $this->currentOrder->setStatus(InstallPaytrail::ORDER_STATUS_CUSTOM_CODE);
-            $this->currentOrder->addCommentToStatusHistory(__('Pending payment from Paytrail Payment Service'));
-        }
-
-        $this->orderRepositoryInterface->save($this->currentOrder);
-
-        try {
-            $this->orderSender->send($this->currentOrder);
-        } catch (\Exception $e) {
-            $this->logger->error(\sprintf(
-                'Paytrail: Order email sending failed: %s',
-                $e->getMessage()
-            ));
-        }
-    }
-
-    /**
-     * process invoice
-     * @throws CheckoutException
-     */
-    protected function processInvoice()
-    {
-        if ($this->currentOrder->canInvoice()) {
-            try {
-                /** @var /Magento/Sales/Api/Data/InvoiceInterface|/Magento/Sales/Model/Order/Invoice $invoice */
-                $invoice = $this->invoiceService->prepareInvoice($this->currentOrder); //TODO: catch \InvalidArgumentException which extends \Exception
-                $invoice->setRequestedCaptureCase(\Magento\Sales\Model\Order\Invoice::CAPTURE_ONLINE);
-                $invoice->setTransactionId($this->currentOrderPayment->getLastTransId());
-                $invoice->register();
-                /** @var /Magento/Framework/DB/Transaction $transactionSave */
-                $transactionSave = $this->transactionFactory->create();
-                $transactionSave->addObject(
-                    $invoice
-                )->addObject(
-                    $this->currentOrder
-                )->save();
-            } catch (\Exception $exception) {
-                $this->paytrailHelper->processError($exception->getMessage());
-            }
-        }
     }
 
     protected function processPayment()
@@ -386,51 +330,6 @@ class ReceiptDataProvider
                 'Failed to complete the payment. Please try again or contact the customer service.'
             );
         }
-    }
-
-    /**
-     * @return bool|mixed
-     * @throws CheckoutException
-     */
-    protected function loadTransaction()
-    {
-        /** @var bool|mixed $transaction */
-        try {
-            $transaction = $this->transactionRepository->getByTransactionId(
-                $this->transactionId,
-                $this->currentOrder->getPayment()->getId(),
-                $this->orderId
-            );
-        } catch (InputException $e) {
-            $this->paytrailHelper->processError($e->getMessage());
-        }
-
-        return $transaction;
-    }
-
-    /**
-     * @param $transaction
-     */
-    protected function processExistingTransaction($transaction)
-    {
-        $details = $transaction->getAdditionalInformation(Transaction::RAW_DETAILS);
-        if (is_array($details)) {
-            $this->paytrailHelper->processSuccess();
-        }
-    }
-
-    /**
-     * @return bool
-     * @throws CheckoutException
-     */
-    protected function processTransaction(): bool
-    {
-        $transaction = $this->loadTransaction();
-        if ($transaction) {
-            $this->processExistingTransaction($transaction);
-            $this->paytrailHelper->processError('Payment failed');
-        }
-        return true;
     }
 
     /**
