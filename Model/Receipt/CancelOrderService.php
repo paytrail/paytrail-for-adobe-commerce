@@ -5,7 +5,10 @@ namespace Paytrail\PaymentService\Model\Receipt;
 use Magento\Backend\Model\UrlInterface;
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\Mail\Template\TransportBuilder;
+use Magento\Sales\Api\OrderManagementInterface;
+use Paytrail\PaymentService\Exceptions\CheckoutException;
 use Paytrail\PaymentService\Gateway\Config\Config;
+use Psr\Log\LoggerInterface;
 
 class CancelOrderService
 {
@@ -14,12 +17,16 @@ class CancelOrderService
      * @param UrlInterface $backendUrl
      * @param ScopeConfigInterface $scopeConfig
      * @param TransportBuilder $transportBuilder
+     * @param OrderManagementInterface $orderManagementInterface
+     * @param LoggerInterface $logger
      */
     public function __construct(
         private Config $gatewayConfig,
         private UrlInterface $backendUrl,
         private ScopeConfigInterface $scopeConfig,
-        private TransportBuilder $transportBuilder
+        private TransportBuilder $transportBuilder,
+        private OrderManagementInterface $orderManagementInterface,
+        private LoggerInterface $logger
     ) {
     }
 
@@ -56,6 +63,34 @@ class CancelOrderService
                     $this->gatewayConfig->getNotificationEmail()
                 ])->getTransport();
             $transport->sendMessage();
+        }
+    }
+
+    /**
+     * CancelOrderById function
+     * 
+     * @param $orderId
+     * @return void
+     * @throws CheckoutException
+     */
+    public function cancelOrderById($orderId): void
+    {
+        if ($this->gatewayConfig->getCancelOrderOnFailedPayment()) {
+            try {
+                $this->orderManagementInterface->cancel($orderId);
+            } catch (\Exception $e) {
+                $this->logger->critical(sprintf(
+                    'Paytrail exception during order cancel: %s,\n error trace: %s',
+                    $e->getMessage(),
+                    $e->getTraceAsString()
+                ));
+
+                // Mask and throw end-user friendly exception
+                throw new CheckoutException(__(
+                    'Error while cancelling order. Please contact customer support with order id: %id to release discount coupons.',
+                    [ 'id'=> $orderId ]
+                ));
+            }
         }
     }
 }

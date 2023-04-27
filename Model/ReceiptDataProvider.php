@@ -176,7 +176,8 @@ class ReceiptDataProvider
         OrderFactory $orderFactory,
         private \Paytrail\PaymentService\Model\Receipt\OrderLockService $orderLockService,
         private \Paytrail\PaymentService\Model\Receipt\ProcessService $processService,
-        private \Paytrail\PaymentService\Model\Receipt\LoadService $loadService
+        private \Paytrail\PaymentService\Model\Receipt\LoadService $loadService,
+        private \Paytrail\PaymentService\Model\Receipt\PaymentTransaction $paymentTransaction
     ) {
         $this->session = $session;
         $this->transactionRepository = $transactionRepository;
@@ -234,7 +235,7 @@ class ReceiptDataProvider
         $this->currentOrderPayment = $this->currentOrder->getPayment();
 
         /** @var string|void $paymentVerified */
-        $paymentVerified = $this->verifyPaymentData($params);
+        $paymentVerified = $this->paymentTransaction->verifyPaymentData($params, $this->currentOrder);
         $this->processService->processTransaction($this->transactionId, $this->currentOrder, $this->orderId);
         if ($paymentVerified === 'ok') {
             $this->processService->processPayment($this->currentOrder, $this->transactionId, $this->getDetails());
@@ -255,53 +256,5 @@ class ReceiptDataProvider
             'stamp'     => $this->paramsStamp,
             'method'    => $this->paramsMethod
         ];
-    }
-
-    /**
-     * @param string[] $params
-     * @throws LocalizedException
-     * @throws CheckoutException
-     * @return string|void
-     */
-    protected function verifyPaymentData($params)
-    {
-        $status = $params['checkout-status'];
-        $verifiedPayment = $this->apiData->validateHmac($params, $params['signature']);
-
-        if ($verifiedPayment && ($status === 'ok' || $status == 'pending' || $status == 'delayed')) {
-            return $status;
-        } else {
-            $this->currentOrder->addCommentToStatusHistory(__('Failed to complete the payment.'));
-            $this->orderRepositoryInterface->save($this->currentOrder);
-            $this->cancelOrderById($this->currentOrder->getId());
-            $this->paytrailHelper->processError(
-                'Failed to complete the payment. Please try again or contact the customer service.'
-            );
-        }
-    }
-
-    /**
-     * @param int $orderId
-     * @return void
-     */
-    private function cancelOrderById($orderId): void
-    {
-        if ($this->gatewayConfig->getCancelOrderOnFailedPayment()) {
-            try {
-                $this->orderManagementInterface->cancel($orderId);
-            } catch (\Exception $e) {
-                $this->logger->critical(sprintf(
-                    'Paytrail exception during order cancel: %s,\n error trace: %s',
-                    $e->getMessage(),
-                    $e->getTraceAsString()
-                ));
-
-                // Mask and throw end-user friendly exception
-                throw new CheckoutException(__(
-                    'Error while cancelling order. Please contact customer support with order id: %id to release discount coupons.',
-                    [ 'id'=> $orderId ]
-                ));
-            }
-        }
     }
 }
