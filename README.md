@@ -1,4 +1,6 @@
 # Paytrail for Adobe Commerce
+<img src="https://www.paytrail.com/hubfs/paytrail-for-adobe-commerce/adobe-technology-partner.png" width="250">
+
 [Paytrail](https://www.paytrail.com) payment service for [Adobe Commerce](https://www.magento.com) (formerly known as Magento 2)
 
 **WARNING: This module is not compatible with Markup/Paytrail module. Using both modules will cause errors.**
@@ -125,3 +127,7 @@ There are three algorithms for tax calculation in Adobe Commerce which can be se
 If the described error occurs when the calculation algorithm is Total based, changing it to Unit Price based might result in tax calculation with no mismatches. 
 
 __Note:__ Changing the setting does not mean that the Unit Price based algorithm is better than Total or Row Total based, all three can have rounding issues in certain situations that can be resolved by choosing one of the other algorithms. The algorithms end up with the same calculations majority of the time.
+
+---
+
+**_Disclaimer:_** *This open source module is provided to help merchants get started with our payment service. However, we do not offer any warranty or guarantee that the module will work as intended and provide limited support for it. Use at your own risk.*
