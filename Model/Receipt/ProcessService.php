@@ -35,7 +35,9 @@ class ProcessService
         private Payment                  $currentOrderPayment,
         private TransactionFactory       $transactionFactory,
         private PaytrailHelper           $paytrailHelper,
-        private LoadService $loadService
+        private LoadService $loadService,
+        private PaymentTransaction $paymentTransaction,
+        private CancelOrderService $cancelOrderService
     ) {
     }
 
@@ -100,6 +102,27 @@ class ProcessService
             } catch (\Exception $exception) {
                 $this->paytrailHelper->processError($exception->getMessage());
             }
+        }
+    }
+
+    /**
+     * ProcessPayment function
+     *
+     * @param $currentOrder
+     * @param $transactionId
+     * @param $details
+     * @return void
+     */
+    public function processPayment($currentOrder, $transactionId, $details)
+    {
+        $transaction = $this->paymentTransaction->addPaymentTransaction($currentOrder, $transactionId, $details);
+
+        $this->currentOrderPayment->setOrder($currentOrder);
+        $this->currentOrderPayment->addTransactionCommentsToOrder($transaction, '');
+        $this->currentOrderPayment->setLastTransId($transactionId);
+
+        if ($currentOrder->getStatus() == 'canceled') {
+            $this->cancelOrderService->notifyCanceledOrder($currentOrder);
         }
     }
 

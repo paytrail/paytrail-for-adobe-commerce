@@ -236,54 +236,14 @@ class ReceiptDataProvider
         $paymentVerified = $this->verifyPaymentData($params);
         $this->processService->processTransaction($this->transactionId, $this->currentOrder, $this->orderId);
         if ($paymentVerified === 'ok') {
-            $this->processPayment();
+            $this->processService->processPayment($this->currentOrder, $this->transactionId, $this->getDetails());
             $this->processService->processInvoice($this->currentOrder);
         }
         $this->processService->processOrder($paymentVerified, $this->currentOrder);
 
         $this->orderLockService->unlockProcessingOrder($this->orderId);
     }
-
-    protected function processPayment()
-    {
-        $transaction = $this->addPaymentTransaction($this->currentOrder, $this->transactionId, $this->getDetails());
-
-        $this->currentOrderPayment->addTransactionCommentsToOrder($transaction, '');
-        $this->currentOrderPayment->setLastTransId($this->transactionId);
-
-        if ($this->currentOrder->getStatus() == 'canceled') {
-            $this->notifyCanceledOrder();
-        }
-    }
-
-    /**
-     * notify canceled order
-     */
-    protected function notifyCanceledOrder()
-    {
-        if (filter_var($this->gatewayConfig->getNotificationEmail(), FILTER_VALIDATE_EMAIL)) {
-            $transport = $this->transportBuilder
-                ->setTemplateIdentifier('restore_order_notification')
-                ->setTemplateOptions(['area' => \Magento\Framework\App\Area::AREA_FRONTEND, 'store' => \Magento\Store\Model\Store::DEFAULT_STORE_ID])
-                ->setTemplateVars([
-                    'order' => [
-                        'increment' => $this->currentOrder->getIncrementId(),
-                        'url' => $this->backendUrl->getUrl(
-                            'sales/order/view',
-                            ['order_id' => $this->currentOrder->getId()]
-                        )
-                    ]
-                ])
-                ->setFrom([
-                    'name' => $this->scopeConfig->getValue('general/store_information/name') . ' - Magento',
-                    'email' => $this->scopeConfig->getValue('trans_email/ident_general/email'),
-                ])->addTo([
-                    $this->gatewayConfig->getNotificationEmail()
-                ])->getTransport();
-            $transport->sendMessage();
-        }
-    }
-
+    
     /**
      * @return array
      */
@@ -330,28 +290,6 @@ class ReceiptDataProvider
                 'Failed to complete the payment. Please try again or contact the customer service.'
             );
         }
-    }
-
-    /**
-     * @param \Magento\Sales\Model\Order $order
-     * @param $transactionId
-     * @param array $details
-     * @return \Magento\Sales\Api\Data\TransactionInterface
-     */
-    protected function addPaymentTransaction(\Magento\Sales\Model\Order $order, $transactionId, array $details = [])
-    {
-        /** @var \Magento\Framework\DataObject|\Magento\Sales\Api\Data\OrderPaymentInterface |mixed|null $payment */
-        $payment = $order->getPayment();
-
-        /** @var \Magento\Sales\Api\Data\TransactionInterface $transaction */
-        $transaction = $this->transactionBuilder
-            ->setPayment($payment)->setOrder($order)
-            ->setTransactionId($transactionId)
-            ->setAdditionalInformation([Transaction::RAW_DETAILS => (array) $details])
-            ->setFailSafe(true)
-            ->build(Transaction::TYPE_CAPTURE);
-        $transaction->setIsClosed(0);
-        return $transaction;
     }
 
     /**
