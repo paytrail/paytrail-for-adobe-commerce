@@ -3,7 +3,6 @@ namespace Paytrail\PaymentService\Model;
 
 use Magento\Backend\Model\UrlInterface;
 use Magento\Checkout\Model\Session;
-use Magento\Framework\App\CacheInterface;
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\DB\TransactionFactory;
 use Magento\Framework\Exception\InputException;
@@ -25,9 +24,6 @@ use Paytrail\PaymentService\Helper\Data as paytrailHelper;
 use Paytrail\PaymentService\Setup\Patch\Data\InstallPaytrail;
 use Psr\Log\LoggerInterface;
 
-/**
- * Class ReceiptDataProvider
- */
 class ReceiptDataProvider
 {
     
@@ -89,11 +85,6 @@ class ReceiptDataProvider
     protected $transactionBuilder;
 
     /**
-     * @var |Magento\Framework\App\CacheInterface
-     */
-    private $cache;
-
-    /**
      * @var \Magento\Sales\Model\Order
      */
     protected $currentOrder;
@@ -150,7 +141,6 @@ class ReceiptDataProvider
     private $orderFactory;
 
     /**
-     * ReceiptDataProvider constructor.
      * @param Session $session
      * @param TransactionRepositoryInterface $transactionRepository
      * @param OrderSender $orderSender
@@ -162,12 +152,13 @@ class ReceiptDataProvider
      * @param InvoiceService $invoiceService
      * @param TransactionFactory $transactionFactory
      * @param paytrailHelper $paytrailHelper
-     * @param transactionBuilderInterface $transactionBuilder
+     * @param transactionBuilder $transactionBuilder
      * @param Config $gatewayConfig
      * @param ApiData $apiData
      * @param LoggerInterface $logger
      * @param UrlInterface $backendUrl
      * @param OrderFactory $orderFactory
+     * @param Receipt\OrderLockService $orderLockService
      */
     public function __construct(
         Session $session,
@@ -177,7 +168,6 @@ class ReceiptDataProvider
         ScopeConfigInterface $scopeConfig,
         OrderManagementInterface $orderManagementInterface,
         OrderRepositoryInterface $orderRepositoryInterface,
-        CacheInterface $cache,
         InvoiceService $invoiceService,
         TransactionFactory $transactionFactory,
         paytrailHelper $paytrailHelper,
@@ -186,9 +176,9 @@ class ReceiptDataProvider
         ApiData $apiData,
         LoggerInterface $logger,
         UrlInterface $backendUrl,
-        OrderFactory $orderFactory
+        OrderFactory $orderFactory,
+        private \Paytrail\PaymentService\Model\Receipt\OrderLockService $orderLockService
     ) {
-        $this->cache = $cache;
         $this->session = $session;
         $this->transactionRepository = $transactionRepository;
         $this->orderSender = $orderSender;
@@ -235,12 +225,12 @@ class ReceiptDataProvider
         /** @var int $count */
         $count = 0;
 
-        while ($this->isOrderLocked($this->orderId) && $count < 3) {
+        while ($this->orderLockService->isOrderLocked($this->orderId) && $count < 3) {
             sleep(1);
             $count++;
         }
 
-        $this->lockProcessingOrder($this->orderId);
+        $this->orderLockService->lockProcessingOrder($this->orderId);
 
         $this->currentOrderPayment = $this->currentOrder->getPayment();
 
@@ -253,41 +243,7 @@ class ReceiptDataProvider
         }
         $this->processOrder($paymentVerified);
 
-        $this->unlockProcessingOrder($this->orderId);
-    }
-
-    /**
-     * @param int $orderId
-     */
-    protected function lockProcessingOrder($orderId)
-    {
-        /** @var string $identifier */
-        $identifier = self::RECEIPT_PROCESSING_CACHE_PREFIX . $orderId;
-
-        $this->cache->save("locked", $identifier);
-    }
-
-    /**
-     * @param int $orderId
-     */
-    protected function unlockProcessingOrder($orderId)
-    {
-        /** @var string $identifier */
-        $identifier = self::RECEIPT_PROCESSING_CACHE_PREFIX . $orderId;
-
-        $this->cache->remove($identifier);
-    }
-
-    /**
-     * @param int $orderId
-     * @return bool
-     */
-    protected function isOrderLocked($orderId)
-    {
-        /** @var string $identifier */
-        $identifier = self::RECEIPT_PROCESSING_CACHE_PREFIX . $orderId;
-
-        return $this->cache->load($identifier) ? true : false;
+        $this->orderLockService->unlockProcessingOrder($this->orderId);
     }
 
     /**
