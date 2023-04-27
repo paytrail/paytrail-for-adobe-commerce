@@ -175,7 +175,8 @@ class ReceiptDataProvider
         UrlInterface $backendUrl,
         OrderFactory $orderFactory,
         private \Paytrail\PaymentService\Model\Receipt\OrderLockService $orderLockService,
-        private \Paytrail\PaymentService\Model\Receipt\ProcessService $processService
+        private \Paytrail\PaymentService\Model\Receipt\ProcessService $processService,
+        private \Paytrail\PaymentService\Model\Receipt\LoadService $loadService
     ) {
         $this->session = $session;
         $this->transactionRepository = $transactionRepository;
@@ -217,7 +218,7 @@ class ReceiptDataProvider
 
         $this->session->unsCheckoutRedirectUrl();
 
-        $this->currentOrder = $this->loadOrder();
+        $this->currentOrder = $this->loadService->loadOrder($this->orderIncrementalId);
         $this->orderId = $this->currentOrder->getId();
 
         /** @var int $count */
@@ -254,19 +255,6 @@ class ReceiptDataProvider
             'stamp'     => $this->paramsStamp,
             'method'    => $this->paramsMethod
         ];
-    }
-
-    /**
-     * @return mixed
-     * @throws CheckoutException
-     */
-    protected function loadOrder()
-    {
-        $order = $this->orderFactory->create()->loadByIncrementId($this->orderIncrementalId);
-        if (!$order->getId()) {
-            $this->paytrailHelper->processError('Order not found');
-        }
-        return $order;
     }
 
     /**

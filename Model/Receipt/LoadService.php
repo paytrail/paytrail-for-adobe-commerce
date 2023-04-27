@@ -4,6 +4,7 @@ namespace Paytrail\PaymentService\Model\Receipt;
 
 use Magento\Framework\Exception\InputException;
 use Magento\Sales\Api\TransactionRepositoryInterface;
+use Magento\Sales\Model\OrderFactory;
 use Paytrail\PaymentService\Helper\Data as PaytrailHelper;
 
 class LoadService
@@ -11,10 +12,12 @@ class LoadService
     /**
      * @param TransactionRepositoryInterface $transactionRepository
      * @param PaytrailHelper $paytrailHelper
+     * @param OrderFactory $orderFactory
      */
     public function __construct(
         private TransactionRepositoryInterface $transactionRepository,
-        private PaytrailHelper $paytrailHelper
+        private PaytrailHelper $paytrailHelper,
+        private OrderFactory $orderFactory
     ) {
     }
 
@@ -41,5 +44,21 @@ class LoadService
         }
 
         return $transaction;
+    }
+
+    /**
+     * LoadOrder function
+     * 
+     * @param $orderIncrementalId
+     * @return mixed
+     * @throws \Paytrail\PaymentService\Exceptions\CheckoutException
+     */
+    public function loadOrder($orderIncrementalId)
+    {
+        $order = $this->orderFactory->create()->loadByIncrementId($orderIncrementalId);
+        if (!$order->getId()) {
+            $this->paytrailHelper->processError('Order not found');
+        }
+        return $order;
     }
 }
