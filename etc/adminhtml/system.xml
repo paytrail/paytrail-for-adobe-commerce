@@ -95,6 +95,12 @@
                     Remember that as long as the order is open product stock in the order is locked.]]></comment>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                 </field>
+                <field id="callback_delay" translate="label" type="select" sortOrder="51" showInDefault="1"
+                       showInWebsite="1" showInStore="1">
+                    <label>Callback Request Delay</label>
+                    <comment><![CDATA[Set delay for callback request that comes after payment (in seconds).]]></comment>
+                    <source_model>Paytrail\PaymentService\Model\Config\Source\CallbackDelay</source_model>
+                </field>
                 <group id="paytrail_personalization" translate="label" type="text" sortOrder="90" showInDefault="1"
                        showInWebsite="1" showInStore="1">
                     <label>Payment page personalization</label>
