@@ -13,6 +13,7 @@ use Magento\Tax\Helper\Data as TaxHelper;
 use Paytrail\PaymentService\Helper\Data as Helper;
 use Paytrail\PaymentService\Logger\PaytrailLogger;
 use Paytrail\PaymentService\Model\Company\CompanyRequestData;
+use Paytrail\PaymentService\Model\Config\Source\CallbackDelay;
 use Paytrail\PaymentService\Model\UrlDataProvider;
 use Paytrail\SDK\Model\Address;
 use Paytrail\SDK\Model\Customer;
@@ -31,6 +32,7 @@ class PaymentDataProvider
      * @param DiscountSplitter $discountSplitter
      * @param TaxItem $taxItems
      * @param UrlDataProvider $urlDataProvider
+     * @param CallbackDelay $callbackDelay
      * @param PaytrailLogger $log
      */
     public function __construct(
@@ -41,7 +43,8 @@ class PaymentDataProvider
         private DiscountSplitter                    $discountSplitter,
         private TaxItem                             $taxItems,
         private UrlDataProvider                     $urlDataProvider,
-        private PaytrailLogger                     $log
+        private CallbackDelay                       $callbackDelay,
+        private PaytrailLogger                      $log
     ) {
     }
 
@@ -86,6 +89,8 @@ class PaymentDataProvider
         $paytrailPayment->setRedirectUrls($this->urlDataProvider->createRedirectUrl());
 
         $paytrailPayment->setCallbackUrls($this->urlDataProvider->createCallbackUrl());
+
+        $paytrailPayment->setCallbackDelay($this->callbackDelay->getCallbackDelay());
 
         // Log payment data
         $this->log->debugLog('request', $paytrailPayment);
