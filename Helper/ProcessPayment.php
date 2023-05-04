@@ -111,7 +111,6 @@ class ProcessPayment
         $count = 0;
         while ($this->isPaymentLocked($orderNo) && $count < 5) {
             $count++;
-//            sleep($count);
         }
 
         $this->lockProcessingPayment($orderNo);
