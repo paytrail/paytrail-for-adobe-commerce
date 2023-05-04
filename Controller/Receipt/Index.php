@@ -107,9 +107,7 @@ class Index implements ActionInterface
         $orderNo = $this->gatewayConfig->getGenerateReferenceForOrder()
             ? $this->paytrailHelper->getIdFromOrderReferenceNumber($reference)
             : $reference;
-
-        sleep(2); //giving callback time to get processed
-
+        
         /** @var \Magento\Sales\Model\Order $order */
         $order = $this->orderFactory->create()->loadByIncrementId($orderNo);
         $status = $order->getStatus();

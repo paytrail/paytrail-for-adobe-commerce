@@ -64,7 +64,7 @@ class ReceiptDataProvider
         $count = 0;
 
         while ($this->orderLockService->isOrderLocked($this->orderId) && $count < 3) {
-            sleep(1);
+//            sleep(1);
             $count++;
         }
 
