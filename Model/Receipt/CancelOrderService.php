@@ -32,7 +32,7 @@ class CancelOrderService
 
     /**
      * NotifyCanceledOrder
-     * 
+     *
      * @param $currentOrder
      * @return void
      * @throws \Magento\Framework\Exception\LocalizedException
@@ -68,7 +68,7 @@ class CancelOrderService
 
     /**
      * CancelOrderById function
-     * 
+     *
      * @param $orderId
      * @return void
      * @throws CheckoutException
@@ -87,7 +87,8 @@ class CancelOrderService
 
                 // Mask and throw end-user friendly exception
                 throw new CheckoutException(__(
-                    'Error while cancelling order. Please contact customer support with order id: %id to release discount coupons.',
+                    'Error while cancelling order. 
+                    Please contact customer support with order id: %id to release discount coupons.',
                     [ 'id'=> $orderId ]
                 ));
             }
