@@ -38,6 +38,9 @@ class CallbackDelay implements ArrayInterface
      */
     public function getCallbackDelay(): int
     {
-        return $this->scopeConfig->getValue('payment/paytrail/callback_delay');
+        return $this->scopeConfig->getValue(
+            self::CALLBACK_DELAY_PATH,
+            ScopeConfigInterface::SCOPE_TYPE_DEFAULT
+        );
     }
 }
