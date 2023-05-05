@@ -14,9 +14,6 @@ use Paytrail\PaymentService\Gateway\Validator\ResponseValidator;
 use Paytrail\PaymentService\Helper\Data;
 use Paytrail\PaymentService\Helper\ProcessPayment;
 
-/**
- * Class Index
- */
 class Index implements ActionInterface
 {
     /**
@@ -28,26 +25,32 @@ class Index implements ActionInterface
      * @var ResponseValidator
      */
     protected $responseValidator;
+    
     /**
      * @var ProcessPayment
      */
     private $processPayment;
+    
     /**
      * @var Config
      */
     private $gatewayConfig;
+    
     /**
      * @var Data
      */
     private $paytrailHelper;
+    
     /**
      * @var OrderFactory
      */
     private $orderFactory;
+    
     /**
      * @var RequestInterface
      */
     private $request;
+    
     /**
      * @var ResultFactory
      */
@@ -58,17 +61,18 @@ class Index implements ActionInterface
      */
     private $messageManager;
 
-
     /**
      * Index constructor.
-     * @param Context $context
+     *
      * @param Session $session
      * @param ResponseValidator $responseValidator
-     * @param ReceiptDataProvider $receiptDataProvider
      * @param ProcessPayment $processPayment
      * @param Config $gatewayConfig
      * @param Data $paytrailHelper
      * @param OrderFactory $orderFactory
+     * @param RequestInterface $request
+     * @param ResultFactory $resultFactory
+     * @param ManagerInterface $messageManager
      */
     public function __construct(
         Session $session,
@@ -94,6 +98,7 @@ class Index implements ActionInterface
 
     /**
      * Order status is manipulated by another callback:
+     *
      * @see \Paytrail\PaymentService\Controller\Callback\Index
      * execute method
      */
@@ -107,9 +112,7 @@ class Index implements ActionInterface
         $orderNo = $this->gatewayConfig->getGenerateReferenceForOrder()
             ? $this->paytrailHelper->getIdFromOrderReferenceNumber($reference)
             : $reference;
-
-        sleep(2); //giving callback time to get processed
-
+        
         /** @var \Magento\Sales\Model\Order $order */
         $order = $this->orderFactory->create()->loadByIncrementId($orderNo);
         $status = $order->getStatus();
@@ -118,7 +121,8 @@ class Index implements ActionInterface
         $failMessages = [];
 
         if ($status == 'pending_payment' || in_array($status, $cancelStatuses)) {
-            // order status could be changed by callback, if not, status change needs to be forced by processing the payment
+            // order status could be changed by callback
+            // if not, status change needs to be forced by processing the payment
             $failMessages = $this->processPayment->process($this->request->getParams(), $this->session);
         }
 
@@ -138,7 +142,9 @@ class Index implements ActionInterface
             return $result->setPath('checkout/cart');
         }
 
-        $this->messageManager->addErrorMessage(__('Order processing has been aborted. Please contact customer service.'));
+        $this->messageManager->addErrorMessage(
+            __('Order processing has been aborted. Please contact customer service.')
+        );
         return $result->setPath('checkout/cart');
     }
 }

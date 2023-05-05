@@ -2,7 +2,6 @@
 
 namespace Paytrail\PaymentService\Helper;
 
-use Magento\Checkout\Model\Session;
 use Magento\Framework\App\CacheInterface;
 use Magento\Quote\Api\CartRepositoryInterface;
 use Magento\Quote\Model\QuoteRepository;
@@ -12,12 +11,9 @@ use Paytrail\PaymentService\Exceptions\CheckoutException;
 use Paytrail\PaymentService\Model\ReceiptDataProvider;
 use Paytrail\PaymentService\Exceptions\TransactionSuccessException;
 
-/**
- * Class ProcessPayment
- */
 class ProcessPayment
 {
-    const PAYMENT_PROCESSING_CACHE_PREFIX = "paytrail-processing-payment-";
+    private const PAYMENT_PROCESSING_CACHE_PREFIX = "paytrail-processing-payment-";
 
     /**
      * @var ResponseValidator
@@ -75,9 +71,12 @@ class ProcessPayment
     }
 
     /**
-     * @param array $params
-     * @param Session $session
+     * Process function
+     *
+     * @param $params
+     * @param $session
      * @return array
+     * @throws \Magento\Framework\Exception\LocalizedException
      */
     public function process($params, $session)
     {
@@ -111,7 +110,6 @@ class ProcessPayment
         $count = 0;
         while ($this->isPaymentLocked($orderNo) && $count < 5) {
             $count++;
-            sleep($count);
         }
 
         $this->lockProcessingPayment($orderNo);
@@ -125,10 +123,13 @@ class ProcessPayment
     }
 
     /**
-     * @param array $params
-     * @param Session $session
+     * ProcessPayment function
+     *
+     * @param $params
+     * @param $session
      * @param $orderNo
      * @return array
+     * @throws \Magento\Framework\Exception\LocalizedException
      */
     protected function processPayment($params, $session, $orderNo)
     {
@@ -151,8 +152,10 @@ class ProcessPayment
             /*
             there are 2 calls called from Paytrail Payment Service.
             One call is when a customer is redirected back to the magento store.
-            There is also the second, parallel, call from Paytrail Payment Service to make sure the payment is confirmed (if for any reason customer was not redirected back to the store).
-            Sometimes, the calls are called with too small time difference between them that Magento cannot handle them. The second call must be ignored or slowed down.
+            There is also the second, parallel, call from Paytrail Payment Service
+            to make sure the payment is confirmed (if for any reason customer was not redirected back to the store).
+            Sometimes, the calls are called with too small time difference between them that Magento cannot handle them.
+            The second call must be ignored or slowed down.
             */
             $this->receiptDataProvider->execute($params);
         } catch (CheckoutException $exception) {
@@ -176,7 +179,10 @@ class ProcessPayment
     }
 
     /**
+     * LockProcessingPayment function
+     *
      * @param int $orderId
+     * @return void
      */
     protected function lockProcessingPayment($orderId)
     {
@@ -187,7 +193,10 @@ class ProcessPayment
     }
 
     /**
+     * UnlockProcessingPayment
+     *
      * @param int $orderId
+     * @return void
      */
     protected function unlockProcessingPayment($orderId)
     {
@@ -198,6 +207,8 @@ class ProcessPayment
     }
 
     /**
+     * IsPaymentLocked function
+     *
      * @param int $orderId
      * @return bool
      */
