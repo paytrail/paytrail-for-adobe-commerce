@@ -32,7 +32,7 @@ class OrderLockService
 
     /**
      * UnlockProcessingOrder function
-     * 
+     *
      * @param $orderId
      * @return void
      */
@@ -46,7 +46,7 @@ class OrderLockService
 
     /**
      * IsOrderLocked function
-     * 
+     *
      * @param $orderId
      * @return bool
      */

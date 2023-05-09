@@ -63,12 +63,12 @@ class ReceiptDataProvider
         /** @var int $count */
         $count = 0;
 
-        while ($this->orderLockService->isOrderLocked($this->orderId) && $count < 3) {
-//            sleep(1);
-            $count++;
-        }
+//        while ($this->orderLockService->isOrderLocked($this->orderId) && $count < 3) {
+////            sleep(1);
+//            $count++;
+//        }
 
-        $this->orderLockService->lockProcessingOrder($this->orderId);
+//        $this->orderLockService->lockProcessingOrder($this->orderId);
 
         $this->currentOrderPayment = $this->currentOrder->getPayment();
 
@@ -81,7 +81,7 @@ class ReceiptDataProvider
         }
         $this->processService->processOrder($paymentVerified, $this->currentOrder);
 
-        $this->orderLockService->unlockProcessingOrder($this->orderId);
+//        $this->orderLockService->unlockProcessingOrder($this->orderId);
     }
     
     /**

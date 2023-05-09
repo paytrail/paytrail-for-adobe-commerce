@@ -108,16 +108,16 @@ class ProcessPayment
 
         /** @var int $count */
         $count = 0;
-        while ($this->isPaymentLocked($orderNo) && $count < 5) {
-            $count++;
-        }
+//        while ($this->isPaymentLocked($orderNo) && $count < 5) {
+//            $count++;
+//        }
 
-        $this->lockProcessingPayment($orderNo);
+//        $this->lockProcessingPayment($orderNo);
 
         /** @var array $ret */
         $ret = $this->processPayment($params, $session, $orderNo);
 
-        $this->unlockProcessingPayment($orderNo);
+//        $this->unlockProcessingPayment($orderNo);
 
         return array_merge($ret, $errors);
     }
