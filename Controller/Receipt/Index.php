@@ -3,69 +3,24 @@
 namespace Paytrail\PaymentService\Controller\Receipt;
 
 use Magento\Checkout\Model\Session;
-use Magento\Framework\App\Action\Context;
 use Magento\Framework\App\ActionInterface;
 use Magento\Framework\App\RequestInterface;
 use Magento\Framework\Controller\ResultFactory;
 use Magento\Framework\Message\ManagerInterface;
 use Magento\Sales\Model\OrderFactory;
 use Paytrail\PaymentService\Gateway\Config\Config;
-use Paytrail\PaymentService\Gateway\Validator\ResponseValidator;
 use Paytrail\PaymentService\Helper\Data;
 use Paytrail\PaymentService\Helper\ProcessPayment;
 
 class Index implements ActionInterface
 {
-    /**
-     * @var Session
-     */
-    protected $session;
-
-    /**
-     * @var ResponseValidator
-     */
-    protected $responseValidator;
-    
-    /**
-     * @var ProcessPayment
-     */
-    private $processPayment;
-    
-    /**
-     * @var Config
-     */
-    private $gatewayConfig;
-    
-    /**
-     * @var Data
-     */
-    private $paytrailHelper;
-    
-    /**
-     * @var OrderFactory
-     */
-    private $orderFactory;
-    
-    /**
-     * @var RequestInterface
-     */
-    private $request;
-    
-    /**
-     * @var ResultFactory
-     */
-    private $resultFactory;
-
-    /**
-     * @var ManagerInterface
-     */
-    private $messageManager;
+    public const ORDER_SUCCESS_STATUSES = ["processing", "pending_paytrail", "pending", "complete"];
+    public const ORDER_CANCEL_STATUSES = ["canceled"];
 
     /**
      * Index constructor.
      *
      * @param Session $session
-     * @param ResponseValidator $responseValidator
      * @param ProcessPayment $processPayment
      * @param Config $gatewayConfig
      * @param Data $paytrailHelper
@@ -75,25 +30,15 @@ class Index implements ActionInterface
      * @param ManagerInterface $messageManager
      */
     public function __construct(
-        Session $session,
-        ResponseValidator $responseValidator,
-        ProcessPayment $processPayment,
-        Config $gatewayConfig,
-        Data $paytrailHelper,
-        OrderFactory $orderFactory,
-        RequestInterface $request,
-        ResultFactory $resultFactory,
-        ManagerInterface $messageManager
+        private Session $session,
+        private ProcessPayment $processPayment,
+        private Config $gatewayConfig,
+        private Data $paytrailHelper,
+        private OrderFactory $orderFactory,
+        private RequestInterface $request,
+        private ResultFactory $resultFactory,
+        private ManagerInterface $messageManager
     ) {
-        $this->session = $session;
-        $this->responseValidator = $responseValidator;
-        $this->processPayment = $processPayment;
-        $this->gatewayConfig = $gatewayConfig;
-        $this->paytrailHelper = $paytrailHelper;
-        $this->orderFactory = $orderFactory;
-        $this->request = $request;
-        $this->resultFactory = $resultFactory;
-        $this->messageManager = $messageManager;
     }
 
     /**
@@ -104,8 +49,6 @@ class Index implements ActionInterface
      */
     public function execute()
     {
-        $successStatuses = ["processing", "pending_paytrail", "pending", "complete"];
-        $cancelStatuses = ["canceled"];
         $reference = $this->request->getParam('checkout-reference');
 
         /** @var string $orderNo */
@@ -117,14 +60,7 @@ class Index implements ActionInterface
         $order = $this->orderFactory->create()->loadByIncrementId($orderNo);
         $status = $order->getStatus();
 
-        /** @var array $failMessages */
-        $failMessages = [];
-
-        if ($status == 'pending_payment' || in_array($status, $cancelStatuses)) {
-            // order status could be changed by callback
-            // if not, status change needs to be forced by processing the payment
-            $failMessages = $this->processPayment->process($this->request->getParams(), $this->session);
-        }
+        $failMessages = $this->processPayment->process($this->request->getParams(), $this->session);
 
         if ($status == 'pending_payment') { // status could be changed by callback, if not, it needs to be forced
             $order = $this->orderFactory->create()->loadByIncrementId($orderNo); // refreshing order
@@ -132,9 +68,9 @@ class Index implements ActionInterface
         }
 
         $result = $this->resultFactory->create(\Magento\Framework\Controller\ResultFactory::TYPE_REDIRECT);
-        if (in_array($status, $successStatuses)) {
+        if (in_array($status, self::ORDER_SUCCESS_STATUSES)) {
             return $result->setPath('checkout/onepage/success');
-        } elseif (in_array($status, $cancelStatuses)) {
+        } elseif (in_array($status, self::ORDER_CANCEL_STATUSES)) {
             foreach ($failMessages as $failMessage) {
                 $this->messageManager->addErrorMessage($failMessage);
             }
