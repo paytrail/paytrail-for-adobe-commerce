@@ -47,6 +47,7 @@ class ProcessPayment
 
     /**
      * ProcessPayment constructor.
+     *
      * @param ResponseValidator $responseValidator
      * @param ReceiptDataProvider $receiptDataProvider
      * @param QuoteRepository $cartRepository
@@ -60,7 +61,7 @@ class ProcessPayment
         CartRepositoryInterface $cartRepository,
         CacheInterface          $cache,
         Config                  $gatewayConfig,
-        Data                    $paytrailHelper
+        Data                    $paytrailHelper,
     ) {
         $this->responseValidator = $responseValidator;
         $this->receiptDataProvider = $receiptDataProvider;
@@ -106,18 +107,8 @@ class ProcessPayment
             ? $this->paytrailHelper->getIdFromOrderReferenceNumber($reference)
             : $reference;
 
-        /** @var int $count */
-        $count = 0;
-//        while ($this->isPaymentLocked($orderNo) && $count < 5) {
-//            $count++;
-//        }
-
-//        $this->lockProcessingPayment($orderNo);
-
         /** @var array $ret */
         $ret = $this->processPayment($params, $session, $orderNo);
-
-//        $this->unlockProcessingPayment($orderNo);
 
         return array_merge($ret, $errors);
     }
@@ -176,47 +167,5 @@ class ProcessPayment
         }
 
         return $errors;
-    }
-
-    /**
-     * LockProcessingPayment function
-     *
-     * @param int $orderId
-     * @return void
-     */
-    protected function lockProcessingPayment($orderId)
-    {
-        /** @var string $identifier */
-        $identifier = self::PAYMENT_PROCESSING_CACHE_PREFIX . $orderId;
-
-        $this->cache->save("locked", $identifier);
-    }
-
-    /**
-     * UnlockProcessingPayment
-     *
-     * @param int $orderId
-     * @return void
-     */
-    protected function unlockProcessingPayment($orderId)
-    {
-        /** @var string $identifier */
-        $identifier = self::PAYMENT_PROCESSING_CACHE_PREFIX . $orderId;
-
-        $this->cache->remove($identifier);
-    }
-
-    /**
-     * IsPaymentLocked function
-     *
-     * @param int $orderId
-     * @return bool
-     */
-    protected function isPaymentLocked($orderId)
-    {
-        /** @var string $identifier */
-        $identifier = self::PAYMENT_PROCESSING_CACHE_PREFIX . $orderId;
-
-        return $this->cache->load($identifier) ? true : false;
     }
 }
