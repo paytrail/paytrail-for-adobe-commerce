@@ -2,6 +2,7 @@
 
 namespace Paytrail\PaymentService\Helper;
 
+use Magento\Checkout\Model\Session;
 use Magento\Framework\App\CacheInterface;
 use Magento\Quote\Api\CartRepositoryInterface;
 use Magento\Quote\Model\QuoteRepository;
@@ -74,8 +75,8 @@ class ProcessPayment
     /**
      * Process function
      *
-     * @param $params
-     * @param $session
+     * @param array $params
+     * @param Session $session
      * @return array
      * @throws \Magento\Framework\Exception\LocalizedException
      */
@@ -116,9 +117,9 @@ class ProcessPayment
     /**
      * ProcessPayment function
      *
-     * @param $params
-     * @param $session
-     * @param $orderNo
+     * @param array $params
+     * @param Session $session
+     * @param string $orderNo
      * @return array
      * @throws \Magento\Framework\Exception\LocalizedException
      */
