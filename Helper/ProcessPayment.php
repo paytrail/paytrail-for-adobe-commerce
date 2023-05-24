@@ -3,7 +3,6 @@
 namespace Paytrail\PaymentService\Helper;
 
 use Magento\Checkout\Model\Session;
-use Magento\Framework\App\CacheInterface;
 use Magento\Quote\Api\CartRepositoryInterface;
 use Magento\Quote\Model\QuoteRepository;
 use Paytrail\PaymentService\Gateway\Config\Config;
@@ -32,11 +31,6 @@ class ProcessPayment
     private $cartRepository;
 
     /**
-     * @var CacheInterface
-     */
-    private $cache;
-
-    /**
      * @var Config
      */
     private $gatewayConfig;
@@ -51,8 +45,7 @@ class ProcessPayment
      *
      * @param ResponseValidator $responseValidator
      * @param ReceiptDataProvider $receiptDataProvider
-     * @param QuoteRepository $cartRepository
-     * @param CacheInterface $cache
+     * @param CartRepositoryInterface $cartRepository
      * @param Config $gatewayConfig
      * @param Data $paytrailHelper
      */
@@ -60,14 +53,12 @@ class ProcessPayment
         ResponseValidator       $responseValidator,
         ReceiptDataProvider     $receiptDataProvider,
         CartRepositoryInterface $cartRepository,
-        CacheInterface          $cache,
         Config                  $gatewayConfig,
         Data                    $paytrailHelper,
     ) {
         $this->responseValidator = $responseValidator;
         $this->receiptDataProvider = $receiptDataProvider;
         $this->cartRepository = $cartRepository;
-        $this->cache = $cache;
         $this->gatewayConfig = $gatewayConfig;
         $this->paytrailHelper = $paytrailHelper;
     }
