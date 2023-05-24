@@ -2,7 +2,7 @@
 
 namespace Paytrail\PaymentService\Helper;
 
-use Magento\Framework\App\CacheInterface;
+use Magento\Checkout\Model\Session;
 use Magento\Quote\Api\CartRepositoryInterface;
 use Magento\Quote\Model\QuoteRepository;
 use Paytrail\PaymentService\Gateway\Config\Config;
@@ -31,11 +31,6 @@ class ProcessPayment
     private $cartRepository;
 
     /**
-     * @var CacheInterface
-     */
-    private $cache;
-
-    /**
      * @var Config
      */
     private $gatewayConfig;
@@ -47,10 +42,10 @@ class ProcessPayment
 
     /**
      * ProcessPayment constructor.
+     *
      * @param ResponseValidator $responseValidator
      * @param ReceiptDataProvider $receiptDataProvider
-     * @param QuoteRepository $cartRepository
-     * @param CacheInterface $cache
+     * @param CartRepositoryInterface $cartRepository
      * @param Config $gatewayConfig
      * @param Data $paytrailHelper
      */
@@ -58,14 +53,12 @@ class ProcessPayment
         ResponseValidator       $responseValidator,
         ReceiptDataProvider     $receiptDataProvider,
         CartRepositoryInterface $cartRepository,
-        CacheInterface          $cache,
         Config                  $gatewayConfig,
-        Data                    $paytrailHelper
+        Data                    $paytrailHelper,
     ) {
         $this->responseValidator = $responseValidator;
         $this->receiptDataProvider = $receiptDataProvider;
         $this->cartRepository = $cartRepository;
-        $this->cache = $cache;
         $this->gatewayConfig = $gatewayConfig;
         $this->paytrailHelper = $paytrailHelper;
     }
@@ -73,8 +66,8 @@ class ProcessPayment
     /**
      * Process function
      *
-     * @param $params
-     * @param $session
+     * @param array $params
+     * @param Session $session
      * @return array
      * @throws \Magento\Framework\Exception\LocalizedException
      */
@@ -106,18 +99,8 @@ class ProcessPayment
             ? $this->paytrailHelper->getIdFromOrderReferenceNumber($reference)
             : $reference;
 
-        /** @var int $count */
-        $count = 0;
-//        while ($this->isPaymentLocked($orderNo) && $count < 5) {
-//            $count++;
-//        }
-
-//        $this->lockProcessingPayment($orderNo);
-
         /** @var array $ret */
         $ret = $this->processPayment($params, $session, $orderNo);
-
-//        $this->unlockProcessingPayment($orderNo);
 
         return array_merge($ret, $errors);
     }
@@ -125,9 +108,9 @@ class ProcessPayment
     /**
      * ProcessPayment function
      *
-     * @param $params
-     * @param $session
-     * @param $orderNo
+     * @param array $params
+     * @param Session $session
+     * @param string $orderNo
      * @return array
      * @throws \Magento\Framework\Exception\LocalizedException
      */
@@ -176,47 +159,5 @@ class ProcessPayment
         }
 
         return $errors;
-    }
-
-    /**
-     * LockProcessingPayment function
-     *
-     * @param int $orderId
-     * @return void
-     */
-    protected function lockProcessingPayment($orderId)
-    {
-        /** @var string $identifier */
-        $identifier = self::PAYMENT_PROCESSING_CACHE_PREFIX . $orderId;
-
-        $this->cache->save("locked", $identifier);
-    }
-
-    /**
-     * UnlockProcessingPayment
-     *
-     * @param int $orderId
-     * @return void
-     */
-    protected function unlockProcessingPayment($orderId)
-    {
-        /** @var string $identifier */
-        $identifier = self::PAYMENT_PROCESSING_CACHE_PREFIX . $orderId;
-
-        $this->cache->remove($identifier);
-    }
-
-    /**
-     * IsPaymentLocked function
-     *
-     * @param int $orderId
-     * @return bool
-     */
-    protected function isPaymentLocked($orderId)
-    {
-        /** @var string $identifier */
-        $identifier = self::PAYMENT_PROCESSING_CACHE_PREFIX . $orderId;
-
-        return $this->cache->load($identifier) ? true : false;
     }
 }

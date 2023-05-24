@@ -8,7 +8,6 @@ use Paytrail\PaymentService\Exceptions\CheckoutException;
 use Paytrail\PaymentService\Gateway\Config\Config;
 use Paytrail\PaymentService\Helper\Data as PaytrailHelper;
 use Paytrail\PaymentService\Model\Receipt\LoadService;
-use Paytrail\PaymentService\Model\Receipt\OrderLockService;
 use Paytrail\PaymentService\Model\Receipt\PaymentTransaction;
 use Paytrail\PaymentService\Model\Receipt\ProcessService;
 
@@ -18,7 +17,6 @@ class ReceiptDataProvider
      * @param Session $session
      * @param PaytrailHelper $paytrailHelper
      * @param Config $gatewayConfig
-     * @param OrderLockService $orderLockService
      * @param ProcessService $processService
      * @param LoadService $loadService
      * @param PaymentTransaction $paymentTransaction
@@ -27,10 +25,9 @@ class ReceiptDataProvider
         private Session $session,
         private PaytrailHelper $paytrailHelper,
         private Config $gatewayConfig,
-        private OrderLockService $orderLockService,
         private ProcessService $processService,
         private LoadService $loadService,
-        private PaymentTransaction $paymentTransaction
+        private PaymentTransaction $paymentTransaction,
     ) {
     }
 
@@ -60,16 +57,6 @@ class ReceiptDataProvider
         $this->currentOrder = $this->loadService->loadOrder($this->orderIncrementalId);
         $this->orderId = $this->currentOrder->getId();
 
-        /** @var int $count */
-        $count = 0;
-
-//        while ($this->orderLockService->isOrderLocked($this->orderId) && $count < 3) {
-////            sleep(1);
-//            $count++;
-//        }
-
-//        $this->orderLockService->lockProcessingOrder($this->orderId);
-
         $this->currentOrderPayment = $this->currentOrder->getPayment();
 
         /** @var string|void $paymentVerified */
@@ -80,8 +67,6 @@ class ReceiptDataProvider
             $this->processService->processInvoice($this->currentOrder);
         }
         $this->processService->processOrder($paymentVerified, $this->currentOrder);
-
-//        $this->orderLockService->unlockProcessingOrder($this->orderId);
     }
     
     /**
