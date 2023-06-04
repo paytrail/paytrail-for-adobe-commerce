@@ -1,8 +1,9 @@
 <?php
+
 namespace Paytrail\PaymentService\Gateway\Http\Client;
 
-use Magento\Framework\Exception\LocalizedException;
 use Magento\Payment\Gateway\Http\ClientInterface;
+use Magento\Sales\Model\Order;
 use Paytrail\PaymentService\Helper\ApiData;
 use Paytrail\SDK\Response\RefundResponse;
 use Psr\Log\LoggerInterface;
@@ -16,6 +17,11 @@ class TransactionRefund implements ClientInterface
     private $apiData;
 
     /**
+     * @var Order 
+     */
+    private $order;
+    
+    /**
      * @var LoggerInterface
      */
     private $log;
@@ -24,14 +30,17 @@ class TransactionRefund implements ClientInterface
      * TransactionRefund constructor.
      *
      * @param ApiData $apiData
+     * @param Order $order
      * @param LoggerInterface $log
      */
     public function __construct(
         ApiData $apiData,
+        Order $order,
         LoggerInterface $log
     ) {
         $this->apiData = $apiData;
         $this->log = $log;
+        $this->order = $order;
     }
 
     /**
@@ -61,9 +70,12 @@ class TransactionRefund implements ClientInterface
      */
     protected function postRefundRequest($request)
     {
+        $orderAdapter = $request['order'];
+        $order = $this->order->loadByIncrementId($orderAdapter->getOrderIncrementId());
+        
         $response = $this->apiData->processApiRequest(
             'refund',
-            $request['order'],
+            $order,
             $request['amount'],
             $request['parent_transaction_id']
         );
@@ -77,7 +89,7 @@ class TransactionRefund implements ClientInterface
             );
             $emailResponse = $this->apiData->processApiRequest(
                 'email_refund',
-                $request['order'],
+                $order,
                 $request['amount'],
                 $request['parent_transaction_id']
             );
