@@ -161,8 +161,7 @@ class Subscription extends AbstractDb
         );
         $select->where(
             'so.grand_total NOT IN (?) 
-            AND so.grand_total = so.total_paid 
-            AND so.total_paid = so.total_invoiced',
+            AND so.grand_total = so.total_paid',
             self::NOT_EMPTY_ARRAY
         );
 
