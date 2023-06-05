@@ -11,7 +11,6 @@ use Paytrail\PaymentService\Api\Data\SubscriptionInterface;
 class Subscription extends AbstractDb
 {
     public const PAYTRAIL_SUBSCRIPTIONS_TABLENAME = 'paytrail_subscriptions';
-    private const NOT_EMPTY_ARRAY = [0, null];
 
     /**
      * @var string
@@ -160,9 +159,8 @@ class Subscription extends AbstractDb
             []
         );
         $select->where(
-            'so.grand_total NOT IN (?) 
-            AND so.grand_total = so.total_paid',
-            self::NOT_EMPTY_ARRAY
+            'so.grand_total != 0 
+            AND so.grand_total = so.total_paid'
         );
 
         return $connection->fetchPairs($select);
