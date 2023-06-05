@@ -17,7 +17,7 @@ class TransactionRefund implements ClientInterface
     private $apiData;
 
     /**
-     * @var Order 
+     * @var Order
      */
     private $order;
     
@@ -44,6 +44,8 @@ class TransactionRefund implements ClientInterface
     }
 
     /**
+     * PlaceRequest function
+     *
      * @param TransferInterface $transferObject
      * @return array|void
      */
@@ -65,7 +67,9 @@ class TransactionRefund implements ClientInterface
     }
 
     /**
-     * @param $request
+     * PostRefundRequest function
+     *
+     * @param array $request
      * @return bool
      */
     protected function postRefundRequest($request)
