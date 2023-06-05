@@ -2,18 +2,26 @@
 
 namespace Paytrail\PaymentService\Model\ResourceModel;
 
+use Magento\Framework\DB\Adapter\AdapterInterface;
 use Magento\Framework\Exception\CouldNotSaveException;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Model\ResourceModel\Db\VersionControl\AbstractDb;
 use Paytrail\PaymentService\Api\Data\SubscriptionInterface;
-use Paytrail\PaymentService\Api\Data\SubscriptionLinkInterface;
-use Paytrail\PaymentService\Model\ResourceModel\Subscription\SubscriptionLink;
 
 class Subscription extends AbstractDb
 {
     public const PAYTRAIL_SUBSCRIPTIONS_TABLENAME = 'paytrail_subscriptions';
+
+    /**
+     * @var string
+     */
     protected $_eventPrefix = 'paytrail_subscriptions';
 
+    /**
+     * Subscription constructor.
+     *
+     * @return void
+     */
     protected function _construct()
     {
         $this->_init(self::PAYTRAIL_SUBSCRIPTIONS_TABLENAME, 'entity_id');
@@ -36,6 +44,8 @@ class Subscription extends AbstractDb
     }
 
     /**
+     * BeforeSave function
+     *
      * @param \Magento\Framework\Model\AbstractModel $object
      * @return $this|Subscription
      * @throws CouldNotSaveException
@@ -50,6 +60,8 @@ class Subscription extends AbstractDb
     }
 
     /**
+     * CanSave function
+     *
      * @param \Magento\Framework\Model\AbstractModel $object
      * @return bool
      * @throws CouldNotSaveException
@@ -87,6 +99,8 @@ class Subscription extends AbstractDb
     }
 
     /**
+     * GetNewestOrderIds function
+     *
      * @param bool $addDateFilter
      * @return array
      */
@@ -125,7 +139,9 @@ class Subscription extends AbstractDb
     }
 
     /**
-     * @param $connection
+     * FilterUnPaidIds function
+     *
+     * @param AdapterInterface|false $connection
      * @param array $newestOrderIds
      * @return mixed
      */
