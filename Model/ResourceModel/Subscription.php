@@ -143,8 +143,7 @@ class Subscription extends AbstractDb
             []
         );
         $select->where(
-            'so.status IN (?)',
-            ['processing'] //TODO fix
+            'so.base_total_paid = so.base_total_invoiced'
         );
 
         return $connection->fetchPairs($select);
