@@ -227,4 +227,11 @@
             <argument name="state" xsi:type="object">\Magento\Framework\App\State\Proxy</argument>
         </arguments>
     </type>
+
+    <type name="Paytrail\PaymentService\Console\Command\Bill">
+        <arguments>
+            <argument name="notify" xsi:type="object">\Paytrail\PaymentService\Model\Recurring\Bill\Proxy</argument>
+            <argument name="state" xsi:type="object">\Magento\Framework\App\State\Proxy</argument>
+        </arguments>
+    </type>
 </config>

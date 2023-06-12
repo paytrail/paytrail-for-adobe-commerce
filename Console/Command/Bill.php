@@ -2,35 +2,61 @@
 
 namespace Paytrail\PaymentService\Console\Command;
 
+use Magento\Framework\App\Area;
+use Magento\Framework\App\State;
+use Magento\Framework\Console\Cli;
+use Magento\Framework\Exception\LocalizedException;
+use Paytrail\PaymentService\Model\Recurring\Bill as RecurringBill;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
 class Bill extends \Symfony\Component\Console\Command\Command
 {
-    /** @var \Paytrail\PaymentService\Model\Recurring\Bill */
+    /** @var RecurringBill */
     private $bill;
 
-    /** @var \Magento\Framework\App\State */
+    /** @var State */
     private $state;
 
+    /**
+     * Constructor
+     *
+     * @param RecurringBill $notify
+     * @param State $state
+     */
     public function __construct(
-        \Paytrail\PaymentService\Model\Recurring\Bill\Proxy $notify,
-        \Magento\Framework\App\State $state
+        RecurringBill $notify,
+        State         $state
     ) {
         $this->bill = $notify;
         $this->state = $state;
         parent::__construct();
     }
 
+    /**
+     * Configure
+     *
+     * @return void
+     */
     protected function configure()
     {
         $this->setName('paytrail:recurring:bill');
         $this->setDescription('Invoice customers of recurring orders');
     }
 
-    protected function execute(InputInterface $input, OutputInterface $output)
+    /**
+     * Execute
+     *
+     * @param InputInterface $input
+     * @param OutputInterface $output
+     * @return int
+     * @throws LocalizedException
+     */
+    public function execute(InputInterface $input, OutputInterface $output)
     {
-        $this->state->setAreaCode(\Magento\Framework\App\Area::AREA_CRONTAB);
+        $this->state->setAreaCode(Area::AREA_CRONTAB);
         $this->bill->process();
+
+        return Cli::RETURN_SUCCESS;
     }
 }
