@@ -148,7 +148,6 @@ class OrderCloner
     {
         if ($order->canReorder()
             && count($this->unavailableProducts->getForOrder($order)) == 0
-            && $order->getStatus() === 'processing'
         ) {
             return true;
         }
