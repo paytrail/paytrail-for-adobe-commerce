@@ -2,6 +2,7 @@
 
 namespace Paytrail\PaymentService\Model\Subscription;
 
+use Exception;
 use Magento\Backend\Model\Session\Quote;
 use Magento\Framework\Api\ExtensionAttribute\JoinProcessorInterface;
 use Magento\Framework\Exception\LocalizedException;
@@ -52,13 +53,13 @@ class OrderCloner
      * @param CartRepositoryInterface $cartRepositoryInterface
      */
     public function __construct(
-        CollectionFactory $orderCollection,
+        CollectionFactory           $orderCollection,
         UnavailableProductsProvider $unavailableProducts,
-        Quote $quoteSession,
-        JoinProcessorInterface $joinProcessor,
-        QuoteManagement $quoteManagement,
-        LoggerInterface $logger,
-        CartRepositoryInterface $cartRepositoryInterface
+        Quote                       $quoteSession,
+        JoinProcessorInterface      $joinProcessor,
+        QuoteManagement             $quoteManagement,
+        LoggerInterface             $logger,
+        CartRepositoryInterface     $cartRepositoryInterface
     ) {
         $this->orderCollection = $orderCollection;
         $this->unavailableProducts = $unavailableProducts;
@@ -71,10 +72,10 @@ class OrderCloner
 
     /**
      * Clones orders by existing order ids, if performance becomes an issue. Consider limiting results from
-     * @see \Paytrail\PaymentService\Model\ResourceModel\Subscription::getClonableOrderIds
-     *
      * @param int[] $orderIds
      * @return \Magento\Sales\Model\Order[]
+     * @see \Paytrail\PaymentService\Model\ResourceModel\Subscription::getClonableOrderIds
+     *
      */
     public function cloneOrders($orderIds): array
     {
@@ -92,7 +93,7 @@ class OrderCloner
             try {
                 $clonedOrder = $this->clone($order);
                 $newOrders[$clonedOrder->getId()] = $clonedOrder;
-            } catch (LocalizedException $exception) {
+            } catch (Exception $exception) {
                 $this->logger->error(__(
                     'Recurring payment order cloning error: %error',
                     ['error' => $exception->getMessage()]
@@ -131,7 +132,7 @@ class OrderCloner
     private function removeNonScheduledProducts($quote): void
     {
         foreach ($quote->getAllVisibleItems() as $quoteItem) {
-            if(!$quoteItem->getProduct()->getRecurringPaymentSchedule()) {
+            if (!$quoteItem->getProduct()->getRecurringPaymentSchedule()) {
                 $quote->deleteItem($quoteItem);
                 $quote->setTotalsCollectedFlag(false);
             }
@@ -159,7 +160,7 @@ class OrderCloner
     }
 
     /**
-     * @param \Magento\Sales\Model\Order$oldOrder
+     * @param \Magento\Sales\Model\Order $oldOrder
      * @return \Magento\Quote\Model\Quote
      * @throws LocalizedException
      */
