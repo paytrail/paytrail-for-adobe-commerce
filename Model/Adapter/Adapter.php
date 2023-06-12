@@ -13,7 +13,6 @@ class Adapter
      * @var string MODULE_CODE
      */
     const MODULE_CODE = 'Paytrail_PaymentService';
-
     const CC_VAULT_CODE = 'paytrail_cc_vault';
 
     /**
@@ -38,7 +37,7 @@ class Adapter
     /**
      * Adapter constructor.
      *
-     * @param Config $gatewayConfig
+     * @param Config              $gatewayConfig
      * @param ModuleListInterface $moduleList
      */
     public function __construct(
@@ -46,13 +45,12 @@ class Adapter
         ModuleListInterface $moduleList
     ) {
         $this->gatewayConfig = $gatewayConfig;
-        $this->moduleList = $moduleList;
-        $this->merchantId = $gatewayConfig->getMerchantId();
-        $this->merchantSecret = $gatewayConfig->getMerchantSecret();
+        $this->moduleList    = $moduleList;
     }
 
     /**
      * Create Instance of the Paytrail PHP-SDK API Client
+     *
      * @return Client
      * @throws LocalizedException
      */
@@ -61,10 +59,11 @@ class Adapter
         try {
             if (class_exists('Paytrail\SDK\Client')) {
                 $paytrailClient = new Client(
-                    $this->merchantId,
-                    $this->merchantSecret,
+                    $this->gatewayConfig->getMerchantId(),
+                    $this->gatewayConfig->getMerchantSecret(),
                     'paytrail-for-adobe-commerce-' . $this->getExtensionVersion()
                 );
+
                 return $paytrailClient;
             } else {
                 throw new LocalizedException(__('Paytrail\SDK\Client does not exist'));
