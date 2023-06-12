@@ -21,14 +21,14 @@ class Bill extends \Symfony\Component\Console\Command\Command
     /**
      * Constructor
      *
-     * @param RecurringBill $notify
+     * @param RecurringBill $bill
      * @param State $state
      */
     public function __construct(
-        RecurringBill $notify,
+        RecurringBill $bill,
         State         $state
     ) {
-        $this->bill = $notify;
+        $this->bill = $bill;
         $this->state = $state;
         parent::__construct();
     }
