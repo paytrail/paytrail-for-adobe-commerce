@@ -12,6 +12,9 @@ class Config extends \Magento\Payment\Gateway\Config\Config
     const DEFAULT_PATH_PATTERN = 'payment/%s/%s';
     const KEY_TITLE = 'title';
     const CODE = 'paytrail';
+    const CC_VAULT_CODE = 'paytrail_cc_vault';
+    const SAVE_CARD_URL = 'tokenization/savecard';
+    const KEY_CHECKOUT_ALGORITHM = 'checkout_algorithm';
     const KEY_MERCHANT_SECRET = 'merchant_secret';
     const KEY_MERCHANT_ID = 'merchant_id';
     const KEY_ACTIVE = 'active';
@@ -254,6 +257,31 @@ class Config extends \Magento\Payment\Gateway\Config\Config
     public function getNotificationEmail($storeId = null)
     {
         return $this->getValue(self::KEY_NOTIFICATION_EMAIL, $storeId);
+    }
+
+    /**
+     * @return string
+     */
+    public function getCcVaultCode()
+    {
+        return self::CC_VAULT_CODE;
+    }
+
+    /**
+     * @param null $storeId
+     * @return mixed|null
+     */
+    public function getCheckoutAlgorithm($storeId = null)
+    {
+        return $this->getValue(self::KEY_CHECKOUT_ALGORITHM, $storeId);
+    }
+
+    /**
+     * @return string
+     */
+    public function getSaveCardUrl()
+    {
+        return self::SAVE_CARD_URL;
     }
 
     /**

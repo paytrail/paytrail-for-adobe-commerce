@@ -3,14 +3,10 @@
 namespace Paytrail\PaymentService\Controller\Redirect;
 
 use Magento\Checkout\Model\Session;
-use Magento\Framework\App\Action\Context;
-use Magento\Framework\App\ActionInterface;
 use Magento\Framework\App\RequestInterface;
 use Magento\Framework\Controller\Result\Json;
-use Magento\Framework\Controller\Result\JsonFactory;
 use Magento\Framework\Controller\ResultFactory;
 use Magento\Framework\Exception\LocalizedException;
-use Magento\Framework\View\Result\PageFactory;
 use Magento\Sales\Api\OrderManagementInterface;
 use Magento\Sales\Api\OrderRepositoryInterface;
 use Magento\Sales\Model\Order;
@@ -19,14 +15,17 @@ use Paytrail\PaymentService\Exceptions\CheckoutException;
 use Paytrail\PaymentService\Helper\ApiData;
 use Paytrail\PaymentService\Helper\Data as paytrailHelper;
 use Paytrail\PaymentService\Gateway\Config\Config;
+use Paytrail\PaymentService\Model\ConfigProvider;
+use Paytrail\PaymentService\Model\Email\Order\PendingOrderEmailConfirmation;
 use Paytrail\SDK\Model\Provider;
 use Paytrail\SDK\Response\PaymentResponse;
 use Psr\Log\LoggerInterface;
+use Magento\Framework\App\Action\HttpPostActionInterface;
 
 /**
  * Class Index
  */
-class Index implements ActionInterface
+class Index implements HttpPostActionInterface
 {
     protected $urlBuilder;
 
@@ -85,6 +84,8 @@ class Index implements ActionInterface
      */
     private $request;
 
+    private PendingOrderEmailConfirmation $pendingOrderEmailConfirmation;
+
     /**
      * Index constructor.
      *
@@ -97,6 +98,7 @@ class Index implements ActionInterface
      * @param Config $gatewayConfig
      * @param ResultFactory $resultFactory
      * @param RequestInterface $request
+     * @param PendingOrderEmailConfirmation $pendingOrderEmailConfirmation
      */
     public function __construct(
         Session $checkoutSession,
@@ -107,7 +109,8 @@ class Index implements ActionInterface
         paytrailHelper $paytrailHelper,
         Config $gatewayConfig,
         ResultFactory $resultFactory,
-        RequestInterface $request
+        RequestInterface $request,
+        PendingOrderEmailConfirmation $pendingOrderEmailConfirmation
     ) {
         $this->checkoutSession = $checkoutSession;
         $this->orderRepositoryInterface = $orderRepositoryInterface;
@@ -118,6 +121,7 @@ class Index implements ActionInterface
         $this->gatewayConfig = $gatewayConfig;
         $this->resultFactory = $resultFactory;
         $this->request = $request;
+        $this->pendingOrderEmailConfirmation = $pendingOrderEmailConfirmation;
     }
 
     /**
@@ -134,9 +138,11 @@ class Index implements ActionInterface
                 $selectedPaymentMethodRaw = $this->request->getParam(
                     'preselected_payment_method_id'
                 );
-                $selectedPaymentMethodId = strpos($selectedPaymentMethodRaw, '-') !== false
-                    ? explode('-', $selectedPaymentMethodRaw)[0]
-                    : $selectedPaymentMethodRaw;
+                $selectedPaymentMethodId = preg_replace(
+                    '/' . ConfigProvider::ID_INCREMENT_SEPARATOR . '[0-9]{1,3}$/',
+                    '',
+                    $selectedPaymentMethodRaw
+                );
 
                 if (empty($selectedPaymentMethodId)) {
                     $this->errorMsg = __('No payment method selected');
@@ -153,6 +159,11 @@ class Index implements ActionInterface
                     $responseData,
                     $selectedPaymentMethodId
                 );
+
+                // send order confirmation for pending order
+                if ($responseData) {
+                    $this->pendingOrderEmailConfirmation->pendingOrderEmailSend($order);
+                }
 
                 if ($this->gatewayConfig->getSkipBankSelection()) {
                     $redirect_url = $responseData->getHref();
