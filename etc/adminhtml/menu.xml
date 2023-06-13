@@ -1,0 +1,34 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Backend:etc/menu.xsd">
+    <menu>
+        <add id="Paytrail_PaymentService::recurring_section"
+             title="Subscriptions"
+             translate="title"
+             module="Paytrail_PaymentService"
+             parent="Magento_Sales::sales"
+             sortOrder="250"
+             dependsOnModule="Paytrail_PaymentService"
+             resource="Paytrail_PaymentService::recurring_payment"
+        />
+        <add id="Paytrail_PaymentService::recurring_payment"
+             title="Payments"
+             translate="title"
+             module="Paytrail_PaymentService"
+             parent="Paytrail_PaymentService::recurring_section"
+             sortOrder="251"
+             dependsOnModule="Paytrail_PaymentService"
+             action="recurring_payments/recurring"
+             resource="Paytrail_PaymentService::recurring_payment"
+        />
+        <add id="Paytrail_PaymentService::recurring_profile"
+             title="Profiles"
+             translate="title"
+             module="Paytrail_PaymentService"
+             parent="Paytrail_PaymentService::recurring_section"
+             sortOrder="252"
+             dependsOnModule="Paytrail_PaymentService"
+             action="recurring_payments/profile"
+             resource="Paytrail_PaymentService::recurring_payment"
+        />
+    </menu>
+</config>
