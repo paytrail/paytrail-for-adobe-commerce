@@ -61,7 +61,7 @@ class RecurringProfileRepositoryInterfaceTest extends TestCase
 
     /**
      * @dataProvider deleteProvider
-     * @magentoDataFixture Paytrail_PaymentService::Test/Integration/_files/recurring_payment.php
+     * @magentoDataFixture Paytrail_PaymentService::Test/Integration/_files/subscription_payment.php
      *
      * @throws \Magento\Framework\Exception\CouldNotDeleteException
      */
@@ -92,7 +92,7 @@ class RecurringProfileRepositoryInterfaceTest extends TestCase
         }
     }
     /**
-     * @magentoDataFixture Paytrail_PaymentService::Test/Integration/_files/recurring_payment.php
+     * @magentoDataFixture Paytrail_PaymentService::Test/Integration/_files/subscription_payment.php
      */
     public function testGetList()
     {
