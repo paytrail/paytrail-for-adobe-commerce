@@ -17,7 +17,7 @@ This payment module has the following features:
 - The ability to restore and ship a cancelled order
 - Support for delayed payments (Collector etc.)
 - Support for multiple stores within a single Magento 2 instance
-- [Recurring Payments](https://github.com/paytrail/paytrail-for-adobe-commerce/wiki/Recurring-Payment)
+- [Recurring Payments](https://github.com/paytrail/paytrail-for-adobe-commerce/wiki/Recurring-Payments)
 
 ## Installation
 
@@ -66,7 +66,7 @@ The module has the following settings:
 - __Payment from Specific Countries__: If the previous setting has been set to specific countries, this list can define the allowed countries *(Input: Selection)*
 
 ## Setting up Recurring Payments
-The module now supports recurring payments. Please refer to [the full instructions on Recurring Payments](https://github.com/paytrail/paytrail-for-adobe-commerce/wiki/Recurring-Payment) to set it up.
+The module now supports recurring payments. Please refer to [the full instructions on Recurring Payments](https://github.com/paytrail/paytrail-for-adobe-commerce/wiki/Recurring-Payments) to set it up.
 
 ## Refunds
 This payment module supports online refunds.
