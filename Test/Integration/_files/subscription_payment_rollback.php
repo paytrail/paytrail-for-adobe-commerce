@@ -1,8 +1,4 @@
 <?php
-/**
- * Copyright © Magento, Inc. All rights reserved.
- * See COPYING.txt for license details.
- */
 
 use Magento\TestFramework\Helper\Bootstrap;
 use Paytrail\PaymentService\Model\ResourceModel\Subscription\Collection;
@@ -18,7 +14,8 @@ foreach ($paymentCollection as $payment) {
     $payment->delete();
 }
 
-$subscriptionLinkCollection = Bootstrap::getObjectManager()->create(\Paytrail\PaymentService\Model\ResourceModel\Subscription\SubscriptionLink\Collection::class);
+$subscriptionLinkCollection = Bootstrap::getObjectManager()
+    ->create(\Paytrail\PaymentService\Model\ResourceModel\Subscription\SubscriptionLink\Collection::class);
 foreach ($subscriptionLinkCollection as $subscriptionLink) {
     $subscriptionLink->delete();
 }

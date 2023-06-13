@@ -4,7 +4,7 @@ use Magento\TestFramework\Helper\Bootstrap;
 use Magento\TestFramework\Workaround\Override\Fixture\Resolver;
 use Magento\Framework\Registry;
 
-Resolver::getInstance()->requireDataFixture('Paytrail_PaymentService::Test/Integration/_files/recurring_payment_rollback.php');
+Resolver::getInstance()->requireDataFixture('Paytrail_PaymentService::Test/Integration/_files/subscription_payment_rollback.php');
 Resolver::getInstance()->requireDataFixture('Paytrail_PaymentService::Test/Integration/_files/customer_notify_rollback.php');
 Resolver::getInstance()->requireDataFixture('Magento/Sales/_files/default_rollback.php');
 $objectManager = Bootstrap::getObjectManager();

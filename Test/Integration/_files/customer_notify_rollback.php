@@ -3,7 +3,7 @@ use Magento\Framework\App\ResourceConnection;
 use Magento\TestFramework\Helper\Bootstrap;
 use Magento\TestFramework\Workaround\Override\Fixture\Resolver;
 
-Resolver::getInstance()->requireDataFixture('Paytrail_PaymentService::Test/Integration/_files/recurring_payment_rollback.php');
+Resolver::getInstance()->requireDataFixture('Paytrail_PaymentService::Test/Integration/_files/subscription_payment_rollback.php');
 Resolver::getInstance()->requireDataFixture('Magento/Sales/_files/customer_order_with_simple_product_rollback.php');
 
 $subscriptionLink = Bootstrap::getObjectManager()->create(\Paytrail\PaymentService\Api\Data\SubscriptionLinkInterface::class);
