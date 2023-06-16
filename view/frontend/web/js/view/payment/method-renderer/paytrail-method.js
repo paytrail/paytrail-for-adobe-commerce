@@ -119,13 +119,19 @@ define(
                 // Redirect to Checkout
                 placeOrder: function () {
                     if (self.getSkipMethodSelection() == false) {
-                        if (self.validate() && additionalValidators.validate()) {
-                            return self.placeOrderBypass();
-                        } else {
+                        if (!self.validate()) {
                             self.addErrorMessage($t('No payment method selected. Please select one.'));
                             self.scrollTo();
                             return false;
                         }
+                        if (!additionalValidators.validate()) {
+                            self.addErrorMessage($t(
+                                'First, agree conditions, then try placing your order again.'
+                            ));
+                            self.scrollTo();
+                            return false;
+                        }
+                        return self.placeOrderBypass();
                     } else {
                         return self.placeOrderBypass();
                     }
