@@ -1,4 +1,5 @@
 <?php
+
 namespace Paytrail\PaymentService\Model;
 
 use Magento\Backend\Model\UrlInterface;
@@ -22,6 +23,7 @@ use Paytrail\PaymentService\Exceptions\CheckoutException;
 use Paytrail\PaymentService\Gateway\Config\Config;
 use Paytrail\PaymentService\Helper\ApiData;
 use Paytrail\PaymentService\Helper\Data as paytrailHelper;
+use Paytrail\PaymentService\Model\Email\Order\PendingOrderEmailConfirmation;
 use Paytrail\PaymentService\Setup\Patch\Data\InstallPaytrail;
 use Psr\Log\LoggerInterface;
 
@@ -92,6 +94,11 @@ class ReceiptDataProvider
     protected $transactionBuilder;
 
     /**
+     * @var \Paytrail\PaymentService\Model\FinnishReferenceNumber
+     */
+    protected FinnishReferenceNumber $finnishReferenceNumber;
+
+    /**
      * @var |Magento\Framework\App\CacheInterface
      */
     private $cache;
@@ -146,6 +153,15 @@ class ReceiptDataProvider
      * @var UrlInterface
      */
     private $backendUrl;
+    /**
+     * @var bool
+     */
+    private $skipHmac;
+
+    /**
+     * @var PendingOrderEmailConfirmation
+     */
+    private $pendingOrderEmail;
 
     /**
      * @var OrderFactory
@@ -154,42 +170,49 @@ class ReceiptDataProvider
 
     /**
      * ReceiptDataProvider constructor.
-     * @param Session $session
-     * @param TransactionRepositoryInterface $transactionRepository
-     * @param OrderSender $orderSender
-     * @param TransportBuilder $transportBuilder
-     * @param ScopeConfigInterface $scopeConfig
-     * @param OrderManagementInterface $orderManagementInterface
-     * @param OrderRepositoryInterface $orderRepositoryInterface
-     * @param CacheInterface $cache
-     * @param InvoiceService $invoiceService
-     * @param TransactionFactory $transactionFactory
-     * @param paytrailHelper $paytrailHelper
-     * @param transactionBuilderInterface $transactionBuilder
-     * @param Config $gatewayConfig
-     * @param ApiData $apiData
-     * @param LoggerInterface $logger
-     * @param UrlInterface $backendUrl
-     * @param OrderFactory $orderFactory
+     *
+     * @param Session                                                $session
+     * @param TransactionRepositoryInterface                         $transactionRepository
+     * @param OrderSender                                            $orderSender
+     * @param TransportBuilder                                       $transportBuilder
+     * @param ScopeConfigInterface                                   $scopeConfig
+     * @param OrderManagementInterface                               $orderManagementInterface
+     * @param OrderRepositoryInterface                               $orderRepositoryInterface
+     * @param CacheInterface                                         $cache
+     * @param InvoiceService                                         $invoiceService
+     * @param TransactionFactory                                     $transactionFactory
+     * @param paytrailHelper                                         $paytrailHelper
+     * @param \Magento\Sales\Model\Order\Payment\Transaction\Builder $transactionBuilder
+     * @param Config                                                 $gatewayConfig
+     * @param ApiData                                                $apiData
+     * @param LoggerInterface                                        $logger
+     * @param UrlInterface                                           $backendUrl
+     * @param OrderFactory                                           $orderFactory
+     * @param PendingOrderEmailConfirmation                          $pendingOrderEmail
+     * @param \Paytrail\PaymentService\Model\FinnishReferenceNumber  $finnishReferenceNumber
+     * @param boolean                                                $skipHmac
      */
     public function __construct(
-        Session $session,
+        Session                        $session,
         TransactionRepositoryInterface $transactionRepository,
-        OrderSender $orderSender,
-        TransportBuilder $transportBuilder,
-        ScopeConfigInterface $scopeConfig,
-        OrderManagementInterface $orderManagementInterface,
-        OrderRepositoryInterface $orderRepositoryInterface,
-        CacheInterface $cache,
-        InvoiceService $invoiceService,
-        TransactionFactory $transactionFactory,
-        paytrailHelper $paytrailHelper,
-        transactionBuilder $transactionBuilder,
-        Config $gatewayConfig,
-        ApiData $apiData,
-        LoggerInterface $logger,
-        UrlInterface $backendUrl,
-        OrderFactory $orderFactory
+        OrderSender                    $orderSender,
+        TransportBuilder               $transportBuilder,
+        ScopeConfigInterface           $scopeConfig,
+        OrderManagementInterface       $orderManagementInterface,
+        OrderRepositoryInterface       $orderRepositoryInterface,
+        CacheInterface                 $cache,
+        InvoiceService                 $invoiceService,
+        TransactionFactory             $transactionFactory,
+        paytrailHelper                 $paytrailHelper,
+        transactionBuilder             $transactionBuilder,
+        Config                         $gatewayConfig,
+        ApiData                        $apiData,
+        LoggerInterface                $logger,
+        UrlInterface                   $backendUrl,
+        OrderFactory                   $orderFactory,
+        PendingOrderEmailConfirmation  $pendingOrderEmail,
+        FinnishReferenceNumber $finnishReferenceNumber,
+        $skipHmac = false
     ) {
         $this->cache = $cache;
         $this->session = $session;
@@ -208,27 +231,32 @@ class ReceiptDataProvider
         $this->logger = $logger;
         $this->backendUrl = $backendUrl;
         $this->orderFactory = $orderFactory;
+        $this->skipHmac = $skipHmac;
+        $this->pendingOrderEmail = $pendingOrderEmail;
+        $this->finnishReferenceNumber = $finnishReferenceNumber;
     }
 
     /**
      * @param array $params
+     *
      * @throws CheckoutException
      * @throws LocalizedException
+     * @throws \Exception
      */
     public function execute(array $params)
     {
         if ($this->gatewayConfig->getGenerateReferenceForOrder()) {
             $this->orderIncrementalId
-                = $this->paytrailHelper->getIdFromOrderReferenceNumber(
-                $params["checkout-reference"]
-            );
+                = $this->finnishReferenceNumber->getIdFromOrderReferenceNumber(
+                    $params["checkout-reference"]
+                );
         } else {
             $this->orderIncrementalId
                 = $params["checkout-reference"];
         }
-        $this->transactionId        =   $params["checkout-transaction-id"];
-        $this->paramsStamp          =   $params['checkout-stamp'];
-        $this->paramsMethod         =   $params['checkout-provider'];
+        $this->transactionId = $params["checkout-transaction-id"];
+        $this->paramsStamp = $params['checkout-stamp'];
+        $this->paramsMethod = $params['checkout-provider'];
 
         $this->session->unsCheckoutRedirectUrl();
 
@@ -311,7 +339,9 @@ class ReceiptDataProvider
         $this->orderRepositoryInterface->save($this->currentOrder);
 
         try {
-            $this->orderSender->send($this->currentOrder);
+            if (!$this->pendingOrderEmail->isPendingOrderEmailEnabled()) {
+                $this->orderSender->send($this->currentOrder);
+            }
         } catch (\Exception $e) {
             $this->logger->error(\sprintf(
                 'Paytrail: Order email sending failed: %s',
@@ -414,7 +444,15 @@ class ReceiptDataProvider
     protected function verifyPaymentData($params)
     {
         $status = $params['checkout-status'];
-        $verifiedPayment = $this->apiData->validateHmac($params, $params['signature']);
+
+        /**
+         * When paying with payment token, such as a card saved to vault. The HMAC validation is done by the php-sdk
+         * directly during the payment post. When this happens the signature parameter is not passed into subsquent
+         * logic. Making Hmac validation here impossible. This forces the skip implementation for Token payments.
+         *
+         * @see \Paytrail\SDK\Client::createCitPayment
+         */
+        $verifiedPayment = $this->skipHmac ?: $this->apiData->validateHmac($params, $params['signature']);
 
         if ($verifiedPayment
             && ($status === self::PAYTRAIL_API_PAYMENT_STATUS_OK
@@ -523,7 +561,7 @@ class ReceiptDataProvider
         $transaction = $this->transactionBuilder
             ->setPayment($payment)->setOrder($order)
             ->setTransactionId($transactionId)
-            ->setAdditionalInformation([Transaction::RAW_DETAILS => (array) $details])
+            ->setAdditionalInformation([Transaction::RAW_DETAILS => (array)$details])
             ->setFailSafe(true)
             ->build(Transaction::TYPE_CAPTURE);
         $transaction->setIsClosed(0);
@@ -561,7 +599,7 @@ class ReceiptDataProvider
                 // Mask and throw end-user friendly exception
                 throw new CheckoutException(__(
                     'Error while cancelling order. Please contact customer support with order id: %id to release discount coupons.',
-                    [ 'id'=> $orderId ]
+                    ['id' => $orderId]
                 ));
             }
         }
