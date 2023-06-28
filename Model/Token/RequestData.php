@@ -259,6 +259,7 @@ class RequestData
         foreach ($items as $orderItem) {
             $itemSum += floatval($orderItem->getUnitPrice() * $orderItem->getUnits());
             $itemQty += $orderItem->getUnits();
+            $this->compressProductCode($orderItem);
         }
 
         if ($itemSum != $orderTotal) {
@@ -382,6 +383,23 @@ class RequestData
             'price' => floatval($price),
             'vat' => $taxDetails['tax_percent'] ?? 0,
         ];
+    }
+
+    /**
+     * Compress product code to be less than 100 characters
+     *
+     * @param Item $orderItem
+     * @return Item
+     */
+    private function compressProductCode(Item $orderItem): Item
+    {
+        if ($orderItem->getProductCode() > 100) {
+            $orderItem->setProductCode(
+                substr($orderItem->getProductCode(), 0, 100)
+            );
+        }
+
+        return $orderItem;
     }
 
     /**
