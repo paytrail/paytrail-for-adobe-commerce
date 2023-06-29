@@ -353,7 +353,10 @@ class ApiData
                 ),
                 $e->getTrace()
             );
-            $response["error"] = $e->getMessage();
+            $response["error"] = sprintf(
+                'Error while payment process. Please contact customer support with order id: %s',
+                $order->getId()
+            );
 
             return $response;
         }
