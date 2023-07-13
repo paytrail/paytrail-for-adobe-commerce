@@ -8,12 +8,18 @@ use Magento\Quote\Model\QuoteRepository;
 use Paytrail\PaymentService\Gateway\Config\Config;
 use Paytrail\PaymentService\Gateway\Validator\ResponseValidator;
 use Paytrail\PaymentService\Exceptions\CheckoutException;
+use Paytrail\PaymentService\Model\FinnishReferenceNumber;
 use Paytrail\PaymentService\Model\ReceiptDataProvider;
 use Paytrail\PaymentService\Exceptions\TransactionSuccessException;
 
 class ProcessPayment
 {
     private const PAYMENT_PROCESSING_CACHE_PREFIX = "paytrail-processing-payment-";
+
+    /**
+     * @var FinnishReferenceNumber
+     */
+    protected FinnishReferenceNumber $finnishReferenceNumber;
 
     /**
      * @var ResponseValidator
@@ -55,12 +61,14 @@ class ProcessPayment
         CartRepositoryInterface $cartRepository,
         Config                  $gatewayConfig,
         Data                    $paytrailHelper,
+        FinnishReferenceNumber $finnishReferenceNumber
     ) {
         $this->responseValidator = $responseValidator;
         $this->receiptDataProvider = $receiptDataProvider;
         $this->cartRepository = $cartRepository;
         $this->gatewayConfig = $gatewayConfig;
         $this->paytrailHelper = $paytrailHelper;
+        $this->finnishReferenceNumber = $finnishReferenceNumber;
     }
 
     /**
@@ -83,7 +91,7 @@ class ProcessPayment
 
             /** @var string $failMessage */
             foreach ($validationResponse->getFailsDescription() as $failMessage) {
-                array_push($errors, $failMessage);
+                $errors[] = $failMessage;
             }
 
             $session->restoreQuote(); // should it be restored?
@@ -96,7 +104,7 @@ class ProcessPayment
 
         /** @var string $orderNo */
         $orderNo = $this->gatewayConfig->getGenerateReferenceForOrder()
-            ? $this->paytrailHelper->getIdFromOrderReferenceNumber($reference)
+            ? $this->finnishReferenceNumber->getIdFromOrderReferenceNumber($reference)
             : $reference;
 
         /** @var array $ret */
