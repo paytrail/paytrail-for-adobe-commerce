@@ -51,8 +51,6 @@ class Index implements ActionInterface
      */
     public function execute()
     {
-        $successStatuses = ["processing", "pending_paytrail", "pending", "complete"];
-        $cancelStatuses  = ["canceled"];
         $reference = $this->request->getParam('checkout-reference');
 
         $order = $this->referenceNumber->getOrderByReference($reference);
@@ -60,18 +58,11 @@ class Index implements ActionInterface
 
         $failMessages = $this->processPayment->process($this->request->getParams(), $this->session);
 
-        if ($status == 'pending_payment' || in_array($status, $cancelStatuses)) {
-            // order status could be changed by callback, if not,
-            // status change needs to be forced by processing the payment
-            $failMessages = $this->processPayment->process($this->request->getParams(), $this->session);
-        }
-
         if ($status == 'pending_payment') { // status could be changed by callback, if not, it needs to be forced
             $order  = $this->referenceNumber->getOrderByReference($reference); // refreshing order
             $status = $order->getStatus(); // getting current status
         }
 
-        /** @var \Magento\Framework\Controller\Result\Redirect $result */
         $result = $this->resultFactory->create(\Magento\Framework\Controller\ResultFactory::TYPE_REDIRECT);
         if (in_array($status, self::ORDER_SUCCESS_STATUSES)) {
             return $result->setPath('checkout/onepage/success');
@@ -86,7 +77,6 @@ class Index implements ActionInterface
         $this->messageManager->addErrorMessage(
             __('Order processing has been aborted. Please contact customer service.')
         );
-
         return $result->setPath('checkout/cart');
     }
 }

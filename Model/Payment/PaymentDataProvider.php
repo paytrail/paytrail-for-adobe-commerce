@@ -14,6 +14,7 @@ use Paytrail\PaymentService\Helper\Data as Helper;
 use Paytrail\PaymentService\Logger\PaytrailLogger;
 use Paytrail\PaymentService\Model\Company\CompanyRequestData;
 use Paytrail\PaymentService\Model\Config\Source\CallbackDelay;
+use Paytrail\PaymentService\Model\FinnishReferenceNumber;
 use Paytrail\PaymentService\Model\UrlDataProvider;
 use Paytrail\SDK\Model\Address;
 use Paytrail\SDK\Model\Customer;
@@ -44,6 +45,7 @@ class PaymentDataProvider
         private TaxItem                             $taxItems,
         private UrlDataProvider                     $urlDataProvider,
         private CallbackDelay                       $callbackDelay,
+        private FinnishReferenceNumber $referenceNumber,
         private PaytrailLogger                      $log
     ) {
     }
@@ -63,7 +65,7 @@ class PaymentDataProvider
 
         $paytrailPayment->setStamp(hash('sha256', time() . $order->getIncrementId()));
 
-        $reference = $this->helper->getReference($order);
+        $reference = $this->referenceNumber->getReference($order);
 
         $paytrailPayment->setReference($reference);
 

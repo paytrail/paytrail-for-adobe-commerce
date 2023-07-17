@@ -12,7 +12,6 @@ use Magento\Payment\Gateway\Command\CommandManagerPoolInterface;
 use Magento\Sales\Api\OrderManagementInterface;
 use Magento\Sales\Api\OrderRepositoryInterface;
 use Paytrail\PaymentService\Exceptions\CheckoutException;
-use Paytrail\PaymentService\Helper\ApiData;
 use Paytrail\PaymentService\Helper\Data as paytrailHelper;
 use Paytrail\PaymentService\Gateway\Config\Config;
 use Paytrail\PaymentService\Model\ConfigProvider;
@@ -20,86 +19,27 @@ use Paytrail\PaymentService\Model\Email\Order\PendingOrderEmailConfirmation;
 use Paytrail\SDK\Model\Provider;
 use Paytrail\SDK\Response\PaymentResponse;
 use Psr\Log\LoggerInterface;
-use Magento\Framework\App\Action\HttpPostActionInterface;
 
 class Index implements ActionInterface
 {
-    protected $urlBuilder;
-
-    /**
-     * @var Session
-     */
-    protected $checkoutSession;
-
-    /**
-     * @var OrderFactory
-     */
-    protected $orderFactory;
-
-    /**
-     * @var OrderRepositoryInterface
-     */
-    protected $orderRepositoryInterface;
-
-    /**
-     * @var OrderManagementInterface
-     */
-    protected $orderManagementInterface;
-
-    /**
-     * @var LoggerInterface
-     */
-    protected $logger;
-
-    /**
-     * @var ApiData
-     */
-    protected $apiData;
-
-    /**
-     * @var paytrailHelper
-     */
-    protected $paytrailHelper;
-
-    /**
-     * @var Config
-     */
-    protected $gatewayConfig;
-
     /**
      * @var $errorMsg
      */
     protected $errorMsg = null;
 
     /**
-     * @var ResultFactory
-     */
-    private $resultFactory;
-
-    /**
-     * @var RequestInterface
-     */
-    private $request;
-
-    /**
-     * @var PendingOrderEmailConfirmation
-     */
-    private PendingOrderEmailConfirmation $pendingOrderEmailConfirmation;
-
-    /**
      * Index constructor.
      *
+     * @param PendingOrderEmailConfirmation $pendingOrderEmailConfirmation
      * @param Session $checkoutSession
      * @param OrderRepositoryInterface $orderRepositoryInterface
      * @param OrderManagementInterface $orderManagementInterface
      * @param LoggerInterface $logger
-     * @param ApiData $apiData
      * @param paytrailHelper $paytrailHelper
      * @param Config $gatewayConfig
      * @param ResultFactory $resultFactory
      * @param RequestInterface $request
      * @param CommandManagerPoolInterface $commandManagerPool
-     * @param PendingOrderEmailConfirmation $pendingOrderEmailConfirmation
      */
     public function __construct(
         protected PendingOrderEmailConfirmation $pendingOrderEmailConfirmation,

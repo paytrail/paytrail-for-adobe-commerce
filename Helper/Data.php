@@ -58,7 +58,7 @@ class Data
 
     /**
      * Get Store locale for payment provider
-     * 
+     *
      * @return string
      */
     public function getStoreLocaleForPaymentProvider(): string
