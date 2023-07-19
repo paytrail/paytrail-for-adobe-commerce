@@ -92,7 +92,7 @@ class PaymentDataProvider
 
         $paytrailPayment->setCallbackUrls($this->urlDataProvider->createCallbackUrl());
 
-        $paytrailPayment->setCallbackDelay($this->callbackDelay->getCallbackDelay());
+//        $paytrailPayment->setCallbackDelay($this->callbackDelay->getCallbackDelay());
 
         // Log payment data
         $this->log->debugLog('request', $paytrailPayment);
