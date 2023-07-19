@@ -187,6 +187,7 @@ class ConfigProvider implements ConfigProviderInterface
                         'payment_terms' => $groupData['terms'],
                         'payment_method_styles' => $this->wrapPaymentMethodStyles($storeId),
                         'addcard_redirect_url' => $this->getAddCardRedirectUrl(),
+                        'pay_and_addcard_redirect_url' => $this->getPayAndAddCardRedirectUrl(),
                         'token_payment_redirect_url' => $this->getTokenPaymentRedirectUrl(),
                         'default_success_page_url' => $this->getDefaultSuccessPageUrl()
                     ]
@@ -241,17 +242,31 @@ class ConfigProvider implements ConfigProviderInterface
      *
      * @return string
      */
-    protected function getPaymentRedirectUrl()
+    protected function getPaymentRedirectUrl(): string
     {
         return 'paytrail/redirect';
     }
 
-    protected function getAddCardRedirectUrl()
+    /**
+     * @return string
+     */
+    protected function getAddCardRedirectUrl(): string
     {
         return 'paytrail/tokenization/addcard';
     }
 
-    protected function getTokenPaymentRedirectUrl()
+    /**
+     * @return string
+     */
+    protected function getPayAndAddCardRedirectUrl(): string
+    {
+        return 'paytrail/redirect/payandaddcard';
+    }
+
+    /**
+     * @return string
+     */
+    protected function getTokenPaymentRedirectUrl(): string
     {
         return 'paytrail/redirect/token';
     }

@@ -179,8 +179,42 @@ define(
                 getBypassPaymentRedirectUrl: function () {
                     return checkoutConfig[self.payMethod].payment_redirect_url;
                 },
+                enablePayAndAddCardButton: function () {
+                    // console.log('first line');
+                    // let creditCardProviders = checkoutConfig.payment.paytrail.method_groups[2].providers;
+                    //
+                    // creditCardProviders.forEach(function (item) {
+                    //     console.log('dwadawdaw');
+                    //     if (item.id === self.selectedPaymentMethodId()) {
+                    //         document.getElementById('pay_and_add_card_button').style.display = 'block';
+                    //         return true;
+                    //     }
+                    //     return false;
+                    // })
+                    if (
+                        self.selectedPaymentMethodId() === 'creditcard__2' ||
+                        self.selectedPaymentMethodId() === 'creditcard__4' ||
+                        self.selectedPaymentMethodId() === 'creditcard__6'
+                    ) {
+                        console.log('ewrrwrwr');
+                        document.getElementById('pay_and_add_card_button').style.display = 'block';
+                        return true;
+                    }
+                    // console.log('find');
+                    // var cardIds = creditCardProviders.find(item => item.id === self.selectedPaymentMethodId());
+                    // console.log('cardIds');
+                    // console.log(cardIds);
+                    // if (cardIds) {
+                    //     document.getElementById('pay_and_add_card_button').style.display = 'block';
+                    //     return true;
+                    // }
+                    return false;
+                },
                 getAddCardRedirectUrl: function () {
                     return checkoutConfig[self.payMethod].addcard_redirect_url;
+                },
+                getPayAndAddCardRedirectUrl: function () {
+                    return checkoutConfig[self.payMethod].pay_and_addcard_redirect_url;
                 },
                 getTokenPaymentRedirectUrl: function () {
                     return checkoutConfig[self.payMethod].token_payment_redirect_url;
@@ -254,6 +288,50 @@ define(
                         );
 
                         /** end here */
+                    }
+                },
+                payAndAddNewCard: function () {
+                    if (self.isLoggedIn()) {
+                        fullScreenLoader.startLoader();
+                        /** start here */
+
+                        $.ajax(
+                            {
+                                url: mageUrlBuilder.build(self.getPayAndAddCardRedirectUrl()),
+                                type: 'post',
+                                context: this,
+                                data: {
+                                    'is_ajax': true
+                                }
+                            }
+                        ).done(
+                            function (response) {
+                                console.log('donedonedoneodne');
+                                if ($.type(response) === 'object' && response.success && response.data) {
+                                    if (response.reference) {
+                                        window.location.href = self.getDefaultSuccessUrl();
+                                    }
+                                    if (response.redirect) {
+                                        window.location.href = response.redirect;
+                                    }
+
+                                    $('#paytrail-form-wrapper').append(response.data);
+                                    return false;
+                                }
+                                fullScreenLoader.stopLoader();
+                                self.addErrorMessage(response.message);
+                            }
+                        ).fail(
+                            function (response) {
+                                console.log('faiflfaiflafilafila');
+                                fullScreenLoader.stopLoader();
+                                self.addErrorMessage(response.message);
+                            }
+                        ).always(
+                            function () {
+                                //a self.scrollTo();
+                            }
+                        );
                     }
                 },
                 getPaymentUrl: function () {
