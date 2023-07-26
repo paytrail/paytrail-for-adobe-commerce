@@ -7,12 +7,13 @@ use Magento\Framework\App\ActionInterface;
 use Magento\Framework\App\RequestInterface;
 use Magento\Framework\Controller\ResultFactory;
 use Magento\Framework\Message\ManagerInterface;
+use Magento\Sales\Model\Order;
 use Paytrail\PaymentService\Helper\ProcessPayment;
 use Paytrail\PaymentService\Model\FinnishReferenceNumber;
 
 /**
  * Class Index
- * 
+ *
  * Receipt Controller
  */
 class Index implements ActionInterface
