@@ -49,26 +49,26 @@ class Index implements ActionInterface
     private ManagerInterface $messageManager;
 
     /**
-     * @param Session                                               $session
-     * @param ProcessPayment                                        $processPayment
-     * @param RequestInterface                                      $request
-     * @param ResultFactory                                         $resultFactory
-     * @param ManagerInterface                                      $messageManager
+     * @param Session $session
+     * @param ProcessPayment $processPayment
+     * @param RequestInterface $request
+     * @param ResultFactory $resultFactory
+     * @param ManagerInterface $messageManager
      * @param \Paytrail\PaymentService\Model\FinnishReferenceNumber $referenceNumber
      */
     public function __construct(
-        Session $session,
-        ProcessPayment $processPayment,
-        RequestInterface $request,
-        ResultFactory $resultFactory,
-        ManagerInterface $messageManager,
+        Session                $session,
+        ProcessPayment         $processPayment,
+        RequestInterface       $request,
+        ResultFactory          $resultFactory,
+        ManagerInterface       $messageManager,
         FinnishReferenceNumber $referenceNumber
     ) {
-        $this->session           = $session;
-        $this->processPayment = $processPayment;
-        $this->request = $request;
-        $this->resultFactory = $resultFactory;
-        $this->messageManager = $messageManager;
+        $this->session         = $session;
+        $this->processPayment  = $processPayment;
+        $this->request         = $request;
+        $this->resultFactory   = $resultFactory;
+        $this->messageManager  = $messageManager;
         $this->referenceNumber = $referenceNumber;
     }
 
@@ -113,14 +113,14 @@ class Index implements ActionInterface
                 $this->messageManager->addErrorMessage($failMessage);
             }
 
-            return $result->setPath('checkout/cart');
+            return $result->setPath($this->getCartUrl($order));
         }
 
         $this->messageManager->addErrorMessage(
             __('Order processing has been aborted. Please contact customer service.')
         );
 
-        return $result->setPath('checkout/cart');
+        return $result->setPath($this->getCartUrl($order));
     }
 
     /**
@@ -133,5 +133,15 @@ class Index implements ActionInterface
     public function getSuccessUrl(Order $order): string
     {
         return 'checkout/onepage/success';
+    }
+
+    /**
+     * @param Order $order
+     *
+     * @return string
+     */
+    public function getCartUrl(Order $order): string
+    {
+        return 'checkout/cart';
     }
 }
