@@ -189,23 +189,23 @@ class ApiData
     /**
      * Process Api request
      *
-     * @param string         $requestType
-     * @param Order|null     $order
-     * @param int|float|null $amount
-     * @param mixed          $transactionId
-     * @param mixed          $methodId
-     * @param mixed          $tokenizationId
+     * @param string $requestType
+     * @param $order
+     * @param $amount
+     * @param $transactionId
+     * @param $methodId
+     * @param $tokenizationId
      *
      * @return mixed
      */
     public function processApiRequest(
         string $requestType,
-        Order|null $order = null,
-        int|float|null $amount = null,
-        mixed $transactionId = null,
-        mixed $methodId = null,
-        mixed $tokenizationId = null
-    ): mixed {
+        $order = null,
+        $amount = null,
+        $transactionId = null,
+        $methodId = null,
+        $tokenizationId = null
+    ) {
         $response["data"]  = null;
         $response["error"] = null;
 

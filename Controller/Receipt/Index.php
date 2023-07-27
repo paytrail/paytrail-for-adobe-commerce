@@ -7,12 +7,13 @@ use Magento\Framework\App\ActionInterface;
 use Magento\Framework\App\RequestInterface;
 use Magento\Framework\Controller\ResultFactory;
 use Magento\Framework\Message\ManagerInterface;
+use Magento\Sales\Model\Order;
 use Paytrail\PaymentService\Helper\ProcessPayment;
 use Paytrail\PaymentService\Model\FinnishReferenceNumber;
 
 /**
  * Class Index
- * 
+ *
  * Receipt Controller
  */
 class Index implements ActionInterface
@@ -106,7 +107,7 @@ class Index implements ActionInterface
         /** @var \Magento\Framework\Controller\Result\Redirect $result */
         $result = $this->resultFactory->create(\Magento\Framework\Controller\ResultFactory::TYPE_REDIRECT);
         if (in_array($status, $successStatuses)) {
-            return $result->setPath('checkout/onepage/success');
+            return $result->setPath($this->getSuccessUrl($order));
         } elseif (in_array($status, $cancelStatuses)) {
             foreach ($failMessages as $failMessage) {
                 $this->messageManager->addErrorMessage($failMessage);
@@ -120,5 +121,17 @@ class Index implements ActionInterface
         );
 
         return $result->setPath('checkout/cart');
+    }
+
+    /**
+     * Method to use for plugins if pwa-graphql installed
+     *
+     * @param Order $order
+     *
+     * @return string
+     */
+    public function getSuccessUrl(Order $order): string
+    {
+        return 'checkout/onepage/success';
     }
 }
