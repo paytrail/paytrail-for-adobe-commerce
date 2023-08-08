@@ -262,7 +262,7 @@ class RequestData
         }
 
         if ($itemSum != $orderTotal) {
-            $diffValue = abs($itemSum - $orderTotal);
+            $diffValue = (int) abs($itemSum - $orderTotal);
 
             if ($diffValue > $itemQty) {
                 throw new LocalizedException(__('Difference in rounding the prices is too big'));
