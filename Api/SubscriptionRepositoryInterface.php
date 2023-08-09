@@ -13,6 +13,8 @@ use Paytrail\PaymentService\Api\Data\SubscriptionSearchResultInterface;
 interface SubscriptionRepositoryInterface
 {
     /**
+     * Get subscription.
+     *
      * @param int $entityId
      * @return SubscriptionInterface
      *
@@ -21,6 +23,8 @@ interface SubscriptionRepositoryInterface
     public function get(int $entityId): SubscriptionInterface;
 
     /**
+     * Save subscription.
+     *
      * @param SubscriptionInterface $subscription
      * @return SubscriptionInterface
      *
@@ -29,12 +33,16 @@ interface SubscriptionRepositoryInterface
     public function save(SubscriptionInterface $subscription): SubscriptionInterface;
 
     /**
-     * @param $searchCriteria
+     * Get list of subscriptions.
+     *
+     * @param SearchCriteriaInterface $searchCriteria
      * @return \Paytrail\PaymentService\Api\Data\SubscriptionSearchResultInterface
      */
     public function getList(SearchCriteriaInterface $searchCriteria): SubscriptionSearchResultInterface;
 
     /**
+     * Delete subscription.
+     *
      * @param SubscriptionInterface $subscription
      * @return void
      *
