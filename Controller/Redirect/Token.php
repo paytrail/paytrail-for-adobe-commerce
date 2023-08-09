@@ -13,14 +13,13 @@ use Magento\Framework\Controller\Result\JsonFactory;
 use Magento\Framework\Controller\ResultInterface;
 use Magento\Framework\Exception\CouldNotSaveException;
 use Magento\Framework\Exception\LocalizedException;
-use Magento\Quote\Model\QuoteRepository;
+use Magento\Payment\Gateway\Command\CommandManagerPoolInterface;
 use Magento\Sales\Api\OrderManagementInterface;
 use Magento\Sales\Api\OrderRepositoryInterface;
 use Magento\Sales\Model\Order;
 use Magento\Sales\Model\OrderFactory;
 use Paytrail\PaymentService\Exceptions\CheckoutException;
 use Paytrail\PaymentService\Gateway\Config\Config;
-use Paytrail\PaymentService\Gateway\Validator\ResponseValidator;
 use Paytrail\PaymentService\Helper\ApiData;
 use Paytrail\PaymentService\Helper\Data;
 use Paytrail\PaymentService\Model\ReceiptDataProvider;
@@ -29,84 +28,8 @@ use Paytrail\PaymentService\Model\Subscription\SubscriptionCreate;
 class Token implements HttpPostActionInterface
 {
     /**
-     * @var Session
-     */
-    protected $session;
-
-    /**
-     * @var ResponseValidator
-     */
-    protected $responseValidator;
-
-    /**
-     * @var ReceiptDataProvider
-     */
-    protected $receiptDataProvider;
-
-    /**
-     * @var QuoteRepository
-     */
-    protected $quoteRepository;
-
-    /**
-     * @var Config
-     */
-    private $gatewayConfig;
-
-    /**
-     * @var SubscriptionCreate
-     */
-    private $subscriptionCreate;
-
-    /**
-     * @var Data
-     */
-    private $opHelper;
-
-    /**
-     * @var RequestInterface
-     */
-    private RequestInterface $request;
-
-    /**
-     * @var OrderFactory
-     */
-    private OrderFactory $orderFactory;
-
-    /**
-     * @var Session
-     */
-    private Session $checkoutSession;
-
-    /**
-     * @var CustomerSession
-     */
-    private CustomerSession $customerSession;
-
-    /**
-     * @var ApiData
-     */
-    private ApiData $apiData;
-
-    /**
-     * @var JsonFactory
-     */
-    private JsonFactory $jsonFactory;
-
-    /**
-     * @var OrderRepositoryInterface
-     */
-    private OrderRepositoryInterface $orderRepository;
-
-    /**
-     * @var OrderManagementInterface
-     */
-    private OrderManagementInterface $orderManagementInterface;
-
-    /**
-     * @param Session $session
-     * @param ResponseValidator $responseValidator
-     * @param QuoteRepository $quoteRepository
+     * Token class constructor.
+     *
      * @param ReceiptDataProvider $receiptDataProvider
      * @param Config $gatewayConfig
      * @param Data $opHelper
@@ -119,39 +42,23 @@ class Token implements HttpPostActionInterface
      * @param OrderRepositoryInterface $orderRepository
      * @param OrderManagementInterface $orderManagementInterface
      * @param SubscriptionCreate $subscriptionCreate
+     * @param CommandManagerPoolInterface $commandManagerPool
      */
     public function __construct(
-        Session                  $session,
-        ResponseValidator        $responseValidator,
-        QuoteRepository          $quoteRepository,
-        ReceiptDataProvider      $receiptDataProvider,
-        Config                   $gatewayConfig,
-        Data                     $opHelper,
-        RequestInterface         $request,
-        OrderFactory             $orderFactory,
-        Session                  $checkoutSession,
-        CustomerSession          $customerSession,
-        ApiData                  $apiData,
-        JsonFactory              $jsonFactory,
-        OrderRepositoryInterface $orderRepository,
-        OrderManagementInterface $orderManagementInterface,
-        SubscriptionCreate       $subscriptionCreate
+        private ReceiptDataProvider      $receiptDataProvider,
+        private Config                   $gatewayConfig,
+        private Data                     $opHelper,
+        private RequestInterface         $request,
+        private OrderFactory             $orderFactory,
+        private Session                  $checkoutSession,
+        private CustomerSession          $customerSession,
+        private ApiData                  $apiData,
+        private JsonFactory              $jsonFactory,
+        private OrderRepositoryInterface $orderRepository,
+        private OrderManagementInterface $orderManagementInterface,
+        private SubscriptionCreate       $subscriptionCreate,
+        private CommandManagerPoolInterface $commandManagerPool
     ) {
-        $this->session = $session;
-        $this->responseValidator = $responseValidator;
-        $this->receiptDataProvider = $receiptDataProvider;
-        $this->quoteRepository = $quoteRepository;
-        $this->gatewayConfig = $gatewayConfig;
-        $this->opHelper = $opHelper;
-        $this->request = $request;
-        $this->orderFactory = $orderFactory;
-        $this->checkoutSession = $checkoutSession;
-        $this->customerSession = $customerSession;
-        $this->apiData = $apiData;
-        $this->jsonFactory = $jsonFactory;
-        $this->orderRepository = $orderRepository;
-        $this->orderManagementInterface = $orderManagementInterface;
-        $this->subscriptionCreate = $subscriptionCreate;
     }
 
     /**
@@ -234,6 +141,7 @@ class Token implements HttpPostActionInterface
         }
 
         /* fetch payment response using transaction id */
+        // TODO: refactor get_payment_data
         $response = $this->apiData->processApiRequest(
             'get_payment_data',
             null,
@@ -272,16 +180,20 @@ class Token implements HttpPostActionInterface
      * @param Customer $customer
      * @return mixed
      * @throws CheckoutException
+     * @throws \Magento\Framework\Exception\NotFoundException
+     * @throws \Magento\Payment\Gateway\Command\CommandException
      */
     protected function getTokenResponseData($order, $tokenId, $customer)
     {
-        $response = $this->apiData->processApiRequest(
+        $commandExecutor = $this->commandManagerPool->get('paytrail');
+        $response = $commandExecutor->executeByCode(
             'token_payment',
-            $order,
             null,
-            null,
-            $tokenId,
-            $customer
+            [
+                'order' => $order,
+                'token_id' => $tokenId,
+                'customer' => $customer
+            ]
         );
 
         $errorMsg = $response['error'];
