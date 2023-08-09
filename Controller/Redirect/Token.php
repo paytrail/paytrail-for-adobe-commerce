@@ -20,7 +20,6 @@ use Magento\Sales\Model\Order;
 use Magento\Sales\Model\OrderFactory;
 use Paytrail\PaymentService\Exceptions\CheckoutException;
 use Paytrail\PaymentService\Gateway\Config\Config;
-use Paytrail\PaymentService\Helper\ApiData;
 use Paytrail\PaymentService\Helper\Data;
 use Paytrail\PaymentService\Model\ReceiptDataProvider;
 use Paytrail\PaymentService\Model\Subscription\SubscriptionCreate;
@@ -37,7 +36,6 @@ class Token implements HttpPostActionInterface
      * @param OrderFactory $orderFactory
      * @param Session $checkoutSession
      * @param CustomerSession $customerSession
-     * @param ApiData $apiData
      * @param JsonFactory $jsonFactory
      * @param OrderRepositoryInterface $orderRepository
      * @param OrderManagementInterface $orderManagementInterface
@@ -52,7 +50,6 @@ class Token implements HttpPostActionInterface
         private OrderFactory             $orderFactory,
         private Session                  $checkoutSession,
         private CustomerSession          $customerSession,
-        private ApiData                  $apiData,
         private JsonFactory              $jsonFactory,
         private OrderRepositoryInterface $orderRepository,
         private OrderManagementInterface $orderManagementInterface,
@@ -141,13 +138,7 @@ class Token implements HttpPostActionInterface
         }
 
         /* fetch payment response using transaction id */
-        // TODO: refactor get_payment_data
-        $response = $this->apiData->processApiRequest(
-            'get_payment_data',
-            null,
-            null,
-            $responseData->getTransactionId()
-        );
+        $response = $this->getPaymentData($responseData->getTransactionId());
 
         $receiptData = [
             'checkout-account' => $this->gatewayConfig->getMerchantId(),
@@ -193,6 +184,36 @@ class Token implements HttpPostActionInterface
                 'order' => $order,
                 'token_id' => $tokenId,
                 'customer' => $customer
+            ]
+        );
+
+        $errorMsg = $response['error'];
+
+        if (isset($errorMsg)) {
+            $this->errorMsg = ($errorMsg);
+            $this->opHelper->processError($errorMsg);
+        }
+
+        return $response["data"];
+    }
+
+    /**
+     * GetPaymentData function
+     *
+     * @param string $transactionId
+     * @return mixed
+     * @throws CheckoutException
+     * @throws \Magento\Framework\Exception\NotFoundException
+     * @throws \Magento\Payment\Gateway\Command\CommandException
+     */
+    protected function getPaymentData($transactionId)
+    {
+        $commandExecutor = $this->commandManagerPool->get('paytrail');
+        $response = $commandExecutor->executeByCode(
+            'get_payment_data',
+            null,
+            [
+                'transaction_id' => $transactionId
             ]
         );
 
