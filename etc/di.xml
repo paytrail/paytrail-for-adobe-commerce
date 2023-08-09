@@ -94,62 +94,70 @@
             </argument>
         </arguments>
     </virtualType>
-  <type name="Magento\Payment\Gateway\Command\CommandManagerPool">
-    <arguments>
-      <argument name="executors" xsi:type="array">
-        <item name="paytrail" xsi:type="string">PaytrailCommandManager</item>
-      </argument>
-    </arguments>
-  </type>
+    <type name="Magento\Payment\Gateway\Command\CommandManagerPool">
+        <arguments>
+            <argument name="executors" xsi:type="array">
+                <item name="paytrail" xsi:type="string">PaytrailCommandManager</item>
+            </argument>
+        </arguments>
+    </type>
 
-  <virtualType name="PaytrailCommandPool" type="Magento\Payment\Gateway\Command\CommandPool">
-    <arguments>
-      <argument name="commands" xsi:type="array">
-        <item name="initialize" xsi:type="string">Paytrail\PaymentService\Gateway\Command\Initialize</item>
-        <item name="refund" xsi:type="string">PaytrailRefundCommand</item>
-        <item name="payment" xsi:type="string">Paytrail\PaymentService\Gateway\Command\Payment</item>
-        <item name="method_provider" xsi:type="string">Paytrail\PaymentService\Gateway\Command\MethodProvider</item>
-        <item name="email_refund" xsi:type="string">PaytrailEmailRefundCommand</item>
-        <item name="token_payment" xsi:type="string">Paytrail\PaymentService\Gateway\Command\TokenPayment</item>
-      </argument>
-    </arguments>
-  </virtualType>
+    <virtualType name="PaytrailCommandPool" type="Magento\Payment\Gateway\Command\CommandPool">
+        <arguments>
+            <argument name="commands" xsi:type="array">
+                <item name="initialize" xsi:type="string">Paytrail\PaymentService\Gateway\Command\Initialize</item>
+                <item name="refund" xsi:type="string">PaytrailRefundCommand</item>
+                <item name="payment" xsi:type="string">Paytrail\PaymentService\Gateway\Command\Payment</item>
+                <item name="method_provider" xsi:type="string">Paytrail\PaymentService\Gateway\Command\MethodProvider
+                </item>
+                <item name="email_refund" xsi:type="string">PaytrailEmailRefundCommand</item>
+                <item name="token_payment" xsi:type="string">Paytrail\PaymentService\Gateway\Command\TokenPayment</item>
+                <item name="get_payment_data" xsi:type="string">Paytrail\PaymentService\Gateway\Command\PaymentData
+                </item>
+            </argument>
+        </arguments>
+    </virtualType>
 
-  <virtualType name="PaytrailCommandManager" type="Magento\Payment\Gateway\Command\CommandManager">
-    <arguments>
-      <argument name="commandPool" xsi:type="object">PaytrailCommandPool</argument>
-    </arguments>
-  </virtualType>
+    <virtualType name="PaytrailCommandManager" type="Magento\Payment\Gateway\Command\CommandManager">
+        <arguments>
+            <argument name="commandPool" xsi:type="object">PaytrailCommandPool</argument>
+        </arguments>
+    </virtualType>
 
-  <!-- Command section for payment action  -->
-  <virtualType name="PaytrailPaymentCommandManager" type="Magento\Payment\Gateway\Command\CommandManager">
-    <arguments>
-      <argument name="commandPool" xsi:type="object">PaytrailPaymentCommandPool</argument>
-    </arguments>
-  </virtualType>
+    <!-- Command section for payment action  -->
+    <virtualType name="PaytrailPaymentCommandManager" type="Magento\Payment\Gateway\Command\CommandManager">
+        <arguments>
+            <argument name="commandPool" xsi:type="object">PaytrailPaymentCommandPool</argument>
+        </arguments>
+    </virtualType>
 
-  <type name="Paytrail\PaymentService\Gateway\Command\Payment">
-    <arguments>
-      <argument name="requestBuilder" xsi:type="object">PaytrailPaymentRequest</argument>
-      <argument name="transferFactory" xsi:type="object">Paytrail\PaymentService\Gateway\Http\TransferFactory</argument>
-      <argument name="client" xsi:type="object">Paytrail\PaymentService\Gateway\Http\Client\TransactionPayment</argument>
-      <argument name="handler" xsi:type="object">Paytrail\PaymentService\Gateway\Response\PaymentHandler</argument>
-    </arguments>
-  </type>
+    <type name="Paytrail\PaymentService\Gateway\Command\Payment">
+        <arguments>
+            <argument name="requestBuilder" xsi:type="object">PaytrailPaymentRequest</argument>
+            <argument name="transferFactory" xsi:type="object">Paytrail\PaymentService\Gateway\Http\TransferFactory
+            </argument>
+            <argument name="client" xsi:type="object">Paytrail\PaymentService\Gateway\Http\Client\TransactionPayment
+            </argument>
+            <argument name="handler" xsi:type="object">Paytrail\PaymentService\Gateway\Response\PaymentHandler
+            </argument>
+        </arguments>
+    </type>
 
-  <virtualType name="PaytrailPaymentRequest" type="Magento\Payment\Gateway\Request\BuilderComposite">
-    <arguments>
-      <argument name="builders" xsi:type="array">
-        <item name="paymentBuilder" xsi:type="string">Paytrail\PaymentService\Gateway\Request\PaymentDataBuilder</item>
-      </argument>
-    </arguments>
-  </virtualType>
+    <virtualType name="PaytrailPaymentRequest" type="Magento\Payment\Gateway\Request\BuilderComposite">
+        <arguments>
+            <argument name="builders" xsi:type="array">
+                <item name="paymentBuilder" xsi:type="string">
+                    Paytrail\PaymentService\Gateway\Request\PaymentDataBuilder
+                </item>
+            </argument>
+        </arguments>
+    </virtualType>
 
-  <virtualType name="PaytrailPaymentRedirect" type="Paytrail\PaymentService\Controller\Redirect\Index">
-    <arguments>
-      <argument name="commandManager" xsi:type="object">PaytrailPaymentCommandManager</argument>
-    </arguments>
-  </virtualType>
+    <virtualType name="PaytrailPaymentRedirect" type="Paytrail\PaymentService\Controller\Redirect\Index">
+        <arguments>
+            <argument name="commandManager" xsi:type="object">PaytrailPaymentCommandManager</argument>
+        </arguments>
+    </virtualType>
 
     <!-- Command section for token payment action  -->
     <virtualType name="PaytrailTokenPaymentCommandManager" type="Magento\Payment\Gateway\Command\CommandManager">
@@ -163,7 +171,8 @@
             <argument name="requestBuilder" xsi:type="object">PaytrailTokenPaymentRequest</argument>
             <argument name="transferFactory" xsi:type="object">Paytrail\PaymentService\Gateway\Http\TransferFactory
             </argument>
-            <argument name="client" xsi:type="object">Paytrail\PaymentService\Gateway\Http\Client\TransactionTokenPayment
+            <argument name="client" xsi:type="object">
+                Paytrail\PaymentService\Gateway\Http\Client\TransactionTokenPayment
             </argument>
             <argument name="handler" xsi:type="object">Paytrail\PaymentService\Gateway\Response\TokenPaymentHandler
             </argument>
@@ -186,38 +195,81 @@
         </arguments>
     </virtualType>
 
-  <!-- Command section for payment providers action  -->
-  <type name="Paytrail\PaymentService\Gateway\Command\MethodProvider">
-    <arguments>
-      <argument name="requestBuilder" xsi:type="object">PaytrailPaymentMethodProviderRequest</argument>
-      <argument name="transferFactory" xsi:type="object">Paytrail\PaymentService\Gateway\Http\TransferFactory</argument>
-      <argument name="client" xsi:type="object">Paytrail\PaymentService\Gateway\Http\Client\PaymentMethodProvider</argument>
-      <argument name="handler" xsi:type="object">Paytrail\PaymentService\Gateway\Response\PaymentMethodProviderHandler</argument>
-    </arguments>
-  </type>
+    <!-- Command section for get_payment_data action  -->
+    <virtualType name="PaytrailPaymentDataCommandManager" type="Magento\Payment\Gateway\Command\CommandManager">
+        <arguments>
+            <argument name="commandPool" xsi:type="object">PaytrailPaymentDataCommandPool</argument>
+        </arguments>
+    </virtualType>
 
-  <virtualType name="PaytrailPaymentMethodProviderRequest" type="Magento\Payment\Gateway\Request\BuilderComposite">
-    <arguments>
-      <argument name="builders" xsi:type="array">
-        <item name="paymentBuilder" xsi:type="string">Paytrail\PaymentService\Gateway\Request\PaymentMethodProviderDataBuilder</item>
-      </argument>
-    </arguments>
-  </virtualType>
+    <type name="Paytrail\PaymentService\Gateway\Command\PaymentData">
+        <arguments>
+            <argument name="requestBuilder" xsi:type="object">PaytrailPaymentDataRequest</argument>
+            <argument name="transferFactory" xsi:type="object">Paytrail\PaymentService\Gateway\Http\TransferFactory
+            </argument>
+            <argument name="client" xsi:type="object">
+                Paytrail\PaymentService\Gateway\Http\Client\TransactionPaymentData
+            </argument>
+            <argument name="handler" xsi:type="object">Paytrail\PaymentService\Gateway\Response\PaymentDataHandler
+            </argument>
+        </arguments>
+    </type>
 
-  <virtualType name="PaytrailConfigProvider" type="Paytrail\PaymentService\Model\ConfigProvider">
-    <arguments>
-      <argument name="commandManager" xsi:type="object">PaytrailPaymentMethodProviderCommandManager</argument>
-    </arguments>
-  </virtualType>
+    <virtualType name="PaytrailPaymentDataRequest" type="Magento\Payment\Gateway\Request\BuilderComposite">
+        <arguments>
+            <argument name="builders" xsi:type="array">
+                <item name="paymentBuilder" xsi:type="string">
+                    Paytrail\PaymentService\Gateway\Request\GetPaymentDataBuilder
+                </item>
+            </argument>
+        </arguments>
+    </virtualType>
 
-  <!-- Command section for refund action -->
+    <!-- Command section for payment providers action  -->
+    <type name="Paytrail\PaymentService\Gateway\Command\MethodProvider">
+        <arguments>
+            <argument name="requestBuilder" xsi:type="object">PaytrailPaymentMethodProviderRequest</argument>
+            <argument name="transferFactory" xsi:type="object">Paytrail\PaymentService\Gateway\Http\TransferFactory
+            </argument>
+            <argument name="client" xsi:type="object">
+                Paytrail\PaymentService\Gateway\Http\Client\PaymentMethodProvider
+            </argument>
+            <argument name="handler" xsi:type="object">
+                Paytrail\PaymentService\Gateway\Response\PaymentMethodProviderHandler
+            </argument>
+        </arguments>
+    </type>
+
+    <virtualType name="PaytrailPaymentMethodProviderRequest" type="Magento\Payment\Gateway\Request\BuilderComposite">
+        <arguments>
+            <argument name="builders" xsi:type="array">
+                <item name="paymentBuilder" xsi:type="string">
+                    Paytrail\PaymentService\Gateway\Request\PaymentMethodProviderDataBuilder
+                </item>
+            </argument>
+        </arguments>
+    </virtualType>
+
+    <virtualType name="PaytrailConfigProvider" type="Paytrail\PaymentService\Model\ConfigProvider">
+        <arguments>
+            <argument name="commandManager" xsi:type="object">PaytrailPaymentMethodProviderCommandManager</argument>
+        </arguments>
+    </virtualType>
+
+    <!-- Command section for refund action -->
     <virtualType name="PaytrailEmailRefundCommand" type="Magento\Payment\Gateway\Command\GatewayCommand">
         <arguments>
             <argument name="requestBuilder" xsi:type="object">PaytrailRefundRequest</argument>
-            <argument name="transferFactory" xsi:type="object">Paytrail\PaymentService\Gateway\Http\TransferFactory</argument>
-            <argument name="client" xsi:type="object">Paytrail\PaymentService\Gateway\Http\Client\TransactionEmailRefund</argument>
-            <argument name="handler" xsi:type="object">Paytrail\PaymentService\Gateway\Response\EmailRefundHandler</argument>
-            <argument name="validator" xsi:type="object">Paytrail\PaymentService\Gateway\Validator\RefundResponseValidator</argument>
+            <argument name="transferFactory" xsi:type="object">Paytrail\PaymentService\Gateway\Http\TransferFactory
+            </argument>
+            <argument name="client" xsi:type="object">
+                Paytrail\PaymentService\Gateway\Http\Client\TransactionEmailRefund
+            </argument>
+            <argument name="handler" xsi:type="object">Paytrail\PaymentService\Gateway\Response\EmailRefundHandler
+            </argument>
+            <argument name="validator" xsi:type="object">
+                Paytrail\PaymentService\Gateway\Validator\RefundResponseValidator
+            </argument>
         </arguments>
     </virtualType>
 
