@@ -2,17 +2,26 @@
 
 namespace Paytrail\PaymentService\Cron;
 
+use Paytrail\PaymentService\Model\Recurring\Bill;
+
 class RecurringPaymentBill
 {
-    /** @var \Paytrail\PaymentService\Model\Recurring\Bill */
-    private $bill;
-
+    /**
+     * Constructor
+     *
+     * @param Bill $bill
+     */
     public function __construct(
-        \Paytrail\PaymentService\Model\Recurring\Bill $bill
+        private Bill $bill
     ) {
-        $this->bill = $bill;
     }
 
+    /**
+     * Execute
+     *
+     * @return void
+     * @throws \Magento\Framework\Exception\LocalizedException
+     */
     public function execute()
     {
         $this->bill->process();

@@ -7,17 +7,12 @@ use Magento\Framework\App\State;
 use Magento\Framework\Console\Cli;
 use Magento\Framework\Exception\LocalizedException;
 use Paytrail\PaymentService\Model\Recurring\Bill as RecurringBill;
+use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
-class Bill extends \Symfony\Component\Console\Command\Command
+class Bill extends Command
 {
-    /** @var RecurringBill */
-    private $bill;
-
-    /** @var State */
-    private $state;
-
     /**
      * Constructor
      *
@@ -25,11 +20,9 @@ class Bill extends \Symfony\Component\Console\Command\Command
      * @param State $state
      */
     public function __construct(
-        RecurringBill $bill,
-        State         $state
+        private RecurringBill $bill,
+        private State         $state
     ) {
-        $this->bill = $bill;
-        $this->state = $state;
         parent::__construct();
     }
 
