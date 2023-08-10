@@ -2,17 +2,26 @@
 
 namespace Paytrail\PaymentService\Cron;
 
+use Paytrail\PaymentService\Model\Recurring\Notify;
+
 class RecurringPaymentNotify
 {
-    /** @var \Paytrail\PaymentService\Model\Recurring\Notify */
-    private $notify;
-
+    /**
+     * Constructor
+     *
+     * @param Notify $notify
+     */
     public function __construct(
-        \Paytrail\PaymentService\Model\Recurring\Notify $notify
+        private Notify $notify
     ) {
         $this->notify = $notify;
     }
 
+    /**
+     * Execute
+     *
+     * @return void
+     */
     public function execute()
     {
         $this->notify->process();

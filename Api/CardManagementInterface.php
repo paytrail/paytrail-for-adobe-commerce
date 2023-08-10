@@ -11,7 +11,7 @@ use Paytrail\SDK\Exception\ValidationException;
 interface CardManagementInterface
 {
     /**
-     * Initialize add card process
+     * Initialize add card process.
      *
      * @return string
      * @throws ValidationException
@@ -19,7 +19,7 @@ interface CardManagementInterface
     public function generateAddCardUrl(): string;
 
     /**
-     * Delete unused card
+     * Delete unused card.
      *
      * @param string $cardId
      * @return bool
