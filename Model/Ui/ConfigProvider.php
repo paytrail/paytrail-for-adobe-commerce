@@ -18,6 +18,7 @@ use Paytrail\PaymentService\Gateway\Config\Config;
 use Paytrail\PaymentService\Helper\ApiData as apiData;
 use Paytrail\PaymentService\Helper\Data as paytrailHelper;
 use Paytrail\PaymentService\Model\Adapter\Adapter;
+use Paytrail\PaymentService\Model\Ui\DataProvider\PaymentProvidersData;
 use Psr\Log\LoggerInterface;
 
 class ConfigProvider implements ConfigProviderInterface
@@ -129,7 +130,7 @@ class ConfigProvider implements ConfigProviderInterface
         CustomerTokenManagement $customerTokenManagement,
         CcConfigProvider $ccConfigProvider,
         UrlInterface $urlBuilder,
-        private CommandManagerPoolInterface $commandManagerPool
+        private PaymentProvidersData $paymentProvidersData
     ) {
         $this->apidata = $apidata;
         $this->checkoutSession = $checkoutSession;
@@ -166,7 +167,7 @@ class ConfigProvider implements ConfigProviderInterface
             return $config;
         }
         try {
-            $groupData = $this->getAllPaymentMethods();
+            $groupData = $this->paymentProvidersData->getAllPaymentMethods();
             $scheduledMethod[] = $this->handlePaymentProviderGroupData($groupData['groups'])['creditcard'];
 
             $config = [
@@ -230,39 +231,6 @@ class ConfigProvider implements ConfigProviderInterface
         return $styles;
     }
 
-
-
-    /**
-     * Get all payment methods and groups with order total value
-     *
-     * @return mixed|null
-     * @throws LocalizedException
-     * @throws NoSuchEntityException
-     */
-    protected function getAllPaymentMethods()
-    {
-        $orderValue = $this->checkoutSession->getQuote()->getGrandTotal();
-
-        $commandExecutor = $this->commandManagerPool->get('paytrail');
-        $response = $commandExecutor->executeByCode(
-            'method_provider',
-            null,
-            ['amount' => $orderValue]
-        );
-
-        $errorMsg = $response['error'];
-
-        if (isset($errorMsg)) {
-            $this->log->error(
-                'Error occurred during providing payment methods: '
-                . $errorMsg
-            );
-            $this->paytrailHelper->processError($errorMsg);
-        }
-
-        return $response["data"];
-    }
-
     /**
      * Create array for payment providers and groups containing unique method id
      *
@@ -296,23 +264,6 @@ class ConfigProvider implements ConfigProviderInterface
             $allGroups[$key]['providers'] = $this->addProviderDataToGroup($allMethods, $group['id']);
         }
         return $allGroups;
-    }
-
-    /**
-     * @param string $type
-     * @return array
-     */
-    protected function getIconUrl($type)
-    {
-        if (isset($this->paymenticons[$type])) {
-            return $this->paymenticons[$type];
-        }
-
-        return [
-            'url' => '',
-            'width' => 0,
-            'height' => 0
-        ];
     }
 
     /**
