@@ -3,9 +3,12 @@
 namespace Paytrail\PaymentService\Gateway\Config;
 
 use Magento\Framework\App\Config\ScopeConfigInterface;
+use Magento\Framework\UrlInterface;
 use Magento\Payment\Gateway\ConfigInterface;
 use Magento\Framework\Encryption\EncryptorInterface;
+use Magento\Payment\Model\CcConfigProvider;
 use Magento\Store\Model\ScopeInterface;
+use Magento\Vault\Model\CustomerTokenManagement;
 
 class Config extends \Magento\Payment\Gateway\Config\Config
 {
@@ -37,10 +40,17 @@ class Config extends \Magento\Payment\Gateway\Config\Config
     const KEY_NOTIFICATION_EMAIL = 'recipient_email';
     const KEY_CANCEL_ORDER_ON_FAILED_PAYMENT = 'failed_payment_cancel';
 
+    private const VAULT_CODE = 'paytrail_cc_vault';
+
     /**
      * @var EncryptorInterface
      */
     private $encryptor;
+
+    /**
+     * @var array
+     */
+    private $paymenticons;
 
     /**
      * Config constructor.
@@ -53,11 +63,15 @@ class Config extends \Magento\Payment\Gateway\Config\Config
     public function __construct(
         ScopeConfigInterface $scopeConfig,
         EncryptorInterface $encryptor,
+        private UrlInterface $urlBuilder,
+        private CustomerTokenManagement $customerTokenManagement,
+        private \Magento\Payment\Model\CcConfigProvider $ccConfigProvider,
         $methodCode = self::CODE,
         $pathPattern = self::DEFAULT_PATH_PATTERN
     ) {
         $this->encryptor = $encryptor;
         parent::__construct($scopeConfig, $methodCode, $pathPattern);
+        $this->paymenticons = $this->ccConfigProvider->getIcons();
     }
 
     /**
@@ -291,5 +305,86 @@ class Config extends \Magento\Payment\Gateway\Config\Config
     public function getCancelOrderOnFailedPayment($storeId = null)
     {
         return $this->getValue(self::KEY_CANCEL_ORDER_ON_FAILED_PAYMENT, $storeId);
+    }
+
+    /**
+     * Get payment request redirect url.
+     *
+     * @return string
+     */
+    public function getPaymentRedirectUrl()
+    {
+        return 'paytrail/redirect';
+    }
+
+    /**
+     * Get add_card request redirect url.
+     *
+     * @return string
+     */
+    public function getAddCardRedirectUrl()
+    {
+        return 'paytrail/tokenization/addcard';
+    }
+
+    /**
+     * Get token_payment request redirect url.
+     *
+     * @return string
+     */
+    public function getTokenPaymentRedirectUrl()
+    {
+        return 'paytrail/redirect/token';
+    }
+
+    /**
+     * Get default success page url.
+     *
+     * @return string
+     */
+    public function getDefaultSuccessPageUrl()
+    {
+        return $this->urlBuilder->getUrl('checkout/onepage/success/');
+    }
+
+    /**
+     * @param string $type
+     * @return array
+     */
+    protected function getIconUrl($type)
+    {
+        if (isset($this->paymenticons[$type])) {
+            return $this->paymenticons[$type];
+        }
+
+        return [
+            'url' => '',
+            'width' => 0,
+            'height' => 0
+        ];
+    }
+
+    /**
+     * Get customer tokens.
+     *
+     * @return array
+     */
+    public function getCustomerTokens()
+    {
+        $tokens =  $this->customerTokenManagement->getCustomerSessionTokens();
+        $t = [];
+
+        foreach ($tokens as $token) {
+            if ($token->getPaymentMethodCode() == self::VAULT_CODE && $token->getIsActive() && $token->getIsVisible()) {
+                $cdata = json_decode($token->getTokenDetails(), true);
+                $t[$token->getEntityId()]["expires"] = $cdata['expirationDate'];
+                $t[$token->getEntityId()]["url"] = $this->getIconUrl($cdata["type"])['url'];
+                $t[$token->getEntityId()]["maskedCC"] = $cdata["maskedCC"];
+                $t[$token->getEntityId()]["type"] = $cdata["type"];
+                $t[$token->getEntityId()]["id"] = $token->getPublicHash();
+            }
+        }
+
+        return $t;
     }
 }

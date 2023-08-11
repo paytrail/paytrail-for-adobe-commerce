@@ -36,11 +36,6 @@ class ConfigProvider implements ConfigProviderInterface
     ];
 
     /**
-     * @var paytrailHelper
-     */
-    protected $paytrailHelper;
-
-    /**
      * @var apiData
      */
     protected $apidata;
@@ -121,7 +116,7 @@ class ConfigProvider implements ConfigProviderInterface
      * @throws LocalizedException
      */
     public function __construct(
-        paytrailHelper $paytrailHelper,
+        private paytrailHelper $paytrailHelper,
         apiData $apidata,
         PaymentHelper $paymentHelper,
         Session $checkoutSession,
@@ -136,7 +131,6 @@ class ConfigProvider implements ConfigProviderInterface
         UrlInterface $urlBuilder,
         private CommandManagerPoolInterface $commandManagerPool
     ) {
-        $this->paytrailHelper = $paytrailHelper;
         $this->apidata = $apidata;
         $this->checkoutSession = $checkoutSession;
         $this->gatewayConfig = $gatewayConfig;
@@ -180,15 +174,15 @@ class ConfigProvider implements ConfigProviderInterface
                     self::CODE => [
                         'instructions' => $this->gatewayConfig->getInstructions(),
                         'skip_method_selection' => $this->gatewayConfig->getSkipBankSelection(),
-                        'payment_redirect_url' => $this->getPaymentRedirectUrl(),
+                        'payment_redirect_url' => $this->gatewayConfig->getPaymentRedirectUrl(),
                         'payment_template' => $this->gatewayConfig->getPaymentTemplate(),
                         'method_groups' => array_values($this->handlePaymentProviderGroupData($groupData['groups'])),
                         'scheduled_method_group' => array_values($scheduledMethod),
                         'payment_terms' => $groupData['terms'],
                         'payment_method_styles' => $this->wrapPaymentMethodStyles($storeId),
-                        'addcard_redirect_url' => $this->getAddCardRedirectUrl(),
-                        'token_payment_redirect_url' => $this->getTokenPaymentRedirectUrl(),
-                        'default_success_page_url' => $this->getDefaultSuccessPageUrl()
+                        'addcard_redirect_url' => $this->gatewayConfig->getAddCardRedirectUrl(),
+                        'token_payment_redirect_url' => $this->gatewayConfig->getTokenPaymentRedirectUrl(),
+                        'default_success_page_url' => $this->gatewayConfig->getDefaultSuccessPageUrl()
                     ]
                 ]
             ];
@@ -236,30 +230,7 @@ class ConfigProvider implements ConfigProviderInterface
         return $styles;
     }
 
-    /**
-     * GetPaymentRedirectUrl function
-     *
-     * @return string
-     */
-    protected function getPaymentRedirectUrl()
-    {
-        return 'paytrail/redirect';
-    }
 
-    protected function getAddCardRedirectUrl()
-    {
-        return 'paytrail/tokenization/addcard';
-    }
-
-    protected function getTokenPaymentRedirectUrl()
-    {
-        return 'paytrail/redirect/token';
-    }
-
-    public function getDefaultSuccessPageUrl()
-    {
-        return $this->urlBuilder->getUrl('checkout/onepage/success/');
-    }
 
     /**
      * Get all payment methods and groups with order total value
@@ -316,7 +287,7 @@ class ConfigProvider implements ConfigProviderInterface
         foreach ($allGroups as $key => $group) {
             if ($group['id'] == 'creditcard') {
                 $allGroups[$key]["can_tokenize"] = true;
-                $allGroups[$key]["tokens"] = $this->getCustomerTokens();
+                $allGroups[$key]["tokens"] = $this->gatewayConfig->getCustomerTokens();
             } else {
                 $allGroups[$key]["can_tokenize"] = false;
                 $allGroups[$key]["tokens"] = false;
@@ -342,23 +313,6 @@ class ConfigProvider implements ConfigProviderInterface
             'width' => 0,
             'height' => 0
         ];
-    }
-
-    protected function getCustomerTokens()
-    {
-        $tokens =  $this->customerTokenManagement->getCustomerSessionTokens();
-        $t = [];
-        foreach($tokens as $token) {
-            if($token->getPaymentMethodCode() == self::VAULT_CODE && $token->getIsActive() && $token->getIsVisible()) {
-                $cdata = json_decode($token->getTokenDetails(), true);
-                $t[$token->getEntityId()]["expires"] = $cdata['expirationDate'];
-                $t[$token->getEntityId()]["url"] = $this->getIconUrl($cdata["type"])['url'];
-                $t[$token->getEntityId()]["maskedCC"] = $cdata["maskedCC"];
-                $t[$token->getEntityId()]["type"] = $cdata["type"];
-                $t[$token->getEntityId()]["id"] = $token->getPublicHash();
-            }
-        }
-        return $t;
     }
 
     /**
