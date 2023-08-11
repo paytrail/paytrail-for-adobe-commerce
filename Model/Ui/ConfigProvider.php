@@ -6,90 +6,20 @@ use Magento\Checkout\Model\ConfigProviderInterface;
 use Magento\Checkout\Model\Session;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Exception\NoSuchEntityException;
-use Magento\Framework\Locale\Resolver;
-use Magento\Framework\UrlInterface;
-use Magento\Framework\View\Asset\Repository as AssetRepository;
 use Magento\Payment\Helper\Data as PaymentHelper;
-use Magento\Payment\Model\CcConfigProvider;
 use Magento\Store\Model\StoreManagerInterface;
-use Magento\Vault\Model\CustomerTokenManagement;
 use Paytrail\PaymentService\Gateway\Config\Config;
-use Paytrail\PaymentService\Helper\ApiData as apiData;
-use Paytrail\PaymentService\Helper\Data as paytrailHelper;
-use Paytrail\PaymentService\Model\Adapter\Adapter;
 use Paytrail\PaymentService\Model\Ui\DataProvider\PaymentProvidersData;
-use Psr\Log\LoggerInterface;
 
 class ConfigProvider implements ConfigProviderInterface
 {
-    public const CODE = 'paytrail';
-    public const VAULT_CODE = 'paytrail_cc_vault';
-
     /**
      * @var string[]
      */
     protected $methodCodes = [
-        self::CODE,
-        self::VAULT_CODE
+        Config::CODE,
+        Config::CC_VAULT_CODE
     ];
-
-    /**
-     * @var apiData
-     */
-    protected $apidata;
-    /**
-     * @var Session
-     */
-    protected $checkoutSession;
-    /**
-     * @var Config
-     */
-    private $gatewayConfig;
-    /**
-     * @var AssetRepository
-     */
-    private $assetRepository;
-    /**
-     * @var StoreManagerInterface
-     */
-    private $storeManager;
-    /**
-     * @var Resolver
-     */
-    private $localeResolver;
-    /**
-     * @var Adapter
-     */
-    private $paytrailAdapter;
-    /**
-     * @var LoggerInterface
-     */
-    private $log;
-
-    /**
-     * @var CustomerTokenManagement
-     */
-    private $customerTokenManagement;
-
-    /**
-     * @var CcConfigProvider
-     */
-    private $ccConfigProvider;
-
-    /**
-     * @var array
-     */
-    private $paymenticons;
-
-    /**
-     * @var UrlInterface
-     */
-    private $urlBuilder;
-
-    /**
-     * @var PaymentHelper
-     */
-    private $paymentHelper;
 
     /**
      * @var \Magento\Payment\Model\MethodInterface[]
@@ -99,53 +29,23 @@ class ConfigProvider implements ConfigProviderInterface
     /**
      * ConfigProvider constructor
      *
-     * @param paytrailHelper $paytrailHelper
-     * @param apiData $apidata
      * @param PaymentHelper $paymentHelper
      * @param Session $checkoutSession
      * @param Config $gatewayConfig
      * @param StoreManagerInterface $storeManager
-     * @param Resolver $localeResolver
-     * @param Adapter $paytrailAdapter
-     * @param LoggerInterface $log
-     * @param CustomerTokenManagement $customerTokenManagement
-     * @param CcConfigProvider $ccConfigProvider
-     * @param UrlInterface $urlBuilder
+     * @param PaymentProvidersData $paymentProvidersData
      * @throws LocalizedException
      */
     public function __construct(
-        private paytrailHelper $paytrailHelper,
-        apiData $apidata,
-        PaymentHelper $paymentHelper,
-        Session $checkoutSession,
-        Config $gatewayConfig,
-        AssetRepository $assetRepository,
-        StoreManagerInterface $storeManager,
-        Resolver $localeResolver,
-        Adapter $paytrailAdapter,
-        LoggerInterface $log,
-        CustomerTokenManagement $customerTokenManagement,
-        CcConfigProvider $ccConfigProvider,
-        UrlInterface $urlBuilder,
-        private PaymentProvidersData $paymentProvidersData
+        private PaymentHelper         $paymentHelper,
+        private Session               $checkoutSession,
+        private Config                $gatewayConfig,
+        private StoreManagerInterface $storeManager,
+        private PaymentProvidersData  $paymentProvidersData
     ) {
-        $this->apidata = $apidata;
-        $this->checkoutSession = $checkoutSession;
-        $this->gatewayConfig = $gatewayConfig;
-        $this->assetRepository = $assetRepository;
-        $this->storeManager = $storeManager;
-        $this->localeResolver = $localeResolver;
-        $this->paytrailAdapter = $paytrailAdapter;
-        $this->log = $log;
-        $this->customerTokenManagement = $customerTokenManagement;
-        $this->ccConfigProvider = $ccConfigProvider;
-
         foreach ($this->methodCodes as $code) {
             $this->methods[$code] = $paymentHelper->getMethodInstance($code);
         }
-        $this->paymenticons = $this->ccConfigProvider->getIcons();
-        $this->urlBuilder = $urlBuilder;
-        $this->paymentHelper = $paymentHelper;
     }
 
     /**
@@ -170,7 +70,7 @@ class ConfigProvider implements ConfigProviderInterface
 
             $config = [
                 'payment' => [
-                    self::CODE => [
+                    Config::CODE => [
                         'instructions' => $this->gatewayConfig->getInstructions(),
                         'skip_method_selection' => $this->gatewayConfig->getSkipBankSelection(),
                         'payment_redirect_url' => $this->gatewayConfig->getPaymentRedirectUrl(),
@@ -190,24 +90,24 @@ class ConfigProvider implements ConfigProviderInterface
             foreach ($groupData['groups'] as $group) {
                 $groupId = $group['id'];
                 $groupImage = $group['svg'];
-                $config['payment'][self::CODE]['image'][$groupId] = '';
+                $config['payment'][Config::CODE]['image'][$groupId] = '';
                 if ($groupImage) {
-                    $config['payment'][self::CODE]['image'][$groupId] = $groupImage;
+                    $config['payment'][Config::CODE]['image'][$groupId] = $groupImage;
                 }
             }
         } catch (\Exception $e) {
-            $config['payment'][self::CODE]['success'] = 0;
+            $config['payment'][Config::CODE]['success'] = 0;
 
             return $config;
         }
         if ($this->checkoutSession->getData('paytrail_previous_error')) {
-            $config['payment'][self::CODE]['previous_error'] = $this->checkoutSession
+            $config['payment'][Config::CODE]['previous_error'] = $this->checkoutSession
                 ->getData('paytrail_previous_error', 1);
         } elseif ($this->checkoutSession->getData('paytrail_previous_success')) {
-            $config['payment'][self::CODE]['previous_success'] = $this->checkoutSession
+            $config['payment'][Config::CODE]['previous_success'] = $this->checkoutSession
                 ->getData('paytrail_previous_success', 1);
         }
-        $config['payment'][self::CODE]['success'] = 1;
+        $config['payment'][Config::CODE]['success'] = 1;
 
         return $config;
     }

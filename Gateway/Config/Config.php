@@ -14,8 +14,8 @@ class Config extends \Magento\Payment\Gateway\Config\Config
 {
     const DEFAULT_PATH_PATTERN = 'payment/%s/%s';
     const KEY_TITLE = 'title';
-    const CODE = 'paytrail';
-    const CC_VAULT_CODE = 'paytrail_cc_vault';
+    public const CODE = 'paytrail';
+    public const CC_VAULT_CODE = 'paytrail_cc_vault';
     const SAVE_CARD_URL = 'tokenization/savecard';
     const KEY_CHECKOUT_ALGORITHM = 'checkout_algorithm';
     const KEY_MERCHANT_SECRET = 'merchant_secret';
@@ -40,7 +40,7 @@ class Config extends \Magento\Payment\Gateway\Config\Config
     const KEY_NOTIFICATION_EMAIL = 'recipient_email';
     const KEY_CANCEL_ORDER_ON_FAILED_PAYMENT = 'failed_payment_cancel';
 
-    private const VAULT_CODE = 'paytrail_cc_vault';
+    public const VAULT_CODE = 'paytrail_cc_vault';
 
     /**
      * @var EncryptorInterface
