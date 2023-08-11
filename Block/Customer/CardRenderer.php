@@ -1,7 +1,7 @@
 <?php
 namespace Paytrail\PaymentService\Block\Customer;
 
-use Paytrail\PaymentService\Model\ConfigProvider;
+use Paytrail\PaymentService\Model\Ui\ConfigProvider;
 use Magento\Vault\Api\Data\PaymentTokenInterface;
 use Magento\Vault\Block\AbstractCardRenderer;
 

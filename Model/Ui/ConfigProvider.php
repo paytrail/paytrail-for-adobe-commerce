@@ -1,6 +1,6 @@
 <?php
 
-namespace Paytrail\PaymentService\Model;
+namespace Paytrail\PaymentService\Model\Ui;
 
 use Magento\Checkout\Model\ConfigProviderInterface;
 use Magento\Checkout\Model\Session;

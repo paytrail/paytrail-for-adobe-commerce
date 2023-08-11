@@ -14,7 +14,7 @@ use Magento\Sales\Api\OrderRepositoryInterface;
 use Paytrail\PaymentService\Exceptions\CheckoutException;
 use Paytrail\PaymentService\Helper\Data as paytrailHelper;
 use Paytrail\PaymentService\Gateway\Config\Config;
-use Paytrail\PaymentService\Model\ConfigProvider;
+use Paytrail\PaymentService\Model\Ui\ConfigProvider;
 use Paytrail\PaymentService\Model\Email\Order\PendingOrderEmailConfirmation;
 use Paytrail\SDK\Model\Provider;
 use Paytrail\SDK\Response\PaymentResponse;

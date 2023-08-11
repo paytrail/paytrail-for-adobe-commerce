@@ -13,7 +13,7 @@
 
     <virtualType name="PaytrailAdapter" type="Magento\Payment\Model\Method\Adapter">
         <arguments>
-            <argument name="code" xsi:type="const">Paytrail\PaymentService\Model\ConfigProvider::CODE</argument>
+            <argument name="code" xsi:type="const">Paytrail\PaymentService\Model\Ui\ConfigProvider::CODE</argument>
             <argument name="formBlockType" xsi:type="string">Paytrail\PaymentService\Block\Form\Paytrail</argument>
             <argument name="infoBlockType" xsi:type="string">Paytrail\PaymentService\Block\Info\Paytrail</argument>
             <argument name="valueHandlerPool" xsi:type="object">PaytrailValueHandlerPool</argument>
@@ -36,7 +36,7 @@
 
     <virtualType name="PaytrailConfig" type="Magento\Payment\Gateway\Config\Config">
         <arguments>
-            <argument name="methodCode" xsi:type="const">Paytrail\PaymentService\Model\ConfigProvider::CODE</argument>
+            <argument name="methodCode" xsi:type="const">Paytrail\PaymentService\Model\Ui\ConfigProvider::CODE</argument>
         </arguments>
     </virtualType>
     <virtualType name="PaytrailConfigValueHandler" type="Magento\Payment\Gateway\Config\ConfigValueHandler">
@@ -250,7 +250,7 @@
         </arguments>
     </virtualType>
 
-    <virtualType name="PaytrailConfigProvider" type="Paytrail\PaymentService\Model\ConfigProvider">
+    <virtualType name="PaytrailConfigProvider" type="Paytrail\PaymentService\Model\Ui\ConfigProvider">
         <arguments>
             <argument name="commandManager" xsi:type="object">PaytrailPaymentMethodProviderCommandManager</argument>
         </arguments>

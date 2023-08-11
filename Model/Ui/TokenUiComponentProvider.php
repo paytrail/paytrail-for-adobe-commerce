@@ -6,7 +6,7 @@ use Magento\Vault\Api\Data\PaymentTokenInterface;
 use Magento\Vault\Model\Ui\TokenUiComponentInterface;
 use Magento\Vault\Model\Ui\TokenUiComponentInterfaceFactory;
 use Magento\Vault\Model\Ui\TokenUiComponentProviderInterface;
-use Paytrail\PaymentService\Model\ConfigProvider;
+use Paytrail\PaymentService\Model\Ui\ConfigProvider;
 
 class TokenUiComponentProvider implements TokenUiComponentProviderInterface
 {
