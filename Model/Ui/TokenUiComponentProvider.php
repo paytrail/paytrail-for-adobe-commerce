@@ -6,7 +6,7 @@ use Magento\Vault\Api\Data\PaymentTokenInterface;
 use Magento\Vault\Model\Ui\TokenUiComponentInterface;
 use Magento\Vault\Model\Ui\TokenUiComponentInterfaceFactory;
 use Magento\Vault\Model\Ui\TokenUiComponentProviderInterface;
-use Paytrail\PaymentService\Model\Ui\ConfigProvider;
+use Paytrail\PaymentService\Gateway\Config\Config;
 
 class TokenUiComponentProvider implements TokenUiComponentProviderInterface
 {
@@ -41,7 +41,7 @@ class TokenUiComponentProvider implements TokenUiComponentProviderInterface
         return $this->componentFactory->create(
             [
                 'config' => [
-                    'code' => ConfigProvider::VAULT_CODE,
+                    'code' => Config::VAULT_CODE,
                     TokenUiComponentProviderInterface::COMPONENT_DETAILS => $jsonDetails,
                     TokenUiComponentProviderInterface::COMPONENT_PUBLIC_HASH => $paymentToken->getPublicHash()
                 ],

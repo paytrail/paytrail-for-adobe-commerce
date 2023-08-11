@@ -1,7 +1,7 @@
 <?php
 namespace Paytrail\PaymentService\Block\Customer;
 
-use Paytrail\PaymentService\Model\Ui\ConfigProvider;
+use Paytrail\PaymentService\Gateway\Config\Config;
 use Magento\Vault\Api\Data\PaymentTokenInterface;
 use Magento\Vault\Block\AbstractCardRenderer;
 
@@ -15,7 +15,7 @@ class CardRenderer extends AbstractCardRenderer
      */
     public function canRender(PaymentTokenInterface $token): bool
     {
-        return $token->getPaymentMethodCode() === ConfigProvider::VAULT_CODE;
+        return $token->getPaymentMethodCode() === Config::VAULT_CODE;
     }
 
     /**
