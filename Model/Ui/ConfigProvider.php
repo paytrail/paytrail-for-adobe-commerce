@@ -37,7 +37,7 @@ class ConfigProvider implements ConfigProviderInterface
      * @throws LocalizedException
      */
     public function __construct(
-        private PaymentHelper         $paymentHelper,
+        PaymentHelper         $paymentHelper,
         private Session               $checkoutSession,
         private Config                $gatewayConfig,
         private StoreManagerInterface $storeManager,
