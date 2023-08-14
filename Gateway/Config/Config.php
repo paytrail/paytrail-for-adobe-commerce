@@ -3,6 +3,7 @@
 namespace Paytrail\PaymentService\Gateway\Config;
 
 use Magento\Framework\App\Config\ScopeConfigInterface;
+use Magento\Framework\Locale\Resolver;
 use Magento\Framework\UrlInterface;
 use Magento\Framework\Encryption\EncryptorInterface;
 use Magento\Payment\Model\CcConfigProvider;
@@ -62,6 +63,7 @@ class Config extends \Magento\Payment\Gateway\Config\Config
         private UrlInterface $urlBuilder,
         private CustomerTokenManagement $customerTokenManagement,
         private CcConfigProvider $ccConfigProvider,
+        private Resolver $localeResolver,
         $methodCode = self::CODE,
         $pathPattern = self::DEFAULT_PATH_PATTERN
     ) {
@@ -429,5 +431,33 @@ class Config extends \Magento\Payment\Gateway\Config\Config
         }
 
         return $t;
+    }
+
+    /**
+     * Get valid algorithms.
+     *
+     * @return array
+     */
+    public function getValidAlgorithms(): array
+    {
+        return ["sha256", "sha512"];
+    }
+
+    /**
+     * Get Store locale for payment provider.
+     *
+     * @return string
+     */
+    public function getStoreLocaleForPaymentProvider(): string
+    {
+        $locale = 'EN';
+        if ($this->localeResolver->getLocale() === 'fi_FI') {
+            $locale = 'FI';
+        }
+        if ($this->localeResolver->getLocale() === 'sv_SE') {
+            $locale = 'SV';
+        }
+
+        return $locale;
     }
 }

@@ -47,34 +47,6 @@ class Data
     }
 
     /**
-     * Get valid algorithms
-     *
-     * @return array
-     */
-    public function getValidAlgorithms(): array
-    {
-        return ["sha256", "sha512"];
-    }
-
-    /**
-     * Get Store locale for payment provider
-     *
-     * @return string
-     */
-    public function getStoreLocaleForPaymentProvider(): string
-    {
-        $locale = 'EN';
-        if ($this->localeResolver->getLocale() === 'fi_FI') {
-            $locale = 'FI';
-        }
-        if ($this->localeResolver->getLocale() === 'sv_SE') {
-            $locale = 'SV';
-        }
-
-        return $locale;
-    }
-
-    /**
      * Calculate Finnish reference number from order increment id
      * according to Finnish reference number algorithm
      * if increment id is not numeric - letters will be converted to numbers -> (ord($letter) % 10)
