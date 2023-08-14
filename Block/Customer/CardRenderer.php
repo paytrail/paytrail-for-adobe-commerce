@@ -19,6 +19,8 @@ class CardRenderer extends AbstractCardRenderer
     }
 
     /**
+     * Get last 4 digits of the credit card.
+     *
      * @return string
      */
     public function getNumberLast4Digits(): string
@@ -27,6 +29,8 @@ class CardRenderer extends AbstractCardRenderer
     }
 
     /**
+     * Get credit card expiration date.
+     *
      * @return string
      */
     public function getExpDate(): string
@@ -35,6 +39,8 @@ class CardRenderer extends AbstractCardRenderer
     }
 
     /**
+     * Get credit card icon url.
+     *
      * @return string
      */
     public function getIconUrl(): string
@@ -43,6 +49,8 @@ class CardRenderer extends AbstractCardRenderer
     }
 
     /**
+     * Get icon height.
+     *
      * @return int
      */
     public function getIconHeight(): int
@@ -51,6 +59,8 @@ class CardRenderer extends AbstractCardRenderer
     }
 
     /**
+     * Get icon width.
+     *
      * @return int
      */
     public function getIconWidth(): int
