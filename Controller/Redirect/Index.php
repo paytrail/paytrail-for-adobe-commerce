@@ -14,8 +14,8 @@ use Magento\Sales\Api\OrderRepositoryInterface;
 use Paytrail\PaymentService\Exceptions\CheckoutException;
 use Paytrail\PaymentService\Helper\Data as paytrailHelper;
 use Paytrail\PaymentService\Gateway\Config\Config;
-use Paytrail\PaymentService\Model\ConfigProvider;
 use Paytrail\PaymentService\Model\Email\Order\PendingOrderEmailConfirmation;
+use Paytrail\PaymentService\Model\Ui\DataProvider\PaymentProvidersData;
 use Paytrail\SDK\Model\Provider;
 use Paytrail\SDK\Response\PaymentResponse;
 use Psr\Log\LoggerInterface;
@@ -72,7 +72,7 @@ class Index implements ActionInterface
                     'preselected_payment_method_id'
                 );
                 $selectedPaymentMethodId = preg_replace(
-                    '/' . ConfigProvider::ID_INCREMENT_SEPARATOR . '[0-9]{1,3}$/',
+                    '/' . PaymentProvidersData::ID_INCREMENT_SEPARATOR . '[0-9]{1,3}$/',
                     '',
                     $selectedPaymentMethodRaw
                 );
