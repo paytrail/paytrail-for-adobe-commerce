@@ -61,6 +61,8 @@ class Payments extends Template
     private MessageManagerInterface $messageManager;
 
     /**
+     * Payments constructor.
+     *
      * @param Context $context
      * @param SubscriptionRepository $subscriptionRepository
      * @param CollectionFactory $subscriptionCollectionFactory
@@ -68,6 +70,8 @@ class Payments extends Template
      * @param StoreManagerInterface $storeManager
      * @param PaymentTokenRepository $paymentTokenRepository
      * @param SerializerInterface $serializer
+     * @param ConfigProvider $configProvider
+     * @param MessageManagerInterface $messageManager
      * @param array $data
      */
     public function __construct(
@@ -94,7 +98,9 @@ class Payments extends Template
     }
 
     /**
+     * Payment protected constructor.
      *
+     * @return void
      */
     protected function _construct()
     {
@@ -103,6 +109,8 @@ class Payments extends Template
     }
 
     /**
+     * Get recurring payments (subscriptions).
+     *
      * @return SubscriptionCollection
      */
     public function getRecurringPayments()
@@ -113,8 +121,8 @@ class Payments extends Template
         $collection->getSelect()->join(
             ['link' => 'paytrail_subscription_link'],
             'main_table.entity_id = link.subscription_id'
-        )->columns(array('MAX(link.order_id) as max_id')
-        )->group('link.subscription_id');
+        )->columns(array('MAX(link.order_id) as max_id'))
+            ->group('link.subscription_id');
 
         $collection->getSelect()->join(
             ['so' => 'sales_order'],
@@ -133,6 +141,8 @@ class Payments extends Template
     }
 
     /**
+     * Get closed subscriptions.
+     *
      * @return SubscriptionCollection
      */
     public function getClosedSubscriptions()
@@ -143,8 +153,8 @@ class Payments extends Template
         $collection->getSelect()->join(
             ['link' => 'paytrail_subscription_link'],
             'main_table.entity_id = link.subscription_id'
-        )->columns(array('MAX(link.order_id) as max_id')
-        )->group('link.subscription_id');
+        )->columns(array('MAX(link.order_id) as max_id'))
+            ->group('link.subscription_id');
 
         $collection->getSelect()->join(
             ['so' => 'sales_order'],
@@ -163,18 +173,21 @@ class Payments extends Template
     }
 
     /**
-     * @param $_order
+     * Validate date.
+     *
+     * @param string $date
      * @return string
-     * @throws NoSuchEntityException
      */
     public function validateDate($date): string
     {
-        $newDate = explode(' ',$date);
+        $newDate = explode(' ', $date);
         return $newDate[0];
     }
 
     /**
-     * @param $recurringPaymentStatus
+     * Get recurring payment status name.
+     *
+     * @param string $recurringPaymentStatus
      * @return \Magento\Framework\Phrase|string
      */
     public function getRecurringPaymentStatusName($recurringPaymentStatus)
@@ -196,12 +209,21 @@ class Payments extends Template
         return '';
     }
 
+    /**
+     * Get current currency.
+     *
+     * @return string
+     * @throws NoSuchEntityException
+     * @throws \Magento\Framework\Exception\LocalizedException
+     */
     public function getCurrentCurrency()
     {
         return $this->storeManager->getStore()->getCurrentCurrency()->getCurrencySymbol();
     }
 
     /**
+     * Get view url.
+     *
      * @param $recurringPayment
      * @return string
      */
@@ -211,6 +233,8 @@ class Payments extends Template
     }
 
     /**
+     * Prepare layout.
+     *
      * @return $this|Payments
      * @throws \Magento\Framework\Exception\LocalizedException
      */
@@ -231,6 +255,8 @@ class Payments extends Template
     }
 
     /**
+     * Get pager html.
+     *
      * @return string
      */
     public function getPagerHtml()
@@ -239,6 +265,9 @@ class Payments extends Template
     }
 
     /**
+     * Get stop payment url.
+     *
+     * @param $recurringPayment
      * @return string
      */
     public function getStopPaymentUrl($recurringPayment)
@@ -247,6 +276,8 @@ class Payments extends Template
     }
 
     /**
+     * Get empty recurring payment message.
+     *
      * @return \Magento\Framework\Phrase
      */
     public function getEmptyRecurringPaymentsMessage()
@@ -255,6 +286,8 @@ class Payments extends Template
     }
 
     /**
+     * Get credit card number.
+     *
      * @param $recurringPayment
      * @return string
      */
@@ -270,6 +303,8 @@ class Payments extends Template
     }
 
     /**
+     * Get add_card request redirect url.
+     *
      * @return string|null
      * @throws NoSuchEntityException
      */
@@ -281,6 +316,8 @@ class Payments extends Template
     }
 
     /**
+     * Get previous error.
+     *
      * @return Phrase|null
      * @throws NoSuchEntityException
      */
