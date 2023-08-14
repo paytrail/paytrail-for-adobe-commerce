@@ -153,7 +153,7 @@ class RequestData
             $paytrailPayment->setDeliveryAddress($deliveryAddress);
         }
 
-        $paytrailPayment->setLanguage($this->helper->getStoreLocaleForPaymentProvider());
+        $paytrailPayment->setLanguage($this->gatewayConfig->getStoreLocaleForPaymentProvider());
 
         $items = $this->getOrderItemLines($order);
 

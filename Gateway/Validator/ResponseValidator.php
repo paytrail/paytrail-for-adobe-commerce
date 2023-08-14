@@ -120,7 +120,7 @@ class ResponseValidator extends AbstractValidator
      */
     public function validateAlgorithm($algorithm)
     {
-        return in_array($algorithm, $this->paytrailHelper->getValidAlgorithms(), true);
+        return in_array($algorithm, $this->gatewayConfig->getValidAlgorithms(), true);
     }
 
     /**

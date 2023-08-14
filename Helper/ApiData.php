@@ -302,9 +302,10 @@ class ApiData
                     )
                 );
             } elseif ($requestType === 'payment_providers') {
+                // TODO: create request using GatewayCommandPool
                 $response["data"] = $paytrailClient->getGroupedPaymentProviders(
                     $amount,
-                    $this->helper->getStoreLocaleForPaymentProvider()
+                    $this->gatewayConfig->getStoreLocaleForPaymentProvider()
                 );
                 $this->log->debugLog(
                     'response',
@@ -317,6 +318,7 @@ class ApiData
                     'Successful response for invoice activation'
                 );
             } elseif ($requestType === 'add_card') {
+                // TODO: create request using GatewayCommandPool
                 $addCardFormRequest = $this->addCardFormRequest;
                 $this->setAddCardFormRequestData($addCardFormRequest);
                 $response['data'] = $paytrailClient->createAddCardFormRequest($addCardFormRequest);
@@ -387,7 +389,7 @@ class ApiData
             ->setAmount(round($order->getGrandTotal() * 100))
             ->setCustomer($this->requestData->createCustomer($billingAddress))
             ->setInvoicingAddress($this->requestData->createAddress($order, $billingAddress))
-            ->setLanguage($this->helper->getStoreLocaleForPaymentProvider())
+            ->setLanguage($this->gatewayConfig->getStoreLocaleForPaymentProvider())
             ->setItems($this->requestData->getOrderItemLines($order))
             ->setRedirectUrls($this->createRedirectUrl())
             ->setCallbackUrls($this->createCallbackUrl());
@@ -466,7 +468,7 @@ class ApiData
         $addCardFormRequest->setCheckoutAlgorithm($this->gatewayConfig->getCheckoutAlgorithm());
         $addCardFormRequest->setCheckoutRedirectSuccessUrl($this->getCallbackUrl($saveCardUrl));
         $addCardFormRequest->setCheckoutRedirectCancelUrl($this->getCallbackUrl($saveCardUrl));
-        $addCardFormRequest->setLanguage($this->helper->getStoreLocaleForPaymentProvider());
+        $addCardFormRequest->setLanguage($this->gatewayConfig->getStoreLocaleForPaymentProvider());
         $addCardFormRequest->setCheckoutMethod('POST');
         $addCardFormRequest->setCheckoutTimestamp($datetime->format('Y-m-d\TH:i:s.u\Z'));
         $addCardFormRequest->setCheckoutNonce(uniqid(true));
