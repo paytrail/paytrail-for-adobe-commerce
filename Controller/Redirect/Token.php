@@ -224,6 +224,6 @@ class Token implements HttpPostActionInterface
             $this->opHelper->processError($errorMsg);
         }
 
-        return $response["data"];
+        return $response;
     }
 }

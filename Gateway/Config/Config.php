@@ -3,61 +3,70 @@
 namespace Paytrail\PaymentService\Gateway\Config;
 
 use Magento\Framework\App\Config\ScopeConfigInterface;
-use Magento\Payment\Gateway\ConfigInterface;
+use Magento\Framework\UrlInterface;
 use Magento\Framework\Encryption\EncryptorInterface;
-use Magento\Store\Model\ScopeInterface;
+use Magento\Payment\Model\CcConfigProvider;
+use Magento\Vault\Model\CustomerTokenManagement;
 
 class Config extends \Magento\Payment\Gateway\Config\Config
 {
-    const DEFAULT_PATH_PATTERN = 'payment/%s/%s';
-    const KEY_TITLE = 'title';
-    const CODE = 'paytrail';
-    const CC_VAULT_CODE = 'paytrail_cc_vault';
-    const SAVE_CARD_URL = 'tokenization/savecard';
-    const KEY_CHECKOUT_ALGORITHM = 'checkout_algorithm';
-    const KEY_MERCHANT_SECRET = 'merchant_secret';
-    const KEY_MERCHANT_ID = 'merchant_id';
-    const KEY_ACTIVE = 'active';
-    const KEY_SKIP_BANK_SELECTION = 'skip_bank_selection';
-    const BYPASS_PATH = 'Paytrail_PaymentService/payment/checkout-bypass';
-    const CHECKOUT_PATH = 'Paytrail_PaymentService/payment/checkout';
-    const KEY_GENERATE_REFERENCE = 'generate_reference';
-    const KEY_RECOMMENDED_TAX_ALGORITHM = 'recommended_tax_algorithm';
-    const KEY_PAYMENTGROUP_BG_COLOR = 'paytrail_personalization/payment_group_bg';
-    const KEY_PAYMENTGROUP_HIGHLIGHT_BG_COLOR = 'paytrail_personalization/payment_group_highlight_bg';
-    const KEY_PAYMENTGROUP_TEXT_COLOR = 'paytrail_personalization/payment_group_text';
-    const KEY_PAYMENTGROUP_HIGHLIGHT_TEXT_COLOR = 'paytrail_personalization/payment_group_highlight_text';
-    const KEY_PAYMENTGROUP_HOVER_COLOR = 'paytrail_personalization/payment_group_hover';
-    const KEY_PAYMENTMETHOD_HIGHLIGHT_COLOR = 'paytrail_personalization/payment_method_highlight';
-    const KEY_PAYMENTMETHOD_HIGHLIGHT_HOVER = 'paytrail_personalization/payment_method_hover';
-    const KEY_PAYMENTMETHOD_ADDITIONAL = 'paytrail_personalization/advanced_paytrail_personalization/additional_css';
-    const KEY_RESPONSE_LOG = 'response_log';
-    const KEY_REQUEST_LOG = 'request_log';
-    const KEY_DEFAULT_ORDER_STATUS = 'order_status';
-    const KEY_NOTIFICATION_EMAIL = 'recipient_email';
-    const KEY_CANCEL_ORDER_ON_FAILED_PAYMENT = 'failed_payment_cancel';
+    public const DEFAULT_PATH_PATTERN = 'payment/%s/%s';
+    public const KEY_TITLE = 'title';
+    public const CODE = 'paytrail';
+    public const CC_VAULT_CODE = 'paytrail_cc_vault';
+    public const SAVE_CARD_URL = 'tokenization/savecard';
+    public const KEY_CHECKOUT_ALGORITHM = 'checkout_algorithm';
+    public const KEY_MERCHANT_SECRET = 'merchant_secret';
+    public const KEY_MERCHANT_ID = 'merchant_id';
+    public const KEY_ACTIVE = 'active';
+    public const KEY_SKIP_BANK_SELECTION = 'skip_bank_selection';
+    public const BYPASS_PATH = 'Paytrail_PaymentService/payment/checkout-bypass';
+    public const CHECKOUT_PATH = 'Paytrail_PaymentService/payment/checkout';
+    public const KEY_GENERATE_REFERENCE = 'generate_reference';
+    public const KEY_RECOMMENDED_TAX_ALGORITHM = 'recommended_tax_algorithm';
+    public const KEY_PAYMENTGROUP_BG_COLOR = 'paytrail_personalization/payment_group_bg';
+    public const KEY_PAYMENTGROUP_HIGHLIGHT_BG_COLOR = 'paytrail_personalization/payment_group_highlight_bg';
+    public const KEY_PAYMENTGROUP_TEXT_COLOR = 'paytrail_personalization/payment_group_text';
+    public const KEY_PAYMENTGROUP_HIGHLIGHT_TEXT_COLOR = 'paytrail_personalization/payment_group_highlight_text';
+    public const KEY_PAYMENTGROUP_HOVER_COLOR = 'paytrail_personalization/payment_group_hover';
+    public const KEY_PAYMENTMETHOD_HIGHLIGHT_COLOR = 'paytrail_personalization/payment_method_highlight';
+    public const KEY_PAYMENTMETHOD_HIGHLIGHT_HOVER = 'paytrail_personalization/payment_method_hover';
+    public const KEY_PAYMENTMETHOD_ADDITIONAL =
+        'paytrail_personalization/advanced_paytrail_personalization/additional_css';
+    public const KEY_RESPONSE_LOG = 'response_log';
+    public const KEY_REQUEST_LOG = 'request_log';
+    public const KEY_DEFAULT_ORDER_STATUS = 'order_status';
+    public const KEY_NOTIFICATION_EMAIL = 'recipient_email';
+    public const KEY_CANCEL_ORDER_ON_FAILED_PAYMENT = 'failed_payment_cancel';
+    public const VAULT_CODE = 'paytrail_cc_vault';
 
     /**
-     * @var EncryptorInterface
+     * @var array
      */
-    private $encryptor;
+    private $paymenticons;
 
     /**
      * Config constructor.
      *
      * @param ScopeConfigInterface $scopeConfig
      * @param EncryptorInterface $encryptor
+     * @param UrlInterface $urlBuilder
+     * @param CustomerTokenManagement $customerTokenManagement
+     * @param CcConfigProvider $ccConfigProvider
      * @param string $methodCode
      * @param string $pathPattern
      */
     public function __construct(
         ScopeConfigInterface $scopeConfig,
-        EncryptorInterface $encryptor,
+        private EncryptorInterface $encryptor,
+        private UrlInterface $urlBuilder,
+        private CustomerTokenManagement $customerTokenManagement,
+        private CcConfigProvider $ccConfigProvider,
         $methodCode = self::CODE,
         $pathPattern = self::DEFAULT_PATH_PATTERN
     ) {
-        $this->encryptor = $encryptor;
         parent::__construct($scopeConfig, $methodCode, $pathPattern);
+        $this->paymenticons = $this->ccConfigProvider->getIcons();
     }
 
     /**
@@ -106,7 +115,9 @@ class Config extends \Magento\Payment\Gateway\Config\Config
     }
 
     /**
-     * @param null $storeId
+     * Get skip bank selection value.
+     *
+     * @param string $storeId
      * @return bool
      */
     public function getSkipBankSelection($storeId = null)
@@ -115,6 +126,8 @@ class Config extends \Magento\Payment\Gateway\Config\Config
     }
 
     /**
+     * Get payment group bg color value.
+     *
      * @param int|null $storeId
      * @return mixed
      */
@@ -124,6 +137,8 @@ class Config extends \Magento\Payment\Gateway\Config\Config
     }
 
     /**
+     * Get payment group highlight bg color value.
+     *
      * @param int|null $storeId
      * @return mixed
      */
@@ -133,6 +148,8 @@ class Config extends \Magento\Payment\Gateway\Config\Config
     }
 
     /**
+     * Get payment group text color value.
+     *
      * @param int|null $storeId
      * @return mixed
      */
@@ -142,6 +159,8 @@ class Config extends \Magento\Payment\Gateway\Config\Config
     }
 
     /**
+     * Get payment group highlight text color value.
+     *
      * @param int|null $storeId
      * @return mixed
      */
@@ -151,6 +170,8 @@ class Config extends \Magento\Payment\Gateway\Config\Config
     }
 
     /**
+     * Get payment group hover color value.
+     *
      * @param int|null $storeId
      * @return mixed
      */
@@ -160,6 +181,8 @@ class Config extends \Magento\Payment\Gateway\Config\Config
     }
 
     /**
+     * Get payment method highlight color value.
+     *
      * @param int|null $storeId
      * @return mixed
      */
@@ -169,6 +192,8 @@ class Config extends \Magento\Payment\Gateway\Config\Config
     }
 
     /**
+     * Get payment method hover highlight value.
+     *
      * @param int|null $storeId
      * @return mixed
      */
@@ -178,6 +203,8 @@ class Config extends \Magento\Payment\Gateway\Config\Config
     }
 
     /**
+     * Get additional css value.
+     *
      * @param int|null $storeId
      * @return mixed
      */
@@ -187,6 +214,8 @@ class Config extends \Magento\Payment\Gateway\Config\Config
     }
 
     /**
+     * Get generate reference for order value.
+     *
      * @param int|null $storeId
      * @return bool
      */
@@ -196,6 +225,8 @@ class Config extends \Magento\Payment\Gateway\Config\Config
     }
 
     /**
+     * Get use recommended tax algorithm value.
+     *
      * @param int|null $storeId
      * @return bool
      */
@@ -205,6 +236,8 @@ class Config extends \Magento\Payment\Gateway\Config\Config
     }
 
     /**
+     * Get instructions.
+     *
      * @return null|string
      */
     public function getInstructions()
@@ -216,6 +249,8 @@ class Config extends \Magento\Payment\Gateway\Config\Config
     }
 
     /**
+     * Get payment template.
+     *
      * @param int|null $storeId
      * @return string
      */
@@ -228,7 +263,10 @@ class Config extends \Magento\Payment\Gateway\Config\Config
     }
 
     /**
-     * @return mixed
+     * Get response log value.
+     *
+     * @param string $storeId
+     * @return mixed|null
      */
     public function getResponseLog($storeId = null)
     {
@@ -236,7 +274,10 @@ class Config extends \Magento\Payment\Gateway\Config\Config
     }
 
     /**
-     * @return mixed
+     * Get request log value.
+     *
+     * @param string $storeId
+     * @return mixed|null
      */
     public function getRequestLog($storeId = null)
     {
@@ -244,6 +285,9 @@ class Config extends \Magento\Payment\Gateway\Config\Config
     }
 
     /**
+     * Get default order status value.
+     *
+     * @param string $storeId
      * @return mixed
      */
     public function getDefaultOrderStatus($storeId = null)
@@ -252,6 +296,9 @@ class Config extends \Magento\Payment\Gateway\Config\Config
     }
 
     /**
+     * Get notification email value.
+     *
+     * @param string $storeId
      * @return mixed
      */
     public function getNotificationEmail($storeId = null)
@@ -260,6 +307,8 @@ class Config extends \Magento\Payment\Gateway\Config\Config
     }
 
     /**
+     * Get cc vault code.
+     *
      * @return string
      */
     public function getCcVaultCode()
@@ -268,7 +317,9 @@ class Config extends \Magento\Payment\Gateway\Config\Config
     }
 
     /**
-     * @param null $storeId
+     * Get checkout algorithm.
+     *
+     * @param string $storeId
      * @return mixed|null
      */
     public function getCheckoutAlgorithm($storeId = null)
@@ -277,6 +328,8 @@ class Config extends \Magento\Payment\Gateway\Config\Config
     }
 
     /**
+     * Get save card url.
+     *
      * @return string
      */
     public function getSaveCardUrl()
@@ -285,11 +338,96 @@ class Config extends \Magento\Payment\Gateway\Config\Config
     }
 
     /**
-     * @param int|null $storeId
+     * Get cancel order failed payment value.
+     *
+     * @param string $storeId
      * @return int
      */
     public function getCancelOrderOnFailedPayment($storeId = null)
     {
         return $this->getValue(self::KEY_CANCEL_ORDER_ON_FAILED_PAYMENT, $storeId);
+    }
+
+    /**
+     * Get payment request redirect url.
+     *
+     * @return string
+     */
+    public function getPaymentRedirectUrl()
+    {
+        return 'paytrail/redirect';
+    }
+
+    /**
+     * Get add_card request redirect url.
+     *
+     * @return string
+     */
+    public function getAddCardRedirectUrl()
+    {
+        return 'paytrail/tokenization/addcard';
+    }
+
+    /**
+     * Get token_payment request redirect url.
+     *
+     * @return string
+     */
+    public function getTokenPaymentRedirectUrl()
+    {
+        return 'paytrail/redirect/token';
+    }
+
+    /**
+     * Get default success page url.
+     *
+     * @return string
+     */
+    public function getDefaultSuccessPageUrl()
+    {
+        return $this->urlBuilder->getUrl('checkout/onepage/success/');
+    }
+
+    /**
+     * Get icon url.
+     *
+     * @param string $type
+     * @return array
+     */
+    protected function getIconUrl($type)
+    {
+        if (isset($this->paymenticons[$type])) {
+            return $this->paymenticons[$type];
+        }
+
+        return [
+            'url' => '',
+            'width' => 0,
+            'height' => 0
+        ];
+    }
+
+    /**
+     * Get customer tokens.
+     *
+     * @return array
+     */
+    public function getCustomerTokens()
+    {
+        $tokens =  $this->customerTokenManagement->getCustomerSessionTokens();
+        $t = [];
+
+        foreach ($tokens as $token) {
+            if ($token->getPaymentMethodCode() == self::VAULT_CODE && $token->getIsActive() && $token->getIsVisible()) {
+                $cdata = json_decode($token->getTokenDetails(), true);
+                $t[$token->getEntityId()]["expires"] = $cdata['expirationDate'];
+                $t[$token->getEntityId()]["url"] = $this->getIconUrl($cdata["type"])['url'];
+                $t[$token->getEntityId()]["maskedCC"] = $cdata["maskedCC"];
+                $t[$token->getEntityId()]["type"] = $cdata["type"];
+                $t[$token->getEntityId()]["id"] = $token->getPublicHash();
+            }
+        }
+
+        return $t;
     }
 }
