@@ -13,6 +13,7 @@ use Magento\Framework\View\Element\Template\Context;
 use Magento\Store\Model\StoreManagerInterface;
 use Magento\Vault\Model\PaymentTokenRepository;
 use Paytrail\PaymentService\Api\Data\SubscriptionInterface;
+use Paytrail\PaymentService\Model\Subscription;
 use Paytrail\PaymentService\Model\Ui\ConfigProvider;
 use Paytrail\PaymentService\Model\SubscriptionRepository;
 use Paytrail\PaymentService\Model\ResourceModel\Subscription\Collection as SubscriptionCollection;
@@ -121,7 +122,7 @@ class Payments extends Template
         $collection->getSelect()->join(
             ['link' => 'paytrail_subscription_link'],
             'main_table.entity_id = link.subscription_id'
-        )->columns(array('MAX(link.order_id) as max_id'))
+        )->columns('MAX(link.order_id) as max_id')
             ->group('link.subscription_id');
 
         $collection->getSelect()->join(
@@ -153,7 +154,7 @@ class Payments extends Template
         $collection->getSelect()->join(
             ['link' => 'paytrail_subscription_link'],
             'main_table.entity_id = link.subscription_id'
-        )->columns(array('MAX(link.order_id) as max_id'))
+        )->columns('MAX(link.order_id) as max_id')
             ->group('link.subscription_id');
 
         $collection->getSelect()->join(
@@ -224,7 +225,7 @@ class Payments extends Template
     /**
      * Get view url.
      *
-     * @param $recurringPayment
+     * @param Subscription $recurringPayment
      * @return string
      */
     public function getViewUrl($recurringPayment)
@@ -267,7 +268,7 @@ class Payments extends Template
     /**
      * Get stop payment url.
      *
-     * @param $recurringPayment
+     * @param Subscription $recurringPayment
      * @return string
      */
     public function getStopPaymentUrl($recurringPayment)
@@ -288,7 +289,7 @@ class Payments extends Template
     /**
      * Get credit card number.
      *
-     * @param $recurringPayment
+     * @param Subscription $recurringPayment
      * @return string
      */
     public function getCardNumber($recurringPayment)
