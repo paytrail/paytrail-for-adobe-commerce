@@ -47,53 +47,6 @@ class Data
     }
 
     /**
-     * Calculate Finnish reference number from order increment id
-     * according to Finnish reference number algorithm
-     * if increment id is not numeric - letters will be converted to numbers -> (ord($letter) % 10)
-     *
-     * @param string $incrementId
-     *
-     * @return string
-     * @throws \Paytrail\PaymentService\Exceptions\CheckoutException
-     */
-    public function calculateOrderReferenceNumber(string $incrementId): string
-    {
-        $prefixedId    = ($incrementId[0] == 0 || !is_numeric($incrementId[0]))
-            ? '1' . $incrementId
-            : $incrementId;
-        $newPrefixedId = '';
-        $sum           = 0;
-        $length        = strlen($prefixedId);
-
-        for ($i = 0; $i < $length; ++$i) {
-            $substr        = substr($prefixedId, -1 - $i, 1);
-            $numSubstring  = is_numeric($substr) ? (int)$substr : (ord($substr) % 10);
-            $newPrefixedId = $numSubstring . $newPrefixedId;
-            $sum           += $numSubstring * [7, 3, 1][$i % 3];
-        }
-        $num          = (10 - $sum % 10) % 10;
-        $referenceNum = $newPrefixedId . $num;
-
-        if ($referenceNum > 9999999999999999999) {
-            throw new CheckoutException('Order reference number is too long');
-        }
-
-        return trim(chunk_split($referenceNum, 5, ' '));
-    }
-
-    /**
-     * Get order increment id from checkout reference number
-     *
-     * @param string $reference
-     *
-     * @return string|null
-     */
-    public function getIdFromOrderReferenceNumber($reference)
-    {
-        return preg_replace('/\s+/', '', substr($reference, 1, -1));
-    }
-
-    /**
      * Log data to file
      *
      * @param string $logType
