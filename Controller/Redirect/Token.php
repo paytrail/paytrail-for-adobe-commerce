@@ -20,18 +20,17 @@ use Magento\Sales\Model\Order;
 use Magento\Sales\Model\OrderFactory;
 use Paytrail\PaymentService\Exceptions\CheckoutException;
 use Paytrail\PaymentService\Gateway\Config\Config;
-use Paytrail\PaymentService\Helper\Data;
+use Paytrail\PaymentService\Model\Receipt\ProcessService;
 use Paytrail\PaymentService\Model\ReceiptDataProvider;
 use Paytrail\PaymentService\Model\Subscription\SubscriptionCreate;
 
 class Token implements HttpPostActionInterface
 {
     /**
-     * Token class constructor.
+     * Token constructor.
      *
      * @param ReceiptDataProvider $receiptDataProvider
      * @param Config $gatewayConfig
-     * @param Data $opHelper
      * @param RequestInterface $request
      * @param OrderFactory $orderFactory
      * @param Session $checkoutSession
@@ -41,11 +40,11 @@ class Token implements HttpPostActionInterface
      * @param OrderManagementInterface $orderManagementInterface
      * @param SubscriptionCreate $subscriptionCreate
      * @param CommandManagerPoolInterface $commandManagerPool
+     * @param ProcessService $processService
      */
     public function __construct(
         private ReceiptDataProvider      $receiptDataProvider,
         private Config                   $gatewayConfig,
-        private Data                     $opHelper,
         private RequestInterface         $request,
         private OrderFactory             $orderFactory,
         private Session                  $checkoutSession,
@@ -54,7 +53,8 @@ class Token implements HttpPostActionInterface
         private OrderRepositoryInterface $orderRepository,
         private OrderManagementInterface $orderManagementInterface,
         private SubscriptionCreate       $subscriptionCreate,
-        private CommandManagerPoolInterface $commandManagerPool
+        private CommandManagerPoolInterface $commandManagerPool,
+        private ProcessService $processService
     ) {
     }
 
@@ -191,7 +191,7 @@ class Token implements HttpPostActionInterface
 
         if (isset($errorMsg)) {
             $this->errorMsg = ($errorMsg);
-            $this->opHelper->processError($errorMsg);
+            $this->processService->processError($errorMsg);
         }
 
         return $response["data"];
@@ -221,7 +221,7 @@ class Token implements HttpPostActionInterface
 
         if (isset($errorMsg)) {
             $this->errorMsg = ($errorMsg);
-            $this->opHelper->processError($errorMsg);
+            $this->processService->processError($errorMsg);
         }
 
         return $response;

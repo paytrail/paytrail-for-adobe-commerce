@@ -9,8 +9,10 @@ use Magento\Sales\Model\Order\Invoice;
 use Magento\Sales\Model\Order\Payment;
 use Magento\Sales\Model\Order\Payment\Transaction;
 use Magento\Sales\Model\Service\InvoiceService;
+use Paytrail\PaymentService\Exceptions\CheckoutException;
 use Paytrail\PaymentService\Gateway\Config\Config;
 use Paytrail\PaymentService\Helper\Data as PaytrailHelper;
+use Paytrail\PaymentService\Logger\PaytrailLogger;
 use Paytrail\PaymentService\Setup\Patch\Data\InstallPaytrail;
 use Psr\Log\LoggerInterface;
 
@@ -37,7 +39,8 @@ class ProcessService
         private PaytrailHelper           $paytrailHelper,
         private LoadService $loadService,
         private PaymentTransaction $paymentTransaction,
-        private CancelOrderService $cancelOrderService
+        private CancelOrderService $cancelOrderService,
+        private PaytrailLogger $paytrailLogger
     ) {
     }
 
@@ -159,5 +162,18 @@ class ProcessService
             $this->paytrailHelper->processError('Payment failed');
         }
         return true;
+    }
+
+    /**
+     * Process error
+     *
+     * @param string $errorMessage
+     *
+     * @throws CheckoutException
+     */
+    public function processError($errorMessage): void
+    {
+        $this->paytrailLogger->logData(\Monolog\Logger::ERROR, $errorMessage);
+        throw new CheckoutException(__($errorMessage));
     }
 }

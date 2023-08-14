@@ -2,93 +2,48 @@
 
 namespace Paytrail\PaymentService\Controller\Tokenization;
 
-use Magento\Checkout\Model\Session;
 use Magento\Framework\App\Action\Context;
 use Magento\Framework\Controller\Result\Json;
 use Magento\Framework\Controller\Result\JsonFactory;
+use Magento\Framework\UrlInterface;
 use Paytrail\PaymentService\Exceptions\CheckoutException;
 use Paytrail\PaymentService\Helper\ApiData;
-use Paytrail\PaymentService\Helper\Data as opHelper;
-use Paytrail\PaymentService\Gateway\Config\Config;
+use Paytrail\PaymentService\Model\Receipt\ProcessService;
 use Psr\Log\LoggerInterface;
 
-/**
- * Class Addcard
- */
 class ProcessToken extends \Magento\Framework\App\Action\Action
 {
-    protected $urlBuilder;
-
-    /**
-     * @var Session
-     */
-    protected $checkoutSession;
-
-    /**
-     * @var JsonFactory
-     */
-    protected $jsonFactory;
-
-    /**
-     * @var LoggerInterface
-     */
-    protected $logger;
-
-    /**
-     * @var ApiData
-     */
-    protected $apiData;
-
-    /**
-     * @var opHelper
-     */
-    protected $opHelper;
-
-    /**
-     * @var Config
-     */
-    protected $gatewayConfig;
-
     /**
      * @var $errorMsg
      */
     protected $errorMsg = null;
 
     /**
-     * AddCard constructor.
+     * ProcessToken constructor.
+     *
      * @param Context $context
-     * @param Session $checkoutSession
      * @param JsonFactory $jsonFactory
      * @param LoggerInterface $logger
      * @param ApiData $apiData
-     * @param opHelper $opHelper
-     * @param Config $gatewayConfig
+     * @param ProcessService $processService
      */
     public function __construct(
         Context $context,
-        Session $checkoutSession,
-        JsonFactory $jsonFactory,
-        LoggerInterface $logger,
-        ApiData $apiData,
-        opHelper $opHelper,
-        Config $gatewayConfig
+        private JsonFactory $jsonFactory,
+        private LoggerInterface $logger,
+        private ApiData $apiData,
+        private ProcessService $processService
     ) {
-        $this->urlBuilder = $context->getUrl();
-        $this->checkoutSession = $checkoutSession;
-        $this->jsonFactory = $jsonFactory;
-        $this->logger = $logger;
-        $this->apiData = $apiData;
-        $this->opHelper = $opHelper;
-        $this->gatewayConfig = $gatewayConfig;
         parent::__construct($context);
     }
 
     /**
+     * Execute
+     *
      * @return mixed
      */
     public function execute()
     {
-
         /** @var Json $resultJson */
         $resultJson = $this->jsonFactory->create();
 
@@ -120,6 +75,8 @@ class ProcessToken extends \Magento\Framework\App\Action\Action
     }
 
     /**
+     * Get add_card response data.
+     *
      * @return mixed
      * @throws CheckoutException
      */
@@ -129,9 +86,9 @@ class ProcessToken extends \Magento\Framework\App\Action\Action
 
         $errorMsg = $response['error'];
 
-        if (isset($errorMsg)){
+        if (isset($errorMsg)) {
             $this->errorMsg = ($errorMsg);
-            $this->opHelper->processError($errorMsg);
+            $this->processService->processError($errorMsg);
         }
 
         return $response["data"];
