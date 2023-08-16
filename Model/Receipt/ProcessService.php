@@ -19,6 +19,8 @@ use Psr\Log\LoggerInterface;
 class ProcessService
 {
     /**
+     * ProcessService constructor.
+     *
      * @param Config $gatewayConfig
      * @param OrderRepositoryInterface $orderRepositoryInterface
      * @param OrderSender $orderSender
@@ -27,6 +29,10 @@ class ProcessService
      * @param Payment $currentOrderPayment
      * @param TransactionFactory $transactionFactory
      * @param PaytrailHelper $paytrailHelper
+     * @param LoadService $loadService
+     * @param PaymentTransaction $paymentTransaction
+     * @param CancelOrderService $cancelOrderService
+     * @param PaytrailLogger $paytrailLogger
      */
     public function __construct(
         private Config                   $gatewayConfig,
@@ -103,7 +109,7 @@ class ProcessService
                     $currentOrder
                 )->save();
             } catch (\Exception $exception) {
-                $this->paytrailHelper->processError($exception->getMessage());
+                $this->processError($exception->getMessage());
             }
         }
     }
@@ -159,7 +165,7 @@ class ProcessService
         $transaction = $this->loadService->loadTransaction($transactionId, $currentOrder, $orderId);
         if ($transaction) {
             $this->processExistingTransaction($transaction);
-            $this->paytrailHelper->processError('Payment failed');
+            $this->processError('Payment failed');
         }
         return true;
     }

@@ -16,6 +16,7 @@ use Paytrail\PaymentService\Model\Adapter\Adapter;
 use Paytrail\PaymentService\Model\Company\CompanyRequestData;
 use Paytrail\PaymentService\Model\Invoice\InvoiceActivation;
 use Paytrail\PaymentService\Model\FinnishReferenceNumber;
+use Paytrail\PaymentService\Model\Receipt\ProcessService;
 use Paytrail\SDK\Model\CallbackUrl;
 use Paytrail\SDK\Request\EmailRefundRequest;
 use Paytrail\SDK\Request\PaymentRequest;
@@ -32,11 +33,6 @@ class ApiData
      * @var \Paytrail\PaymentService\Model\FinnishReferenceNumber
      */
     private FinnishReferenceNumber $referenceNumber;
-
-    /**
-     * @var CheckoutHelper
-     */
-    private $helper;
 
     /**
      * @var PaytrailLogger
@@ -128,7 +124,6 @@ class ApiData
      * @param UrlInterface           $urlBuilder
      * @param RequestInterface       $request
      * @param Json                   $json
-     * @param Data                   $helper
      * @param StoreManagerInterface  $storeManager
      * @param Adapter                $paytrailAdapter
      * @param PaymentRequest         $paymentRequest
@@ -149,7 +144,6 @@ class ApiData
         UrlInterface $urlBuilder,
         RequestInterface $request,
         Json $json,
-        CheckoutHelper $helper,
         StoreManagerInterface $storeManager,
         Adapter $paytrailAdapter,
         PaymentRequest $paymentRequest,
@@ -163,13 +157,13 @@ class ApiData
         CitPaymentRequest $citPaymentRequest,
         PaymentStatusRequest $paymentStatusRequest,
         RequestData $requestData,
-        FinnishReferenceNumber $referenceNumber
+        FinnishReferenceNumber $referenceNumber,
+        private ProcessService $processService
     ) {
         $this->log                  = $log;
         $this->urlBuilder           = $urlBuilder;
         $this->request              = $request;
         $this->json                 = $json;
-        $this->helper               = $helper;
         $this->gatewayConfig        = $gatewayConfig;
         $this->paytrailAdapter      = $paytrailAdapter;
         $this->paymentRequest       = $paymentRequest;
@@ -421,7 +415,7 @@ class ApiData
     private function setRefundRequestData(RefundRequest $paytrailRefund, float|int|null $amount): void
     {
         if ($amount <= 0) {
-            $this->helper->processError('Refund amount must be above 0');
+            $this->processService->processError('Refund amount must be above 0');
         }
 
         $paytrailRefund->setAmount(round($amount * 100));

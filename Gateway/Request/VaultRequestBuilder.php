@@ -1,55 +1,32 @@
 <?php
+
 namespace Paytrail\PaymentService\Gateway\Request;
 
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Payment\Gateway\Helper\SubjectReader;
 use Magento\Payment\Gateway\Request\BuilderInterface;
-use Magento\Store\Model\StoreManagerInterface;
-use Paytrail\PaymentService\Helper\Data;
+use Paytrail\PaymentService\Model\Receipt\ProcessService;
 use Psr\Log\LoggerInterface;
 
 class VaultRequestBuilder implements BuilderInterface
 {
     /**
-     * @var StoreManagerInterface
-     */
-    private $storeManager;
-
-    /**
-     * @var Data
-     */
-    private $opHelper;
-
-    /**
-     * @var LoggerInterface
-     */
-    private $log;
-    /**
-     * @var SubjectReader
-     */
-    private $subjectReader;
-
-    /**
-     * RefundDataBuilder constructor.
+     * VaultRequestBuilder constructor.
      *
-     * @param StoreManagerInterface $storeManager
-     * @param Data $opHelper
      * @param SubjectReader $subjectReader
      * @param LoggerInterface $log
+     * @param ProcessService $processService
      */
     public function __construct(
-        StoreManagerInterface $storeManager,
-        Data $opHelper,
-        SubjectReader $subjectReader,
-        LoggerInterface $log
+        private SubjectReader   $subjectReader,
+        private LoggerInterface $log,
+        private ProcessService  $processService
     ) {
-        $this->opHelper = $opHelper;
-        $this->storeManager = $storeManager;
-        $this->log = $log;
-        $this->subjectReader = $subjectReader;
     }
 
     /**
+     * Build
+     *
      * @param array $buildSubject
      * @return array
      * @throws LocalizedException
@@ -79,7 +56,7 @@ class VaultRequestBuilder implements BuilderInterface
 
         if (isset($errMsg)) {
             $this->log->error($errMsg);
-            $this->opHelper->processError($errMsg);
+            $this->processService->processError($errMsg);
         }
 
         return [
@@ -91,6 +68,8 @@ class VaultRequestBuilder implements BuilderInterface
     }
 
     /**
+     * Get tax rates.
+     *
      * @param $items
      * @return array
      */
