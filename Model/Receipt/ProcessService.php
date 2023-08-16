@@ -10,6 +10,7 @@ use Magento\Sales\Model\Order\Payment;
 use Magento\Sales\Model\Order\Payment\Transaction;
 use Magento\Sales\Model\Service\InvoiceService;
 use Paytrail\PaymentService\Exceptions\CheckoutException;
+use Paytrail\PaymentService\Exceptions\TransactionSuccessException;
 use Paytrail\PaymentService\Gateway\Config\Config;
 use Paytrail\PaymentService\Helper\Data as PaytrailHelper;
 use Paytrail\PaymentService\Logger\PaytrailLogger;
@@ -146,7 +147,7 @@ class ProcessService
     {
         $details = $transaction->getAdditionalInformation(Transaction::RAW_DETAILS);
         if (is_array($details)) {
-            $this->paytrailHelper->processSuccess();
+            $this->processSuccess();
         }
     }
 
@@ -181,5 +182,15 @@ class ProcessService
     {
         $this->paytrailLogger->logData(\Monolog\Logger::ERROR, $errorMessage);
         throw new CheckoutException(__($errorMessage));
+    }
+
+    /**
+     * Process success
+     *
+     * @throws TransactionSuccessException
+     */
+    public function processSuccess(): void
+    {
+        throw new TransactionSuccessException(__('Success'));
     }
 }
