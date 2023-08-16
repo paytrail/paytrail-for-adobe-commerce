@@ -12,7 +12,6 @@ use Magento\Sales\Model\Service\InvoiceService;
 use Paytrail\PaymentService\Exceptions\CheckoutException;
 use Paytrail\PaymentService\Exceptions\TransactionSuccessException;
 use Paytrail\PaymentService\Gateway\Config\Config;
-use Paytrail\PaymentService\Helper\Data as PaytrailHelper;
 use Paytrail\PaymentService\Logger\PaytrailLogger;
 use Paytrail\PaymentService\Setup\Patch\Data\InstallPaytrail;
 use Psr\Log\LoggerInterface;
@@ -20,6 +19,8 @@ use Psr\Log\LoggerInterface;
 class ProcessService
 {
     /**
+     * ProcessService constructor.
+     *
      * @param Config $gatewayConfig
      * @param OrderRepositoryInterface $orderRepositoryInterface
      * @param OrderSender $orderSender
@@ -27,7 +28,10 @@ class ProcessService
      * @param InvoiceService $invoiceService
      * @param Payment $currentOrderPayment
      * @param TransactionFactory $transactionFactory
-     * @param PaytrailHelper $paytrailHelper
+     * @param LoadService $loadService
+     * @param PaymentTransaction $paymentTransaction
+     * @param CancelOrderService $cancelOrderService
+     * @param PaytrailLogger $paytrailLogger
      */
     public function __construct(
         private Config                   $gatewayConfig,
@@ -37,7 +41,6 @@ class ProcessService
         private InvoiceService           $invoiceService,
         private Payment                  $currentOrderPayment,
         private TransactionFactory       $transactionFactory,
-        private PaytrailHelper           $paytrailHelper,
         private LoadService $loadService,
         private PaymentTransaction $paymentTransaction,
         private CancelOrderService $cancelOrderService,
