@@ -6,14 +6,9 @@ use Magento\Checkout\Model\Session;
 use Magento\Framework\Exception\LocalizedException;
 use Paytrail\PaymentService\Exceptions\CheckoutException;
 use Paytrail\PaymentService\Gateway\Config\Config;
-use Paytrail\PaymentService\Helper\ApiData;
-use Paytrail\PaymentService\Helper\Data as paytrailHelper;
-use Paytrail\PaymentService\Model\Email\Order\PendingOrderEmailConfirmation;
 use Paytrail\PaymentService\Model\Receipt\LoadService;
 use Paytrail\PaymentService\Model\Receipt\PaymentTransaction;
 use Paytrail\PaymentService\Model\Receipt\ProcessService;
-use Paytrail\PaymentService\Setup\Patch\Data\InstallPaytrail;
-use Psr\Log\LoggerInterface;
 
 class ReceiptDataProvider
 {
@@ -21,15 +16,14 @@ class ReceiptDataProvider
      * ReceiptDataProvider constructor.
      *
      * @param Session $session
-     * @param paytrailHelper $paytrailHelper
      * @param Config $gatewayConfig
      * @param ProcessService $processService
      * @param LoadService $loadService
      * @param PaymentTransaction $paymentTransaction
+     * @param FinnishReferenceNumber $referenceNumber
      */
     public function __construct(
         private Session $session,
-        private PaytrailHelper $paytrailHelper,
         private Config $gatewayConfig,
         private ProcessService $processService,
         private LoadService $loadService,
@@ -71,13 +65,16 @@ class ReceiptDataProvider
         $paymentVerified = $this->paymentTransaction->verifyPaymentData($params, $this->currentOrder);
         $this->processService->processTransaction($this->transactionId, $this->currentOrder, $this->orderId);
         if ($paymentVerified === 'ok') {
-            $this->processService->processPayment($this->currentOrder, $this->transactionId, $this->getDetails($paymentVerified));
+            $this->processService
+                ->processPayment($this->currentOrder, $this->transactionId, $this->getDetails($paymentVerified));
             $this->processService->processInvoice($this->currentOrder);
         }
         $this->processService->processOrder($paymentVerified, $this->currentOrder);
     }
 
     /**
+     * Get details.
+     *
      * @param string $paymentStatus
      * GetDetails function
      *
