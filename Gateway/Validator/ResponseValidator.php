@@ -1,32 +1,49 @@
 <?php
-
 namespace Paytrail\PaymentService\Gateway\Validator;
 
 use Magento\Payment\Gateway\Validator\AbstractValidator;
 use Magento\Payment\Gateway\Validator\ResultInterfaceFactory;
+use Paytrail\PaymentService\Helper\Data as paytrailHelper;
 use Paytrail\PaymentService\Helper\ApiData;
 use Paytrail\PaymentService\Gateway\Config\Config;
 
 class ResponseValidator extends AbstractValidator
 {
+
+    /**
+     * @var paytrailHelper
+     */
+    private $paytrailHelper;
+
+    /**
+     * @var ApiData
+     */
+    private $apiData;
+    /**
+     * @var Config
+     */
+    private $gatewayConfig;
+
     /**
      * ResponseValidator constructor.
-     *
+     * @param paytrailHelper $paytrailHelper
      * @param Config $gatewayConfig
      * @param ResultInterfaceFactory $resultFactory
      * @param ApiData $apiData
      */
     public function __construct(
-        private Config $gatewayConfig,
+        paytrailHelper $paytrailHelper,
+        Config $gatewayConfig,
         ResultInterfaceFactory $resultFactory,
-        private ApiData $apiData
+        ApiData $apiData
     ) {
         parent::__construct($resultFactory);
+        $this->paytrailHelper = $paytrailHelper;
+        $this->apiData = $apiData;
+        $this->gatewayConfig = $gatewayConfig;
     }
 
     /**
-     * Validate.
-     *
      * @param array $validationSubject
      * @return \Magento\Payment\Gateway\Validator\ResultInterface
      */
@@ -35,7 +52,7 @@ class ResponseValidator extends AbstractValidator
         $isValid = true;
         $fails = [];
 
-        if (isset($validationSubject["skip_validation"]) && $validationSubject["skip_validation"] == 1) {
+        if(isset($validationSubject["skip_validation"]) && $validationSubject["skip_validation"] == 1) {
             return $this->createResult($isValid, $fails);
         }
 
@@ -66,8 +83,6 @@ class ResponseValidator extends AbstractValidator
     }
 
     /**
-     * Is merchant ID is valid.
-     *
      * @param $responseMerchantId
      * @return bool
      */
@@ -82,8 +97,6 @@ class ResponseValidator extends AbstractValidator
     }
 
     /**
-     * Is request Merchant ID empty.
-     *
      * @param $requestMerchantId
      * @return bool
      */
@@ -93,8 +106,6 @@ class ResponseValidator extends AbstractValidator
     }
 
     /**
-     * Is sponse merchant ID empty.
-     *
      * @param $responseMerchantId
      * @return bool
      */
@@ -104,8 +115,6 @@ class ResponseValidator extends AbstractValidator
     }
 
     /**
-     * Validate algorithm.
-     *
      * @param $algorithm
      * @return bool
      */
@@ -115,8 +124,6 @@ class ResponseValidator extends AbstractValidator
     }
 
     /**
-     * Validate response.
-     *
      * @param $params
      * @return bool
      */

@@ -11,6 +11,7 @@ use Magento\Sales\Model\Order\Item as OrderItem;
 use Magento\Sales\Model\ResourceModel\Order\Tax\Item as TaxItem;
 use Magento\Tax\Helper\Data as TaxHelper;
 use Paytrail\PaymentService\Gateway\Config\Config;
+use Paytrail\PaymentService\Helper\Data as Helper;
 use Paytrail\PaymentService\Logger\PaytrailLogger;
 use Paytrail\PaymentService\Model\Company\CompanyRequestData;
 use Paytrail\PaymentService\Model\Config\Source\CallbackDelay;
@@ -26,6 +27,7 @@ class PaymentDataProvider
     /**
      * PaymentDataProvider constructor.
      *
+     * @param Helper $helper
      * @param CompanyRequestData $companyRequestData
      * @param CountryInformationAcquirerInterface $countryInfo
      * @param TaxHelper $taxHelper
@@ -33,11 +35,10 @@ class PaymentDataProvider
      * @param TaxItem $taxItems
      * @param UrlDataProvider $urlDataProvider
      * @param CallbackDelay $callbackDelay
-     * @param FinnishReferenceNumber $referenceNumber
-     * @param Config $gatewayConfig
      * @param PaytrailLogger $log
      */
     public function __construct(
+        private Helper                              $helper,
         private CompanyRequestData                  $companyRequestData,
         private CountryInformationAcquirerInterface $countryInfo,
         private TaxHelper                           $taxHelper,

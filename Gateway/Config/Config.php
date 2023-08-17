@@ -40,7 +40,6 @@ class Config extends \Magento\Payment\Gateway\Config\Config
     public const KEY_NOTIFICATION_EMAIL = 'recipient_email';
     public const KEY_CANCEL_ORDER_ON_FAILED_PAYMENT = 'failed_payment_cancel';
     public const VAULT_CODE = 'paytrail_cc_vault';
-    public const LOGO = 'payment/paytrail/logo';
 
     /**
      * @var array
