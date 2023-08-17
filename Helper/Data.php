@@ -68,4 +68,14 @@ class Data
         $level = $level == 'error' ? $level : $this->paytrailLogger->resolveLogLevel($logType);
         $this->paytrailLogger->logData($level, $data);
     }
+    
+    /**
+     * Process success
+     *
+     * @throws TransactionSuccessException
+     */
+    public function processSuccess(): void
+    {
+        throw new TransactionSuccessException(__('Success'));
+    }
 }
