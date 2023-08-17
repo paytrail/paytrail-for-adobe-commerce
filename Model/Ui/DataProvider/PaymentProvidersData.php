@@ -7,7 +7,7 @@ use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Payment\Gateway\Command\CommandManagerPoolInterface;
 use Paytrail\PaymentService\Gateway\Config\Config;
-use Paytrail\PaymentService\Model\Receipt\ProcessService;
+use Paytrail\PaymentService\Helper\Data as paytrailHelper;
 use Psr\Log\LoggerInterface;
 
 class PaymentProvidersData
@@ -18,18 +18,18 @@ class PaymentProvidersData
     /**
      * PaymentProvidersData
      *
+     * @param paytrailHelper $paytrailHelper
      * @param Session $checkoutSession
      * @param LoggerInterface $log
      * @param CommandManagerPoolInterface $commandManagerPool
      * @param Config $gatewayConfig
-     * @param ProcessService $processService
      */
     public function __construct(
+        private paytrailHelper $paytrailHelper,
         private Session $checkoutSession,
         private LoggerInterface $log,
         private CommandManagerPoolInterface $commandManagerPool,
-        private Config $gatewayConfig,
-        private ProcessService $processService
+        private Config $gatewayConfig
     ) {
     }
 
@@ -58,7 +58,7 @@ class PaymentProvidersData
                 'Error occurred during providing payment methods: '
                 . $errorMsg
             );
-            $this->processService->processError($errorMsg);
+            $this->paytrailHelper->processError($errorMsg);
         }
 
         return $response["data"];

@@ -5,27 +5,26 @@ namespace Paytrail\PaymentService\Model\Receipt;
 use Magento\Framework\Exception\InputException;
 use Magento\Sales\Api\TransactionRepositoryInterface;
 use Magento\Sales\Model\OrderFactory;
+use Paytrail\PaymentService\Helper\Data as PaytrailHelper;
 
 class LoadService
 {
     /**
-     * LoadService constructor.
-     *
      * @param TransactionRepositoryInterface $transactionRepository
+     * @param PaytrailHelper $paytrailHelper
      * @param OrderFactory $orderFactory
-     * @param ProcessService $processService
      */
     public function __construct(
         private TransactionRepositoryInterface $transactionRepository,
-        private OrderFactory $orderFactory,
-        private ProcessService $processService
+        private PaytrailHelper $paytrailHelper,
+        private OrderFactory $orderFactory
     ) {
     }
 
     /**
      * LoadTransaction function
-     *
-     * @param string $transactionId
+     * 
+     * @param $transactionId
      * @param $currentOrder
      * @param $orderId
      * @return bool|mixed
@@ -41,7 +40,7 @@ class LoadService
                 $orderId
             );
         } catch (InputException $e) {
-            $this->processService->processError($e->getMessage());
+            $this->paytrailHelper->processError($e->getMessage());
         }
 
         return $transaction;
@@ -49,8 +48,8 @@ class LoadService
 
     /**
      * LoadOrder function
-     *
-     * @param string $orderIncrementalId
+     * 
+     * @param $orderIncrementalId
      * @return mixed
      * @throws \Paytrail\PaymentService\Exceptions\CheckoutException
      */
@@ -58,7 +57,7 @@ class LoadService
     {
         $order = $this->orderFactory->create()->loadByIncrementId($orderIncrementalId);
         if (!$order->getId()) {
-            $this->processService->processError('Order not found');
+            $this->paytrailHelper->processError('Order not found');
         }
         return $order;
     }

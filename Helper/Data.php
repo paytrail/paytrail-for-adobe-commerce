@@ -68,7 +68,20 @@ class Data
         $level = $level == 'error' ? $level : $this->paytrailLogger->resolveLogLevel($logType);
         $this->paytrailLogger->logData($level, $data);
     }
-    
+
+    /**
+     * Process error
+     *
+     * @param string $errorMessage
+     *
+     * @throws CheckoutException
+     */
+    public function processError($errorMessage): void
+    {
+        $this->paytrailLogger->logData(\Monolog\Logger::ERROR, $errorMessage);
+        throw new CheckoutException(__($errorMessage));
+    }
+
     /**
      * Process success
      *

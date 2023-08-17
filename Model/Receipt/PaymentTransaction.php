@@ -7,24 +7,23 @@ use Magento\Sales\Model\Order;
 use Magento\Sales\Model\Order\Payment\Transaction;
 use Magento\Sales\Model\Order\Payment\Transaction\BuilderInterface as TransactionBuilderInterface;
 use Paytrail\PaymentService\Helper\ApiData;
+use Paytrail\PaymentService\Helper\Data as PaytrailHelper;
 
 class PaymentTransaction
 {
     /**
-     * PaymentTransaction constructor.
-     *
      * @param TransactionBuilderInterface $transactionBuilder
      * @param ApiData $apiData
      * @param CancelOrderService $cancelOrderService
      * @param OrderRepositoryInterface $orderRepositoryInterface
-     * @param ProcessService $processService
+     * @param PaytrailHelper $paytrailHelper
      */
     public function __construct(
         private TransactionBuilderInterface $transactionBuilder,
         private ApiData                     $apiData,
         private CancelOrderService          $cancelOrderService,
         private OrderRepositoryInterface    $orderRepositoryInterface,
-        private ProcessService $processService
+        private PaytrailHelper $paytrailHelper
     ) {
     }
 
@@ -32,7 +31,7 @@ class PaymentTransaction
      * AddPaymentTransaction function
      *
      * @param Order $order
-     * @param string $transactionId
+     * @param $transactionId
      * @param array $details
      * @return \Magento\Sales\Api\Data\TransactionInterface
      */
@@ -54,7 +53,7 @@ class PaymentTransaction
 
     /**
      * VerifyPaymentData function
-     *
+     * 
      * @param $params
      * @param $currentOrder
      * @return mixed|string|void
@@ -71,7 +70,7 @@ class PaymentTransaction
             $currentOrder->addCommentToStatusHistory(__('Failed to complete the payment.'));
             $this->orderRepositoryInterface->save($currentOrder);
             $this->cancelOrderService->cancelOrderById($currentOrder->getId());
-            $this->processService->processError(
+            $this->paytrailHelper->processError(
                 'Failed to complete the payment. Please try again or contact the customer service.'
             );
         }

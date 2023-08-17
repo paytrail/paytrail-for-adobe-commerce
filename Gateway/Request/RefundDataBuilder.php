@@ -6,7 +6,7 @@ use Magento\Framework\Exception\LocalizedException;
 use Magento\Payment\Gateway\Helper\SubjectReader;
 use Magento\Payment\Gateway\Request\BuilderInterface;
 use Paytrail\PaymentService\Exceptions\CheckoutException;
-use Paytrail\PaymentService\Model\Receipt\ProcessService;
+use Paytrail\PaymentService\Helper\Data;
 use Paytrail\PaymentService\Model\RefundCallback;
 use Paytrail\SDK\Request\RefundRequest;
 use Psr\Log\LoggerInterface;
@@ -16,18 +16,18 @@ class RefundDataBuilder implements BuilderInterface
     /**
      * RefundDataBuilder constructor.
      *
-     * @param SubjectReader $subjectReader
-     * @param LoggerInterface $log
-     * @param RefundRequest $refundRequest
-     * @param RefundCallback $refundCallback
-     * @param ProcessService $processService
+     * @param Data                                          $paytrailHelper
+     * @param SubjectReader                                 $subjectReader
+     * @param LoggerInterface                               $log
+     * @param \Paytrail\SDK\Request\RefundRequest           $refundRequest
+     * @param \Paytrail\PaymentService\Model\RefundCallback $refundCallback
      */
     public function __construct(
+        private readonly Data $paytrailHelper,
         private readonly SubjectReader $subjectReader,
         private readonly LoggerInterface $log,
         private readonly RefundRequest $refundRequest,
-        private readonly RefundCallback $refundCallback,
-        private readonly ProcessService $processService
+        private readonly RefundCallback $refundCallback
     ) {
     }
 
@@ -64,7 +64,7 @@ class RefundDataBuilder implements BuilderInterface
 
         if (isset($errMsg)) {
             $this->log->error($errMsg);
-            $this->processService->processError($errMsg);
+            $this->paytrailHelper->processError($errMsg);
         }
 
         // Handle request
