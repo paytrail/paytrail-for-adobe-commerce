@@ -4,6 +4,7 @@ namespace Paytrail\PaymentService\Helper;
 
 use Magento\Checkout\Model\Session;
 use Magento\Quote\Api\CartRepositoryInterface;
+use Magento\Quote\Model\QuoteRepository;
 use Paytrail\PaymentService\Gateway\Config\Config;
 use Paytrail\PaymentService\Gateway\Validator\ResponseValidator;
 use Paytrail\PaymentService\Exceptions\CheckoutException;
@@ -16,21 +17,58 @@ class ProcessPayment
     private const PAYMENT_PROCESSING_CACHE_PREFIX = "paytrail-processing-payment-";
 
     /**
+     * @var FinnishReferenceNumber
+     */
+    protected FinnishReferenceNumber $finnishReferenceNumber;
+
+    /**
+     * @var ResponseValidator
+     */
+    private $responseValidator;
+
+    /**
+     * @var ReceiptDataProvider
+     */
+    private $receiptDataProvider;
+
+    /**
+     * @var QuoteRepository
+     */
+    private $cartRepository;
+
+    /**
+     * @var Config
+     */
+    private $gatewayConfig;
+
+    /**
+     * @var Data
+     */
+    private $paytrailHelper;
+
+    /**
      * ProcessPayment constructor.
      *
      * @param ResponseValidator $responseValidator
      * @param ReceiptDataProvider $receiptDataProvider
      * @param CartRepositoryInterface $cartRepository
      * @param Config $gatewayConfig
-     * @param FinnishReferenceNumber $finnishReferenceNumber
+     * @param Data $paytrailHelper
      */
     public function __construct(
-        private ResponseValidator       $responseValidator,
-        private ReceiptDataProvider     $receiptDataProvider,
-        private CartRepositoryInterface $cartRepository,
-        private Config                  $gatewayConfig,
-        protected FinnishReferenceNumber $finnishReferenceNumber
+        ResponseValidator       $responseValidator,
+        ReceiptDataProvider     $receiptDataProvider,
+        CartRepositoryInterface $cartRepository,
+        Config                  $gatewayConfig,
+        Data                    $paytrailHelper,
+        FinnishReferenceNumber $finnishReferenceNumber
     ) {
+        $this->responseValidator = $responseValidator;
+        $this->receiptDataProvider = $receiptDataProvider;
+        $this->cartRepository = $cartRepository;
+        $this->gatewayConfig = $gatewayConfig;
+        $this->paytrailHelper = $paytrailHelper;
+        $this->finnishReferenceNumber = $finnishReferenceNumber;
     }
 
     /**
