@@ -6,53 +6,122 @@ namespace Paytrail\PaymentService\Model\Token;
 use Magento\Customer\Api\CustomerRepositoryInterface;
 use Magento\Framework\DB\Transaction;
 use Magento\Framework\Exception\LocalizedException;
-use Magento\Sales\Api\Data\OrderInterface;
 use Magento\Sales\Api\Data\OrderStatusHistoryInterfaceFactory;
 use Magento\Sales\Api\OrderManagementInterface;
 use Magento\Sales\Api\OrderRepositoryInterface;
 use Magento\Sales\Api\OrderStatusHistoryRepositoryInterface;
+use Magento\Sales\Model\Order;
 use Magento\Sales\Model\Order\Payment\Transaction\BuilderInterface;
 use Magento\Sales\Model\Service\InvoiceService;
-use Paytrail\PaymentService\Logger\PaytrailLogger;
+use Paytrail\PaymentService\Helper\Data;
 use Paytrail\PaymentService\Model\Adapter\Adapter;
 use Paytrail\SDK\Request\MitPaymentRequest;
-use Paytrail\SDK\Response\MitPaymentResponse;
 
 class Payment
 {
     /**
-     * Payment constructor.
-     *
+     * @var OrderRepositoryInterface
+     */
+    private $orderRepository;
+
+    /**
+     * @var Adapter
+     */
+    private $adapter;
+
+    /**
+     * @var Data
+     */
+    private $helper;
+
+    /**
+     * @var RequestData
+     */
+    private $requestData;
+
+    /**
+     * @var CustomerRepositoryInterface
+     */
+    private $customerRepository;
+
+    /**
+     * @var InvoiceService
+     */
+    private $invoiceService;
+
+    /**
+     * @var Transaction
+     */
+    private $transaction;
+
+    /**
+     * @var Order
+     */
+    private $currentOrder;
+
+    /**
+     * @var BuilderInterface
+     */
+    private $transactionBuilder;
+
+    /**
+     * @var OrderManagementInterface
+     */
+    private $orderManagement;
+
+    /**
+     * @var OrderStatusHistoryInterfaceFactory
+     */
+    private $orderStatusHistoryFactory;
+
+    /**
+     * @var OrderStatusHistoryRepositoryInterface
+     */
+    private $orderStatusHistoryRepository;
+
+    /**
      * @param OrderRepositoryInterface $orderRepository
      * @param Adapter $adapter
+     * @param Data $helper
      * @param RequestData $requestData
      * @param CustomerRepositoryInterface $customerRepository
      * @param InvoiceService $invoiceService
      * @param Transaction $transaction
+     * @param Order $currentOrder
      * @param BuilderInterface $transactionBuilder
      * @param OrderManagementInterface $orderManagement
      * @param OrderStatusHistoryInterfaceFactory $orderStatusHistoryFactory
      * @param OrderStatusHistoryRepositoryInterface $orderStatusHistoryRepository
-     * @param PaytrailLogger $paytrailLogger
      */
     public function __construct(
-        private OrderRepositoryInterface $orderRepository,
-        private Adapter $adapter,
-        private RequestData $requestData,
-        private CustomerRepositoryInterface $customerRepository,
-        private InvoiceService $invoiceService,
-        private Transaction $transaction,
-        private BuilderInterface $transactionBuilder,
-        private OrderManagementInterface $orderManagement,
-        private OrderStatusHistoryInterfaceFactory $orderStatusHistoryFactory,
-        private OrderStatusHistoryRepositoryInterface $orderStatusHistoryRepository,
-        private PaytrailLogger $paytrailLogger
+        OrderRepositoryInterface $orderRepository,
+        Adapter $adapter,
+        Data $helper,
+        RequestData $requestData,
+        CustomerRepositoryInterface $customerRepository,
+        InvoiceService $invoiceService,
+        Transaction $transaction,
+        Order $currentOrder,
+        BuilderInterface $transactionBuilder,
+        OrderManagementInterface $orderManagement,
+        OrderStatusHistoryInterfaceFactory $orderStatusHistoryFactory,
+        OrderStatusHistoryRepositoryInterface $orderStatusHistoryRepository
     ) {
+        $this->orderRepository = $orderRepository;
+        $this->adapter = $adapter;
+        $this->helper = $helper;
+        $this->requestData = $requestData;
+        $this->customerRepository = $customerRepository;
+        $this->invoiceService = $invoiceService;
+        $this->transaction = $transaction;
+        $this->currentOrder = $currentOrder;
+        $this->transactionBuilder = $transactionBuilder;
+        $this->orderManagement = $orderManagement;
+        $this->orderStatusHistoryFactory = $orderStatusHistoryFactory;
+        $this->orderStatusHistoryRepository = $orderStatusHistoryRepository;
     }
 
     /**
-     * Make MIT payment request.
-     *
      * @param $orderId
      * @param $cardToken
      * @return bool
@@ -68,10 +137,10 @@ class Payment
             $mitPayment = $this->getMitPaymentRequest();
             $mitPayment = $this->requestData->setTokenPaymentRequestData($mitPayment, $order, $cardToken, $customer);
 
-            /** @var MitPaymentResponse $mitResponse */
+            /** @var \Paytrail\SDK\Response\MitPaymentResponse $mitResponse */
             $mitResponse = $client->createMitPaymentCharge($mitPayment);
             if (!$mitResponse->getTransactionId()) {
-                $this->paytrailLogger->logCheckoutData(
+                $this->helper->logCheckoutData(
                     'response',
                     'error',
                     'A problem occurred: '
@@ -81,7 +150,7 @@ class Payment
                 return false;
             }
         } catch (\Exception $e) {
-            $this->paytrailLogger->logCheckoutData(
+            $this->helper->logCheckoutData(
                 'response',
                 'error',
                 'A problem occurred: '
@@ -97,13 +166,11 @@ class Payment
     }
 
     /**
-     * Create invoice.
-     *
      * @param $order
      * @param $mitResponse
      * @throws LocalizedException
      */
-    private function createInvoice($order, $mitResponse)
+    private function createInvoice($order,$mitResponse)
     {
         if ($order->canInvoice()) {
             try {
@@ -118,7 +185,7 @@ class Payment
                 );
                 $transactionSave->save();
             } catch (\Exception $e) {
-                $this->paytrailLogger->logCheckoutData(
+                $this->helper->logCheckoutData(
                     'response',
                     'error',
                     'A problem with creating invoice after payment '
@@ -129,8 +196,6 @@ class Payment
     }
 
     /**
-     * Create transaction.
-     *
      * @param $order
      * @param $mitResponse
      * @return int|void
@@ -162,7 +227,7 @@ class Payment
 
             return  $transaction->save()->getTransactionId();
         } catch (\Exception $e) {
-            $this->paytrailLogger->logCheckoutData(
+            $this->helper->logCheckoutData(
                 'response',
                 'error',
                 'A problem occurred: while creating transaction'
@@ -172,8 +237,6 @@ class Payment
     }
 
     /**
-     * Get MIT payment request.
-     *
      * @return MitPaymentRequest
      */
     private function getMitPaymentRequest()
@@ -182,16 +245,13 @@ class Payment
     }
 
     /**
-     * Update order.
-     *
-     * @param OrderInterface $order
-     * @param MitPaymentResponse $mitResponse
+     * @param \Magento\Sales\Api\Data\OrderInterface $order
+     * @param \Paytrail\SDK\Response\MitPaymentResponse $mitResponse
      * @return void
-     * @throws \Magento\Framework\Exception\CouldNotSaveException
      */
     private function updateOrder(
-        OrderInterface $order,
-        MitPaymentResponse $mitResponse
+        \Magento\Sales\Api\Data\OrderInterface $order,
+        \Paytrail\SDK\Response\MitPaymentResponse $mitResponse
     ): void {
 
         $commentsArray = [
@@ -204,7 +264,7 @@ class Payment
             $historyComment
                 ->setStatus($status)
                 ->setComment($comment);
-            $this->orderManagement->addComment($order->getEntityId(), $historyComment);
+            $this->orderManagement->addComment($order->getEntityId(),$historyComment);
             $this->orderStatusHistoryRepository->save($historyComment);
         }
 

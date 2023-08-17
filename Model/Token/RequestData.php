@@ -14,7 +14,7 @@ use Magento\Sales\Model\ResourceModel\Order\Tax\Item as TaxItems;
 use Magento\Tax\Helper\Data as TaxHelper;
 use Magento\Vault\Api\PaymentTokenManagementInterface;
 use Paytrail\PaymentService\Gateway\Config\Config;
-use Paytrail\PaymentService\Logger\PaytrailLogger;
+use Paytrail\PaymentService\Helper\Data;
 use Paytrail\PaymentService\Model\FinnishReferenceNumber;
 use Paytrail\PaymentService\Model\Payment\DiscountSplitter;
 use Paytrail\SDK\Model\Address;
@@ -25,10 +25,64 @@ use Paytrail\SDK\Model\Item;
 class RequestData
 {
     /**
-     * RequestData constructor.
-     *
+     * @var \Paytrail\PaymentService\Model\FinnishReferenceNumber
+     */
+    private FinnishReferenceNumber $finnishReferenceNumber;
+
+    /**
+     * @var OrderRepositoryInterface
+     */
+    private $orderRepositoryInterface;
+
+    /**
+     * @var Config
+     */
+    private $gatewayConfig;
+
+    /**
+     * @var Data
+     */
+    private $helper;
+
+    /**
+     * @var TaxHelper
+     */
+    private $taxHelper;
+
+    /**
+     * @var DiscountSplitter
+     */
+    private $discountSplitter;
+
+    /**
+     * @var CountryInformationAcquirerInterface
+     */
+    private $countryInfo;
+
+    /**
+     * @var UrlInterface
+     */
+    private $urlBuilder;
+
+    /**
+     * @var RequestInterface
+     */
+    private $request;
+
+    /**
+     * @var TaxItems
+     */
+    private $taxItems;
+
+    /**
+     * @var PaymentTokenManagementInterface
+     */
+    private $paymentTokenManagement;
+
+    /**
      * @param OrderRepositoryInterface $orderRepositoryInterface
      * @param Config $gatewayConfig
+     * @param Data $helper
      * @param TaxHelper $taxHelper
      * @param DiscountSplitter $discountSplitter
      * @param CountryInformationAcquirerInterface $countryInfo
@@ -36,27 +90,34 @@ class RequestData
      * @param RequestInterface $request
      * @param TaxItems $taxItems
      * @param PaymentTokenManagementInterface $paymentTokenManagement
-     * @param FinnishReferenceNumber $finnishReferenceNumber
-     * @param PaytrailLogger $paytrailLogger
      */
     public function __construct(
-        private OrderRepositoryInterface $orderRepositoryInterface,
-        private Config $gatewayConfig,
-        private TaxHelper $taxHelper,
-        private DiscountSplitter $discountSplitter,
-        private CountryInformationAcquirerInterface $countryInfo,
-        private UrlInterface $urlBuilder,
-        private RequestInterface $request,
-        private TaxItems $taxItems,
-        private PaymentTokenManagementInterface $paymentTokenManagement,
-        private FinnishReferenceNumber $finnishReferenceNumber,
-        private PaytrailLogger $paytrailLogger
+        OrderRepositoryInterface $orderRepositoryInterface,
+        Config $gatewayConfig,
+        Data $helper,
+        TaxHelper $taxHelper,
+        DiscountSplitter $discountSplitter,
+        CountryInformationAcquirerInterface $countryInfo,
+        UrlInterface $urlBuilder,
+        RequestInterface $request,
+        TaxItems $taxItems,
+        PaymentTokenManagementInterface $paymentTokenManagement,
+        FinnishReferenceNumber $finnishReferenceNumber
     ) {
+        $this->orderRepositoryInterface = $orderRepositoryInterface;
+        $this->gatewayConfig = $gatewayConfig;
+        $this->helper = $helper;
+        $this->taxHelper = $taxHelper;
+        $this->discountSplitter = $discountSplitter;
+        $this->countryInfo = $countryInfo;
+        $this->urlBuilder = $urlBuilder;
+        $this->request = $request;
+        $this->taxItems = $taxItems;
+        $this->paymentTokenManagement = $paymentTokenManagement;
+        $this->finnishReferenceNumber = $finnishReferenceNumber;
     }
 
     /**
-     * Set token payment request data.
-     *
      * @param $paytrailPayment
      * @param $order
      * @param $tokenId
@@ -81,7 +142,7 @@ class RequestData
         $customer = $this->createCustomer($billingAddress);
 
         $customerId = $rcustomer->getId();
-        $this->paytrailLogger->logCheckoutData('request', 'info', 'we have customer:'.$customerId);
+        $this->helper->logCheckoutData('request', 'info', 'we have customer:'.$customerId);
         $paytrailPayment->setCustomer($customer);
 
         $invoicingAddress = $this->createAddress($order, $billingAddress);
@@ -109,18 +170,16 @@ class RequestData
         $paymentExtensionAttributes->setVaultPaymentToken($token);
         $this->orderRepositoryInterface->save($order);
 
-        $this->paytrailLogger->logCheckoutData('request', 'info', 'we have token:'.$paymentToken);
+        $this->helper->logCheckoutData('request', 'info', 'we have token:'.$paymentToken);
         $paytrailPayment->setToken($paymentToken);
 
         // Log payment data
-        $this->paytrailLogger->logCheckoutData('request', 'info', $paytrailPayment);
+        $this->helper->logCheckoutData('request', 'info', $paytrailPayment);
 
         return $paytrailPayment;
     }
 
     /**
-     * Create address.
-     *
      * @param $order
      * @param $address
      * @return Address
@@ -152,8 +211,6 @@ class RequestData
     }
 
     /**
-     * Create customer.
-     *
      * @param $billingAddress
      * @return Customer
      */
@@ -170,8 +227,6 @@ class RequestData
     }
 
     /**
-     * Get order item.
-     *
      * @param $order
      * @return Item
      */
@@ -181,8 +236,6 @@ class RequestData
     }
 
     /**
-     * Get order item lines.
-     *
      * @param Order $order
      * @return array
      * @throws LocalizedException
@@ -229,8 +282,6 @@ class RequestData
     }
 
     /**
-     * Item arguments.
-     *
      * @param $order
      * @return mixed
      * @throws LocalizedException
@@ -284,8 +335,6 @@ class RequestData
     }
 
     /**
-     * Create order items.
-     *
      * @param array $item
      * @return Item
      */
@@ -304,8 +353,6 @@ class RequestData
     }
 
     /**
-     * Get shipping item.
-     *
      * @param Order $order
      * @return array
      */
@@ -338,8 +385,6 @@ class RequestData
     }
 
     /**
-     * Create redirect url.
-     *
      * @return CallbackUrl
      */
     protected function createRedirectUrl()
@@ -353,8 +398,6 @@ class RequestData
     }
 
     /**
-     * Create callback url.
-     *
      * @return CallbackUrl
      */
     protected function createCallbackUrl()
@@ -368,8 +411,6 @@ class RequestData
     }
 
     /**
-     * Get callback url.
-     *
      * @param $param
      * @return string
      */
@@ -387,8 +428,6 @@ class RequestData
     }
 
     /**
-     * Get payment token.
-     *
      * @param $tokenhash
      * @param $customerId
      * @return \Magento\Vault\Api\Data\PaymentTokenInterface|null

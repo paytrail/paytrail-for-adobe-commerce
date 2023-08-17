@@ -2,7 +2,6 @@
 namespace Paytrail\PaymentService\Logger;
 
 use Magento\Framework\Serialize\SerializerInterface;
-use Paytrail\PaymentService\Gateway\Config\Config;
 
 class PaytrailLogger extends \Magento\Framework\Logger\Monolog
 {
@@ -11,7 +10,7 @@ class PaytrailLogger extends \Magento\Framework\Logger\Monolog
      */
     private $serializer;
     /**
-     * @var Config
+     * @var \Paytrail\PaymentService\Gateway\Config\Config
      */
     private $config;
     /**
@@ -22,11 +21,12 @@ class PaytrailLogger extends \Magento\Framework\Logger\Monolog
     public function __construct(
         $name,
         SerializerInterface $serializer,
-        private Config $gatewayConfig,
+        \Paytrail\PaymentService\Gateway\Config\Config $config,
         array $handlers = [],
         array $processors = []
     ) {
         $this->serializer = $serializer;
+        $this->config = $config;
         parent::__construct($name, $handlers, $processors);
     }
 
@@ -89,33 +89,10 @@ class PaytrailLogger extends \Magento\Framework\Logger\Monolog
     {
         if (!isset($this->debugActive[$type])) {
             $this->debugActive[$type] = $type == 'request'
-                ? $this->gatewayConfig->getRequestLog()
-                : $this->gatewayConfig->getResponseLog();
+                ? $this->config->getRequestLog()
+                : $this->config->getResponseLog();
         }
 
         return $this->debugActive[$type];
-    }
-
-    /**
-     * Log data to file
-     *
-     * @param string $logType
-     * @param string $level
-     * @param mixed  $data
-     *
-     * @deprecated   implementation replaced by dedicated logger class
-     * @see          \Paytrail\PaymentService\Logger\PaytrailLogger::logData
-     */
-    public function logCheckoutData($logType, $level, $data): void
-    {
-        if ($level !== 'error' &&
-            (($logType === 'request' && $this->gatewayConfig->getRequestLog() == false)
-                || ($logType === 'response' && $this->gatewayConfig->getResponseLog() == false))
-        ) {
-            return;
-        }
-
-        $level = $level == 'error' ? $level : $this->resolveLogLevel($logType);
-        $this->logData($level, $data);
     }
 }
