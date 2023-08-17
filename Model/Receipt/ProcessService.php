@@ -171,7 +171,7 @@ class ProcessService
      *
      * @throws CheckoutException
      */
-    public function processError($errorMessage): void
+    public function processError($errorMessage)
     {
         $this->paytrailLogger->logData(\Monolog\Logger::ERROR, $errorMessage);
         throw new CheckoutException(__($errorMessage));

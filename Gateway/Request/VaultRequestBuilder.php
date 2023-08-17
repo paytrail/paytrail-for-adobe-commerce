@@ -6,6 +6,7 @@ use Magento\Payment\Gateway\Helper\SubjectReader;
 use Magento\Payment\Gateway\Request\BuilderInterface;
 use Magento\Store\Model\StoreManagerInterface;
 use Paytrail\PaymentService\Helper\Data;
+use Paytrail\PaymentService\Model\Receipt\ProcessService;
 use Psr\Log\LoggerInterface;
 
 class VaultRequestBuilder implements BuilderInterface
@@ -30,20 +31,19 @@ class VaultRequestBuilder implements BuilderInterface
     private $subjectReader;
 
     /**
-     * RefundDataBuilder constructor.
+     * VaultRequestBuilder constructor.
      *
      * @param StoreManagerInterface $storeManager
-     * @param Data $opHelper
+     * @param ProcessService $processService
      * @param SubjectReader $subjectReader
      * @param LoggerInterface $log
      */
     public function __construct(
         StoreManagerInterface $storeManager,
-        Data $opHelper,
+        private ProcessService $processService,
         SubjectReader $subjectReader,
         LoggerInterface $log
     ) {
-        $this->opHelper = $opHelper;
         $this->storeManager = $storeManager;
         $this->log = $log;
         $this->subjectReader = $subjectReader;
@@ -79,7 +79,7 @@ class VaultRequestBuilder implements BuilderInterface
 
         if (isset($errMsg)) {
             $this->log->error($errMsg);
-            $this->opHelper->processError($errMsg);
+            $this->processService->processError($errMsg);
         }
 
         return [
