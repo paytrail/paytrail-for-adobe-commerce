@@ -103,7 +103,7 @@ class ProcessService
                     $currentOrder
                 )->save();
             } catch (\Exception $exception) {
-                $this->paytrailHelper->processError($exception->getMessage());
+                $this->processError($exception->getMessage());
             }
         }
     }
@@ -159,7 +159,7 @@ class ProcessService
         $transaction = $this->loadService->loadTransaction($transactionId, $currentOrder, $orderId);
         if ($transaction) {
             $this->processExistingTransaction($transaction);
-            $this->paytrailHelper->processError('Payment failed');
+            $this->processError('Payment failed');
         }
         return true;
     }

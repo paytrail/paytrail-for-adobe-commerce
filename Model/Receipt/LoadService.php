@@ -5,19 +5,22 @@ namespace Paytrail\PaymentService\Model\Receipt;
 use Magento\Framework\Exception\InputException;
 use Magento\Sales\Api\TransactionRepositoryInterface;
 use Magento\Sales\Model\OrderFactory;
-use Paytrail\PaymentService\Helper\Data as PaytrailHelper;
+use Paytrail\PaymentService\Exceptions\CheckoutException;
+use Paytrail\PaymentService\Logger\PaytrailLogger;
 
 class LoadService
 {
     /**
+     * LoadService constructor.
+     *
      * @param TransactionRepositoryInterface $transactionRepository
-     * @param PaytrailHelper $paytrailHelper
      * @param OrderFactory $orderFactory
+     * @param PaytrailLogger $paytrailLogger
      */
     public function __construct(
         private TransactionRepositoryInterface $transactionRepository,
-        private PaytrailHelper $paytrailHelper,
-        private OrderFactory $orderFactory
+        private OrderFactory $orderFactory,
+        private PaytrailLogger $paytrailLogger
     ) {
     }
 
@@ -40,7 +43,8 @@ class LoadService
                 $orderId
             );
         } catch (InputException $e) {
-            $this->paytrailHelper->processError($e->getMessage());
+            $this->paytrailLogger->logData(\Monolog\Logger::ERROR, $e->getMessage());
+            throw new CheckoutException(__($e->getMessage()));
         }
 
         return $transaction;
@@ -48,16 +52,17 @@ class LoadService
 
     /**
      * LoadOrder function
-     * 
+     *
      * @param $orderIncrementalId
-     * @return mixed
-     * @throws \Paytrail\PaymentService\Exceptions\CheckoutException
+     * @return \Magento\Sales\Model\Order
+     * @throws CheckoutException
      */
     public function loadOrder($orderIncrementalId)
     {
         $order = $this->orderFactory->create()->loadByIncrementId($orderIncrementalId);
         if (!$order->getId()) {
-            $this->paytrailHelper->processError('Order not found');
+            $this->paytrailLogger->logData(\Monolog\Logger::ERROR, 'Order not found');
+            throw new CheckoutException(__('Order not found'));
         }
         return $order;
     }
