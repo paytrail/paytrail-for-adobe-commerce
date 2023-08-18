@@ -4,52 +4,29 @@ namespace Paytrail\PaymentService\Gateway\Request;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Payment\Gateway\Helper\SubjectReader;
 use Magento\Payment\Gateway\Request\BuilderInterface;
-use Magento\Store\Model\StoreManagerInterface;
-use Paytrail\PaymentService\Helper\Data;
+use Magento\Sales\Api\Data\OrderItemInterface;
 use Paytrail\PaymentService\Model\Receipt\ProcessService;
 use Psr\Log\LoggerInterface;
 
 class VaultRequestBuilder implements BuilderInterface
 {
     /**
-     * @var StoreManagerInterface
-     */
-    private $storeManager;
-
-    /**
-     * @var Data
-     */
-    private $opHelper;
-
-    /**
-     * @var LoggerInterface
-     */
-    private $log;
-    /**
-     * @var SubjectReader
-     */
-    private $subjectReader;
-
-    /**
      * VaultRequestBuilder constructor.
      *
-     * @param StoreManagerInterface $storeManager
      * @param ProcessService $processService
      * @param SubjectReader $subjectReader
      * @param LoggerInterface $log
      */
     public function __construct(
-        StoreManagerInterface $storeManager,
         private ProcessService $processService,
-        SubjectReader $subjectReader,
-        LoggerInterface $log
+        private SubjectReader $subjectReader,
+        private LoggerInterface $log
     ) {
-        $this->storeManager = $storeManager;
-        $this->log = $log;
-        $this->subjectReader = $subjectReader;
     }
 
     /**
+     * Build
+     *
      * @param array $buildSubject
      * @return array
      * @throws LocalizedException
@@ -91,7 +68,9 @@ class VaultRequestBuilder implements BuilderInterface
     }
 
     /**
-     * @param $items
+     * Get tax rates.
+     *
+     * @param OrderItemInterface[] $items
      * @return array
      */
     protected function getTaxRates($items)

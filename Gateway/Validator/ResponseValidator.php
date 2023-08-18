@@ -68,7 +68,7 @@ class ResponseValidator extends AbstractValidator
     /**
      * Is merchant ID is valid.
      *
-     * @param $responseMerchantId
+     * @param string $responseMerchantId
      * @return bool
      */
     public function isMerchantIdValid($responseMerchantId)
@@ -84,7 +84,7 @@ class ResponseValidator extends AbstractValidator
     /**
      * Is request Merchant ID empty.
      *
-     * @param $requestMerchantId
+     * @param string $requestMerchantId
      * @return bool
      */
     public function isRequestMerchantIdEmpty($requestMerchantId)
@@ -95,7 +95,7 @@ class ResponseValidator extends AbstractValidator
     /**
      * Is sponse merchant ID empty.
      *
-     * @param $responseMerchantId
+     * @param string $responseMerchantId
      * @return bool
      */
     public function isResponseMerchantIdEmpty($responseMerchantId)
@@ -106,7 +106,7 @@ class ResponseValidator extends AbstractValidator
     /**
      * Validate algorithm.
      *
-     * @param $algorithm
+     * @param string $algorithm
      * @return bool
      */
     public function validateAlgorithm($algorithm)
@@ -117,7 +117,7 @@ class ResponseValidator extends AbstractValidator
     /**
      * Validate response.
      *
-     * @param $params
+     * @param array $params
      * @return bool
      */
     public function validateResponse($params)
