@@ -4,6 +4,7 @@ namespace Paytrail\PaymentService\Model\Receipt;
 
 use Magento\Framework\Exception\InputException;
 use Magento\Sales\Api\TransactionRepositoryInterface;
+use Magento\Sales\Model\Order;
 use Magento\Sales\Model\OrderFactory;
 use Paytrail\PaymentService\Exceptions\CheckoutException;
 use Paytrail\PaymentService\Logger\PaytrailLogger;
@@ -26,10 +27,10 @@ class LoadService
 
     /**
      * LoadTransaction function
-     * 
-     * @param $transactionId
-     * @param $currentOrder
-     * @param $orderId
+     *
+     * @param string $transactionId
+     * @param Order $currentOrder
+     * @param string $orderId
      * @return bool|mixed
      * @throws \Paytrail\PaymentService\Exceptions\CheckoutException
      */
@@ -53,8 +54,8 @@ class LoadService
     /**
      * LoadOrder function
      *
-     * @param $orderIncrementalId
-     * @return \Magento\Sales\Model\Order
+     * @param string $orderIncrementalId
+     * @return Order
      * @throws CheckoutException
      */
     public function loadOrder($orderIncrementalId)
