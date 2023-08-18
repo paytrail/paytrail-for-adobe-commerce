@@ -1,4 +1,5 @@
 <?php
+
 namespace Paytrail\PaymentService\Logger;
 
 use Magento\Framework\Serialize\SerializerInterface;
@@ -7,32 +8,34 @@ use Paytrail\PaymentService\Gateway\Config\Config;
 class PaytrailLogger extends \Magento\Framework\Logger\Monolog
 {
     /**
-     * @var SerializerInterface
-     */
-    private $serializer;
-    /**
-     * @var Config
-     */
-    private $config;
-    /**
      * @var array
      */
     private $debugActive = [];
 
+    /**
+     * PaytrailLogger constructor.
+     *
+     * @param string $name
+     * @param SerializerInterface $serializer
+     * @param Config $gatewayConfig
+     * @param array $handlers
+     * @param array $processors
+     */
     public function __construct(
         $name,
-        SerializerInterface $serializer,
+        private SerializerInterface $serializer,
         private Config $gatewayConfig,
         array $handlers = [],
         array $processors = []
     ) {
-        $this->serializer = $serializer;
         parent::__construct($name, $handlers, $processors);
     }
 
     /**
-     * @param $level
-     * @param $message
+     * Log data.
+     *
+     * @param int $level
+     * @param string $message
      */
     public function logData($level, $message)
     {
@@ -51,8 +54,10 @@ class PaytrailLogger extends \Magento\Framework\Logger\Monolog
     }
 
     /**
-     * @param $type
-     * @param $message
+     * Debug log.
+     *
+     * @param string $type
+     * @param string $message
      */
     public function debugLog($type, $message)
     {
@@ -65,6 +70,8 @@ class PaytrailLogger extends \Magento\Framework\Logger\Monolog
     }
 
     /**
+     * Resolve log level.
+     *
      * @param string $logType
      * @return string
      */
@@ -82,7 +89,9 @@ class PaytrailLogger extends \Magento\Framework\Logger\Monolog
     }
 
     /**
-     * @param $type
+     * Is debug active.
+     *
+     * @param string $type
      * @return int
      */
     private function isDebugActive($type)
@@ -97,14 +106,12 @@ class PaytrailLogger extends \Magento\Framework\Logger\Monolog
     }
 
     /**
-     * Log data to file
+     * Log data to file.
      *
      * @param string $logType
      * @param string $level
-     * @param mixed  $data
-     *
-     * @deprecated   implementation replaced by dedicated logger class
-     * @see          \Paytrail\PaymentService\Logger\PaytrailLogger::logData
+     * @param mixed $data
+     * @return void
      */
     public function logCheckoutData($logType, $level, $data): void
     {
