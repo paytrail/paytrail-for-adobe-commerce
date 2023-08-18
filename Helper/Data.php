@@ -70,19 +70,6 @@ class Data
     }
 
     /**
-     * Process error
-     *
-     * @param string $errorMessage
-     *
-     * @throws CheckoutException
-     */
-    public function processError($errorMessage): void
-    {
-        $this->paytrailLogger->logData(\Monolog\Logger::ERROR, $errorMessage);
-        throw new CheckoutException(__($errorMessage));
-    }
-
-    /**
      * Process success
      *
      * @throws TransactionSuccessException

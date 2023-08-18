@@ -9,6 +9,7 @@ use Magento\Framework\Serialize\Serializer\Json;
 use Magento\Framework\UrlInterface;
 use Magento\Sales\Model\Order;
 use Magento\Store\Model\StoreManagerInterface;
+use Paytrail\PaymentService\Exceptions\CheckoutException;
 use Paytrail\PaymentService\Gateway\Config\Config as GatewayConfig;
 use Paytrail\PaymentService\Helper\Data as CheckoutHelper;
 use Paytrail\PaymentService\Logger\PaytrailLogger;
@@ -124,6 +125,11 @@ class ApiData
     private InvoiceActivation $invoiceActivate;
 
     /**
+     * @var PaytrailLogger
+     */
+    private $paytrailLogger;
+
+    /**
      * @param PaytrailLogger         $log
      * @param UrlInterface           $urlBuilder
      * @param RequestInterface       $request
@@ -163,7 +169,8 @@ class ApiData
         CitPaymentRequest $citPaymentRequest,
         PaymentStatusRequest $paymentStatusRequest,
         RequestData $requestData,
-        FinnishReferenceNumber $referenceNumber
+        FinnishReferenceNumber $referenceNumber,
+        PaytrailLogger $paytrailLogger
     ) {
         $this->log                  = $log;
         $this->urlBuilder           = $urlBuilder;
@@ -184,6 +191,7 @@ class ApiData
         $this->paymentStatusRequest = $paymentStatusRequest;
         $this->requestData          = $requestData;
         $this->referenceNumber      = $referenceNumber;
+        $this->paytrailLogger = $paytrailLogger;
     }
 
     /**
@@ -416,12 +424,13 @@ class ApiData
      * @param RefundRequest  $paytrailRefund
      * @param float|int|null $amount
      *
-     * @throws \Paytrail\PaymentService\Exceptions\CheckoutException
+     * @throws CheckoutException
      */
     private function setRefundRequestData(RefundRequest $paytrailRefund, float|int|null $amount): void
     {
         if ($amount <= 0) {
-            $this->helper->processError('Refund amount must be above 0');
+            $this->paytrailLogger->logData(\Monolog\Logger::ERROR, 'Refund amount must be above 0');
+            throw new CheckoutException(__('Refund amount must be above 0'));
         }
 
         $paytrailRefund->setAmount(round($amount * 100));
