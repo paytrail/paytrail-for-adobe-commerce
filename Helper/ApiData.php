@@ -34,11 +34,6 @@ class ApiData
     private FinnishReferenceNumber $referenceNumber;
 
     /**
-     * @var CheckoutHelper
-     */
-    private $helper;
-
-    /**
      * @var PaytrailLogger
      */
     private $log;
@@ -133,7 +128,6 @@ class ApiData
      * @param UrlInterface           $urlBuilder
      * @param RequestInterface       $request
      * @param Json                   $json
-     * @param Data                   $helper
      * @param StoreManagerInterface  $storeManager
      * @param Adapter                $paytrailAdapter
      * @param PaymentRequest         $paymentRequest
@@ -154,7 +148,6 @@ class ApiData
         UrlInterface $urlBuilder,
         RequestInterface $request,
         Json $json,
-        CheckoutHelper $helper,
         StoreManagerInterface $storeManager,
         Adapter $paytrailAdapter,
         PaymentRequest $paymentRequest,
@@ -175,7 +168,6 @@ class ApiData
         $this->urlBuilder           = $urlBuilder;
         $this->request              = $request;
         $this->json                 = $json;
-        $this->helper               = $helper;
         $this->gatewayConfig        = $gatewayConfig;
         $this->paytrailAdapter      = $paytrailAdapter;
         $this->paymentRequest       = $paymentRequest;
