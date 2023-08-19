@@ -34,7 +34,7 @@ class PaymentTransaction
      * AddPaymentTransaction function
      *
      * @param Order $order
-     * @param $transactionId
+     * @param string $transactionId
      * @param array $details
      * @return \Magento\Sales\Api\Data\TransactionInterface
      */
@@ -56,9 +56,9 @@ class PaymentTransaction
 
     /**
      * VerifyPaymentData function
-     * 
-     * @param $params
-     * @param $currentOrder
+     *
+     * @param array $params
+     * @param Order $currentOrder
      * @return mixed|string|void
      * @throws \Paytrail\PaymentService\Exceptions\CheckoutException
      */
