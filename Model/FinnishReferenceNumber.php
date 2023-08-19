@@ -12,14 +12,43 @@ use Magento\Framework\Api\SearchCriteriaBuilderFactory;
 class FinnishReferenceNumber
 {
     /**
+     * @var Config
+     */
+    private $gatewayConfig;
+
+    /**
+     * @var OrderFactory
+     */
+    private $orderFactory;
+
+    /**
+     * @var OrderRepositoryInterface
+     */
+    private $orderRepository;
+
+    /**
+     * @var SearchCriteriaBuilderFactory
+     */
+    private $criteriaBuilderFactory;
+
+    /**
      * FinnishReferenceNumber constructor.
+     *
+     * @param Config $gatewayConfig
+     * @param OrderFactory $orderFactory
+     * @param OrderRepositoryInterface $orderRepository
+     * @param SearchCriteriaBuilderFactory $criteriaBuilderFactory
      */
     public function __construct(
-        private readonly Config $gatewayConfig,
-        private readonly OrderFactory $orderFactory,
-        private readonly OrderRepositoryInterface $orderRepository,
-        private readonly SearchCriteriaBuilderFactory $criteriaBuilderFactory
+        Config $gatewayConfig,
+        OrderFactory $orderFactory,
+        OrderRepositoryInterface $orderRepository,
+        SearchCriteriaBuilderFactory $criteriaBuilderFactory
     ) {
+        $this->gatewayConfig = $gatewayConfig;
+        $this->orderFactory = $orderFactory;
+        $this->orderRepository = $orderRepository;
+        $this->criteriaBuilderFactory = $criteriaBuilderFactory;
     }
 
     /**
