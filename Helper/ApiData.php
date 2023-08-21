@@ -9,8 +9,8 @@ use Magento\Framework\Serialize\Serializer\Json;
 use Magento\Framework\UrlInterface;
 use Magento\Sales\Model\Order;
 use Magento\Store\Model\StoreManagerInterface;
+use Paytrail\PaymentService\Exceptions\CheckoutException;
 use Paytrail\PaymentService\Gateway\Config\Config as GatewayConfig;
-use Paytrail\PaymentService\Helper\Data as CheckoutHelper;
 use Paytrail\PaymentService\Logger\PaytrailLogger;
 use Paytrail\PaymentService\Model\Adapter\Adapter;
 use Paytrail\PaymentService\Model\Company\CompanyRequestData;
@@ -32,11 +32,6 @@ class ApiData
      * @var \Paytrail\PaymentService\Model\FinnishReferenceNumber
      */
     private FinnishReferenceNumber $referenceNumber;
-
-    /**
-     * @var CheckoutHelper
-     */
-    private $helper;
 
     /**
      * @var PaytrailLogger
@@ -124,11 +119,15 @@ class ApiData
     private InvoiceActivation $invoiceActivate;
 
     /**
+     * @var PaytrailLogger
+     */
+    private $paytrailLogger;
+
+    /**
      * @param PaytrailLogger         $log
      * @param UrlInterface           $urlBuilder
      * @param RequestInterface       $request
      * @param Json                   $json
-     * @param Data                   $helper
      * @param StoreManagerInterface  $storeManager
      * @param Adapter                $paytrailAdapter
      * @param PaymentRequest         $paymentRequest
@@ -149,7 +148,6 @@ class ApiData
         UrlInterface $urlBuilder,
         RequestInterface $request,
         Json $json,
-        CheckoutHelper $helper,
         StoreManagerInterface $storeManager,
         Adapter $paytrailAdapter,
         PaymentRequest $paymentRequest,
@@ -163,13 +161,13 @@ class ApiData
         CitPaymentRequest $citPaymentRequest,
         PaymentStatusRequest $paymentStatusRequest,
         RequestData $requestData,
-        FinnishReferenceNumber $referenceNumber
+        FinnishReferenceNumber $referenceNumber,
+        PaytrailLogger $paytrailLogger
     ) {
         $this->log                  = $log;
         $this->urlBuilder           = $urlBuilder;
         $this->request              = $request;
         $this->json                 = $json;
-        $this->helper               = $helper;
         $this->gatewayConfig        = $gatewayConfig;
         $this->paytrailAdapter      = $paytrailAdapter;
         $this->paymentRequest       = $paymentRequest;
@@ -184,6 +182,7 @@ class ApiData
         $this->paymentStatusRequest = $paymentStatusRequest;
         $this->requestData          = $requestData;
         $this->referenceNumber      = $referenceNumber;
+        $this->paytrailLogger = $paytrailLogger;
     }
 
     /**
@@ -302,9 +301,10 @@ class ApiData
                     )
                 );
             } elseif ($requestType === 'payment_providers') {
+                // TODO: create request using GatewayCommandPool
                 $response["data"] = $paytrailClient->getGroupedPaymentProviders(
                     $amount,
-                    $this->helper->getStoreLocaleForPaymentProvider()
+                    $this->gatewayConfig->getStoreLocaleForPaymentProvider()
                 );
                 $this->log->debugLog(
                     'response',
@@ -317,6 +317,7 @@ class ApiData
                     'Successful response for invoice activation'
                 );
             } elseif ($requestType === 'add_card') {
+                // TODO: create request using GatewayCommandPool
                 $addCardFormRequest = $this->addCardFormRequest;
                 $this->setAddCardFormRequestData($addCardFormRequest);
                 $response['data'] = $paytrailClient->createAddCardFormRequest($addCardFormRequest);
@@ -387,7 +388,7 @@ class ApiData
             ->setAmount(round($order->getGrandTotal() * 100))
             ->setCustomer($this->requestData->createCustomer($billingAddress))
             ->setInvoicingAddress($this->requestData->createAddress($order, $billingAddress))
-            ->setLanguage($this->helper->getStoreLocaleForPaymentProvider())
+            ->setLanguage($this->gatewayConfig->getStoreLocaleForPaymentProvider())
             ->setItems($this->requestData->getOrderItemLines($order))
             ->setRedirectUrls($this->createRedirectUrl())
             ->setCallbackUrls($this->createCallbackUrl());
@@ -414,12 +415,13 @@ class ApiData
      * @param RefundRequest  $paytrailRefund
      * @param float|int|null $amount
      *
-     * @throws \Paytrail\PaymentService\Exceptions\CheckoutException
+     * @throws CheckoutException
      */
     private function setRefundRequestData(RefundRequest $paytrailRefund, float|int|null $amount): void
     {
         if ($amount <= 0) {
-            $this->helper->processError('Refund amount must be above 0');
+            $this->paytrailLogger->logData(\Monolog\Logger::ERROR, 'Refund amount must be above 0');
+            throw new CheckoutException(__('Refund amount must be above 0'));
         }
 
         $paytrailRefund->setAmount(round($amount * 100));
@@ -466,7 +468,7 @@ class ApiData
         $addCardFormRequest->setCheckoutAlgorithm($this->gatewayConfig->getCheckoutAlgorithm());
         $addCardFormRequest->setCheckoutRedirectSuccessUrl($this->getCallbackUrl($saveCardUrl));
         $addCardFormRequest->setCheckoutRedirectCancelUrl($this->getCallbackUrl($saveCardUrl));
-        $addCardFormRequest->setLanguage($this->helper->getStoreLocaleForPaymentProvider());
+        $addCardFormRequest->setLanguage($this->gatewayConfig->getStoreLocaleForPaymentProvider());
         $addCardFormRequest->setCheckoutMethod('POST');
         $addCardFormRequest->setCheckoutTimestamp($datetime->format('Y-m-d\TH:i:s.u\Z'));
         $addCardFormRequest->setCheckoutNonce(uniqid(true));

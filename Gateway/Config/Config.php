@@ -3,6 +3,7 @@
 namespace Paytrail\PaymentService\Gateway\Config;
 
 use Magento\Framework\App\Config\ScopeConfigInterface;
+use Magento\Framework\Locale\Resolver;
 use Magento\Framework\UrlInterface;
 use Magento\Framework\Encryption\EncryptorInterface;
 use Magento\Payment\Model\CcConfigProvider;
@@ -39,6 +40,7 @@ class Config extends \Magento\Payment\Gateway\Config\Config
     public const KEY_NOTIFICATION_EMAIL = 'recipient_email';
     public const KEY_CANCEL_ORDER_ON_FAILED_PAYMENT = 'failed_payment_cancel';
     public const VAULT_CODE = 'paytrail_cc_vault';
+    public const LOGO = 'payment/paytrail/logo';
 
     /**
      * @var array
@@ -53,6 +55,7 @@ class Config extends \Magento\Payment\Gateway\Config\Config
      * @param UrlInterface $urlBuilder
      * @param CustomerTokenManagement $customerTokenManagement
      * @param CcConfigProvider $ccConfigProvider
+     * @param Resolver $localeResolver
      * @param string $methodCode
      * @param string $pathPattern
      */
@@ -62,6 +65,7 @@ class Config extends \Magento\Payment\Gateway\Config\Config
         private UrlInterface $urlBuilder,
         private CustomerTokenManagement $customerTokenManagement,
         private CcConfigProvider $ccConfigProvider,
+        private Resolver $localeResolver,
         $methodCode = self::CODE,
         $pathPattern = self::DEFAULT_PATH_PATTERN
     ) {
@@ -429,5 +433,45 @@ class Config extends \Magento\Payment\Gateway\Config\Config
         }
 
         return $t;
+    }
+
+    /**
+     * Get valid algorithms.
+     *
+     * @return array
+     */
+    public function getValidAlgorithms(): array
+    {
+        return ["sha256", "sha512"];
+    }
+
+    /**
+     * Get Store locale for payment provider.
+     *
+     * @return string
+     */
+    public function getStoreLocaleForPaymentProvider(): string
+    {
+        $locale = 'EN';
+        if ($this->localeResolver->getLocale() === 'fi_FI') {
+            $locale = 'FI';
+        }
+        if ($this->localeResolver->getLocale() === 'sv_SE') {
+            $locale = 'SV';
+        }
+
+        return $locale;
+    }
+
+    /**
+     * Get order increment id from checkout reference number
+     *
+     * @param string $reference
+     *
+     * @return string|null
+     */
+    public function getIdFromOrderReferenceNumber($reference)
+    {
+        return preg_replace('/\s+/', '', substr($reference, 1, -1));
     }
 }

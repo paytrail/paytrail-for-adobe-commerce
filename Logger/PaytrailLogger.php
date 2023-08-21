@@ -1,38 +1,41 @@
 <?php
+
 namespace Paytrail\PaymentService\Logger;
 
 use Magento\Framework\Serialize\SerializerInterface;
+use Paytrail\PaymentService\Gateway\Config\Config;
 
 class PaytrailLogger extends \Magento\Framework\Logger\Monolog
 {
-    /**
-     * @var SerializerInterface
-     */
-    private $serializer;
-    /**
-     * @var \Paytrail\PaymentService\Gateway\Config\Config
-     */
-    private $config;
     /**
      * @var array
      */
     private $debugActive = [];
 
+    /**
+     * PaytrailLogger constructor.
+     *
+     * @param string $name
+     * @param SerializerInterface $serializer
+     * @param Config $gatewayConfig
+     * @param array $handlers
+     * @param array $processors
+     */
     public function __construct(
         $name,
-        SerializerInterface $serializer,
-        \Paytrail\PaymentService\Gateway\Config\Config $config,
+        private SerializerInterface $serializer,
+        private Config $gatewayConfig,
         array $handlers = [],
         array $processors = []
     ) {
-        $this->serializer = $serializer;
-        $this->config = $config;
         parent::__construct($name, $handlers, $processors);
     }
 
     /**
-     * @param $level
-     * @param $message
+     * Log data.
+     *
+     * @param int $level
+     * @param string $message
      */
     public function logData($level, $message)
     {
@@ -51,8 +54,10 @@ class PaytrailLogger extends \Magento\Framework\Logger\Monolog
     }
 
     /**
-     * @param $type
-     * @param $message
+     * Debug log.
+     *
+     * @param string $type
+     * @param string $message
      */
     public function debugLog($type, $message)
     {
@@ -65,6 +70,8 @@ class PaytrailLogger extends \Magento\Framework\Logger\Monolog
     }
 
     /**
+     * Resolve log level.
+     *
      * @param string $logType
      * @return string
      */
@@ -82,17 +89,40 @@ class PaytrailLogger extends \Magento\Framework\Logger\Monolog
     }
 
     /**
-     * @param $type
+     * Is debug active.
+     *
+     * @param string $type
      * @return int
      */
     private function isDebugActive($type)
     {
         if (!isset($this->debugActive[$type])) {
             $this->debugActive[$type] = $type == 'request'
-                ? $this->config->getRequestLog()
-                : $this->config->getResponseLog();
+                ? $this->gatewayConfig->getRequestLog()
+                : $this->gatewayConfig->getResponseLog();
         }
 
         return $this->debugActive[$type];
+    }
+
+    /**
+     * Log data to file.
+     *
+     * @param string $logType
+     * @param string $level
+     * @param mixed $data
+     * @return void
+     */
+    public function logCheckoutData($logType, $level, $data): void
+    {
+        if ($level !== 'error' &&
+            (($logType === 'request' && $this->gatewayConfig->getRequestLog() == false)
+                || ($logType === 'response' && $this->gatewayConfig->getResponseLog() == false))
+        ) {
+            return;
+        }
+
+        $level = $level == 'error' ? $level : $this->resolveLogLevel($logType);
+        $this->logData($level, $data);
     }
 }

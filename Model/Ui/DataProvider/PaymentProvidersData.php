@@ -6,8 +6,9 @@ use Magento\Checkout\Model\Session;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Payment\Gateway\Command\CommandManagerPoolInterface;
+use Paytrail\PaymentService\Exceptions\CheckoutException;
 use Paytrail\PaymentService\Gateway\Config\Config;
-use Paytrail\PaymentService\Helper\Data as paytrailHelper;
+use Paytrail\PaymentService\Logger\PaytrailLogger;
 use Psr\Log\LoggerInterface;
 
 class PaymentProvidersData
@@ -16,20 +17,20 @@ class PaymentProvidersData
     public const ID_INCREMENT_SEPARATOR = '__';
 
     /**
-     * PaymentProvidersData
+     * PaymentProvidersData constructor.
      *
-     * @param paytrailHelper $paytrailHelper
      * @param Session $checkoutSession
      * @param LoggerInterface $log
      * @param CommandManagerPoolInterface $commandManagerPool
      * @param Config $gatewayConfig
+     * @param PaytrailLogger $paytrailLogger
      */
     public function __construct(
-        private paytrailHelper $paytrailHelper,
         private Session $checkoutSession,
         private LoggerInterface $log,
         private CommandManagerPoolInterface $commandManagerPool,
-        private Config $gatewayConfig
+        private Config $gatewayConfig,
+        private PaytrailLogger $paytrailLogger
     ) {
     }
 
@@ -58,7 +59,8 @@ class PaymentProvidersData
                 'Error occurred during providing payment methods: '
                 . $errorMsg
             );
-            $this->paytrailHelper->processError($errorMsg);
+            $this->paytrailLogger->logData(\Monolog\Logger::ERROR, $errorMsg);
+            throw new CheckoutException(__($errorMsg));
         }
 
         return $response["data"];

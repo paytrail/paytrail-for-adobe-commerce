@@ -6,24 +6,27 @@ use Magento\Sales\Api\OrderRepositoryInterface;
 use Magento\Sales\Model\Order;
 use Magento\Sales\Model\Order\Payment\Transaction;
 use Magento\Sales\Model\Order\Payment\Transaction\BuilderInterface as TransactionBuilderInterface;
+use Paytrail\PaymentService\Exceptions\CheckoutException;
 use Paytrail\PaymentService\Helper\ApiData;
-use Paytrail\PaymentService\Helper\Data as PaytrailHelper;
+use Paytrail\PaymentService\Logger\PaytrailLogger;
 
 class PaymentTransaction
 {
     /**
+     * PaymentTransaction constructor.
+     *
      * @param TransactionBuilderInterface $transactionBuilder
      * @param ApiData $apiData
      * @param CancelOrderService $cancelOrderService
      * @param OrderRepositoryInterface $orderRepositoryInterface
-     * @param PaytrailHelper $paytrailHelper
+     * @param PaytrailLogger $paytrailLogger
      */
     public function __construct(
         private TransactionBuilderInterface $transactionBuilder,
         private ApiData                     $apiData,
         private CancelOrderService          $cancelOrderService,
         private OrderRepositoryInterface    $orderRepositoryInterface,
-        private PaytrailHelper $paytrailHelper
+        private PaytrailLogger $paytrailLogger
     ) {
     }
 
@@ -31,7 +34,7 @@ class PaymentTransaction
      * AddPaymentTransaction function
      *
      * @param Order $order
-     * @param $transactionId
+     * @param string $transactionId
      * @param array $details
      * @return \Magento\Sales\Api\Data\TransactionInterface
      */
@@ -53,9 +56,9 @@ class PaymentTransaction
 
     /**
      * VerifyPaymentData function
-     * 
-     * @param $params
-     * @param $currentOrder
+     *
+     * @param array $params
+     * @param Order $currentOrder
      * @return mixed|string|void
      * @throws \Paytrail\PaymentService\Exceptions\CheckoutException
      */
@@ -70,8 +73,13 @@ class PaymentTransaction
             $currentOrder->addCommentToStatusHistory(__('Failed to complete the payment.'));
             $this->orderRepositoryInterface->save($currentOrder);
             $this->cancelOrderService->cancelOrderById($currentOrder->getId());
-            $this->paytrailHelper->processError(
+
+            $this->paytrailLogger->logData(
+                \Monolog\Logger::ERROR,
                 'Failed to complete the payment. Please try again or contact the customer service.'
+            );
+            throw new CheckoutException(
+                __('Failed to complete the payment. Please try again or contact the customer service.')
             );
         }
     }
