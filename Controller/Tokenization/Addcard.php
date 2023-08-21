@@ -2,108 +2,50 @@
 
 namespace Paytrail\PaymentService\Controller\Tokenization;
 
-use Magento\Checkout\Model\Session;
 use Magento\Customer\Model\Session as CustomerSession;
 use Magento\Framework\App\Action\Context;
 use Magento\Framework\Controller\Result\Json;
 use Magento\Framework\Controller\Result\JsonFactory;
 use Magento\Framework\Validation\ValidationException;
 use Paytrail\PaymentService\Exceptions\CheckoutException;
-use Paytrail\PaymentService\Gateway\Config\Config;
 use Paytrail\PaymentService\Helper\ApiData;
-use Paytrail\PaymentService\Helper\Data as opHelper;
+use Paytrail\PaymentService\Model\Receipt\ProcessService;
 use Paytrail\PaymentService\Model\Validation\PreventAdminActions;
 use Psr\Log\LoggerInterface;
 
-/**
- * Class Addcard
- */
 class AddCard extends \Magento\Framework\App\Action\Action
 {
-    protected $urlBuilder;
-
-    /**
-     * @var Session
-     */
-    protected $checkoutSession;
-
-    /**
-     * @var JsonFactory
-     */
-    protected $jsonFactory;
-
-    /**
-     * @var LoggerInterface
-     */
-    protected $logger;
-
-    /**
-     * @var ApiData
-     */
-    protected $apiData;
-
-    /**
-     * @var opHelper
-     */
-    protected $opHelper;
-
-    /**
-     * @var Config
-     */
-    protected $gatewayConfig;
-
     /**
      * @var $errorMsg
      */
     protected $errorMsg = null;
 
     /**
-     * @var CustomerSession
-     */
-    protected $customerSession;
-
-    /**
-     * @var PreventAdminActions
-     */
-    protected PreventAdminActions $preventAdminActions;
-
-    /**
      * AddCard constructor.
      *
      * @param Context $context
-     * @param Session $checkoutSession
      * @param JsonFactory $jsonFactory
      * @param LoggerInterface $logger
      * @param ApiData $apiData
-     * @param opHelper $opHelper
-     * @param Config $gatewayConfig
      * @param CustomerSession $customerSession
      * @param PreventAdminActions $preventAdminActions
+     * @param ProcessService $processService
      */
     public function __construct(
         Context $context,
-        Session $checkoutSession,
-        JsonFactory $jsonFactory,
-        LoggerInterface $logger,
-        ApiData $apiData,
-        opHelper $opHelper,
-        Config $gatewayConfig,
-        CustomerSession $customerSession,
-        PreventAdminActions $preventAdminActions
+        private JsonFactory $jsonFactory,
+        private LoggerInterface $logger,
+        private ApiData $apiData,
+        private CustomerSession $customerSession,
+        private PreventAdminActions $preventAdminActions,
+        private ProcessService $processService
     ) {
-        $this->urlBuilder = $context->getUrl();
-        $this->checkoutSession = $checkoutSession;
-        $this->jsonFactory = $jsonFactory;
-        $this->logger = $logger;
-        $this->apiData = $apiData;
-        $this->opHelper = $opHelper;
-        $this->gatewayConfig = $gatewayConfig;
-        $this->customerSession = $customerSession;
         parent::__construct($context);
-        $this->preventAdminActions = $preventAdminActions;
     }
 
     /**
+     * Execute
+     *
      * @return mixed
      */
     public function execute()
@@ -142,6 +84,8 @@ class AddCard extends \Magento\Framework\App\Action\Action
     }
 
     /**
+     * Get add_card response data.
+     *
      * @return mixed
      * @throws CheckoutException
      */
@@ -153,7 +97,7 @@ class AddCard extends \Magento\Framework\App\Action\Action
 
         if (isset($errorMsg)) {
             $this->errorMsg = ($errorMsg);
-            $this->opHelper->processError($errorMsg);
+            $this->processService->processError($errorMsg);
         }
 
         return $response["data"];

@@ -12,9 +12,9 @@ use Magento\Payment\Gateway\Command\CommandManagerPoolInterface;
 use Magento\Sales\Api\OrderManagementInterface;
 use Magento\Sales\Api\OrderRepositoryInterface;
 use Paytrail\PaymentService\Exceptions\CheckoutException;
-use Paytrail\PaymentService\Helper\Data as paytrailHelper;
 use Paytrail\PaymentService\Gateway\Config\Config;
 use Paytrail\PaymentService\Model\Email\Order\PendingOrderEmailConfirmation;
+use Paytrail\PaymentService\Model\Receipt\ProcessService;
 use Paytrail\PaymentService\Model\Ui\DataProvider\PaymentProvidersData;
 use Paytrail\SDK\Model\Provider;
 use Paytrail\SDK\Response\PaymentResponse;
@@ -35,11 +35,11 @@ class Index implements ActionInterface
      * @param OrderRepositoryInterface $orderRepositoryInterface
      * @param OrderManagementInterface $orderManagementInterface
      * @param LoggerInterface $logger
-     * @param paytrailHelper $paytrailHelper
      * @param Config $gatewayConfig
      * @param ResultFactory $resultFactory
      * @param RequestInterface $request
      * @param CommandManagerPoolInterface $commandManagerPool
+     * @param ProcessService $processService
      */
     public function __construct(
         protected PendingOrderEmailConfirmation $pendingOrderEmailConfirmation,
@@ -47,11 +47,11 @@ class Index implements ActionInterface
         protected OrderRepositoryInterface    $orderRepositoryInterface,
         protected OrderManagementInterface    $orderManagementInterface,
         protected LoggerInterface             $logger,
-        protected paytrailHelper              $paytrailHelper,
         protected Config                      $gatewayConfig,
         protected ResultFactory               $resultFactory,
         protected RequestInterface            $request,
-        protected CommandManagerPoolInterface $commandManagerPool
+        protected CommandManagerPoolInterface $commandManagerPool,
+        protected ProcessService $processService
     ) {
     }
 
@@ -206,7 +206,7 @@ class Index implements ActionInterface
 
         if ($response['error']) {
             $this->errorMsg = ($response['error']);
-            $this->paytrailHelper->processError($response['error']);
+            $this->processService->processError($response['error']);
         }
 
         return $response["data"];

@@ -9,7 +9,6 @@ use Magento\Framework\Controller\ResultInterface;
 use Magento\Sales\Model\OrderFactory;
 use Paytrail\PaymentService\Controller\Receipt\Index as Receipt;
 use Paytrail\PaymentService\Gateway\Config\Config;
-use Paytrail\PaymentService\Helper\Data;
 use Paytrail\PaymentService\Helper\ProcessPayment;
 
 class Index implements \Magento\Framework\App\ActionInterface
@@ -22,7 +21,6 @@ class Index implements \Magento\Framework\App\ActionInterface
      * @param RequestInterface $request
      * @param ResultFactory $resultFactory
      * @param Config $gatewayConfig
-     * @param Data $paytrailHelper
      * @param OrderFactory $orderFactory
      */
     public function __construct(
@@ -31,7 +29,6 @@ class Index implements \Magento\Framework\App\ActionInterface
         private RequestInterface $request,
         private ResultFactory $resultFactory,
         private Config $gatewayConfig,
-        private Data $paytrailHelper,
         private OrderFactory $orderFactory
     ) {
     }
@@ -49,7 +46,7 @@ class Index implements \Magento\Framework\App\ActionInterface
 
         /** @var string $orderNo */
         $orderNo = $this->gatewayConfig->getGenerateReferenceForOrder()
-            ? $this->paytrailHelper->getIdFromOrderReferenceNumber($reference)
+            ? $this->gatewayConfig->getIdFromOrderReferenceNumber($reference)
             : $reference;
 
         /** @var \Magento\Sales\Model\Order $order */

@@ -13,65 +13,17 @@ use Magento\Vault\Api\PaymentTokenRepositoryInterface;
 use Magento\Vault\Model\PaymentTokenFactory;
 use Paytrail\PaymentService\Gateway\Config\Config;
 use Paytrail\PaymentService\Helper\ApiData;
-use Paytrail\PaymentService\Helper\Data;
+use Paytrail\PaymentService\Model\Receipt\ProcessService;
 use Paytrail\SDK\Model\Token\Card;
+use Paytrail\SDK\Response\GetTokenResponse;
 use Psr\Log\LoggerInterface;
 
-/**
- * Class SaveCard
- */
 class SaveCard extends \Magento\Framework\App\Action\Action
 {
-    private const ADDING_CARD_SUCCESS = 'Card added successfully';
-
-    /**
-     * @var Data
-     */
-    private $opHelper;
-
     /**
      * @var $errorMsg
      */
     protected $errorMsg = null;
-
-    /**
-     * @var ApiData
-     */
-    protected $apiData;
-
-    /**
-     * @var CustomerSession
-     */
-    private $customerSession;
-    /**
-     * @var PaymentTokenFactory
-     */
-    private $paymentTokenFactory;
-
-    /**
-     * @var SerializerInterface
-     */
-    private $jsonSerializer;
-
-    /**
-     * @var EncryptorInterface
-     */
-    private $encryptor;
-
-    /**
-     * @var PaymentTokenRepositoryInterface
-     */
-    private $tokenRepository;
-
-    /**
-     * @var LoggerInterface
-     */
-    protected $logger;
-
-    /**
-     * @var Config
-     */
-    protected $gatewayConfig;
 
     /**
      * @var string[]
@@ -86,18 +38,9 @@ class SaveCard extends \Magento\Framework\App\Action\Action
     ];
 
     /**
-     * @var PaymentTokenManagementInterface
-     */
-    private $paymentTokenManagementInterface;
-
-    /**
-     * @var Session
-     */
-    private $checkoutSession;
-
-    /**
+     * Save card constructor.
+     *
      * @param Context $context
-     * @param Data $opHelper
      * @param ApiData $apiData
      * @param CustomerSession $customerSession
      * @param PaymentTokenFactory $paymentTokenFactory
@@ -108,37 +51,27 @@ class SaveCard extends \Magento\Framework\App\Action\Action
      * @param Config $gatewayConfig
      * @param PaymentTokenManagementInterface $paymentTokenManagementInterface
      * @param Session $checkoutSession
+     * @param ProcessService $processService
      */
     public function __construct(
         Context $context,
-        Data $opHelper,
-        ApiData $apiData,
-        CustomerSession $customerSession,
-        PaymentTokenFactory $paymentTokenFactory,
-        SerializerInterface $jsonSerializer,
-        EncryptorInterface $encryptor,
-        PaymentTokenRepositoryInterface $tokenRepository,
-        LoggerInterface $logger,
-        Config $gatewayConfig,
-        PaymentTokenManagementInterface $paymentTokenManagementInterface,
-        Session $checkoutSession
+        private ApiData $apiData,
+        private CustomerSession $customerSession,
+        private PaymentTokenFactory $paymentTokenFactory,
+        private SerializerInterface $jsonSerializer,
+        private EncryptorInterface $encryptor,
+        private PaymentTokenRepositoryInterface $tokenRepository,
+        private LoggerInterface $logger,
+        private Config $gatewayConfig,
+        private PaymentTokenManagementInterface $paymentTokenManagementInterface,
+        private Session $checkoutSession,
+        private ProcessService $processService
     ) {
         parent::__construct($context);
-        $this->opHelper = $opHelper;
-        $this->apiData = $apiData;
-        $this->customerSession = $customerSession;
-        $this->paymentTokenFactory = $paymentTokenFactory;
-        $this->jsonSerializer = $jsonSerializer;
-        $this->encryptor = $encryptor;
-        $this->tokenRepository = $tokenRepository;
-        $this->logger = $logger;
-        $this->gatewayConfig = $gatewayConfig;
-        $this->paymentTokenManagementInterface = $paymentTokenManagementInterface;
-        $this->checkoutSession = $checkoutSession;
     }
 
     /**
-     * execute method
+     * Execute
      */
     public function execute()
     {
@@ -177,17 +110,20 @@ class SaveCard extends \Magento\Framework\App\Action\Action
         }
 
         // success
-        $this->checkoutSession->setData('paytrail_previous_success', __(self::ADDING_CARD_SUCCESS));
+        $this->checkoutSession->setData('paytrail_previous_success', __('Card added successfully'));
         $this->redirect();
     }
 
     /**
-     * @param $tokenizationId
+     * Get token response data.
+     *
+     * @param string $tokenizationId
      * @return mixed
      * @throws \Paytrail\PaymentService\Exceptions\CheckoutException
      */
     protected function getResponseData($tokenizationId)
     {
+        // TODO: token_request request by GatewayCommandPool
         $response = $this->apiData->processApiRequest(
             'token_request',
             null,
@@ -201,14 +137,16 @@ class SaveCard extends \Magento\Framework\App\Action\Action
 
         if (isset($errorMsg)) {
             $this->errorMsg = ($errorMsg);
-            $this->opHelper->processError($errorMsg);
+            $this->processService->processError($errorMsg);
         }
 
         return $response["data"];
     }
 
     /**
-     * @param $responseData
+     * Get response data.
+     *
+     * @param GetTokenResponse $responseData
      */
     private function saveToken($responseData)
     {
@@ -248,8 +186,10 @@ class SaveCard extends \Magento\Framework\App\Action\Action
     }
 
     /**
-     * @param $addingCard
-     * @param $customerId
+     * Create public hash.
+     *
+     * @param Card $addingCard
+     * @param string $customerId
      * @return string
      */
     private function createPublicHash($addingCard, $customerId)
@@ -270,6 +210,8 @@ class SaveCard extends \Magento\Framework\App\Action\Action
     }
 
     /**
+     * Redirect method.
+     *
      * @return ResponseInterface
      */
     protected function redirect(): ResponseInterface
