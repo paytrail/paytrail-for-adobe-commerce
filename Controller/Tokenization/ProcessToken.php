@@ -2,16 +2,16 @@
 
 namespace Paytrail\PaymentService\Controller\Tokenization;
 
+use Magento\Framework\App\Action\Action;
 use Magento\Framework\App\Action\Context;
 use Magento\Framework\Controller\Result\Json;
 use Magento\Framework\Controller\Result\JsonFactory;
-use Magento\Framework\UrlInterface;
+use Magento\Payment\Gateway\Command\CommandManagerPoolInterface;
 use Paytrail\PaymentService\Exceptions\CheckoutException;
-use Paytrail\PaymentService\Helper\ApiData;
 use Paytrail\PaymentService\Model\Receipt\ProcessService;
 use Psr\Log\LoggerInterface;
 
-class ProcessToken extends \Magento\Framework\App\Action\Action
+class ProcessToken extends Action
 {
     /**
      * @var $errorMsg
@@ -19,20 +19,20 @@ class ProcessToken extends \Magento\Framework\App\Action\Action
     protected $errorMsg = null;
 
     /**
-     * ProcessToken constructor.
+     * ProcessToken constructor
      *
      * @param Context $context
      * @param JsonFactory $jsonFactory
      * @param LoggerInterface $logger
-     * @param ApiData $apiData
      * @param ProcessService $processService
+     * @param CommandManagerPoolInterface $commandManagerPool
      */
     public function __construct(
         Context $context,
         private JsonFactory $jsonFactory,
         private LoggerInterface $logger,
-        private ApiData $apiData,
-        private ProcessService $processService
+        private ProcessService $processService,
+        private CommandManagerPoolInterface $commandManagerPool
     ) {
         parent::__construct($context);
     }
@@ -82,7 +82,8 @@ class ProcessToken extends \Magento\Framework\App\Action\Action
      */
     protected function getResponseData()
     {
-        $response = $this->apiData->processApiRequest('add_card');
+        $commandExecutor = $this->commandManagerPool->get('paytrail');
+        $response = $commandExecutor->executeByCode('add_card');
 
         $errorMsg = $response['error'];
 
