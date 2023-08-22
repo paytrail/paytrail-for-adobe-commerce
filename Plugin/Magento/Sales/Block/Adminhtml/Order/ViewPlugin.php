@@ -5,48 +5,47 @@ namespace Paytrail\PaymentService\Plugin\Magento\Sales\Block\Adminhtml\Order;
 use Magento\Backend\Model\UrlInterface;
 use Magento\Framework\App\RequestInterface;
 use Magento\Sales\Block\Adminhtml\Order\View;
-use Paytrail\PaymentService\Helper\ActivateOrder;
+use Paytrail\PaymentService\Model\Order\OrderActivation;
 
 class ViewPlugin
 {
     /**
-     * @var ActivateOrder
+     * ViewPlugin constructor.
+     *
+     * @param OrderActivation $orderActivation
+     * @param RequestInterface $request
+     * @param UrlInterface $url
      */
-    private $activateOrder;
-
-    /**
-     * @var RequestInterface
-     */
-    private $request;
-    /**
-     * @var UrlInterface
-     */
-    private $url;
-
     public function __construct(
-        ActivateOrder $activateOrder,
-        RequestInterface $request,
-        UrlInterface $url
+        private OrderActivation  $orderActivation,
+        private RequestInterface $request,
+        private UrlInterface     $url
     ) {
-        $this->activateOrder = $activateOrder;
-        $this->request = $request;
-        $this->url = $url;
     }
 
+    /**
+     * Before setLayout plugin.
+     *
+     * @param View $view
+     * @return void
+     */
     public function beforeSetLayout(View $view)
     {
         $orderId = $this->request->getParam('order_id');
-        if ($this->activateOrder->isCanceled($orderId)) {
+        if ($this->orderActivation->isCanceled($orderId)) {
             $view->addButton('rescueOrder', [
                 'label' => __('Restore Order'),
-                'onclick' => "confirmSetLocation('Are you sure you want to make changes to this order?', '{$this->getRestoreOrderUrl($orderId)}')",
+                'onclick' =>
+                    "confirmSetLocation('Are you sure you want to make changes to this order?'
+                    , '{$this->getRestoreOrderUrl($orderId)}')",
             ]);
         }
     }
 
     /**
-     * Restore order URL getter
+     * Get restore order url.
      *
+     * @param string $orderId
      * @return string
      */
     public function getRestoreOrderUrl($orderId): string
