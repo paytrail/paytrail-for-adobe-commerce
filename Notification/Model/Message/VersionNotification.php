@@ -9,6 +9,8 @@ use Paytrail\PaymentService\Gateway\Config\Config;
 
 class VersionNotification implements MessageInterface
 {
+    private const MESSAGE_IDENTITY = 'Paytrail Payment Service Version Control message';
+
     /**
      * VersionNotification constructor.
      *
@@ -22,8 +24,6 @@ class VersionNotification implements MessageInterface
         private Config $gatewayConfig,
     ) {
     }
-
-    private const MESSAGE_IDENTITY = 'Paytrail Payment Service Version Control message';
 
     /**
      * Retrieve unique system message identity
@@ -107,8 +107,9 @@ class VersionNotification implements MessageInterface
 
     /**
      * Set the current value for the backend session
-     * @param $key
-     * @param $value
+     *
+     * @param string $key
+     * @param array $value
      * @return mixed
      */
     private function setSessionData($key, $value)
@@ -118,7 +119,8 @@ class VersionNotification implements MessageInterface
 
     /**
      * Retrieve the session value
-     * @param $key
+     *
+     * @param string $key
      * @param bool $remove
      * @return mixed
      */

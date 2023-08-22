@@ -60,6 +60,8 @@ class Config extends \Magento\Payment\Gateway\Config\Config
      * @param CustomerTokenManagement $customerTokenManagement
      * @param CcConfigProvider $ccConfigProvider
      * @param Resolver $localeResolver
+     * @param ModuleListInterface $moduleList
+     * @param Curl $curlClient
      * @param string $methodCode
      * @param string $pathPattern
      */
