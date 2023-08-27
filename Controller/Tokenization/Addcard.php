@@ -3,17 +3,18 @@
 namespace Paytrail\PaymentService\Controller\Tokenization;
 
 use Magento\Customer\Model\Session as CustomerSession;
+use Magento\Framework\App\Action\Action;
 use Magento\Framework\App\Action\Context;
 use Magento\Framework\Controller\Result\Json;
 use Magento\Framework\Controller\Result\JsonFactory;
 use Magento\Framework\Validation\ValidationException;
+use Magento\Payment\Gateway\Command\CommandManagerPoolInterface;
 use Paytrail\PaymentService\Exceptions\CheckoutException;
-use Paytrail\PaymentService\Helper\ApiData;
 use Paytrail\PaymentService\Model\Receipt\ProcessService;
 use Paytrail\PaymentService\Model\Validation\PreventAdminActions;
 use Psr\Log\LoggerInterface;
 
-class AddCard extends \Magento\Framework\App\Action\Action
+class AddCard extends Action
 {
     /**
      * @var $errorMsg
@@ -26,19 +27,19 @@ class AddCard extends \Magento\Framework\App\Action\Action
      * @param Context $context
      * @param JsonFactory $jsonFactory
      * @param LoggerInterface $logger
-     * @param ApiData $apiData
      * @param CustomerSession $customerSession
      * @param PreventAdminActions $preventAdminActions
      * @param ProcessService $processService
+     * @param CommandManagerPoolInterface $commandManagerPool
      */
     public function __construct(
         Context $context,
         private JsonFactory $jsonFactory,
         private LoggerInterface $logger,
-        private ApiData $apiData,
         private CustomerSession $customerSession,
         private PreventAdminActions $preventAdminActions,
-        private ProcessService $processService
+        private ProcessService $processService,
+        private CommandManagerPoolInterface $commandManagerPool
     ) {
         parent::__construct($context);
     }
@@ -91,7 +92,8 @@ class AddCard extends \Magento\Framework\App\Action\Action
      */
     protected function getResponseData()
     {
-        $response = $this->apiData->processApiRequest('add_card');
+        $commandExecutor = $this->commandManagerPool->get('paytrail');
+        $response = $commandExecutor->executeByCode('add_card');
 
         $errorMsg = $response['error'];
 

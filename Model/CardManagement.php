@@ -7,77 +7,37 @@ use Magento\Framework\Api\FilterBuilder;
 use Magento\Framework\Api\Search\FilterGroupBuilder;
 use Magento\Framework\Api\SearchCriteriaBuilder;
 use Magento\Framework\Exception\LocalizedException;
+use Magento\Payment\Gateway\Command\CommandManagerPoolInterface;
 use Magento\Vault\Api\Data\PaymentTokenInterface;
 use Magento\Vault\Api\PaymentTokenRepositoryInterface;
 use Paytrail\PaymentService\Api\CardManagementInterface;
 use Paytrail\PaymentService\Api\Data\SubscriptionInterface;
 use Paytrail\PaymentService\Api\Data\SubscriptionSearchResultInterface;
 use Paytrail\PaymentService\Api\SubscriptionRepositoryInterface;
-use Paytrail\PaymentService\Helper\ApiData;
 use Paytrail\SDK\Exception\ValidationException;
 
 class CardManagement implements CardManagementInterface
 {
     /**
-     * @var ApiData
-     */
-    private ApiData $apiData;
-
-    /**
-     * @var PaymentTokenRepositoryInterface
-     */
-    private PaymentTokenRepositoryInterface $paymentTokenRepository;
-
-    /**
-     * @var UserContextInterface
-     */
-    private UserContextInterface $userContext;
-
-    /**
-     * @var FilterBuilder
-     */
-    private FilterBuilder $filterBuilder;
-
-    /**
-     * @var FilterGroupBuilder
-     */
-    private FilterGroupBuilder $filterGroupBuilder;
-
-    /**
-     * @var SubscriptionRepositoryInterface $subscriptionRepository
-     */
-    private SubscriptionRepositoryInterface $subscriptionRepository;
-
-    /**
-     * @var SearchCriteriaBuilder
-     */
-    private SearchCriteriaBuilder $searchCriteriaBuilder;
-
-    /**
-     * @param ApiData $apiData
+     * CardManagement constructor.
+     *
      * @param PaymentTokenRepositoryInterface $paymentTokenRepository
      * @param UserContextInterface $userContext
      * @param FilterBuilder $filterBuilder
      * @param FilterGroupBuilder $filterGroupBuilder
      * @param SubscriptionRepositoryInterface $subscriptionRepository
      * @param SearchCriteriaBuilder $searchCriteriaBuilder
+     * @param CommandManagerPoolInterface $commandManagerPool
      */
     public function __construct(
-        ApiData $apiData,
-        PaymentTokenRepositoryInterface $paymentTokenRepository,
-        UserContextInterface $userContext,
-        FilterBuilder $filterBuilder,
-        FilterGroupBuilder $filterGroupBuilder,
-        SubscriptionRepositoryInterface $subscriptionRepository,
-        SearchCriteriaBuilder $searchCriteriaBuilder
+        private PaymentTokenRepositoryInterface $paymentTokenRepository,
+        private UserContextInterface $userContext,
+        private FilterBuilder $filterBuilder,
+        private FilterGroupBuilder $filterGroupBuilder,
+        private SubscriptionRepositoryInterface $subscriptionRepository,
+        private SearchCriteriaBuilder $searchCriteriaBuilder,
+        private CommandManagerPoolInterface $commandManagerPool
     ) {
-        $this->apiData = $apiData;
-        $this->paymentTokenRepository = $paymentTokenRepository;
-        $this->userContext = $userContext;
-        $this->filterBuilder = $filterBuilder;
-        $this->filterGroupBuilder = $filterGroupBuilder;
-        $this->subscriptionRepository = $subscriptionRepository;
-        $this->searchCriteriaBuilder = $searchCriteriaBuilder;
     }
 
     /**
@@ -85,7 +45,8 @@ class CardManagement implements CardManagementInterface
      */
     public function generateAddCardUrl(): string
     {
-        $response = $this->apiData->processApiRequest('add_card');
+        $commandExecutor = $this->commandManagerPool->get('paytrail');
+        $response = $commandExecutor->executeByCode('add_card');
 
         if (isset($response['error'])) {
             throw new ValidationException($response['error']);
@@ -115,6 +76,8 @@ class CardManagement implements CardManagementInterface
     }
 
     /**
+     * Get subscription for payment token.
+     *
      * @param PaymentTokenInterface $paymentToken
      * @return SubscriptionSearchResultInterface
      */

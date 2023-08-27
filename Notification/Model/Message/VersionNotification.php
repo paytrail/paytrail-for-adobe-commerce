@@ -2,44 +2,28 @@
 
 namespace Paytrail\PaymentService\Notification\Model\Message;
 
-class VersionNotification implements \Magento\Framework\Notification\MessageInterface
+use Magento\AdminNotification\Model\InboxFactory;
+use Magento\Backend\Model\Auth\Session;
+use Magento\Framework\Notification\MessageInterface;
+use Paytrail\PaymentService\Gateway\Config\Config;
+
+class VersionNotification implements MessageInterface
 {
-    /**
-     * @var \Magento\Backend\Model\Auth\Session
-     */
-    private $authSession;
-    /**
-     * @var \Magento\AdminNotification\Model\InboxFactory
-     */
-    private $inboxFactory;
-    /**
-     * @var \Magento\Framework\Component\ComponentRegistrarInterface
-     */
-    private $componentRegistrar;
-    /**
-     * @var \Magento\Framework\Notification\NotifierInterface
-     */
-    private $notifierPool;
-    /**
-     * @var \Paytrail\PaymentService\Helper\Version
-     */
-    private $versionHelper;
+    private const MESSAGE_IDENTITY = 'Paytrail Payment Service Version Control message';
 
+    /**
+     * VersionNotification constructor.
+     *
+     * @param Session $authSession
+     * @param InboxFactory $inboxFactory
+     * @param Config $gatewayConfig
+     */
     public function __construct(
-        \Magento\Backend\Model\Auth\Session $authSession,
-        \Magento\AdminNotification\Model\InboxFactory $inboxFactory,
-        \Magento\Framework\Component\ComponentRegistrarInterface $componentRegistrar,
-        \Magento\Framework\Notification\NotifierInterface $notifierPool,
-        \Paytrail\PaymentService\Helper\Version $versionHelper
+        private Session $authSession,
+        private InboxFactory $inboxFactory,
+        private Config $gatewayConfig,
     ) {
-        $this->authSession = $authSession;
-        $this->inboxFactory = $inboxFactory;
-        $this->componentRegistrar = $componentRegistrar;
-        $this->notifierPool = $notifierPool;
-        $this->versionHelper = $versionHelper;
     }
-
-    const MESSAGE_IDENTITY = 'Paytrail Payment Service Version Control message';
 
     /**
      * Retrieve unique system message identity
@@ -59,18 +43,21 @@ class VersionNotification implements \Magento\Framework\Notification\MessageInte
     public function isDisplayed()
     {
         try {
-            $githubContent = $this->versionHelper->getDecodedContentFromGithub();
+            $githubContent = $this->gatewayConfig->getDecodedContentFromGithub();
             $this->setSessionData("PaytrailGithubVersion", $githubContent);
 
             /*
              * This will compare the currently installed version with the latest available one.
              * A message will appear after the login if the two are not matching.
              */
-            if ('v' . $this->versionHelper->getVersion() != $githubContent['tag_name']) {
+            if ('v' . $this->gatewayConfig->getVersion() != $githubContent['tag_name']) {
                 $versionData[] = [
                     'severity' => self::SEVERITY_CRITICAL,
                     'date_added' => date('Y-m-d H:i:s'),
-                    'title' => __("Paytrail Payment Service extension version %1 available!", $githubContent['tag_name']),
+                    'title' => __(
+                        "Paytrail Payment Service extension version %1 available!",
+                        $githubContent['tag_name']
+                    ),
                     'description' => $githubContent['body'],
                     'url' => $githubContent['html_url'],
                 ];
@@ -101,8 +88,10 @@ class VersionNotification implements \Magento\Framework\Notification\MessageInte
         $message .= __(
             "<a href= \"" . $githubContent['html_url'] . "\" target='_blank'> " . $githubContent['tag_name'] . "!</a>"
         );
-        $message .= __(" You are running the v%1 version. We advise to update your extension.",
-            $this->versionHelper->getVersion());
+        $message .= __(
+            " You are running the v%1 version. We advise to update your extension.",
+            $this->gatewayConfig->getVersion()
+        );
         return __($message);
     }
 
@@ -118,8 +107,9 @@ class VersionNotification implements \Magento\Framework\Notification\MessageInte
 
     /**
      * Set the current value for the backend session
-     * @param $key
-     * @param $value
+     *
+     * @param string $key
+     * @param array $value
      * @return mixed
      */
     private function setSessionData($key, $value)
@@ -129,7 +119,8 @@ class VersionNotification implements \Magento\Framework\Notification\MessageInte
 
     /**
      * Retrieve the session value
-     * @param $key
+     *
+     * @param string $key
      * @param bool $remove
      * @return mixed
      */

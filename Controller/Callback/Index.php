@@ -9,7 +9,7 @@ use Magento\Framework\Controller\ResultInterface;
 use Magento\Sales\Model\OrderFactory;
 use Paytrail\PaymentService\Controller\Receipt\Index as Receipt;
 use Paytrail\PaymentService\Gateway\Config\Config;
-use Paytrail\PaymentService\Helper\ProcessPayment;
+use Paytrail\PaymentService\Model\Receipt\ProcessPayment;
 
 class Index implements \Magento\Framework\App\ActionInterface
 {
