@@ -112,8 +112,8 @@
                 </item>
                 <item name="email_refund" xsi:type="string">PaytrailEmailRefundCommand</item>
                 <item name="token_payment" xsi:type="string">Paytrail\PaymentService\Gateway\Command\TokenPayment</item>
-                <item name="get_payment_data" xsi:type="string">Paytrail\PaymentService\Gateway\Command\PaymentData
-                </item>
+                <item name="get_payment_data" xsi:type="string">Paytrail\PaymentService\Gateway\Command\PaymentData</item>
+                <item name="add_card" xsi:type="string">Paytrail\PaymentService\Gateway\Command\AddCard</item>
             </argument>
         </arguments>
     </virtualType>
@@ -253,6 +253,32 @@
     <virtualType name="PaytrailConfigProvider" type="Paytrail\PaymentService\Model\Ui\ConfigProvider">
         <arguments>
             <argument name="commandManager" xsi:type="object">PaytrailPaymentMethodProviderCommandManager</argument>
+        </arguments>
+    </virtualType>
+
+    <!-- Command section for add_card action  -->
+    <virtualType name="PaytrailAddCardCommandManager" type="Magento\Payment\Gateway\Command\CommandManager">
+        <arguments>
+            <argument name="commandPool" xsi:type="object">PaytrailAddCardCommandPool</argument>
+        </arguments>
+    </virtualType>
+
+    <type name="Paytrail\PaymentService\Gateway\Command\AddCard">
+        <arguments>
+            <argument name="requestBuilder" xsi:type="object">PaytrailAddCardRequest</argument>
+            <argument name="transferFactory" xsi:type="object">Paytrail\PaymentService\Gateway\Http\TransferFactory</argument>
+            <argument name="client" xsi:type="object">Paytrail\PaymentService\Gateway\Http\Client\TransactionAddCard</argument>
+            <argument name="handler" xsi:type="object">Paytrail\PaymentService\Gateway\Response\AddCardHandler</argument>
+        </arguments>
+    </type>
+
+    <virtualType name="PaytrailAddCardRequest" type="Magento\Payment\Gateway\Request\BuilderComposite">
+        <arguments>
+            <argument name="builders" xsi:type="array">
+                <item name="paymentBuilder" xsi:type="string">
+                    Paytrail\PaymentService\Gateway\Request\AddCardDataBuilder
+                </item>
+            </argument>
         </arguments>
     </virtualType>
 
