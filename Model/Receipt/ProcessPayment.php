@@ -1,6 +1,6 @@
 <?php
 
-namespace Paytrail\PaymentService\Helper;
+namespace Paytrail\PaymentService\Model\Receipt;
 
 use Magento\Checkout\Model\Session;
 use Magento\Quote\Api\CartRepositoryInterface;

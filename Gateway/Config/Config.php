@@ -3,7 +3,9 @@
 namespace Paytrail\PaymentService\Gateway\Config;
 
 use Magento\Framework\App\Config\ScopeConfigInterface;
+use Magento\Framework\HTTP\Client\Curl;
 use Magento\Framework\Locale\Resolver;
+use Magento\Framework\Module\ModuleListInterface;
 use Magento\Framework\UrlInterface;
 use Magento\Framework\Encryption\EncryptorInterface;
 use Magento\Payment\Model\CcConfigProvider;
@@ -42,6 +44,8 @@ class Config extends \Magento\Payment\Gateway\Config\Config
     public const VAULT_CODE = 'paytrail_cc_vault';
     public const LOGO = 'payment/paytrail/logo';
 
+    public const GIT_URL = 'https://api.github.com/repos/paytrail/paytrail-for-adobe-commerce/releases/latest';
+
     /**
      * @var array
      */
@@ -56,6 +60,8 @@ class Config extends \Magento\Payment\Gateway\Config\Config
      * @param CustomerTokenManagement $customerTokenManagement
      * @param CcConfigProvider $ccConfigProvider
      * @param Resolver $localeResolver
+     * @param ModuleListInterface $moduleList
+     * @param Curl $curlClient
      * @param string $methodCode
      * @param string $pathPattern
      */
@@ -66,6 +72,8 @@ class Config extends \Magento\Payment\Gateway\Config\Config
         private CustomerTokenManagement $customerTokenManagement,
         private CcConfigProvider $ccConfigProvider,
         private Resolver $localeResolver,
+        private ModuleListInterface $moduleList,
+        private Curl $curlClient,
         $methodCode = self::CODE,
         $pathPattern = self::DEFAULT_PATH_PATTERN
     ) {
@@ -473,5 +481,35 @@ class Config extends \Magento\Payment\Gateway\Config\Config
     public function getIdFromOrderReferenceNumber($reference)
     {
         return preg_replace('/\s+/', '', substr($reference, 1, -1));
+    }
+
+    /**
+     * Get module version.
+     *
+     * @return string
+     */
+    public function getVersion()
+    {
+        if ($moduleInfo = $this->moduleList->getOne('Paytrail_PaymentService')) {
+            return $moduleInfo['setup_version'];
+        }
+        return '-';
+    }
+
+    /**
+     * Get decoded content from GitHub.
+     *
+     * @return mixed
+     */
+    public function getDecodedContentFromGithub()
+    {
+        $options = [
+            CURLOPT_RETURNTRANSFER => 1,
+            CURLOPT_CONNECTTIMEOUT => 1,
+            CURLOPT_USERAGENT => 'magento'
+        ];
+        $this->curlClient->setOptions($options);
+        $this->curlClient->get(self::GIT_URL);
+        return json_decode($this->curlClient->getBody(), true);
     }
 }
