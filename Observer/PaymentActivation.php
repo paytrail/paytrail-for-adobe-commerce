@@ -18,7 +18,8 @@ class PaymentActivation implements \Magento\Framework\Event\ObserverInterface
     public function __construct(
         \Magento\Sales\Model\ResourceModel\Order\Payment\Transaction\CollectionFactory $collectionFactory,
         SerializerInterface $serializer,
-        ApiData $apiData
+        ApiData $apiData,
+        private \Magento\Payment\Gateway\Command\CommandManagerPoolInterface $commandManagerPool
     ) {
         $this->collectionFactory = $collectionFactory;
         $this->serializer = $serializer;
@@ -42,16 +43,18 @@ class PaymentActivation implements \Magento\Framework\Event\ObserverInterface
             $info = $transaction->getAdditionalInformation();
 
             if (isset($info['raw_details_info']['method']) && in_array(
-                    $info['raw_details_info']['method'],
-                    ActivationModel::SUB_METHODS_WITH_MANUAL_ACTIVATION_SUPPORT
-                )) {
+                $info['raw_details_info']['method'],
+                ActivationModel::SUB_METHODS_WITH_MANUAL_ACTIVATION_SUPPORT
+            )) {
                 $this->sendActivation($transaction->getTxnId());
             }
         }
     }
 
     /**
-     * @param \Magento\Sales\Api\Data\OrderInterface $transaction
+     * Send invoice activation.
+     *
+     * @param string $txnId
      * @return void
      */
     private function sendActivation($txnId)
@@ -60,11 +63,20 @@ class PaymentActivation implements \Magento\Framework\Event\ObserverInterface
         // Without signature Hmac validation embedded in payment processing cannot be passed. This can be resolved with
         // Recurring payment HMAC updates.
         // TODO Use recurring payment HMAC processing here to mark order as paid if response status is "OK"
-        $this->apiData->processApiRequest(
+//        $this->apiData->processApiRequest(
+//            'invoice_activation',
+//            null,
+//            null,
+//            $txnId
+//        );
+
+        $commandExecutor = $this->commandManagerPool->get('paytrail');
+        $commandExecutor->executeByCode(
             'invoice_activation',
             null,
-            null,
-            $txnId
+            [
+                'transaction_id' => $txnId
+            ]
         );
     }
 }
