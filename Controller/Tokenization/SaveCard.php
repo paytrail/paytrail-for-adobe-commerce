@@ -123,16 +123,6 @@ class SaveCard extends \Magento\Framework\App\Action\Action
      */
     protected function getResponseData($tokenizationId)
     {
-        // TODO: token_request request by GatewayCommandPool
-//        $response = $this->apiData->processApiRequest(
-//            'token_request',
-//            null,
-//            null,
-//            null,
-//            null,
-//            $tokenizationId
-//        );
-
         $commandExecutor = $this->commandManagerPool->get('paytrail');
         $response = $commandExecutor->executeByCode(
             'token_request',
