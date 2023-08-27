@@ -114,6 +114,7 @@
                 <item name="token_payment" xsi:type="string">Paytrail\PaymentService\Gateway\Command\TokenPayment</item>
                 <item name="get_payment_data" xsi:type="string">Paytrail\PaymentService\Gateway\Command\PaymentData</item>
                 <item name="add_card" xsi:type="string">Paytrail\PaymentService\Gateway\Command\AddCard</item>
+                <item name="token_request" xsi:type="string">Paytrail\PaymentService\Gateway\Command\TokenRequest</item>
             </argument>
         </arguments>
     </virtualType>
@@ -277,6 +278,32 @@
             <argument name="builders" xsi:type="array">
                 <item name="paymentBuilder" xsi:type="string">
                     Paytrail\PaymentService\Gateway\Request\AddCardDataBuilder
+                </item>
+            </argument>
+        </arguments>
+    </virtualType>
+
+    <!-- Command section for token_request action  -->
+    <virtualType name="PaytrailTokenRequestCommandManager" type="Magento\Payment\Gateway\Command\CommandManager">
+        <arguments>
+            <argument name="commandPool" xsi:type="object">PaytrailTokenRequestCommandPool</argument>
+        </arguments>
+    </virtualType>
+
+    <type name="Paytrail\PaymentService\Gateway\Command\TokenRequest">
+        <arguments>
+            <argument name="requestBuilder" xsi:type="object">PaytrailTokenRequestRequest</argument>
+            <argument name="transferFactory" xsi:type="object">Paytrail\PaymentService\Gateway\Http\TransferFactory</argument>
+            <argument name="client" xsi:type="object">Paytrail\PaymentService\Gateway\Http\Client\TokenRequest</argument>
+            <argument name="handler" xsi:type="object">Paytrail\PaymentService\Gateway\Response\TokenRequestHandler</argument>
+        </arguments>
+    </type>
+
+    <virtualType name="PaytrailTokenRequestRequest" type="Magento\Payment\Gateway\Request\BuilderComposite">
+        <arguments>
+            <argument name="builders" xsi:type="array">
+                <item name="paymentBuilder" xsi:type="string">
+                    Paytrail\PaymentService\Gateway\Request\TokenRequestDataBuilder
                 </item>
             </argument>
         </arguments>
