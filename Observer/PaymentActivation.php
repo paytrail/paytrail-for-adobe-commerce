@@ -1,31 +1,34 @@
 <?php
 declare(strict_types=1);
 
-
 namespace Paytrail\PaymentService\Observer;
 
 use Magento\Framework\Event\Observer;
-use Magento\Framework\Serialize\SerializerInterface;
-use Paytrail\PaymentService\Helper\ApiData;
+use Magento\Framework\Event\ObserverInterface;
+use Magento\Payment\Gateway\Command\CommandManagerPoolInterface;
+use Magento\Sales\Model\ResourceModel\Order\Payment\Transaction\CollectionFactory;
 use \Paytrail\PaymentService\Model\Invoice\InvoiceActivation as ActivationModel;
 
-class PaymentActivation implements \Magento\Framework\Event\ObserverInterface
+class PaymentActivation implements ObserverInterface
 {
-    private \Magento\Sales\Model\ResourceModel\Order\Payment\Transaction\CollectionFactory $collectionFactory;
-    private SerializerInterface $serializer;
-    private ApiData $apiData;
-
+    /**
+     * PaymentActivation constructor.
+     *
+     * @param CollectionFactory $collectionFactory
+     * @param CommandManagerPoolInterface $commandManagerPool
+     */
     public function __construct(
-        \Magento\Sales\Model\ResourceModel\Order\Payment\Transaction\CollectionFactory $collectionFactory,
-        SerializerInterface $serializer,
-        ApiData $apiData,
-        private \Magento\Payment\Gateway\Command\CommandManagerPoolInterface $commandManagerPool
+        private CollectionFactory $collectionFactory,
+        private CommandManagerPoolInterface $commandManagerPool
     ) {
-        $this->collectionFactory = $collectionFactory;
-        $this->serializer = $serializer;
-        $this->apiData = $apiData;
     }
 
+    /**
+     * Execute.
+     *
+     * @param Observer $observer
+     * @return void
+     */
     public function execute(Observer $observer)
     {
         /** @var \Magento\Sales\Model\Order\Shipment $shipment */
@@ -63,12 +66,6 @@ class PaymentActivation implements \Magento\Framework\Event\ObserverInterface
         // Without signature Hmac validation embedded in payment processing cannot be passed. This can be resolved with
         // Recurring payment HMAC updates.
         // TODO Use recurring payment HMAC processing here to mark order as paid if response status is "OK"
-//        $this->apiData->processApiRequest(
-//            'invoice_activation',
-//            null,
-//            null,
-//            $txnId
-//        );
 
         $commandExecutor = $this->commandManagerPool->get('paytrail');
         $commandExecutor->executeByCode(
