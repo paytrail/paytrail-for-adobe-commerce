@@ -8,11 +8,11 @@ use Magento\Framework\App\Action\Context;
 use Magento\Framework\App\ResponseInterface;
 use Magento\Framework\Encryption\EncryptorInterface;
 use Magento\Framework\Serialize\SerializerInterface;
+use Magento\Payment\Gateway\Command\CommandManagerPoolInterface;
 use Magento\Vault\Api\PaymentTokenManagementInterface;
 use Magento\Vault\Api\PaymentTokenRepositoryInterface;
 use Magento\Vault\Model\PaymentTokenFactory;
 use Paytrail\PaymentService\Gateway\Config\Config;
-use Paytrail\PaymentService\Helper\ApiData;
 use Paytrail\PaymentService\Model\Receipt\ProcessService;
 use Paytrail\SDK\Model\Token\Card;
 use Paytrail\SDK\Response\GetTokenResponse;
@@ -38,10 +38,10 @@ class SaveCard extends \Magento\Framework\App\Action\Action
     ];
 
     /**
-     * Save card constructor.
+     * SaveCard constructor.
      *
      * @param Context $context
-     * @param ApiData $apiData
+     * @param CommandManagerPoolInterface $commandManagerPool
      * @param CustomerSession $customerSession
      * @param PaymentTokenFactory $paymentTokenFactory
      * @param SerializerInterface $jsonSerializer
@@ -55,7 +55,7 @@ class SaveCard extends \Magento\Framework\App\Action\Action
      */
     public function __construct(
         Context $context,
-        private ApiData $apiData,
+        private CommandManagerPoolInterface $commandManagerPool,
         private CustomerSession $customerSession,
         private PaymentTokenFactory $paymentTokenFactory,
         private SerializerInterface $jsonSerializer,
@@ -123,14 +123,13 @@ class SaveCard extends \Magento\Framework\App\Action\Action
      */
     protected function getResponseData($tokenizationId)
     {
-        // TODO: token_request request by GatewayCommandPool
-        $response = $this->apiData->processApiRequest(
+        $commandExecutor = $this->commandManagerPool->get('paytrail');
+        $response = $commandExecutor->executeByCode(
             'token_request',
             null,
-            null,
-            null,
-            null,
-            $tokenizationId
+            [
+                'tokenization_id' => $tokenizationId
+            ]
         );
 
         $errorMsg = $response['error'];
