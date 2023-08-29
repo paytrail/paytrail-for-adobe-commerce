@@ -4,7 +4,6 @@ namespace Paytrail\PaymentService\Gateway\Validator;
 
 use Magento\Payment\Gateway\Validator\AbstractValidator;
 use Magento\Payment\Gateway\Validator\ResultInterfaceFactory;
-use Paytrail\PaymentService\Helper\ApiData;
 use Paytrail\PaymentService\Gateway\Config\Config;
 
 class ResponseValidator extends AbstractValidator
@@ -14,12 +13,12 @@ class ResponseValidator extends AbstractValidator
      *
      * @param Config $gatewayConfig
      * @param ResultInterfaceFactory $resultFactory
-     * @param ApiData $apiData
+     * @param HmacValidator $hmacValidator
      */
     public function __construct(
         private Config $gatewayConfig,
         ResultInterfaceFactory $resultFactory,
-        private ApiData $apiData
+        private HmacValidator $hmacValidator
     ) {
         parent::__construct($resultFactory);
     }
@@ -122,6 +121,6 @@ class ResponseValidator extends AbstractValidator
      */
     public function validateResponse($params)
     {
-        return $this->apiData->validateHmac($params, $params["signature"]);
+        return $this->hmacValidator->validateHmac($params, $params["signature"]);
     }
 }
