@@ -164,6 +164,12 @@
         <section id="sales">
             <group id="recurring_payment" translate="label" sortOrder="800" showInDefault="1" showInStore="0" showInWebsite="0">
                 <label>Paytrail: Recurring Payment</label>
+                <field id="active_recurring_payment" translate="label" type="select" sortOrder="1" showInDefault="1" showInWebsite="1"
+                       showInStore="0" canRestore="1">
+                    <label>Enabled Recurring payment</label>
+                    <comment>Activating Recurring Payment feature</comment>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                </field>
                 <field id="notify_cron_schedule" translate="label comment" sortOrder="10" type="text"
                        showInDefault="1" showInWebsite="0" showInStore="0" canRestore="1">
                     <label>Recurring payment email notification schedule</label>
