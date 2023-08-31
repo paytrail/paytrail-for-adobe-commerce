@@ -7,7 +7,7 @@ use Magento\Sales\Model\Order;
 use Magento\Sales\Model\Order\Payment\Transaction;
 use Magento\Sales\Model\Order\Payment\Transaction\BuilderInterface as TransactionBuilderInterface;
 use Paytrail\PaymentService\Exceptions\CheckoutException;
-use Paytrail\PaymentService\Helper\ApiData;
+use Paytrail\PaymentService\Gateway\Validator\HmacValidator;
 use Paytrail\PaymentService\Logger\PaytrailLogger;
 
 class PaymentTransaction
@@ -16,14 +16,14 @@ class PaymentTransaction
      * PaymentTransaction constructor.
      *
      * @param TransactionBuilderInterface $transactionBuilder
-     * @param ApiData $apiData
+     * @param HmacValidator $hmacValidator
      * @param CancelOrderService $cancelOrderService
      * @param OrderRepositoryInterface $orderRepositoryInterface
      * @param PaytrailLogger $paytrailLogger
      */
     public function __construct(
         private TransactionBuilderInterface $transactionBuilder,
-        private ApiData                     $apiData,
+        private HmacValidator $hmacValidator,
         private CancelOrderService          $cancelOrderService,
         private OrderRepositoryInterface    $orderRepositoryInterface,
         private PaytrailLogger $paytrailLogger
@@ -65,7 +65,7 @@ class PaymentTransaction
     public function verifyPaymentData($params, $currentOrder)
     {
         $status = $params['checkout-status'];
-        $verifiedPayment = $this->apiData->validateHmac($params, $params['signature']);
+        $verifiedPayment = $this->hmacValidator->validateHmac($params, $params['signature']);
 
         if ($verifiedPayment && ($status === 'ok' || $status == 'pending' || $status == 'delayed')) {
             return $status;
