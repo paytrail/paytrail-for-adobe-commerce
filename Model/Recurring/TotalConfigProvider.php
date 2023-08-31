@@ -5,12 +5,15 @@ namespace Paytrail\PaymentService\Model\Recurring;
 
 use Magento\Checkout\Model\ConfigProviderInterface;
 use Magento\Checkout\Model\Session;
+use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Exception\NoSuchEntityException;
+use Magento\Store\Model\ScopeInterface;
 
 class TotalConfigProvider implements ConfigProviderInterface
 {
     private const NO_SCHEDULE_VALUE = null;
+    private const IS_RECURRING_PAYMENT_ENABLED = 'sales/recurring_payment/active_recurring_payment';
 
     /**
      * @var Session
@@ -18,12 +21,35 @@ class TotalConfigProvider implements ConfigProviderInterface
     private $checkoutSession;
 
     /**
+     * @var ScopeConfigInterface
+     */
+    private $scopeConfig;
+
+    /**
+     * TotalConfigProvider constructor.
+     *
      * @param Session $checkoutSession
+     * @param ScopeConfigInterface $scopeConfig
      */
     public function __construct(
-        Session $checkoutSession
+        Session $checkoutSession,
+        ScopeConfigInterface $scopeConfig
     ) {
         $this->checkoutSession = $checkoutSession;
+        $this->scopeConfig = $scopeConfig;
+    }
+
+    /**
+     * Is recurring payment feature enable.
+     *
+     * @return bool
+     */
+    public function isRecurringPaymentEnabled(): bool
+    {
+        return (bool)$this->scopeConfig->getValue(
+            self::IS_RECURRING_PAYMENT_ENABLED,
+            ScopeInterface::SCOPE_STORE
+        );
     }
 
     /**
