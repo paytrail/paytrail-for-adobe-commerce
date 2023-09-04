@@ -24,6 +24,7 @@ use Paytrail\PaymentService\Gateway\Validator\ResponseValidator;
 use Paytrail\PaymentService\Helper\ApiData;
 use Paytrail\PaymentService\Helper\Data;
 use Paytrail\PaymentService\Model\ReceiptDataProvider;
+use Paytrail\PaymentService\Model\Recurring\TotalConfigProvider;
 use Paytrail\PaymentService\Model\Subscription\SubscriptionCreate;
 
 class Token implements HttpPostActionInterface
@@ -104,6 +105,11 @@ class Token implements HttpPostActionInterface
     private OrderManagementInterface $orderManagementInterface;
 
     /**
+     * @var TotalConfigProvider
+     */
+    private TotalConfigProvider $totalConfigProvider;
+
+    /**
      * @param Session $session
      * @param ResponseValidator $responseValidator
      * @param QuoteRepository $quoteRepository
@@ -135,7 +141,8 @@ class Token implements HttpPostActionInterface
         JsonFactory              $jsonFactory,
         OrderRepositoryInterface $orderRepository,
         OrderManagementInterface $orderManagementInterface,
-        SubscriptionCreate       $subscriptionCreate
+        SubscriptionCreate       $subscriptionCreate,
+        TotalConfigProvider $totalConfigProvider
     ) {
         $this->session = $session;
         $this->responseValidator = $responseValidator;
@@ -152,6 +159,7 @@ class Token implements HttpPostActionInterface
         $this->orderRepository = $orderRepository;
         $this->orderManagementInterface = $orderManagementInterface;
         $this->subscriptionCreate = $subscriptionCreate;
+        $this->totalConfigProvider = $totalConfigProvider;
     }
 
     /**
@@ -191,14 +199,16 @@ class Token implements HttpPostActionInterface
         $customer = $this->customerSession->getCustomer();
         try {
             $responseData = $this->getTokenResponseData($order, $selectedTokenId, $customer);
-            if ($this->subscriptionCreate->getSubscriptionSchedule($order) && $responseData->getTransactionId()) {
-                $orderSchedule = $this->subscriptionCreate->getSubscriptionSchedule($order);
-                $this->subscriptionCreate->createSubscription(
-                    $orderSchedule,
-                    $selectedTokenId,
-                    $customer->getId(),
-                    $order->getId()
-                );
+            if ($this->totalConfigProvider->isRecurringPaymentEnabled()) {
+                if ($this->subscriptionCreate->getSubscriptionSchedule($order) && $responseData->getTransactionId()) {
+                    $orderSchedule = $this->subscriptionCreate->getSubscriptionSchedule($order);
+                    $this->subscriptionCreate->createSubscription(
+                        $orderSchedule,
+                        $selectedTokenId,
+                        $customer->getId(),
+                        $order->getId()
+                    );
+                }
             }
         } catch (CheckoutException $exception) {
             $this->errorMsg = __('Error processing token payment');
