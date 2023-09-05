@@ -24,7 +24,7 @@ class PendingOrderEmailConfirmation
     public function __construct(
         ScopeConfigInterface $scopeConfig,
         OrderSender          $orderSender,
-        LoggerInterface      $logger,
+        LoggerInterface      $logger
     ) {
         $this->scopeConfig = $scopeConfig;
         $this->orderSender = $orderSender;
