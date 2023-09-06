@@ -130,9 +130,7 @@ class SubscriptionManagement implements SubscriptionManagementInterface
     }
 
     /**
-     * @param $subscriptionId
-     * @return \Magento\Framework\Phrase
-     * @throws LocalizedException
+     * @inheritdoc
      */
     public function cancelSubscription($subscriptionId)
     {
@@ -144,7 +142,7 @@ class SubscriptionManagement implements SubscriptionManagementInterface
         try {
             $subscription = $this->subscriptionRepository->get((int)$subscriptionId);
             if ($subscription->getStatus() === self::STATUS_CLOSED) {
-                return (__('Subscription is closed'));
+                return __('Subscription is closed')->render();
             }
 
             $customerId = $this->userContext->getUserId();
@@ -171,7 +169,7 @@ class SubscriptionManagement implements SubscriptionManagementInterface
             throw new LocalizedException(__("Subscription couldn't be canceled"));
         }
 
-        return __('Subscription has been canceled correctly');
+        return __('Subscription has been canceled correctly')->render();
     }
 
     /**
