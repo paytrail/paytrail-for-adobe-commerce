@@ -31,7 +31,7 @@ class AddCardDataBuilder implements BuilderInterface
         $addCardFormRequest = $this->addCardFormRequest;
 
         return [
-            'add_card_form' => $this->addCardDataProvider->setAddCardFormRequestData($addCardFormRequest)
+            'add_card_form' => $this->addCardDataProvider->setAddCardFormRequestData($addCardFormRequest, $buildSubject)
         ];
     }
 }
