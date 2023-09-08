@@ -93,7 +93,13 @@ class AddCard extends Action
     protected function getResponseData()
     {
         $commandExecutor = $this->commandManagerPool->get('paytrail');
-        $response = $commandExecutor->executeByCode('add_card');
+        $response = $commandExecutor->executeByCode(
+            'add_card',
+            null,
+            [
+                'custom_redirect_url' => $this->getRequest()->getParam('custom_redirect_url')
+            ]
+        );
 
         $errorMsg = $response['error'];
 
