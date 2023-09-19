@@ -17,4 +17,16 @@
     <type name="Magento\Sales\Model\ResourceModel\Order\Grid\Collection">
         <plugin name="RecurringToOrderGrid" type="Paytrail\PaymentService\Plugin\RecurringToOrderGrid" />
     </type>
+
+    <!-- hide recurring_payment_schedule attribute on product edit page for disable Recurring Payment configuration -->
+    <virtualType name="Magento\Catalog\Ui\DataProvider\Product\Form\Modifier\Pool">
+        <arguments>
+            <argument name="modifiers" xsi:type="array">
+                <item name="recurringPaymentSchedule" xsi:type="array">
+                    <item name="class" xsi:type="string">Paytrail\PaymentService\Model\Ui\DataProvider\Product\Form\Modifier\Attributes</item>
+                    <item name="sortOrder" xsi:type="number">1000</item>
+                </item>
+            </argument>
+        </arguments>
+    </virtualType>
 </config>
