@@ -67,7 +67,7 @@ class PaymentTransaction
     {
         $status = $params['checkout-status'];
 
-        // skip HMAC validator if signature is not provided from response
+        // skip HMAC validator if signature is 'skip_hmac' for token payment
         if ($params['signature'] === Token::SKIP_HMAC_VALIDATION) {
             $verifiedPayment = true;
         } else {
