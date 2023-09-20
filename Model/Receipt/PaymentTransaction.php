@@ -6,6 +6,7 @@ use Magento\Sales\Api\OrderRepositoryInterface;
 use Magento\Sales\Model\Order;
 use Magento\Sales\Model\Order\Payment\Transaction;
 use Magento\Sales\Model\Order\Payment\Transaction\BuilderInterface as TransactionBuilderInterface;
+use Paytrail\PaymentService\Controller\Redirect\Token;
 use Paytrail\PaymentService\Exceptions\CheckoutException;
 use Paytrail\PaymentService\Gateway\Validator\HmacValidator;
 use Paytrail\PaymentService\Logger\PaytrailLogger;
@@ -67,10 +68,10 @@ class PaymentTransaction
         $status = $params['checkout-status'];
 
         // skip HMAC validator if signature is not provided from response
-        if ($params['signature']) {
-            $verifiedPayment = $this->hmacValidator->validateHmac($params, $params['signature']);
-        } else {
+        if ($params['signature'] === Token::SKIP_HMAC_VALIDATION) {
             $verifiedPayment = true;
+        } else {
+            $verifiedPayment = $this->hmacValidator->validateHmac($params, $params['signature']);
         }
 
         if ($verifiedPayment && ($status === 'ok' || $status == 'pending' || $status == 'delayed')) {
