@@ -65,7 +65,13 @@ class PaymentTransaction
     public function verifyPaymentData($params, $currentOrder)
     {
         $status = $params['checkout-status'];
-        $verifiedPayment = $this->hmacValidator->validateHmac($params, $params['signature']);
+
+        // skip HMAC validator if signature is not provided from response
+        if ($params['signature']) {
+            $verifiedPayment = $this->hmacValidator->validateHmac($params, $params['signature']);
+        } else {
+            $verifiedPayment = true;
+        }
 
         if ($verifiedPayment && ($status === 'ok' || $status == 'pending' || $status == 'delayed')) {
             return $status;
