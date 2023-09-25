@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Fix: Fix PHP 7 compatibility issues
 - Improvements for GraphQl module compatibility
+- Add translations
+- Enable/Disable switcher for recurring-payment
 
 
 ## [1.4.3] - 2023-09-05
