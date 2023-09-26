@@ -316,13 +316,29 @@ class RequestData
                     'vat' => 0
                 ];
             } else {
-                $items[] = [
+                $paytrailItem = [
                     'title' => $item->getName(),
                     'code' => $item->getSku(),
                     'amount' => floatval($item->getQtyOrdered()),
                     'price' => floatval($item->getPriceInclTax()) - round(($discountIncl / $item->getQtyOrdered()), 2),
                     'vat' => round(floatval($item->getTaxPercent()))
                 ];
+
+                $difference = $discountIncl - round(
+                    abs($paytrailItem['amount'] * $paytrailItem['price'] - $item->getRowTotalInclTax()),
+                    2
+                    );
+                if ($difference) {
+                    $paytrailItem['amount'] -= 1;
+                    $paytrailItemDiscountCorrection = $paytrailItem;
+                    $paytrailItemDiscountCorrection['amount'] = 1;
+                    $paytrailItemDiscountCorrection['price'] -= $difference;
+                }
+
+                $items [] = $paytrailItem;
+                if ($difference) {
+                    $items [] = $paytrailItemDiscountCorrection;
+                }
             }
         }
 
