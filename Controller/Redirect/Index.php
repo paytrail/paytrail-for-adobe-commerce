@@ -191,7 +191,7 @@ class Index implements HttpPostActionInterface
             $this->logger->error($e->getMessage());
         }
 
-        if ($order->getId()) {
+        if ($order && $order->getId()) {
             $this->orderManagementInterface->cancel($order->getId());
             $order->addCommentToStatusHistory(
                 __('Order canceled. Failed to redirect to Paytrail Payment Service.')
