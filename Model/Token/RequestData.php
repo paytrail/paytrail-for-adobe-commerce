@@ -261,23 +261,6 @@ class RequestData
             $itemQty += $orderItem->getUnits();
         }
 
-        if ($itemSum != $orderTotal) {
-            $diffValue = (int) abs($itemSum - $orderTotal);
-
-            if ($diffValue > $itemQty) {
-                throw new LocalizedException(__('Difference in rounding the prices is too big'));
-            }
-
-            $roundingItem = new Item();
-            $roundingItem->setDescription((string)__('Rounding', 'op-payment-service-magento-2'));
-            $roundingItem->setDeliveryDate(date('Y-m-d'));
-            $roundingItem->setVatPercentage(0);
-            $roundingItem->setUnits(($orderTotal - $itemSum > 0) ? 1 : -1);
-            $roundingItem->setUnitPrice($diffValue);
-            $roundingItem->setProductCode('rounding-row');
-
-            $items[] = $roundingItem;
-        }
         return $items;
     }
 
