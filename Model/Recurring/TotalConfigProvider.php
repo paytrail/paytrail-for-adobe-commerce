@@ -47,9 +47,11 @@ class TotalConfigProvider implements ConfigProviderInterface
     private function isRecurringScheduled(): bool
     {
         $quoteItems = $this->checkoutSession->getQuote()->getItems();
-        foreach ($quoteItems as $item) {
-            if ($item->getProduct()->getCustomAttribute('recurring_payment_schedule') != self::NO_SCHEDULE_VALUE) {
-                return true;
+        if ($quoteItems) {
+            foreach ($quoteItems as $item) {
+                if ($item->getProduct()->getCustomAttribute('recurring_payment_schedule') != self::NO_SCHEDULE_VALUE) {
+                    return true;
+                }
             }
         }
 

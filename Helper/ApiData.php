@@ -411,12 +411,12 @@ class ApiData
     /**
      * Set refund request data.
      *
-     * @param RefundRequest  $paytrailRefund
-     * @param float|int|null $amount
-     *
+     * @param RefundRequest $paytrailRefund
+     * @param float $amount
+     * @return void
      * @throws \Paytrail\PaymentService\Exceptions\CheckoutException
      */
-    private function setRefundRequestData(RefundRequest $paytrailRefund, float|int|null $amount): void
+    private function setRefundRequestData(RefundRequest $paytrailRefund, $amount): void
     {
         if ($amount <= 0) {
             $this->helper->processError('Refund amount must be above 0');
@@ -431,15 +431,14 @@ class ApiData
     /**
      * SetEmailRefundRequestData method
      *
-     * @param EmailRefundRequest         $paytrailEmailRefund
-     * @param float|int|null             $amount
-     * @param \Magento\Sales\Model\Order $order
-     *
+     * @param EmailRefundRequest $paytrailEmailRefund
+     * @param float $amount
+     * @param Order $order
      * @return void
      */
     private function setEmailRefundRequestData(
         EmailRefundRequest $paytrailEmailRefund,
-        float|int|null $amount,
+        float $amount,
         Order $order
     ): void {
         $paytrailEmailRefund->setEmail($order->getBillingAddress()->getEmail());
