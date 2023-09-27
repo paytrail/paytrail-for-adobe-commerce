@@ -18,12 +18,14 @@
     "require": {
         "php": "^8.0",
         "paytrail/paytrail-php-sdk": "^2.6",
-        "magento/framework": ">=102.0.0",
+        "magento/framework": "*",
         "ext-curl": "*",
         "nesbot/carbon": "^2.57.0"
     },
     "require-dev": {
-        "magento/magento-coding-standard": "*"
+        "magento/magento-coding-standard": "*",
+        "phpunit/phpunit": "*",
+        "magento/product-enterprise-edition": "> 2.4.3"
     },
     "conflict": {
         "markup/module-paytrail": "*"
@@ -51,5 +53,12 @@
         "payment gateway",
         "paytrail",
         "Recurring Payment"
-    ]
+    ],
+    "config": {
+        "allow-plugins": {
+            "magento/composer-dependency-version-audit-plugin": false,
+            "magento/magento-composer-installer": false,
+            "magento/inventory-composer-installer": false
+        }
+    }
 }
