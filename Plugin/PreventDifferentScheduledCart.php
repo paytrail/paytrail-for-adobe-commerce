@@ -8,7 +8,7 @@ use Magento\Framework\Exception\LocalizedException;
 
 class PreventDifferentScheduledCart
 {
-    private const SCHEDULE_CODE = 'recurring_payment_schedule';
+    public const SCHEDULE_CODE = 'recurring_payment_schedule';
 
     /**
      * @param Cart $subject
