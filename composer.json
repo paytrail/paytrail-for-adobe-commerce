@@ -1,55 +1,55 @@
 {
-  "name": "paytrail/paytrail-for-adobe-commerce",
-  "description": "Paytrail is a payment gateway that offers 20+ payment methods for Finnish customers.",
-  "authors": [
-    {
-      "name": "Solteq Oyj",
-      "email": "magentoservices@solteq.com",
-      "homepage": "http://github.com/solteq",
-      "role": "Developer"
-    },
-    {
-      "name": "Joonas Loueranta",
-      "email": "joonas.loueranta@paytrail.com",
-      "homepage": "https://github.com/loueranta",
-      "role": "Manager"
-    }
-  ],
-  "require": {
-    "php": "^7.3|^8.0",
-    "paytrail/paytrail-php-sdk": ">=2.4.1",
-    "magento/framework": ">=102.0.0",
-    "ext-curl": "*",
-    "nesbot/carbon": "^2.57.0"
-  },
-  "require-dev": {
-    "magento/magento-coding-standard": "*"
-  },
-  "conflict": {
-    "markup/module-paytrail": "*"
-  },
-  "type": "magento2-module",
-  "version": "1.4.3",
-  "license": "MIT",
-  "autoload": {
-    "files": [
-      "registration.php"
+    "name": "paytrail/paytrail-for-adobe-commerce",
+    "description": "Paytrail is a payment gateway that offers 20+ payment methods for Finnish customers.",
+    "authors": [
+        {
+            "name": "Solteq Oyj",
+            "email": "magentoservices@solteq.com",
+            "homepage": "https://github.com/Solteq",
+            "role": "Developer"
+        },
+        {
+            "name": "Joonas Loueranta",
+            "email": "joonas.loueranta@paytrail.com",
+            "homepage": "https://github.com/loueranta",
+            "role": "Manager"
+        }
     ],
-    "psr-4": {
-      "Paytrail\\PaymentService\\": ""
-    }
-  },
-  "repositories": [
-    {
-      "type": "composer",
-      "url": "https://repo.magento.com/"
-    }
-  ],
-  "keywords": [
-    "magento 2",
-    "adobe commerce",
-    "payment gateway",
-    "paytrail",
-    "Recurring Payment"
-  ]
+    "require": {
+        "php": "^7.3|^8.0",
+        "paytrail/paytrail-php-sdk": ">=2.4.1",
+        "magento/framework": ">=102.0.0",
+        "ext-curl": "*",
+        "nesbot/carbon": "^2.57.0"
+    },
+    "require-dev": {
+        "magento/magento-coding-standard": "*"
+    },
+    "conflict": {
+        "markup/module-paytrail": "*"
+    },
+    "type": "magento2-module",
+    "version": "1.4.4",
+    "license": "MIT",
+    "autoload": {
+        "files": [
+            "registration.php"
+        ],
+        "psr-4": {
+            "Paytrail\\PaymentService\\": ""
+        }
+    },
+    "repositories": [
+        {
+            "type": "composer",
+            "url": "https://repo.magento.com/"
+        }
+    ],
+    "keywords": [
+        "magento 2",
+        "adobe commerce",
+        "payment gateway",
+        "paytrail",
+        "Recurring Payment"
+    ]
 }

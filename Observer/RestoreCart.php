@@ -12,6 +12,9 @@ use Magento\Sales\Model\Order;
 
 class RestoreCart implements ObserverInterface
 {
+    private Session       $checkoutSession;
+    private ResultFactory $resultFactory;
+
     /**
      * RestoreCart constructor.
      *
@@ -19,21 +22,24 @@ class RestoreCart implements ObserverInterface
      * @param ResultFactory $resultFactory
      */
     public function __construct(
-        private Session $checkoutSession,
-        private ResultFactory $resultFactory,
+        Session       $checkoutSession,
+        ResultFactory $resultFactory
     ) {
+        $this->checkoutSession = $checkoutSession;
+        $this->resultFactory = $resultFactory;
     }
 
     /**
      * Execute.
      *
      * @param Observer $observer
+     *
      * @return $this|void
      */
     public function execute(Observer $observer)
     {
         $lastOrder = $this->checkoutSession->getLastRealOrder();
-        $result = $this->resultFactory->create(ResultFactory::TYPE_REDIRECT);
+        $result    = $this->resultFactory->create(ResultFactory::TYPE_REDIRECT);
         if ($lastOrder->getPayment() && $lastOrder->getData('status') === Order::STATE_PENDING_PAYMENT) {
             $this->checkoutSession->restoreQuote();
         }

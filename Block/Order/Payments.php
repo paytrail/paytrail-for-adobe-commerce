@@ -10,10 +10,12 @@ use Magento\Framework\Phrase;
 use Magento\Framework\Serialize\SerializerInterface;
 use Magento\Framework\View\Element\Template;
 use Magento\Framework\View\Element\Template\Context;
+use Magento\Store\Model\ScopeInterface;
 use Magento\Store\Model\StoreManagerInterface;
 use Magento\Vault\Model\PaymentTokenRepository;
 use Paytrail\PaymentService\Api\Data\SubscriptionInterface;
 use Paytrail\PaymentService\Model\ConfigProvider;
+use Paytrail\PaymentService\Model\Recurring\TotalConfigProvider;
 use Paytrail\PaymentService\Model\SubscriptionRepository;
 use Paytrail\PaymentService\Model\ResourceModel\Subscription\Collection as SubscriptionCollection;
 use Paytrail\PaymentService\Model\ResourceModel\Subscription\CollectionFactory;
@@ -61,6 +63,11 @@ class Payments extends Template
     private MessageManagerInterface $messageManager;
 
     /**
+     * @var TotalConfigProvider
+     */
+    private $totalConfigProvider;
+
+    /**
      * @param Context $context
      * @param SubscriptionRepository $subscriptionRepository
      * @param CollectionFactory $subscriptionCollectionFactory
@@ -68,6 +75,9 @@ class Payments extends Template
      * @param StoreManagerInterface $storeManager
      * @param PaymentTokenRepository $paymentTokenRepository
      * @param SerializerInterface $serializer
+     * @param ConfigProvider $configProvider
+     * @param MessageManagerInterface $messageManager
+     * @param TotalConfigProvider $totalConfigProvider
      * @param array $data
      */
     public function __construct(
@@ -80,6 +90,7 @@ class Payments extends Template
         SerializerInterface     $serializer,
         ConfigProvider          $configProvider,
         MessageManagerInterface $messageManager,
+        TotalConfigProvider     $totalConfigProvider,
         array                   $data = []
     ) {
         $this->subscriptionRepository = $subscriptionRepository;
@@ -91,6 +102,7 @@ class Payments extends Template
         parent::__construct($context, $data);
         $this->configProvider = $configProvider;
         $this->messageManager = $messageManager;
+        $this->totalConfigProvider = $totalConfigProvider;
     }
 
     /**
@@ -100,6 +112,14 @@ class Payments extends Template
     {
         parent::_construct();
         $this->pageConfig->getTitle()->set(__('My Subscriptions'));
+    }
+
+    /**
+     * @return bool
+     */
+    public function isSubscriptionsEnabled(): bool
+    {
+        return $this->totalConfigProvider->isRecurringPaymentEnabled();
     }
 
     /**

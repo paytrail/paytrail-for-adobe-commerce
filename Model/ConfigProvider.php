@@ -161,7 +161,11 @@ class ConfigProvider implements ConfigProviderInterface
         }
         try {
             $groupData = $this->getAllPaymentMethods();
-            $scheduledMethod[] = $this->handlePaymentProviderGroupData($groupData['groups'])['creditcard'];
+            $scheduledMethod = [];
+
+            if (array_key_exists('creditcard', $this->handlePaymentProviderGroupData($groupData['groups']))) {
+                $scheduledMethod[] = $this->handlePaymentProviderGroupData($groupData['groups'])['creditcard'];
+            }
 
             $config = [
                 'payment' => [
@@ -191,6 +195,8 @@ class ConfigProvider implements ConfigProviderInterface
             }
         } catch (\Exception $e) {
             $config['payment'][self::CODE]['success'] = 0;
+            $this->log->error($e->getMessage());
+
             return $config;
         }
         if ($this->checkoutSession->getData('paytrail_previous_error')) {

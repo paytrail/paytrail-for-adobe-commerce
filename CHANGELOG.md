@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.4] - 2023-09-26
+
+- Fix: Fix PHP 7 compatibility issues
+- Improvements for GraphQl module compatibility
+- Add translations
+- Enable/Disable switcher for recurring-payment
+
+
 ## [1.4.3] - 2023-09-05
 
 - Fix: Fix PHP compatibility issues
