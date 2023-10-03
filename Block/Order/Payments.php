@@ -13,8 +13,7 @@ use Magento\Framework\View\Element\Template\Context;
 use Magento\Store\Model\StoreManagerInterface;
 use Magento\Vault\Model\PaymentTokenRepository;
 use Paytrail\PaymentService\Api\Data\SubscriptionInterface;
-use Paytrail\PaymentService\Model\ConfigProvider;
-use Paytrail\PaymentService\Model\SubscriptionRepository;
+use Paytrail\PaymentService\Model\Recurring\TotalConfigProvider;
 use Paytrail\PaymentService\Model\ResourceModel\Subscription\Collection as SubscriptionCollection;
 use Paytrail\PaymentService\Model\ResourceModel\Subscription\CollectionFactory;
 
@@ -34,7 +33,7 @@ class Payments extends Template
      * @param StoreManagerInterface $storeManager
      * @param PaymentTokenRepository $paymentTokenRepository
      * @param SerializerInterface $serializer
-     * @param ConfigProvider $configProvider
+     * @param TotalConfigProvider $totalConfigProvider
      * @param MessageManagerInterface $messageManager
      * @param array $data
      */
@@ -45,7 +44,7 @@ class Payments extends Template
         private StoreManagerInterface   $storeManager,
         private PaymentTokenRepository  $paymentTokenRepository,
         private SerializerInterface     $serializer,
-        private ConfigProvider          $configProvider,
+        private TotalConfigProvider $totalConfigProvider,
         private MessageManagerInterface $messageManager,
         array                   $data = []
     ) {

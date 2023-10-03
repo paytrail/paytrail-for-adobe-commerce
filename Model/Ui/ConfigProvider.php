@@ -65,8 +65,13 @@ class ConfigProvider implements ConfigProviderInterface
         }
         try {
             $groupData = $this->paymentProvidersData->getAllPaymentMethods();
-            $scheduledMethod[] = $this->paymentProvidersData
-                ->handlePaymentProviderGroupData($groupData['groups'])['creditcard'];
+            $scheduledMethod = [];
+
+            if (array_key_exists('creditcard', $this->paymentProvidersData
+                ->handlePaymentProviderGroupData($groupData['groups']))) {
+                $scheduledMethod[] = $this->paymentProvidersData
+                    ->handlePaymentProviderGroupData($groupData['groups'])['creditcard'];
+            }
 
             $config = [
                 'payment' => [
