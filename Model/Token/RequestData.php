@@ -294,7 +294,7 @@ class RequestData
                 $items[] = [
                     'title' => $item->getName(),
                     'code' => $item->getSku(),
-                    'amount' => floatval($item->getQtyOrdered()),
+                    'amount' => $item->getQtyOrdered(),
                     'price' => 0,
                     'vat' => 0
                 ];
@@ -302,20 +302,20 @@ class RequestData
                 $paytrailItem = [
                     'title' => $item->getName(),
                     'code' => $item->getSku(),
-                    'amount' => floatval($item->getQtyOrdered()),
-                    'price' => floatval($item->getPriceInclTax()) - round(($discountIncl / $item->getQtyOrdered()), 2),
-                    'vat' => round(floatval($item->getTaxPercent()))
+                    'amount' => $item->getQtyOrdered(),
+                    'price' => $item->getPriceInclTax() - ($discountIncl / $item->getQtyOrdered()),
+                    'vat' => $item->getTaxPercent()
                 ];
 
                 $difference = $discountIncl - round(
-                    abs($paytrailItem['amount'] * $paytrailItem['price'] - $item->getRowTotalInclTax()),
+                    $paytrailItem['amount'] * $paytrailItem['price'] - $item->getRowTotalInclTax(),
                     2
                     );
                 if ($difference) {
                     $paytrailItem['amount'] -= 1;
                     $paytrailItemDiscountCorrection = $paytrailItem;
                     $paytrailItemDiscountCorrection['amount'] = 1;
-                    $paytrailItemDiscountCorrection['price'] -= $difference;
+                    $paytrailItemDiscountCorrection['price'] += $difference;
                 }
 
                 $items [] = $paytrailItem;
@@ -341,7 +341,7 @@ class RequestData
     {
         $opItem = new Item();
 
-        $opItem->setUnitPrice((int)($item['price'] * 100))
+        $opItem->setUnitPrice((int)bcmul((string)$item['price'] , '100'))
             ->setUnits((int)$item['amount'])
             ->setVatPercentage((int)$item['vat'])
             ->setProductCode($item['code'])
