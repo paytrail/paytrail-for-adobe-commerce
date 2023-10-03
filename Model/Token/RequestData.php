@@ -12,6 +12,7 @@ use Magento\Sales\Model\Order;
 use Magento\Sales\Model\Order\Item as OrderItem;
 use Magento\Sales\Model\ResourceModel\Order\Tax\Item as TaxItems;
 use Magento\Tax\Helper\Data as TaxHelper;
+use Magento\Vault\Api\Data\PaymentTokenInterface;
 use Magento\Vault\Api\PaymentTokenManagementInterface;
 use Paytrail\PaymentService\Gateway\Config\Config;
 use Paytrail\PaymentService\Helper\Data;
@@ -92,29 +93,29 @@ class RequestData
      * @param PaymentTokenManagementInterface $paymentTokenManagement
      */
     public function __construct(
-        OrderRepositoryInterface $orderRepositoryInterface,
-        Config $gatewayConfig,
-        Data $helper,
-        TaxHelper $taxHelper,
-        DiscountSplitter $discountSplitter,
+        OrderRepositoryInterface            $orderRepositoryInterface,
+        Config                              $gatewayConfig,
+        Data                                $helper,
+        TaxHelper                           $taxHelper,
+        DiscountSplitter                    $discountSplitter,
         CountryInformationAcquirerInterface $countryInfo,
-        UrlInterface $urlBuilder,
-        RequestInterface $request,
-        TaxItems $taxItems,
-        PaymentTokenManagementInterface $paymentTokenManagement,
-        FinnishReferenceNumber $finnishReferenceNumber
+        UrlInterface                        $urlBuilder,
+        RequestInterface                    $request,
+        TaxItems                            $taxItems,
+        PaymentTokenManagementInterface     $paymentTokenManagement,
+        FinnishReferenceNumber              $finnishReferenceNumber
     ) {
         $this->orderRepositoryInterface = $orderRepositoryInterface;
-        $this->gatewayConfig = $gatewayConfig;
-        $this->helper = $helper;
-        $this->taxHelper = $taxHelper;
-        $this->discountSplitter = $discountSplitter;
-        $this->countryInfo = $countryInfo;
-        $this->urlBuilder = $urlBuilder;
-        $this->request = $request;
-        $this->taxItems = $taxItems;
-        $this->paymentTokenManagement = $paymentTokenManagement;
-        $this->finnishReferenceNumber = $finnishReferenceNumber;
+        $this->gatewayConfig            = $gatewayConfig;
+        $this->helper                   = $helper;
+        $this->taxHelper                = $taxHelper;
+        $this->discountSplitter         = $discountSplitter;
+        $this->countryInfo              = $countryInfo;
+        $this->urlBuilder               = $urlBuilder;
+        $this->request                  = $request;
+        $this->taxItems                 = $taxItems;
+        $this->paymentTokenManagement   = $paymentTokenManagement;
+        $this->finnishReferenceNumber   = $finnishReferenceNumber;
     }
 
     /**
@@ -122,27 +123,32 @@ class RequestData
      * @param $order
      * @param $tokenId
      * @param $rcustomer
+     *
      * @return mixed
      * @throws LocalizedException
      */
     public function setTokenPaymentRequestData($paytrailPayment, $order, $tokenId, $rcustomer)
     {
-        $billingAddress = $order->getBillingAddress();
+        $billingAddress  = $order->getBillingAddress();
         $shippingAddress = $order->getShippingAddress();
 
-        $paytrailPayment->setStamp(hash($this->gatewayConfig->getCheckoutAlgorithm(), time() . $order->getIncrementId()));
+        $paytrailPayment->setStamp(
+            hash($this->gatewayConfig->getCheckoutAlgorithm(), time() . $order->getIncrementId())
+        );
 
         $reference = $this->finnishReferenceNumber->getReference($order);
 
         $paytrailPayment->setReference($reference);
 
-        $paytrailPayment->setCurrency($order->getOrderCurrencyCode())->setAmount((int)round($order->getGrandTotal() * 100));
+        $paytrailPayment->setCurrency($order->getOrderCurrencyCode())->setAmount(
+            (int)round($order->getGrandTotal() * 100)
+        );
 
         /* we should alredy have a customer */
         $customer = $this->createCustomer($billingAddress);
 
         $customerId = $rcustomer->getId();
-        $this->helper->logCheckoutData('request', 'info', 'we have customer:'.$customerId);
+        $this->helper->logCheckoutData('request', 'info', 'we have customer:' . $customerId);
         $paytrailPayment->setCustomer($customer);
 
         $invoicingAddress = $this->createAddress($order, $billingAddress);
@@ -163,14 +169,14 @@ class RequestData
 
         $paytrailPayment->setCallbackUrls($this->createCallbackUrl());
         // set token
-        $token = $this->getPaymentToken($tokenId, $customerId);
+        $token        = $this->getPaymentToken($tokenId, $customerId);
         $paymentToken = $token->getGatewayToken();
 
         $paymentExtensionAttributes = $order->getPayment()->getExtensionAttributes();
         $paymentExtensionAttributes->setVaultPaymentToken($token);
         $this->orderRepositoryInterface->save($order);
 
-        $this->helper->logCheckoutData('request', 'info', 'we have token:'.$paymentToken);
+        $this->helper->logCheckoutData('request', 'info', 'we have token:' . $paymentToken);
         $paytrailPayment->setToken($paymentToken);
 
         // Log payment data
@@ -182,18 +188,19 @@ class RequestData
     /**
      * @param $order
      * @param $address
+     *
      * @return Address
      */
     public function createAddress($order, $address)
     {
         $opAddress = new Address();
 
-        $country = $this->countryInfo->getCountryInfo(
+        $country           = $this->countryInfo->getCountryInfo(
             $address->getCountryId()
         )
             ->getTwoLetterAbbreviation();
         $streetAddressRows = $address->getStreet();
-        $streetAddress = $streetAddressRows[0];
+        $streetAddress     = $streetAddressRows[0];
         if (mb_strlen($streetAddress, 'utf-8') > 50) {
             $streetAddress = mb_substr($streetAddress, 0, 50, 'utf-8');
         }
@@ -212,6 +219,7 @@ class RequestData
 
     /**
      * @param $billingAddress
+     *
      * @return Customer
      */
     public function createCustomer($billingAddress)
@@ -228,6 +236,7 @@ class RequestData
 
     /**
      * @param $order
+     *
      * @return Item
      */
     protected function getOrderItem($order)
@@ -237,6 +246,7 @@ class RequestData
 
     /**
      * @param Order $order
+     *
      * @return array
      * @throws LocalizedException
      */
@@ -266,6 +276,7 @@ class RequestData
 
     /**
      * @param $order
+     *
      * @return mixed
      * @throws LocalizedException
      */
@@ -276,11 +287,15 @@ class RequestData
         # Add line items
         /** @var $item OrderItem */
         foreach ($order->getAllItems() as $item) {
-            $discountIncl = 0;
-            if (!$this->taxHelper->priceIncludesTax()) {
-                $discountIncl += $item->getDiscountAmount() * (($item->getTaxPercent() / 100) + 1);
+            $discountInclTax = 0;
+            if (!$this->taxHelper->priceIncludesTax()
+                && $this->taxHelper->applyTaxAfterDiscount()
+            ) {
+                $discountInclTax = $this->formatPrice(
+                    $item->getDiscountAmount() * (($item->getTaxPercent() / 100) + 1)
+                );
             } else {
-                $discountIncl += $item->getDiscountAmount();
+                $discountInclTax += $this->formatPrice($item->getDiscountAmount());
             }
 
             if (!$item->getQtyOrdered()) {
@@ -292,30 +307,38 @@ class RequestData
             // then also the child products has prices so we set
             if ($item->getChildrenItems() && !$item->getProductOptions()['product_calculations']) {
                 $items[] = [
-                    'title' => $item->getName(),
-                    'code' => $item->getSku(),
+                    'title'  => $item->getName(),
+                    'code'   => $item->getSku(),
                     'amount' => $item->getQtyOrdered(),
-                    'price' => 0,
-                    'vat' => 0
+                    'price'  => 0,
+                    'vat'    => 0
                 ];
             } else {
+                $itemPriceInclDiscount = ($item->getRowTotalInclTax() / $item->getQtyOrdered())
+                    - ($discountInclTax / $item->getQtyOrdered());
+
                 $paytrailItem = [
-                    'title' => $item->getName(),
-                    'code' => $item->getSku(),
+                    'title'  => $item->getName(),
+                    'code'   => $item->getSku(),
                     'amount' => $item->getQtyOrdered(),
-                    'price' => $item->getPriceInclTax() - ($discountIncl / $item->getQtyOrdered()),
-                    'vat' => $item->getTaxPercent()
+                    'price'  => $this->formatPrice($itemPriceInclDiscount),
+                    'vat'    => $item->getTaxPercent()
                 ];
 
-                $difference = $discountIncl - round(
-                    $paytrailItem['amount'] * $paytrailItem['price'] - $item->getRowTotalInclTax(),
-                    2
-                    );
+                $rowTotalInclDiscount = $item->getRowTotalInclTax() - $discountInclTax;
+                $difference           = $rowTotalInclDiscount - ($paytrailItem['price'] * $paytrailItem['amount']);
+
                 if ($difference) {
-                    $paytrailItem['amount'] -= 1;
-                    $paytrailItemDiscountCorrection = $paytrailItem;
+                    $paytrailItem['amount']                   -= 1;
+                    $paytrailItemDiscountCorrection           = $paytrailItem;
                     $paytrailItemDiscountCorrection['amount'] = 1;
-                    $paytrailItemDiscountCorrection['price'] += $difference;
+                    $paytrailItemDiscountCorrection['price']  = $this->formatPrice(
+                        $paytrailItem['price'] + $difference
+                    );
+                    $paytrailItemDiscountCorrection['title']  .=
+                        ' (rounding issue fix, diff: '
+                        . $this->formatPrice($difference)
+                        . ')';
                 }
 
                 $items [] = $paytrailItem;
@@ -335,13 +358,14 @@ class RequestData
 
     /**
      * @param array $item
+     *
      * @return Item
      */
     protected function createOrderItems(array $item)
     {
         $opItem = new Item();
 
-        $opItem->setUnitPrice((int)bcmul((string)$item['price'] , '100'))
+        $opItem->setUnitPrice((int)bcmul((string)$item['price'], '100'))
             ->setUnits((int)$item['amount'])
             ->setVatPercentage((int)$item['vat'])
             ->setProductCode($item['code'])
@@ -353,12 +377,13 @@ class RequestData
 
     /**
      * @param Order $order
+     *
      * @return array
      */
     private function getShippingItem(Order $order)
     {
         $taxDetails = [];
-        $price = 0;
+        $price      = 0;
 
         if ($order->getShippingAmount()) {
             foreach ($this->taxItems->getTaxItemsByOrderId($order->getId()) as $detail) {
@@ -375,11 +400,11 @@ class RequestData
         }
 
         return [
-            'title' => $order->getShippingDescription() ?: __('Shipping'),
-            'code' => 'shipping-row',
+            'title'  => $order->getShippingDescription() ?: __('Shipping'),
+            'code'   => 'shipping-row',
             'amount' => 1,
-            'price' => floatval($price),
-            'vat' => $taxDetails['tax_percent'] ?? 0,
+            'price'  => $this->formatPrice($price),
+            'vat'    => $taxDetails['tax_percent'] ?? 0,
         ];
     }
 
@@ -411,6 +436,7 @@ class RequestData
 
     /**
      * @param $param
+     *
      * @return string
      */
     protected function getCallbackUrl($param)
@@ -427,13 +453,24 @@ class RequestData
     }
 
     /**
-     * @param $tokenhash
+     * @param $tokenHash
      * @param $customerId
-     * @return \Magento\Vault\Api\Data\PaymentTokenInterface|null
+     *
+     * @return PaymentTokenInterface|null
      */
     protected function getPaymentToken($tokenHash, $customerId)
     {
         $token = $this->paymentTokenManagement->getByPublicHash($tokenHash, $customerId);
         return $token;
+    }
+
+    /**
+     * @param $amount
+     *
+     * @return string
+     */
+    private function formatPrice($amount)
+    {
+        return number_format(floatval($amount), 2, '.', '');
     }
 }
