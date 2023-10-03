@@ -208,23 +208,6 @@ class RequestData
             $itemQty += $orderItem->getUnits();
         }
 
-        if ($itemSum != $orderTotal) {
-            $diffValue = abs($itemSum - $orderTotal);
-
-            if ($diffValue > $itemQty) {
-                throw new LocalizedException(__('Difference in rounding the prices is too big'));
-            }
-
-            $roundingItem = new Item();
-            $roundingItem->setDescription((string)__('Rounding', 'op-payment-service-magento-2'));
-            $roundingItem->setDeliveryDate(date('Y-m-d'));
-            $roundingItem->setVatPercentage(0);
-            $roundingItem->setUnits(($orderTotal - $itemSum > 0) ? 1 : -1);
-            $roundingItem->setUnitPrice($diffValue);
-            $roundingItem->setProductCode('rounding-row');
-
-            $items[] = $roundingItem;
-        }
         return $items;
     }
 
@@ -265,13 +248,29 @@ class RequestData
                     'vat' => 0
                 ];
             } else {
-                $items[] = [
+                $paytrailItem = [
                     'title' => $item->getName(),
                     'code' => $item->getSku(),
                     'amount' => floatval($item->getQtyOrdered()),
                     'price' => floatval($item->getPriceInclTax()) - round(($discountIncl / $item->getQtyOrdered()), 2),
                     'vat' => round(floatval($item->getTaxPercent()))
                 ];
+
+                $difference = $discountIncl - round(
+                    abs($paytrailItem['amount'] * $paytrailItem['price'] - $item->getRowTotalInclTax()),
+                    2
+                    );
+                if ($difference) {
+                    $paytrailItem['amount'] -= 1;
+                    $paytrailItemDiscountCorrection = $paytrailItem;
+                    $paytrailItemDiscountCorrection['amount'] = 1;
+                    $paytrailItemDiscountCorrection['price'] -= $difference;
+                }
+
+                $items [] = $paytrailItem;
+                if ($difference) {
+                    $items [] = $paytrailItemDiscountCorrection;
+                }
             }
         }
 

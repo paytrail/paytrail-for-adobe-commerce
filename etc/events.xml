@@ -8,6 +8,9 @@
     <event name="sales_order_shipment_save_after">
         <observer name="manual_invoice_activation" instance="Paytrail\PaymentService\Observer\PaymentActivation"/>
     </event>
+    <event name="controller_action_predispatch_checkout_index_index">
+        <observer name="initiate_checkout_onepage" instance="Paytrail\PaymentService\Observer\RestoreCart"/>
+    </event>
     <event name="sales_order_place_before">
         <observer name="validate_cart_before_order_place" instance="Paytrail\PaymentService\Observer\ScheduledCartValidation"/>
     </event>

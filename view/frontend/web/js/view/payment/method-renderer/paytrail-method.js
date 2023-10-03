@@ -20,7 +20,6 @@ define(
         'Magento_Checkout/js/model/totals',
         'Magento_Ui/js/model/messageList',
         'mage/translate',
-        'Magento_Checkout/js/action/redirect-on-success',
     ],
     function (ko, $, _, storage, Component, placeOrderAction, selectPaymentMethodAction, additionalValidators, quote, getTotalsAction, urlBuilder, mageUrlBuilder, fullScreenLoader, customer, checkoutData, totals, messageList, $t) {
         'use strict';
@@ -217,7 +216,7 @@ define(
                     return self.placeOrderBypass();
                 },
                 addNewCard: function () {
-                    if(self.isLoggedIn()) {
+                    if (self.isLoggedIn()) {
                         fullScreenLoader.startLoader();
                         /** start here */
 
@@ -254,6 +253,23 @@ define(
                         );
 
                         /** end here */
+                        if (self.getSkipMethodSelection() == false) {
+                            if (!self.validate()) {
+                                self.addErrorMessage($t('No payment method selected. Please select one.'));
+                                self.scrollTo();
+                                return false;
+                            }
+                            if (!additionalValidators.validate()) {
+                                self.addErrorMessage($t(
+                                    'First, agree conditions, then try placing your order again.'
+                                ));
+                                self.scrollTo();
+                                return false;
+                            }
+                            return self.placeOrderBypass();
+                        } else {
+                            return self.placeOrderBypass();
+                        }
                     }
                 },
                 getPaymentUrl: function () {

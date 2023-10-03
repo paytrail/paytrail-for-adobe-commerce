@@ -120,3 +120,6 @@ Hello,Hei
 "The subscription doesn't belong to the customer", "Tilaus ei kuulu asiakkaalle"
 "The card has active subscriptions","Kortilla on aktiivisia tilauksia"
 "Error while cancelling order. Please contact customer support with order id: %id to release discount coupons.","Virhe tilauksen peruutuksessa. Ota yhteysasiakaspalveluun tilausnumeron %id kanssa, jotta tilauksen alennuskupongit voidaan palauttaa"
+"Error while payment process. Please contact customer support with order id: %id","Virhe maksutapahtumassa. Ota yhteys asiakaspalveluun tilausnumeron %id kanssa."
+"My Subscriptions","Toistuvat tilaukseni"
+"You have no payments to display.","Ei toistuvia tilauksia."

@@ -13,8 +13,8 @@ use Magento\Framework\View\Element\Template\Context;
 use Magento\Store\Model\StoreManagerInterface;
 use Magento\Vault\Model\PaymentTokenRepository;
 use Paytrail\PaymentService\Api\Data\SubscriptionInterface;
-use Paytrail\PaymentService\Model\Subscription;
-use Paytrail\PaymentService\Model\Ui\ConfigProvider;
+use Paytrail\PaymentService\Model\ConfigProvider;
+use Paytrail\PaymentService\Model\SubscriptionRepository;
 use Paytrail\PaymentService\Model\ResourceModel\Subscription\Collection as SubscriptionCollection;
 use Paytrail\PaymentService\Model\ResourceModel\Subscription\CollectionFactory;
 
@@ -61,6 +61,14 @@ class Payments extends Template
     {
         parent::_construct();
         $this->pageConfig->getTitle()->set(__('My Subscriptions'));
+    }
+
+    /**
+     * @return bool
+     */
+    public function isSubscriptionsEnabled(): bool
+    {
+        return $this->totalConfigProvider->isRecurringPaymentEnabled();
     }
 
     /**

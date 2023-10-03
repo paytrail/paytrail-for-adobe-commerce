@@ -3,6 +3,7 @@
 namespace Paytrail\PaymentService\Cron;
 
 use Paytrail\PaymentService\Model\Recurring\Notify;
+use Paytrail\PaymentService\Model\Recurring\TotalConfigProvider;
 
 class RecurringPaymentNotify
 {
@@ -12,9 +13,9 @@ class RecurringPaymentNotify
      * @param Notify $notify
      */
     public function __construct(
-        private Notify $notify
+        private Notify $notify,
+        private TotalConfigProvider $totalConfigProvider
     ) {
-        $this->notify = $notify;
     }
 
     /**
@@ -24,6 +25,8 @@ class RecurringPaymentNotify
      */
     public function execute()
     {
-        $this->notify->process();
+        if ($this->totalConfigProvider->isRecurringPaymentEnabled()) {
+            $this->notify->process();
+        }
     }
 }

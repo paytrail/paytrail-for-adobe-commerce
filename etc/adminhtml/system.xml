@@ -108,11 +108,20 @@
                     <label>Enable Order confirmation email for pending order</label>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                 </field>
+                <group id="paytrail_cc_vault" translate="label" type="text" sortOrder="90" showInDefault="1"
+                       showInWebsite="1" showInStore="1">
+                    <label>Paytrail Vault for Card Payments</label>
+                    <field id="active" translate="label" type="select" sortOrder="1" showInDefault="1" showInWebsite="1"
+                           showInStore="0" canRestore="1">
+                        <label>Enabled</label>
+                        <config_path>payment/paytrail_cc_vault/active</config_path>
+                        <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    </field>
+                </group>
                 <group id="paytrail_personalization" translate="label" type="text" sortOrder="90" showInDefault="1"
                        showInWebsite="1" showInStore="1">
                     <label>Payment page personalization</label>
                     <comment>Hex color codes for payment page elements</comment>
-
                     <field id="payment_group_bg" translate="label comment" sortOrder="1" type="text"
                            showInDefault="1"
                            showInWebsite="1" showInStore="1" canRestore="1">
@@ -164,24 +173,42 @@
         <section id="sales">
             <group id="recurring_payment" translate="label" sortOrder="800" showInDefault="1" showInStore="0" showInWebsite="0">
                 <label>Paytrail: Recurring Payment</label>
+                <field id="active_recurring_payment" translate="label" type="select" sortOrder="1" showInDefault="1" showInWebsite="1"
+                       showInStore="0" canRestore="1">
+                    <label>Enabled Recurring payment</label>
+                    <comment>Activating Recurring Payment feature</comment>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                </field>
                 <field id="notify_cron_schedule" translate="label comment" sortOrder="10" type="text"
                        showInDefault="1" showInWebsite="0" showInStore="0" canRestore="1">
                     <label>Recurring payment email notification schedule</label>
+                    <depends>
+                        <field id="sales/recurring_payment/active_recurring_payment">1</field>
+                    </depends>
                 </field>
                 <field id="bill_cron_schedule" translate="label comment" sortOrder="20" type="text"
                        showInDefault="1" showInWebsite="0" showInStore="0" canRestore="1">
                     <label>Recurring payment email billing schedule</label>
+                    <depends>
+                        <field id="sales/recurring_payment/active_recurring_payment">1</field>
+                    </depends>
                 </field>
                 <field id="warning_period" translate="label comment" sortOrder="30" type="text"
                        showInDefault="1" showInWebsite="0" showInStore="0" canRestore="1">
                     <label>Alert email advance period</label>
                     <comment>Controls the amount of days between notifying customer about upcoming payment and billing the payment</comment>
                     <validate>validate-digit validate-range range-0-30</validate>
+                    <depends>
+                        <field id="sales/recurring_payment/active_recurring_payment">1</field>
+                    </depends>
                 </field>
                 <field id="force_weekdays" translate="label" type="select" sortOrder="40" showInDefault="1" showInWebsite="0"
                        showInStore="0" canRestore="1">
                     <label>Force billing date to be on weekday (monday-friday)</label>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <depends>
+                        <field id="sales/recurring_payment/active_recurring_payment">1</field>
+                    </depends>
                 </field>
             </group>
         </section>

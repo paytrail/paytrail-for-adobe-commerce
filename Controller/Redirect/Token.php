@@ -23,6 +23,7 @@ use Paytrail\PaymentService\Gateway\Config\Config;
 use Paytrail\PaymentService\Model\Receipt\PaymentTransaction;
 use Paytrail\PaymentService\Model\Receipt\ProcessService;
 use Paytrail\PaymentService\Model\ReceiptDataProvider;
+use Paytrail\PaymentService\Model\Recurring\TotalConfigProvider;
 use Paytrail\PaymentService\Model\Subscription\SubscriptionCreate;
 
 class Token implements HttpPostActionInterface
@@ -98,14 +99,16 @@ class Token implements HttpPostActionInterface
         $customer = $this->customerSession->getCustomer();
         try {
             $responseData = $this->getTokenResponseData($order, $selectedTokenId, $customer);
-            if ($this->subscriptionCreate->getSubscriptionSchedule($order) && $responseData->getTransactionId()) {
-                $orderSchedule = $this->subscriptionCreate->getSubscriptionSchedule($order);
-                $this->subscriptionCreate->createSubscription(
-                    $orderSchedule,
-                    $selectedTokenId,
-                    $customer->getId(),
-                    $order->getId()
-                );
+            if ($this->totalConfigProvider->isRecurringPaymentEnabled()) {
+                if ($this->subscriptionCreate->getSubscriptionSchedule($order) && $responseData->getTransactionId()) {
+                    $orderSchedule = $this->subscriptionCreate->getSubscriptionSchedule($order);
+                    $this->subscriptionCreate->createSubscription(
+                        $orderSchedule,
+                        $selectedTokenId,
+                        $customer->getId(),
+                        $order->getId()
+                    );
+                }
             }
         } catch (CheckoutException $exception) {
             $this->errorMsg = __('Error processing token payment');
