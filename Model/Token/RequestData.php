@@ -347,12 +347,12 @@ class RequestData
                         ' (rounding issue fix, diff: '
                         . $this->formatPrice($difference)
                         . ')';
+
+                    $items [] = $paytrailItemDiscountCorrection;
+
                 }
 
                 $items [] = $paytrailItem;
-                if ($difference <> 0) {
-                    $items [] = $paytrailItemDiscountCorrection;
-                }
             }
         }
 
