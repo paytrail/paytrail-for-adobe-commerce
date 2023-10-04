@@ -314,8 +314,8 @@ class RequestData
                     'vat'    => 0
                 ];
             } else {
-                $itemPriceInclDiscount = ($item->getRowTotalInclTax() / $item->getQtyOrdered())
-                    - ($discountInclTax / $item->getQtyOrdered());
+                $rowTotalInclDiscount  = $item->getRowTotalInclTax() - $discountInclTax;
+                $itemPriceInclDiscount = $rowTotalInclDiscount / $item->getQtyOrdered();
 
                 $paytrailItem = [
                     'title'  => $item->getName(),
@@ -325,15 +325,23 @@ class RequestData
                     'vat'    => $item->getTaxPercent()
                 ];
 
-                $rowTotalInclDiscount = $item->getRowTotalInclTax() - $discountInclTax;
-                $difference           = $rowTotalInclDiscount - ($paytrailItem['price'] * $paytrailItem['amount']);
+                $difference = $this->formatPrice(
+                    $rowTotalInclDiscount - ($paytrailItem['price'] * $paytrailItem['amount'])
+                );
 
-                if ($difference) {
-                    $paytrailItem['amount']                   -= 1;
+                if ($difference <> 0) {
+                    $differenceUnits = $difference / 0.01;
+                    if ($differenceUnits > $item->getQtyOrdered()) {
+                        throw new LocalizedException(
+                            \__('Rounding diff bigger than 0.01 per item : %sku', ['sku' => $item->getSku()])
+                        );
+                    }
+
+                    $paytrailItem['amount']                   -= $differenceUnits;
                     $paytrailItemDiscountCorrection           = $paytrailItem;
-                    $paytrailItemDiscountCorrection['amount'] = 1;
+                    $paytrailItemDiscountCorrection['amount'] = $differenceUnits;
                     $paytrailItemDiscountCorrection['price']  = $this->formatPrice(
-                        $paytrailItem['price'] + $difference
+                        $paytrailItem['price'] + 0.01
                     );
                     $paytrailItemDiscountCorrection['title']  .=
                         ' (rounding issue fix, diff: '
@@ -342,7 +350,7 @@ class RequestData
                 }
 
                 $items [] = $paytrailItem;
-                if ($difference) {
+                if ($difference <> 0) {
                     $items [] = $paytrailItemDiscountCorrection;
                 }
             }
