@@ -330,7 +330,7 @@ class RequestData
                 );
 
                 if ($difference <> 0) {
-                    $differenceUnits = $difference / 0.01;
+                    $differenceUnits = abs($difference / 0.01);
                     if ($differenceUnits > $item->getQtyOrdered()) {
                         throw new LocalizedException(
                             \__('Rounding diff bigger than 0.01 per item : %sku', ['sku' => $item->getSku()])
