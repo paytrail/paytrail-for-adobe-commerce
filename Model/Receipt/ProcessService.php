@@ -9,14 +9,18 @@ use Magento\Sales\Model\Order\Invoice;
 use Magento\Sales\Model\Order\Payment;
 use Magento\Sales\Model\Order\Payment\Transaction;
 use Magento\Sales\Model\Service\InvoiceService;
+use Paytrail\PaymentService\Exceptions\CheckoutException;
+use Paytrail\PaymentService\Exceptions\TransactionSuccessException;
 use Paytrail\PaymentService\Gateway\Config\Config;
-use Paytrail\PaymentService\Helper\Data as PaytrailHelper;
+use Paytrail\PaymentService\Logger\PaytrailLogger;
 use Paytrail\PaymentService\Setup\Patch\Data\InstallPaytrail;
 use Psr\Log\LoggerInterface;
 
 class ProcessService
 {
     /**
+     * ProcessService constructor.
+     *
      * @param Config $gatewayConfig
      * @param OrderRepositoryInterface $orderRepositoryInterface
      * @param OrderSender $orderSender
@@ -24,7 +28,10 @@ class ProcessService
      * @param InvoiceService $invoiceService
      * @param Payment $currentOrderPayment
      * @param TransactionFactory $transactionFactory
-     * @param PaytrailHelper $paytrailHelper
+     * @param LoadService $loadService
+     * @param PaymentTransaction $paymentTransaction
+     * @param CancelOrderService $cancelOrderService
+     * @param PaytrailLogger $paytrailLogger
      */
     public function __construct(
         private Config                   $gatewayConfig,
@@ -34,10 +41,10 @@ class ProcessService
         private InvoiceService           $invoiceService,
         private Payment                  $currentOrderPayment,
         private TransactionFactory       $transactionFactory,
-        private PaytrailHelper           $paytrailHelper,
         private LoadService $loadService,
         private PaymentTransaction $paymentTransaction,
-        private CancelOrderService $cancelOrderService
+        private CancelOrderService $cancelOrderService,
+        private PaytrailLogger $paytrailLogger
     ) {
     }
 
@@ -100,7 +107,7 @@ class ProcessService
                     $currentOrder
                 )->save();
             } catch (\Exception $exception) {
-                $this->paytrailHelper->processError($exception->getMessage());
+                $this->processError($exception->getMessage());
             }
         }
     }
@@ -137,7 +144,7 @@ class ProcessService
     {
         $details = $transaction->getAdditionalInformation(Transaction::RAW_DETAILS);
         if (is_array($details)) {
-            $this->paytrailHelper->processSuccess();
+            $this->processSuccess();
         }
     }
 
@@ -156,8 +163,31 @@ class ProcessService
         $transaction = $this->loadService->loadTransaction($transactionId, $currentOrder, $orderId);
         if ($transaction) {
             $this->processExistingTransaction($transaction);
-            $this->paytrailHelper->processError('Payment failed');
+            $this->processError('Payment failed');
         }
         return true;
+    }
+
+    /**
+     * Process error
+     *
+     * @param string $errorMessage
+     *
+     * @throws CheckoutException
+     */
+    public function processError($errorMessage)
+    {
+        $this->paytrailLogger->logData(\Monolog\Logger::ERROR, $errorMessage);
+        throw new CheckoutException(__($errorMessage));
+    }
+
+    /**
+     * Process success
+     *
+     * @throws TransactionSuccessException
+     */
+    public function processSuccess(): void
+    {
+        throw new TransactionSuccessException(__('Success'));
     }
 }

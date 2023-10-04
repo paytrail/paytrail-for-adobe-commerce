@@ -1,7 +1,7 @@
 <?php
 namespace Paytrail\PaymentService\Block\Customer;
 
-use Paytrail\PaymentService\Model\ConfigProvider;
+use Paytrail\PaymentService\Gateway\Config\Config;
 use Magento\Vault\Api\Data\PaymentTokenInterface;
 use Magento\Vault\Block\AbstractCardRenderer;
 
@@ -15,10 +15,12 @@ class CardRenderer extends AbstractCardRenderer
      */
     public function canRender(PaymentTokenInterface $token): bool
     {
-        return $token->getPaymentMethodCode() === ConfigProvider::VAULT_CODE;
+        return $token->getPaymentMethodCode() === Config::VAULT_CODE;
     }
 
     /**
+     * Get last 4 digits of the credit card.
+     *
      * @return string
      */
     public function getNumberLast4Digits(): string
@@ -27,6 +29,8 @@ class CardRenderer extends AbstractCardRenderer
     }
 
     /**
+     * Get credit card expiration date.
+     *
      * @return string
      */
     public function getExpDate(): string
@@ -35,6 +39,8 @@ class CardRenderer extends AbstractCardRenderer
     }
 
     /**
+     * Get credit card icon url.
+     *
      * @return string
      */
     public function getIconUrl(): string
@@ -43,6 +49,8 @@ class CardRenderer extends AbstractCardRenderer
     }
 
     /**
+     * Get icon height.
+     *
      * @return int
      */
     public function getIconHeight(): int
@@ -51,6 +59,8 @@ class CardRenderer extends AbstractCardRenderer
     }
 
     /**
+     * Get icon width.
+     *
      * @return int
      */
     public function getIconWidth(): int

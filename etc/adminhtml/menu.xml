@@ -9,6 +9,7 @@
              sortOrder="250"
              dependsOnModule="Paytrail_PaymentService"
              resource="Paytrail_PaymentService::recurring_payment"
+             dependsOnConfig="sales/recurring_payment/active_recurring_payment"
         />
         <add id="Paytrail_PaymentService::recurring_payment"
              title="Payments"

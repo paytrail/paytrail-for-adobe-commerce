@@ -56,7 +56,7 @@ class UrlDataProvider
      * @param string $param
      * @return string
      */
-    protected function getCallbackUrl($param)
+    public function getCallbackUrl($param)
     {
         $successUrl = $this->urlBuilder->getUrl('paytrail/' . $param, [
             '_secure' => $this->request->isSecure()

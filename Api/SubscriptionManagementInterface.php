@@ -10,22 +10,23 @@ use Magento\Framework\Api\SearchCriteriaInterface;
 interface SubscriptionManagementInterface
 {
     /**
-     * Cancel active subscription
+     * Cancel active subscription.
      *
      * @param string $subscriptionId
-     * @return \Magento\Framework\Phrase
+     * @return string
      */
     public function cancelSubscription(string $subscriptionId);
 
     /**
-     * Shows customer subscriptions
+     * Shows customer subscriptions.
      *
+     * @param  \Magento\Framework\Api\SearchCriteriaInterface $searchCriteria
      * @return \Paytrail\PaymentService\Api\Data\SubscriptionSearchResultInterface
      */
     public function showSubscriptions(SearchCriteriaInterface $searchCriteria);
 
     /**
-     * Change assigned card for subscription
+     * Change assigned card for subscription.
      *
      * @param string $subscriptionId
      * @param string $cardId

@@ -10,7 +10,7 @@ use Magento\Framework\Exception\LocalizedException;
 interface CustomerTokensManagementInterface
 {
     /**
-     * Show payment methods for customer
+     * Show payment methods for customer.
      *
      * @return \Paytrail\PaymentService\Api\Data\CustomerTokensResultInterface[]
      * @throws LocalizedException

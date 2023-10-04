@@ -2,19 +2,32 @@
 
 namespace Paytrail\PaymentService\Cron;
 
+use Paytrail\PaymentService\Model\Recurring\Bill;
+use Paytrail\PaymentService\Model\Recurring\TotalConfigProvider;
+
 class RecurringPaymentBill
 {
-    /** @var \Paytrail\PaymentService\Model\Recurring\Bill */
-    private $bill;
-
+    /**
+     * Constructor
+     *
+     * @param Bill $bill
+     */
     public function __construct(
-        \Paytrail\PaymentService\Model\Recurring\Bill $bill
+        private Bill $bill,
+        private TotalConfigProvider $totalConfigProvider
     ) {
-        $this->bill = $bill;
     }
 
+    /**
+     * Execute
+     *
+     * @return void
+     * @throws \Magento\Framework\Exception\LocalizedException
+     */
     public function execute()
     {
-        $this->bill->process();
+        if ($this->totalConfigProvider->isRecurringPaymentEnabled()) {
+            $this->bill->process();
+        }
     }
 }

@@ -7,11 +7,8 @@ use Magento\Framework\App\ActionInterface;
 use Magento\Framework\App\RequestInterface;
 use Magento\Framework\Controller\ResultFactory;
 use Magento\Framework\Message\ManagerInterface;
-use Magento\Sales\Model\OrderFactory;
-use Paytrail\PaymentService\Gateway\Config\Config;
-use Paytrail\PaymentService\Helper\Data;
-use Paytrail\PaymentService\Helper\ProcessPayment;
 use Paytrail\PaymentService\Model\FinnishReferenceNumber;
+use Paytrail\PaymentService\Model\Receipt\ProcessPayment;
 
 class Index implements ActionInterface
 {
@@ -20,22 +17,18 @@ class Index implements ActionInterface
 
     /**
      * Index constructor.
-     * @param Context $context
+     *
+     * @param FinnishReferenceNumber $referenceNumber
      * @param Session $session
-     * @param ResponseValidator $responseValidator
-     * @param ReceiptDataProvider $receiptDataProvider
      * @param ProcessPayment $processPayment
-     * @param Config $gatewayConfig
-     * @param Data $paytrailHelper
-     * @param OrderFactory $orderFactory
+     * @param RequestInterface $request
+     * @param ResultFactory $resultFactory
+     * @param ManagerInterface $messageManager
      */
     public function __construct(
         private FinnishReferenceNumber $referenceNumber,
         private Session $session,
         private ProcessPayment $processPayment,
-        private Config $gatewayConfig,
-        private Data $paytrailHelper,
-        private OrderFactory $orderFactory,
         private RequestInterface $request,
         private ResultFactory $resultFactory,
         private ManagerInterface $messageManager
