@@ -4,16 +4,14 @@ namespace Paytrail\PaymentService\Model\Token;
 
 use Magento\Checkout\Model\Session;
 use Magento\Customer\Model\Session as CustomerSession;
-use Magento\Framework\App\Action\Context;
-use Magento\Framework\App\ResponseInterface;
 use Magento\Framework\Encryption\EncryptorInterface;
 use Magento\Framework\Serialize\SerializerInterface;
+use Magento\Payment\Gateway\Command\CommandManagerPoolInterface;
 use Magento\Vault\Api\PaymentTokenManagementInterface;
 use Magento\Vault\Api\PaymentTokenRepositoryInterface;
 use Magento\Vault\Model\PaymentTokenFactory;
 use Paytrail\PaymentService\Gateway\Config\Config;
-use Paytrail\PaymentService\Helper\ApiData;
-use Paytrail\PaymentService\Helper\Data;
+use Paytrail\PaymentService\Model\Receipt\ProcessService;
 use Paytrail\SDK\Model\Token\Card;
 use Psr\Log\LoggerInterface;
 
@@ -22,19 +20,9 @@ class SaveCreditCard
     private const ADDING_CARD_SUCCESS = 'Card added successfully';
 
     /**
-     * @var Data
-     */
-    private $opHelper;
-
-    /**
      * @var $errorMsg
      */
     protected $errorMsg = null;
-
-    /**
-     * @var ApiData
-     */
-    protected $apiData;
 
     /**
      * @var CustomerSession
@@ -93,9 +81,8 @@ class SaveCreditCard
     private $checkoutSession;
 
     /**
-     * @param Context $context
-     * @param Data $opHelper
-     * @param ApiData $apiData
+     * SaveCreditCard constructor.
+     *
      * @param CustomerSession $customerSession
      * @param PaymentTokenFactory $paymentTokenFactory
      * @param SerializerInterface $jsonSerializer
@@ -105,10 +92,10 @@ class SaveCreditCard
      * @param Config $gatewayConfig
      * @param PaymentTokenManagementInterface $paymentTokenManagementInterface
      * @param Session $checkoutSession
+     * @param CommandManagerPoolInterface $commandManagerPool
+     * @param ProcessService $processService
      */
     public function __construct(
-        Data $opHelper,
-        ApiData $apiData,
         CustomerSession $customerSession,
         PaymentTokenFactory $paymentTokenFactory,
         SerializerInterface $jsonSerializer,
@@ -117,10 +104,10 @@ class SaveCreditCard
         LoggerInterface $logger,
         Config $gatewayConfig,
         PaymentTokenManagementInterface $paymentTokenManagementInterface,
-        Session $checkoutSession
+        Session $checkoutSession,
+        private CommandManagerPoolInterface $commandManagerPool,
+        private ProcessService $processService
     ) {
-        $this->opHelper = $opHelper;
-        $this->apiData = $apiData;
         $this->customerSession = $customerSession;
         $this->paymentTokenFactory = $paymentTokenFactory;
         $this->jsonSerializer = $jsonSerializer;
@@ -171,20 +158,20 @@ class SaveCreditCard
      */
     protected function getResponseData($tokenizationId)
     {
-        $response = $this->apiData->processApiRequest(
+        $commandExecutor = $this->commandManagerPool->get('paytrail');
+        $response = $commandExecutor->executeByCode(
             'token_request',
             null,
-            null,
-            null,
-            null,
-            $tokenizationId
+            [
+                'tokenization_id' => $tokenizationId
+            ]
         );
 
         $errorMsg = $response['error'];
 
         if (isset($errorMsg)) {
             $this->errorMsg = ($errorMsg);
-            $this->opHelper->processError($errorMsg);
+            $this->processService->processError($errorMsg);
         }
 
         return $response["data"];

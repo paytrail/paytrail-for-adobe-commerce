@@ -15,8 +15,7 @@ use Magento\Sales\Api\OrderRepositoryInterface;
 use Magento\Sales\Model\OrderFactory;
 use Paytrail\PaymentService\Exceptions\CheckoutException;
 use Paytrail\PaymentService\Gateway\Config\Config;
-use Paytrail\PaymentService\Helper\ApiData;
-use Paytrail\PaymentService\Helper\Data as PaytrailHelper;
+use Paytrail\PaymentService\Model\Receipt\ProcessService;
 use Paytrail\PaymentService\Model\Validation\PreventAdminActions;
 use Psr\Log\LoggerInterface;
 
@@ -38,11 +37,6 @@ class PayAndAddCard extends \Magento\Framework\App\Action\Action
      * @var LoggerInterface
      */
     protected $logger;
-
-    /**
-     * @var ApiData
-     */
-    protected $apiData;
 
     /**
      * @var Config
@@ -88,21 +82,20 @@ class PayAndAddCard extends \Magento\Framework\App\Action\Action
      * @param Session $checkoutSession
      * @param JsonFactory $jsonFactory
      * @param LoggerInterface $logger
-     * @param ApiData $apiData
-     * @param opHelper $opHelper
      * @param Config $gatewayConfig
      * @param CustomerSession $customerSession
      * @param PreventAdminActions $preventAdminActions
      * @param OrderRepositoryInterface $orderRepository
      * @param CartManagementInterface $cartManagement
      * @param QuoteManagement $quoteManagement
+     * @param CommandManagerPoolInterface $commandManagerPool
+     * @param ProcessService $processService
      */
     public function __construct(
         Context $context,
         Session $checkoutSession,
         JsonFactory $jsonFactory,
         LoggerInterface $logger,
-        ApiData $apiData,
         Config $gatewayConfig,
         CustomerSession $customerSession,
         PreventAdminActions $preventAdminActions,
@@ -110,13 +103,12 @@ class PayAndAddCard extends \Magento\Framework\App\Action\Action
         CartManagementInterface $cartManagement,
         QuoteManagement $quoteManagement,
         private CommandManagerPoolInterface $commandManagerPool,
-        private PaytrailHelper $paytrailHelper
+        private ProcessService $processService
     ) {
         $this->urlBuilder = $context->getUrl();
         $this->checkoutSession = $checkoutSession;
         $this->jsonFactory = $jsonFactory;
         $this->logger = $logger;
-        $this->apiData = $apiData;
         $this->gatewayConfig = $gatewayConfig;
         $this->customerSession = $customerSession;
         parent::__construct($context);
@@ -127,8 +119,12 @@ class PayAndAddCard extends \Magento\Framework\App\Action\Action
     }
 
     /**
+     * Execute.
+     *
      * @return \Magento\Framework\App\ResponseInterface|Json|\Magento\Framework\Controller\ResultInterface
      * @throws ValidationException
+     * @throws \Magento\Framework\Exception\LocalizedException
+     * @throws \Magento\Framework\Exception\NoSuchEntityException
      */
     public function execute()
     {
@@ -187,7 +183,7 @@ class PayAndAddCard extends \Magento\Framework\App\Action\Action
 
         if ($response['error']) {
             $this->errorMsg = ($response['error']);
-            $this->paytrailHelper->processError($response['error']);
+            $this->processService->processError($response['error']);
         }
 
         return $response["data"];
