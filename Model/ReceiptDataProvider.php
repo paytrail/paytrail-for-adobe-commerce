@@ -1,4 +1,5 @@
 <?php
+
 namespace Paytrail\PaymentService\Model;
 
 use Magento\Backend\Model\UrlInterface;
@@ -8,6 +9,7 @@ use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\DB\TransactionFactory;
 use Magento\Framework\Exception\InputException;
 use Magento\Framework\Exception\LocalizedException;
+use Magento\Framework\Exception\MailException;
 use Magento\Framework\Mail\Template\TransportBuilder;
 use Magento\Sales\Api\OrderManagementInterface;
 use Magento\Sales\Api\OrderRepositoryInterface;
@@ -19,9 +21,11 @@ use Magento\Sales\Model\Order\Payment\Transaction\BuilderInterface as transactio
 use Magento\Sales\Model\OrderFactory;
 use Magento\Sales\Model\Service\InvoiceService;
 use Paytrail\PaymentService\Exceptions\CheckoutException;
+use Paytrail\PaymentService\Exceptions\TransactionSuccessException;
 use Paytrail\PaymentService\Gateway\Config\Config;
 use Paytrail\PaymentService\Helper\ApiData;
 use Paytrail\PaymentService\Helper\Data as paytrailHelper;
+use Paytrail\PaymentService\Model\Email\Order\PendingOrderEmailConfirmation;
 use Paytrail\PaymentService\Setup\Patch\Data\InstallPaytrail;
 use Psr\Log\LoggerInterface;
 
@@ -35,6 +39,11 @@ class ReceiptDataProvider
     public const PAYTRAIL_API_PAYMENT_STATUS_PENDING = 'pending';
     public const PAYTRAIL_API_PAYMENT_STATUS_DELAYED = 'delayed';
     public const PAYTRAIL_API_PAYMENT_STATUS_FAIL = 'fail';
+
+    private const CONTINUABLE_STATUSES = [
+        self::PAYTRAIL_API_PAYMENT_STATUS_PENDING,
+        self::PAYTRAIL_API_PAYMENT_STATUS_DELAYED,
+    ];
 
     /**
      * @var Session
@@ -92,6 +101,11 @@ class ReceiptDataProvider
     protected $transactionBuilder;
 
     /**
+     * @var \Paytrail\PaymentService\Model\FinnishReferenceNumber
+     */
+    protected FinnishReferenceNumber $finnishReferenceNumber;
+
+    /**
      * @var |Magento\Framework\App\CacheInterface
      */
     private $cache;
@@ -146,6 +160,15 @@ class ReceiptDataProvider
      * @var UrlInterface
      */
     private $backendUrl;
+    /**
+     * @var bool
+     */
+    private $skipHmac;
+
+    /**
+     * @var PendingOrderEmailConfirmation
+     */
+    private $pendingOrderEmail;
 
     /**
      * @var OrderFactory
@@ -154,42 +177,49 @@ class ReceiptDataProvider
 
     /**
      * ReceiptDataProvider constructor.
-     * @param Session $session
-     * @param TransactionRepositoryInterface $transactionRepository
-     * @param OrderSender $orderSender
-     * @param TransportBuilder $transportBuilder
-     * @param ScopeConfigInterface $scopeConfig
-     * @param OrderManagementInterface $orderManagementInterface
-     * @param OrderRepositoryInterface $orderRepositoryInterface
-     * @param CacheInterface $cache
-     * @param InvoiceService $invoiceService
-     * @param TransactionFactory $transactionFactory
-     * @param paytrailHelper $paytrailHelper
-     * @param transactionBuilderInterface $transactionBuilder
-     * @param Config $gatewayConfig
-     * @param ApiData $apiData
-     * @param LoggerInterface $logger
-     * @param UrlInterface $backendUrl
-     * @param OrderFactory $orderFactory
+     *
+     * @param Session                                                $session
+     * @param TransactionRepositoryInterface                         $transactionRepository
+     * @param OrderSender                                            $orderSender
+     * @param TransportBuilder                                       $transportBuilder
+     * @param ScopeConfigInterface                                   $scopeConfig
+     * @param OrderManagementInterface                               $orderManagementInterface
+     * @param OrderRepositoryInterface                               $orderRepositoryInterface
+     * @param CacheInterface                                         $cache
+     * @param InvoiceService                                         $invoiceService
+     * @param TransactionFactory                                     $transactionFactory
+     * @param paytrailHelper                                         $paytrailHelper
+     * @param \Magento\Sales\Model\Order\Payment\Transaction\Builder $transactionBuilder
+     * @param Config                                                 $gatewayConfig
+     * @param ApiData                                                $apiData
+     * @param LoggerInterface                                        $logger
+     * @param UrlInterface                                           $backendUrl
+     * @param OrderFactory                                           $orderFactory
+     * @param PendingOrderEmailConfirmation                          $pendingOrderEmail
+     * @param \Paytrail\PaymentService\Model\FinnishReferenceNumber  $finnishReferenceNumber
+     * @param boolean                                                $skipHmac
      */
     public function __construct(
-        Session $session,
+        Session                        $session,
         TransactionRepositoryInterface $transactionRepository,
-        OrderSender $orderSender,
-        TransportBuilder $transportBuilder,
-        ScopeConfigInterface $scopeConfig,
-        OrderManagementInterface $orderManagementInterface,
-        OrderRepositoryInterface $orderRepositoryInterface,
-        CacheInterface $cache,
-        InvoiceService $invoiceService,
-        TransactionFactory $transactionFactory,
-        paytrailHelper $paytrailHelper,
-        transactionBuilder $transactionBuilder,
-        Config $gatewayConfig,
-        ApiData $apiData,
-        LoggerInterface $logger,
-        UrlInterface $backendUrl,
-        OrderFactory $orderFactory
+        OrderSender                    $orderSender,
+        TransportBuilder               $transportBuilder,
+        ScopeConfigInterface           $scopeConfig,
+        OrderManagementInterface       $orderManagementInterface,
+        OrderRepositoryInterface       $orderRepositoryInterface,
+        CacheInterface                 $cache,
+        InvoiceService                 $invoiceService,
+        TransactionFactory             $transactionFactory,
+        paytrailHelper                 $paytrailHelper,
+        transactionBuilder             $transactionBuilder,
+        Config                         $gatewayConfig,
+        ApiData                        $apiData,
+        LoggerInterface                $logger,
+        UrlInterface                   $backendUrl,
+        OrderFactory                   $orderFactory,
+        PendingOrderEmailConfirmation  $pendingOrderEmail,
+        FinnishReferenceNumber $finnishReferenceNumber,
+        $skipHmac = false
     ) {
         $this->cache = $cache;
         $this->session = $session;
@@ -208,27 +238,34 @@ class ReceiptDataProvider
         $this->logger = $logger;
         $this->backendUrl = $backendUrl;
         $this->orderFactory = $orderFactory;
+        $this->skipHmac = $skipHmac;
+        $this->pendingOrderEmail = $pendingOrderEmail;
+        $this->finnishReferenceNumber = $finnishReferenceNumber;
     }
 
     /**
+     * Interrogates the current payment message. If valid: updates order and saves invoice and payment data
+     *
      * @param array $params
+     *
      * @throws CheckoutException
      * @throws LocalizedException
+     * @throws \Exception
      */
     public function execute(array $params)
     {
         if ($this->gatewayConfig->getGenerateReferenceForOrder()) {
             $this->orderIncrementalId
-                = $this->paytrailHelper->getIdFromOrderReferenceNumber(
-                $params["checkout-reference"]
-            );
+                = $this->finnishReferenceNumber->getIdFromOrderReferenceNumber(
+                    $params["checkout-reference"]
+                );
         } else {
             $this->orderIncrementalId
                 = $params["checkout-reference"];
         }
-        $this->transactionId        =   $params["checkout-transaction-id"];
-        $this->paramsStamp          =   $params['checkout-stamp'];
-        $this->paramsMethod         =   $params['checkout-provider'];
+        $this->transactionId = $params["checkout-transaction-id"];
+        $this->paramsStamp = $params['checkout-stamp'];
+        $this->paramsMethod = $params['checkout-provider'];
 
         $this->session->unsCheckoutRedirectUrl();
 
@@ -238,6 +275,7 @@ class ReceiptDataProvider
         /** @var int $count */
         $count = 0;
 
+        // wait 3 seconds for the order cache to be cleared.
         while ($this->isOrderLocked($this->orderId) && $count < 3) {
             sleep(1);
             $count++;
@@ -259,6 +297,8 @@ class ReceiptDataProvider
     }
 
     /**
+     * Add order lock to cache
+     *
      * @param int $orderId
      */
     protected function lockProcessingOrder($orderId)
@@ -270,6 +310,8 @@ class ReceiptDataProvider
     }
 
     /**
+     * Remove lock from cache
+     *
      * @param int $orderId
      */
     protected function unlockProcessingOrder($orderId)
@@ -281,6 +323,8 @@ class ReceiptDataProvider
     }
 
     /**
+     * Check order locked state from cache.
+     *
      * @param int $orderId
      * @return bool
      */
@@ -289,11 +333,13 @@ class ReceiptDataProvider
         /** @var string $identifier */
         $identifier = self::RECEIPT_PROCESSING_CACHE_PREFIX . $orderId;
 
-        return $this->cache->load($identifier) ? true : false;
+        return (bool)$this->cache->load($identifier);
     }
 
     /**
-     * @param $paymentVerified
+     * Update order status based on payment status and send order confirmation email
+     *
+     * @param string $paymentVerified
      */
     protected function processOrder($paymentVerified)
     {
@@ -311,17 +357,21 @@ class ReceiptDataProvider
         $this->orderRepositoryInterface->save($this->currentOrder);
 
         try {
-            $this->orderSender->send($this->currentOrder);
+            if (!$this->pendingOrderEmail->isPendingOrderEmailEnabled()) {
+                $this->orderSender->send($this->currentOrder);
+            }
         } catch (\Exception $e) {
             $this->logger->error(\sprintf(
                 'Paytrail: Order email sending failed: %s',
                 $e->getMessage()
             ));
         }
+        $this->sendEmail();
     }
 
     /**
-     * process invoice
+     * If order can be invoiced, create a new invoice using transaction save.
+     *
      * @throws CheckoutException
      */
     protected function processInvoice()
@@ -347,7 +397,13 @@ class ReceiptDataProvider
     }
 
     /**
-     * notify canceled order
+     * Send email message to admin that an order requires their attention
+     *
+     * If an order got a failed payment status from Payment api followed up by "payment ok" status later admin user
+     * needs to be informed so that manual "restore order" action can be performed in admin.
+     *
+     * @throws MailException
+     * @throws LocalizedException
      */
     protected function notifyCanceledOrder()
     {
@@ -378,21 +434,23 @@ class ReceiptDataProvider
     }
 
     /**
-     * @param string $paymentStatus
+     * Get array of payment transactional information based on current request
+     *
      * @return array
      */
-    protected function getDetails($paymentStatus)
+    protected function getDetails()
     {
         return [
-            'orderNo'    => $this->orderIncrementalId,
-            'stamp'      => $this->paramsStamp,
-            'method'     => $this->paramsMethod,
-            'api_status' => $paymentStatus
+            'orderNo' => $this->orderIncrementalId,
+            'stamp' => $this->paramsStamp,
+            'method' => $this->paramsMethod,
         ];
     }
 
     /**
-     * @return mixed
+     * Load order by current increment id.
+     *
+     * @return \Magento\Sales\Model\Order
      * @throws CheckoutException
      */
     protected function loadOrder()
@@ -405,22 +463,32 @@ class ReceiptDataProvider
     }
 
     /**
+     * Validate that incoming request has correct Hmac and payment status
+     *
      * @param string[] $params
      *
-     * @throws LocalizedException
-     * @throws CheckoutException
      * @return string|void
+     * @throws CheckoutException thrown if payment had status "fail"
+     * @throws LocalizedException Thrown if errors happen in cancel order.
      */
     protected function verifyPaymentData($params)
     {
         $status = $params['checkout-status'];
-        $verifiedPayment = $this->apiData->validateHmac($params, $params['signature']);
+
+        /**
+         * When paying with payment token, such as a card saved to vault. The HMAC validation is done by the php-sdk
+         * directly during the payment post. When this happens the signature parameter is not passed into subsquent
+         * logic. Making Hmac validation here impossible. This forces the skip implementation for Token payments.
+         *
+         * @see \Paytrail\SDK\Client::createCitPayment
+         */
+        $verifiedPayment = $this->skipHmac ?: $this->apiData->validateHmac($params, $params['signature']);
 
         if ($verifiedPayment
             && ($status === self::PAYTRAIL_API_PAYMENT_STATUS_OK
                 || $status === self::PAYTRAIL_API_PAYMENT_STATUS_PENDING
                 || $status === self::PAYTRAIL_API_PAYMENT_STATUS_DELAYED
-        )) {
+            )) {
             return $status;
         } else {
             $this->currentOrder->addCommentToStatusHistory(__('Failed to complete the payment.'));
@@ -433,14 +501,14 @@ class ReceiptDataProvider
     }
 
     /**
-     * Validate that payment process is allowed to continue past an existing transaction
+     * Load existing payment transaction or generate a new one based on the payment status.
      *
-     * @return bool|\Magento\Sales\Model\Order\Payment\Transaction
-     * @throws CheckoutException
+     * @return \Magento\Sales\Model\Order\Payment\Transaction|bool
+     * @throws CheckoutException thrown on unexpected load errors.
      */
     protected function loadTransaction()
     {
-        /** @var bool|mixed $transaction */
+        $transaction = false;
         try {
             $transaction = $this->transactionRepository->getByTransactionId(
                 $this->transactionId,
@@ -455,7 +523,15 @@ class ReceiptDataProvider
     }
 
     /**
-     * @param $transaction
+     * Validates ongoing transaction against the information in previous transaction
+     *
+     * Validate transaction id is the same as old id and that previous transaction did not finish the payment
+     * Note that for backwards compatibility if transaction is missing api_status field, assume completed payment.
+     *
+     * @param \Magento\Sales\Model\Order\Payment\Transaction|bool $transaction
+     *
+     * @throws \Paytrail\PaymentService\Exceptions\TransactionSuccessException thrown if previous transaction got "ok"
+     * @throws CheckoutException thrown if multiple transaction ids are present.
      */
     protected function validateOldTransaction($transaction)
     {
@@ -465,40 +541,56 @@ class ReceiptDataProvider
             }
 
             $details = $transaction->getAdditionalInformation(Transaction::RAW_DETAILS);
-            if (is_array($details)
-                && (!isset($details['api_status']) || $details['api_status'] === self::PAYTRAIL_API_PAYMENT_STATUS_OK)
-            ) {
-                // After a singular "ok" response, Magento needs to ignore following callbacks.
-                $this->paytrailHelper->processSuccess();
+            if (isset($details['api_status']) && in_array($details['api_status'], self::CONTINUABLE_STATUSES)) {
+                return;
             }
+
+            // transaction was already completed with 'Ok' status.
+            $this->paytrailHelper->processSuccess();
         }
     }
 
     /**
+     * Create a new transaction and save it to database or update the old one.
+     *
      * @param string $paymentStatus
      *
-     * @throws CheckoutException
+     * @throws CheckoutException thrown if multiple transactions are present
+     * @throws TransactionSuccessException thrown if previous transaction got "ok" status from Paytrail
+     * @throws LocalizedException thrown if payment details array is malformed or email notification failed
      */
     protected function processTransaction(string $paymentStatus)
     {
         $oldTransaction = $this->loadTransaction();
         $this->validateOldTransaction($oldTransaction);
+        $oldStatus = false;
+        $paymentDetails = $this->getDetails();
+        $paymentDetails['api_status'] = $paymentStatus;
 
         if ($oldTransaction) {
-            $transaction = $this->updateTransaction(
-                $oldTransaction,
-                $this->getDetails($paymentStatus)
-            );
+            // Backwards compatibility: If transaction exists without api_status, assume OK status since
+            // only 'ok' status could create transactions in old version.
+            $oldStatus = isset($oldTransaction->getAdditionalInformation(Transaction::RAW_DETAILS)['api_status'])
+                ? $oldTransaction->getAdditionalInformation(Transaction::RAW_DETAILS)['api_status']
+                : 'ok';
+
+            $transaction = $this->updateOldTransaction($oldTransaction, $paymentDetails);
         } else {
             $transaction = $this->addPaymentTransaction(
                 $this->currentOrder,
                 $this->transactionId,
-                $this->getDetails($paymentStatus)
+                $paymentDetails
             );
         }
 
-        $this->currentOrderPayment->addTransactionCommentsToOrder($transaction, '');
-        $this->currentOrderPayment->setLastTransId($this->transactionId);
+        // Only append transaction comments to orders if the payment status changes
+        if ($oldStatus !== $paymentStatus) {
+            $this->currentOrderPayment->addTransactionCommentsToOrder(
+                $transaction,
+                __('Paytrail Api - New payment status: "%status"', ['status' => $paymentStatus])
+            );
+            $this->currentOrderPayment->setLastTransId($this->transactionId);
+        }
 
         if ($this->currentOrder->getStatus() == 'canceled') {
             $this->notifyCanceledOrder();
@@ -506,8 +598,10 @@ class ReceiptDataProvider
     }
 
     /**
+     * Create new payment transaction
+     *
      * @param \Magento\Sales\Model\Order $order
-     * @param $transactionId
+     * @param string $transactionId
      * @param array $details
      * @return \Magento\Sales\Api\Data\TransactionInterface
      */
@@ -523,7 +617,7 @@ class ReceiptDataProvider
         $transaction = $this->transactionBuilder
             ->setPayment($payment)->setOrder($order)
             ->setTransactionId($transactionId)
-            ->setAdditionalInformation([Transaction::RAW_DETAILS => (array) $details])
+            ->setAdditionalInformation([Transaction::RAW_DETAILS => (array)$details])
             ->setFailSafe(true)
             ->build(Transaction::TYPE_CAPTURE);
         $transaction->setIsClosed(0);
@@ -531,20 +625,11 @@ class ReceiptDataProvider
     }
 
     /**
-     * @param \Magento\Sales\Api\Data\TransactionInterface $oldTransaction
-     * @param array $details
-     * @return mixed
-     */
-    private function updateTransaction($oldTransaction, array $details)
-    {
-        $oldTransaction->setAdditionalInformation(Transaction::RAW_DETAILS, $details);
-
-        return $oldTransaction;
-    }
-
-    /**
+     * If automatic order cancellation is enabled. Cancel the order on first "Failed" payment response.
+     *
      * @param int $orderId
      * @return void
+     * @throws CheckoutException
      */
     private function cancelOrderById($orderId): void
     {
@@ -561,9 +646,44 @@ class ReceiptDataProvider
                 // Mask and throw end-user friendly exception
                 throw new CheckoutException(__(
                     'Error while cancelling order. Please contact customer support with order id: %id to release discount coupons.',
-                    [ 'id'=> $orderId ]
+                    ['id' => $orderId]
                 ));
             }
         }
+    }
+
+    /**
+     * Conditionally send email if it was not sent before
+     *
+     * @return void
+     */
+    private function sendEmail(): void
+    {
+        if ($this->currentOrder->getEmailSent()) {
+            return; // only send confirmation email once.
+        }
+
+        try {
+            $this->orderSender->send($this->currentOrder);
+        } catch (\Exception $e) {
+            $this->logger->error(\sprintf(
+                'Paytrail: Order email sending failed: %s',
+                $e->getMessage()
+            ));
+        }
+    }
+
+    /**
+     * @param bool|Transaction $oldTransaction
+     * @param array $paymentDetails
+     * @return Transaction
+     * @throws LocalizedException
+     */
+    private function updateOldTransaction(bool|Transaction $oldTransaction, array $paymentDetails): Transaction
+    {
+        $transaction = $oldTransaction->setAdditionalInformation(Transaction::RAW_DETAILS, $paymentDetails);
+        $this->transactionRepository->save($transaction);
+
+        return $transaction;
     }
 }
