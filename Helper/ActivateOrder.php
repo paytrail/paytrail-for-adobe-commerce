@@ -6,7 +6,6 @@ use Magento\Framework\Exception\InputException;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Sales\Api\OrderRepositoryInterface;
 use Magento\Sales\Api\TransactionRepositoryInterface;
-use Magento\Sales\Model\ResourceModel\Order;
 use Magento\Sales\Model\Service\InvoiceService;
 use Magento\Framework\DB\TransactionFactory;
 use Psr\Log\LoggerInterface;

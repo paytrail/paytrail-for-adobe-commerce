@@ -4,4 +4,9 @@
               label="Restore order"
               file="restore_order_notification.html" type="html"
               module="Paytrail_PaymentService" area="frontend"/>
+    <template id="recurring_email_template"
+              label="New Recurring order"
+              file="recurring_new.html"
+              type="html"
+              module="Paytrail_PaymentService" area="frontend"/>
 </config>

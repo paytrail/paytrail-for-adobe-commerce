@@ -35,6 +35,8 @@ class Config extends \Magento\Payment\Gateway\Config\Config
     public const KEY_CANCEL_ORDER_ON_FAILED_PAYMENT = 'failed_payment_cancel';
     public const KEY_MANUAL_INVOICE = 'manual_invoice';
     public const KEY_ACTIVATE_WITH_SHIPMENT = 'shipment_activates_invoice';
+    public const SAVE_CARD_URL = 'tokenization/savecard';
+    public const KEY_CHECKOUT_ALGORITHM = 'checkout_algorithm';
 
     /**
      * @var EncryptorInterface
@@ -260,6 +262,31 @@ class Config extends \Magento\Payment\Gateway\Config\Config
     public function getNotificationEmail($storeId = null)
     {
         return $this->getValue(self::KEY_NOTIFICATION_EMAIL, $storeId);
+    }
+
+    /**
+     * @return string
+     */
+    public function getCcVaultCode()
+    {
+        return self::CC_VAULT_CODE;
+    }
+
+    /**
+     * @param null $storeId
+     * @return mixed|null
+     */
+    public function getCheckoutAlgorithm($storeId = null)
+    {
+        return $this->getValue(self::KEY_CHECKOUT_ALGORITHM, $storeId);
+    }
+
+    /**
+     * @return string
+     */
+    public function getSaveCardUrl()
+    {
+        return self::SAVE_CARD_URL;
     }
 
     /**

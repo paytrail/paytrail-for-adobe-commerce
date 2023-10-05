@@ -2,6 +2,16 @@
 <config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Store:etc/config.xsd">
   <default>
+      <csp>
+          <policies>
+              <storefront>
+                  <frame-ancestors>
+                      <inline>0</inline>
+                  </frame-ancestors>
+              </storefront>
+          </policies>
+      </csp>
+
     <payment>
       <paytrail>
         <title>Paytrail for Adobe Commerce</title>
@@ -17,6 +27,7 @@
         <can_initialize>1</can_initialize>
         <can_use_checkout>1</can_use_checkout>
         <can_authorize>1</can_authorize>
+        <can_authorize_vault>1</can_authorize_vault>
         <can_use_internal>1</can_use_internal>
         <can_capture>0</can_capture>
         <can_capture_partial>0</can_capture_partial>
@@ -43,7 +54,27 @@
             <additional_css></additional_css>
           </advanced_paytrail_personalization>
         </paytrail_personalization>
+        <checkout_algorithm>sha256</checkout_algorithm>
+        <order_place_redirect_url>0</order_place_redirect_url>
       </paytrail>
+      <paytrail_cc_vault>
+        <model>PaytrailVaultFacade</model>
+        <title>Stored Cards (Paytrail)</title>
+        <active>1</active>
+        <can_initialize>1</can_initialize>
+        <can_use_checkout>1</can_use_checkout>
+        <can_use_internal>1</can_use_internal>
+      </paytrail_cc_vault>
     </payment>
+    <sales>
+      <recurring_payment>
+        <active_recurring_payment>0</active_recurring_payment>
+        <notify_cron_schedule>0 1 * * *</notify_cron_schedule>
+        <bill_cron_schedule>15 3 * * *</bill_cron_schedule>
+        <email_template>recurring_email_template</email_template>
+        <warning_period>7</warning_period>
+        <force_weekdays>0</force_weekdays>
+      </recurring_payment>
+    </sales>
   </default>
 </config>
