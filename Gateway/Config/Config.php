@@ -15,6 +15,7 @@ class Config extends \Magento\Payment\Gateway\Config\Config
     public const KEY_MERCHANT_SECRET = 'merchant_secret';
     public const KEY_MERCHANT_ID = 'merchant_id';
     public const KEY_ACTIVE = 'active';
+    public const CC_VAULT_CODE = 'paytrail_cc_vault';
     public const KEY_SKIP_BANK_SELECTION = 'skip_bank_selection';
     public const BYPASS_PATH = 'Paytrail_PaymentService/payment/checkout-bypass';
     public const CHECKOUT_PATH = 'Paytrail_PaymentService/payment/checkout';
