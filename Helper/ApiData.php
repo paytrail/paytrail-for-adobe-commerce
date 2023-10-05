@@ -3,19 +3,26 @@
 namespace Paytrail\PaymentService\Helper;
 
 use GuzzleHttp\Exception\RequestException;
+use Magento\Directory\Api\CountryInformationAcquirerInterface;
 use Magento\Framework\App\RequestInterface;
+use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Framework\Serialize\Serializer\Json;
 use Magento\Framework\UrlInterface;
 use Magento\Sales\Model\Order;
 use Magento\Store\Model\StoreManagerInterface;
 use Paytrail\PaymentService\Gateway\Config\Config as GatewayConfig;
+use Magento\Tax\Helper\Data as TaxHelper;
+use Paytrail\PaymentService\Exceptions\CheckoutException;
 use Paytrail\PaymentService\Helper\Data as CheckoutHelper;
 use Paytrail\PaymentService\Logger\PaytrailLogger;
 use Paytrail\PaymentService\Model\Adapter\Adapter;
 use Paytrail\PaymentService\Model\Company\CompanyRequestData;
 use Paytrail\PaymentService\Model\Invoice\InvoiceActivation;
 use Paytrail\PaymentService\Model\FinnishReferenceNumber;
+use Paytrail\PaymentService\Model\Invoice\Activation\Flag;
+use Paytrail\PaymentService\Model\Payment\DiscountSplitter;
+use Paytrail\SDK\Model\Address;
 use Paytrail\SDK\Model\CallbackUrl;
 use Paytrail\SDK\Request\EmailRefundRequest;
 use Paytrail\SDK\Request\PaymentRequest;
@@ -25,6 +32,7 @@ use Paytrail\SDK\Request\CitPaymentRequest;
 use Paytrail\SDK\Request\GetTokenRequest;
 use Paytrail\SDK\Request\PaymentStatusRequest;
 use Paytrail\PaymentService\Model\Token\RequestData;
+use Psr\Log\LoggerInterface;
 
 class ApiData
 {
@@ -119,9 +127,9 @@ class ApiData
     private CompanyRequestData $companyRequestData;
 
     /**
-     * @var InvoiceActivation
+     * @var Flag
      */
-    private InvoiceActivation $invoiceActivate;
+    private Flag $invoiceActivate;
 
     /**
      * @param PaytrailLogger         $log
@@ -143,6 +151,22 @@ class ApiData
      * @param PaymentStatusRequest   $paymentStatusRequest
      * @param RequestData            $requestData
      * @param FinnishReferenceNumber $referenceNumber
+     * @param LoggerInterface $log
+     * @param UrlInterface $urlBuilder
+     * @param RequestInterface $request
+     * @param Json $json
+     * @param CountryInformationAcquirerInterface $countryInformationAcquirer
+     * @param TaxHelper $taxHelper
+     * @param Data $helper
+     * @param StoreManagerInterface $storeManager
+     * @param Adapter $paytrailAdapter
+     * @param PaymentRequest $paymentRequest
+     * @param RefundRequest $refundRequest
+     * @param EmailRefundRequest $emailRefundRequest
+     * @param DiscountSplitter $discountSplitter
+     * @param TaxItem $taxItem
+     * @param CompanyRequestData $companyRequestData
+     * @param Flag $invoiceActivate
      */
     public function __construct(
         PaytrailLogger $log,
@@ -163,7 +187,12 @@ class ApiData
         CitPaymentRequest $citPaymentRequest,
         PaymentStatusRequest $paymentStatusRequest,
         RequestData $requestData,
-        FinnishReferenceNumber $referenceNumber
+        FinnishReferenceNumber $referenceNumber,
+        CountryInformationAcquirerInterface $countryInformationAcquirer,
+        TaxHelper                           $taxHelper,
+        DiscountSplitter                    $discountSplitter,
+        TaxItem                             $taxItem,
+        Flag                                $invoiceActivate
     ) {
         $this->log                  = $log;
         $this->urlBuilder           = $urlBuilder;
@@ -585,5 +614,39 @@ class ApiData
         );
 
         return true;
+    }
+
+    /**
+     * Creates Shipping item
+     *
+     * @param Order $order
+     * @return array
+     */
+    private function getShippingItem(Order $order)
+    {
+        $taxDetails = [];
+        $price = 0;
+
+        if ($order->getShippingAmount()) {
+            foreach ($this->taxItems->getTaxItemsByOrderId($order->getId()) as $detail) {
+                if (isset($detail['taxable_item_type']) && $detail['taxable_item_type'] == 'shipping') {
+                    $taxDetails = $detail;
+                    break;
+                }
+            }
+
+            $price = $order->getShippingAmount();
+            $price -= $order->getShippingDiscountAmount();
+            $price += $order->getShippingTaxAmount();
+            $price += $order->getShippingDiscountTaxCompensationAmount();
+        }
+
+        return [
+            'title' => $order->getShippingDescription() ?: __('Shipping'),
+            'code' => 'shipping-row',
+            'amount' => 1,
+            'price' => floatval($price),
+            'vat' => $taxDetails['tax_percent'] ?? 0,
+        ];
     }
 }
