@@ -43,6 +43,6 @@ class PaymentActivation implements \Magento\Framework\Event\ObserverInterface
             return; // Observer only processes shipments the first time they're made.
         }
 
-        $this->manualActivation->activateInvoice($shipment->getOrderId());
+        $this->manualActivation->activateInvoice((int)$shipment->getOrderId());
     }
 }

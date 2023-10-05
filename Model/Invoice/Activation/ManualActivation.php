@@ -2,34 +2,52 @@
 
 namespace Paytrail\PaymentService\Model\Invoice\Activation;
 
+use Magento\Sales\Model\InvoiceOrder;
 use Magento\Sales\Model\ResourceModel\Order\Payment\Transaction\CollectionFactory as TransactionCollectionFactory;
 use Paytrail\PaymentService\Helper\ApiData;
 use Paytrail\PaymentService\Model\ReceiptDataProvider;
 
 class ManualActivation
 {
-    private TransactionCollectionFactory $collectionFactory;
-    private ApiData $apiData;
+    /**
+     * @var TransactionCollectionFactory
+     */
+    private $collectionFactory;
 
     /**
+     * @var ApiData
+     */
+    private $apiData;
+
+    /**
+     * @var InvoiceOrder
+     */
+    private $invoiceOrder;
+
+    /**
+     * ManualActivation constructor.
+     *
      * @param TransactionCollectionFactory $collectionFactory
      * @param ApiData $apiData
+     * @param InvoiceOrder $invoiceOrder
      */
     public function __construct(
         TransactionCollectionFactory $collectionFactory,
         ApiData $apiData,
+        InvoiceOrder $invoiceOrder
     ) {
         $this->collectionFactory = $collectionFactory;
         $this->apiData = $apiData;
+        $this->invoiceOrder = $invoiceOrder;
     }
 
     /**
+     * Activate invoice.
+     *
      * @param int $orderId
      * @return void
-     * @throws \Paytrail\SDK\Exception\ClientException
-     * @throws \Paytrail\SDK\Exception\HmacException
-     * @throws \Paytrail\SDK\Exception\RequestException
-     * @throws \Paytrail\SDK\Exception\ValidationException
+     * @throws \Magento\Framework\Exception\InputException
+     * @throws \Magento\Framework\Exception\NoSuchEntityException
      */
     public function activateInvoice(int $orderId)
     {
@@ -52,31 +70,36 @@ class ManualActivation
                     Flag::SUB_METHODS_WITH_MANUAL_ACTIVATION_SUPPORT
                 ) && $info['raw_details_info']['api_status'] === ReceiptDataProvider::PAYTRAIL_API_PAYMENT_STATUS_PENDING
             ) {
-                $this->sendActivation($transaction->getTxnId());
+                $this->sendActivation($transaction->getTxnId(), $orderId);
             }
         }
     }
 
     /**
-     * @param \Magento\Sales\Api\Data\OrderInterface $transaction
-     * @return void
+     * Send invoice activation to Paytrail while submit shipment.
      *
-     * @throws \Paytrail\SDK\Exception\ClientException
-     * @throws \Paytrail\SDK\Exception\HmacException
-     * @throws \Paytrail\SDK\Exception\RequestException
-     * @throws \Paytrail\SDK\Exception\ValidationException
+     * @param string $txnId
+     * @param int $orderId
+     * @return void
+     * @throws \Magento\Framework\Exception\InputException
+     * @throws \Magento\Framework\Exception\NoSuchEntityException
      */
-    private function sendActivation($txnId)
+    private function sendActivation($txnId, $orderId)
     {
         // Activation returns a status "OK" if the payment was completed upon activation but the return has no signature
         // Without signature Hmac validation embedded in payment processing cannot be passed. This can be resolved with
         // Recurring payment HMAC updates.
         // TODO Use recurring payment HMAC processing here to mark order as paid if response status is "OK"
-        $this->apiData->processApiRequest(
+        $response = $this->apiData->processApiRequest(
             'invoice_activation',
             null,
             null,
             $txnId
         );
+
+        if ($response['data']->getStatus() === 'ok') {
+
+            $this->invoiceOrder->execute($orderId);
+        }
     }
 }
