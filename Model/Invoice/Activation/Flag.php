@@ -1,9 +1,7 @@
 <?php
 declare(strict_types=1);
 
-
 namespace Paytrail\PaymentService\Model\Invoice\Activation;
-
 
 use Paytrail\SDK\Request\PaymentRequest;
 
