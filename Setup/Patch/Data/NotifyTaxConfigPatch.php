@@ -8,6 +8,7 @@ namespace Paytrail\PaymentService\Setup\Patch\Data;
 use Magento\Backend\Model\UrlInterface;
 use Magento\Framework\Notification\NotifierInterface;
 use Magento\Framework\Setup\Patch\DataPatchInterface;
+use Magento\Framework\Setup\Patch\PatchInterface;
 
 /**
  * Activate data collection mechanism
