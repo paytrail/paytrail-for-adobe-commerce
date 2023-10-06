@@ -285,7 +285,6 @@ class RequestData
         $items = [];
 
         # Add line items
-        /** @var $item OrderItem */
         foreach ($order->getAllItems() as $item) {
             $discountInclTax = 0;
             if (!$this->taxHelper->priceIncludesTax()
@@ -295,10 +294,11 @@ class RequestData
                     $item->getDiscountAmount() * (($item->getTaxPercent() / 100) + 1)
                 );
             } else {
-                $discountInclTax += $this->formatPrice($item->getDiscountAmount());
+                $discountInclTax += $item->getDiscountAmount();
             }
 
-            if (!$item->getQtyOrdered()) {
+            $qtyOrdered = $item->getQtyOrdered();
+            if (!$qtyOrdered) {
                 // Prevent division by zero errors
                 throw new LocalizedException(\__('Quantity missing for order item: %sku', ['sku' => $item->getSku()]));
             }
@@ -309,46 +309,49 @@ class RequestData
                 $items[] = [
                     'title'  => $item->getName(),
                     'code'   => $item->getSku(),
-                    'amount' => $item->getQtyOrdered(),
+                    'amount' => $qtyOrdered,
                     'price'  => 0,
                     'vat'    => 0
                 ];
             } else {
                 $rowTotalInclDiscount  = $item->getRowTotalInclTax() - $discountInclTax;
-                $itemPriceInclDiscount = $rowTotalInclDiscount / $item->getQtyOrdered();
+                $itemPriceInclDiscount = $this->formatPrice($rowTotalInclDiscount / $qtyOrdered);
+
+                $difference = $rowTotalInclDiscount - ($itemPriceInclDiscount * $qtyOrdered);
+                // deduct/add only 0.01 per product
+                $diffAdjustment       = 0.01;
+                $differenceUnitsCount = (int)(abs($difference / $diffAdjustment));
+
+                if ($differenceUnitsCount > $qtyOrdered) {
+                    throw new LocalizedException(
+                        \__('Rounding diff bigger than 0.01 per item : %sku', ['sku' => $item->getSku()])
+                    );
+                }
 
                 $paytrailItem = [
                     'title'  => $item->getName(),
                     'code'   => $item->getSku(),
-                    'amount' => $item->getQtyOrdered(),
-                    'price'  => $this->formatPrice($itemPriceInclDiscount),
+                    'amount' => $qtyOrdered - $differenceUnitsCount,
+                    'price'  => $itemPriceInclDiscount,
                     'vat'    => $item->getTaxPercent()
                 ];
 
-                $difference = $this->formatPrice(
-                    $rowTotalInclDiscount - ($paytrailItem['price'] * $paytrailItem['amount'])
-                );
-
                 if ($difference <> 0) {
-                    $differenceUnits = abs($difference / 0.01);
-                    if ($differenceUnits > $item->getQtyOrdered()) {
-                        throw new LocalizedException(
-                            \__('Rounding diff bigger than 0.01 per item : %sku', ['sku' => $item->getSku()])
-                        );
-                    }
+                    $paytrailItemRoundingCorrection = [
+                        'title'  => $item->getName()
+                            . ' (rounding issue fix, diff: '
+                            . $this->formatPrice($difference)
+                            . ')',
+                        'code'   => $item->getSku(),
+                        'amount' => $differenceUnitsCount,
+                        'price'  => $this->formatPrice(
+                            floatval($itemPriceInclDiscount) + ($difference <=> 0) * $diffAdjustment
+                        ),
+                        'vat'    => $item->getTaxPercent()
+                    ];
 
-                    $paytrailItem['amount']                   -= $differenceUnits;
-                    $paytrailItemDiscountCorrection           = $paytrailItem;
-                    $paytrailItemDiscountCorrection['amount'] = $differenceUnits;
-                    $paytrailItemDiscountCorrection['price']  = $this->formatPrice(
-                        $paytrailItem['price'] + 0.01
-                    );
-                    $paytrailItemDiscountCorrection['title']  .=
-                        ' (rounding issue fix, diff: '
-                        . $this->formatPrice($difference)
-                        . ')';
 
-                    $items [] = $paytrailItemDiscountCorrection;
+                    $items [] = $paytrailItemRoundingCorrection;
 
                 }
 
