@@ -674,12 +674,12 @@ class ReceiptDataProvider
     }
 
     /**
-     * @param bool|Transaction $oldTransaction
+     * @param Transaction $oldTransaction
      * @param array $paymentDetails
      * @return Transaction
      * @throws LocalizedException
      */
-    private function updateOldTransaction(bool|Transaction $oldTransaction, array $paymentDetails): Transaction
+    private function updateOldTransaction(Transaction $oldTransaction, array $paymentDetails): Transaction
     {
         $transaction = $oldTransaction->setAdditionalInformation(Transaction::RAW_DETAILS, $paymentDetails);
         $this->transactionRepository->save($transaction);
