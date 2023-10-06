@@ -2,7 +2,10 @@
 
 namespace Paytrail\PaymentService\Model\Invoice\Activation;
 
+use Magento\Sales\Api\OrderRepositoryInterface;
 use Magento\Sales\Model\InvoiceOrder;
+use Magento\Sales\Model\Order\Config;
+use Magento\Sales\Model\Order\OrderStateResolverInterface;
 use Magento\Sales\Model\ResourceModel\Order\Payment\Transaction\CollectionFactory as TransactionCollectionFactory;
 use Paytrail\PaymentService\Helper\ApiData;
 use Paytrail\PaymentService\Model\ReceiptDataProvider;
@@ -23,6 +26,9 @@ class ManualActivation
      * @var InvoiceOrder
      */
     private $invoiceOrder;
+    private $orderStateResolver;
+    private OrderRepositoryInterface $orderRepository;
+    private Config $config;
 
     /**
      * ManualActivation constructor.
@@ -32,13 +38,19 @@ class ManualActivation
      * @param InvoiceOrder $invoiceOrder
      */
     public function __construct(
-        TransactionCollectionFactory $collectionFactory,
-        ApiData $apiData,
-        InvoiceOrder $invoiceOrder
+        TransactionCollectionFactory      $collectionFactory,
+        ApiData                           $apiData,
+        InvoiceOrder                      $invoiceOrder,
+        OrderStateResolverInterface       $orderStateResolver,
+        OrderRepositoryInterface          $orderRepository,
+        Config $config
     ) {
         $this->collectionFactory = $collectionFactory;
         $this->apiData = $apiData;
         $this->invoiceOrder = $invoiceOrder;
+        $this->orderStateResolver = $orderStateResolver;
+        $this->orderRepository = $orderRepository;
+        $this->config = $config;
     }
 
     /**
@@ -90,16 +102,25 @@ class ManualActivation
         // Without signature Hmac validation embedded in payment processing cannot be passed. This can be resolved with
         // Recurring payment HMAC updates.
         // TODO Use recurring payment HMAC processing here to mark order as paid if response status is "OK"
-        $response = $this->apiData->processApiRequest(
-            'invoice_activation',
-            null,
-            null,
-            $txnId
-        );
+        $order = $this->orderRepository->get($orderId);
+        if (!$order->hasInvoices()) {
+            $response = $this->apiData->processApiRequest(
+                'invoice_activation',
+                null,
+                null,
+                $txnId
+            );
 
-        if ($response['data']->getStatus() === 'ok') {
-
-            $this->invoiceOrder->execute($orderId);
+            if ($response['data']->getStatus() === 'ok') {
+                $invoiceResult = $this->invoiceOrder->execute($orderId, true);
+                if ($invoiceResult) {
+                    $order->setState(
+                        $this->orderStateResolver->getStateForOrder($order, [OrderStateResolverInterface::IN_PROGRESS])
+                    );
+                    $order->setStatus($this->config->getStateDefaultStatus($order->getState()));
+                    $this->orderRepository->save($order);
+                }
+            }
         }
     }
 }
