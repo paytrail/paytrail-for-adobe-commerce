@@ -320,7 +320,7 @@ class RequestData
                 $difference = $rowTotalInclDiscount - ($itemPriceInclDiscount * $qtyOrdered);
                 // deduct/add only 0.01 per product
                 $diffAdjustment       = 0.01;
-                $differenceUnitsCount = (int)(round(abs($difference / $diffAdjustment) ));
+                $differenceUnitsCount = (int)(round(abs($difference / $diffAdjustment)));
 
                 if ($differenceUnitsCount > $qtyOrdered) {
                     throw new LocalizedException(
