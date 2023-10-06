@@ -320,7 +320,7 @@ class RequestData
                 $difference = $rowTotalInclDiscount - ($itemPriceInclDiscount * $qtyOrdered);
                 // deduct/add only 0.01 per product
                 $diffAdjustment       = 0.01;
-                $differenceUnitsCount = (int)(abs($difference / $diffAdjustment));
+                $differenceUnitsCount = (int)(round(abs($difference / $diffAdjustment) ));
 
                 if ($differenceUnitsCount > $qtyOrdered) {
                     throw new LocalizedException(
@@ -336,6 +336,8 @@ class RequestData
                     'vat'    => $item->getTaxPercent()
                 ];
 
+                $items [] = $paytrailItem;
+
                 if ($difference <> 0) {
                     $paytrailItemRoundingCorrection = [
                         'title'  => $item->getName()
@@ -350,12 +352,8 @@ class RequestData
                         'vat'    => $item->getTaxPercent()
                     ];
 
-
                     $items [] = $paytrailItemRoundingCorrection;
-
                 }
-
-                $items [] = $paytrailItem;
             }
         }
 
