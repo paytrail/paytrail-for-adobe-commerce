@@ -26,8 +26,20 @@ class ManualActivation
      * @var InvoiceOrder
      */
     private $invoiceOrder;
+
+    /**
+     * @var OrderStateResolverInterface
+     */
     private $orderStateResolver;
+
+    /**
+     * @var OrderRepositoryInterface
+     */
     private OrderRepositoryInterface $orderRepository;
+
+    /**
+     * @var Config
+     */
     private Config $config;
 
     /**
@@ -36,6 +48,9 @@ class ManualActivation
      * @param TransactionCollectionFactory $collectionFactory
      * @param ApiData $apiData
      * @param InvoiceOrder $invoiceOrder
+     * @param OrderStateResolverInterface $orderStateResolver
+     * @param OrderRepositoryInterface $orderRepository
+     * @param Config $config
      */
     public function __construct(
         TransactionCollectionFactory      $collectionFactory,
