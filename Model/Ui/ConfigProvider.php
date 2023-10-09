@@ -86,6 +86,7 @@ class ConfigProvider implements ConfigProviderInterface
                         'payment_terms' => $groupData['terms'],
                         'payment_method_styles' => $this->paymentProvidersData->wrapPaymentMethodStyles($storeId),
                         'addcard_redirect_url' => $this->gatewayConfig->getAddCardRedirectUrl(),
+                        'pay_and_addcard_redirect_url' => $this->gatewayConfig->getPayAndAddCardRedirectUrl(),
                         'token_payment_redirect_url' => $this->gatewayConfig->getTokenPaymentRedirectUrl(),
                         'default_success_page_url' => $this->gatewayConfig->getDefaultSuccessPageUrl()
                     ]
