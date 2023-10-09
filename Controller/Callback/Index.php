@@ -29,7 +29,7 @@ class Index implements \Magento\Framework\App\ActionInterface
         private RequestInterface $request,
         private ResultFactory $resultFactory,
         private Config $gatewayConfig,
-        private OrderFactory $orderFactory,
+        private OrderFactory $orderFactory
     ) {
     }
 
