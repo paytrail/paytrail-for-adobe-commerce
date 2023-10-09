@@ -30,7 +30,6 @@ class Index implements \Magento\Framework\App\ActionInterface
         private ResultFactory $resultFactory,
         private Config $gatewayConfig,
         private OrderFactory $orderFactory,
-        private \Paytrail\PaymentService\Model\Token\SaveCreditCard $saveCreditCard
     ) {
     }
 
@@ -44,10 +43,6 @@ class Index implements \Magento\Framework\App\ActionInterface
     {
         $reference = $this->request->getParam('checkout-reference');
         $response = $this->resultFactory->create(ResultFactory::TYPE_JSON);
-
-        if ($this->request->getParam('checkout-card-token')) {
-            $this->saveCreditCard->saveCard($this->request->getParam('checkout-card-token'));
-        }
 
         /** @var string $orderNo */
         $orderNo = $this->gatewayConfig->getGenerateReferenceForOrder()
