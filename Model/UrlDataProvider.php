@@ -51,6 +51,21 @@ class UrlDataProvider
     }
 
     /**
+     * CreateCallbackUrl function
+     *
+     * @return CallbackUrl
+     */
+    public function createPayAndAddCardCallbackUrl()
+    {
+        $callback = new CallbackUrl();
+
+        $callback->setSuccess($this->getCallbackUrl('callback/payandaddcardcallback'));
+        $callback->setCancel($this->getCallbackUrl('callback/payandaddcardcallback'));
+
+        return $callback;
+    }
+
+    /**
      * GetCallbackUrl function
      *
      * @param string $param
