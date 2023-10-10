@@ -77,9 +77,8 @@ class TransactionPayAndAddCard implements ClientInterface
                     isset($order) ? 'With order id: ' . $order->getId() : ''
                 )
             );
-            // TODO: use pay and add card client method
+
             // Handle payment requests
-//            $response["data"] = $paytrailClient->createPayment($paytrailPayment);
             $response["data"] = $paytrailClient->createPaymentAndAddCard($paytrailPayment);
 
             $loggedData = $this->json->serialize([

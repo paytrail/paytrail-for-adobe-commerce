@@ -102,6 +102,59 @@ class PaymentDataProvider
     }
 
     /**
+     * SetPayAndAddCardRequestData function.
+     *
+     * @param PaymentRequest $paytrailPayment
+     * @param Order $order
+     * @return PaymentRequest
+     * @throws LocalizedException
+     * @throws NoSuchEntityException
+     * @throws \Paytrail\PaymentService\Exceptions\CheckoutException
+     * @throws \Paytrail\SDK\Exception\ValidationException
+     */
+    public function setPayAndAddCardRequestData(PaymentRequest $paytrailPayment, $order): PaymentRequest
+    {
+        $billingAddress = $order->getBillingAddress() ?? $order->getShippingAddress();
+        $shippingAddress = $order->getShippingAddress();
+
+        $paytrailPayment->setStamp(hash('sha256', time() . $order->getIncrementId()));
+
+        $reference = $this->referenceNumber->getReference($order);
+
+        $paytrailPayment->setReference($reference);
+
+        $paytrailPayment->setCurrency($order->getOrderCurrencyCode())->setAmount(round($order->getGrandTotal() * 100));
+
+        $customer = $this->createCustomer($billingAddress);
+        $paytrailPayment->setCustomer($customer);
+
+        $invoicingAddress = $this->createAddress($billingAddress);
+        $paytrailPayment->setInvoicingAddress($invoicingAddress);
+
+        if ($shippingAddress !== null) {
+            $deliveryAddress = $this->createAddress($shippingAddress);
+            $paytrailPayment->setDeliveryAddress($deliveryAddress);
+        }
+
+        $paytrailPayment->setLanguage($this->gatewayConfig->getStoreLocaleForPaymentProvider());
+
+        $items = $this->getOrderItemLines($order);
+
+        $paytrailPayment->setItems($items);
+
+        $paytrailPayment->setRedirectUrls($this->urlDataProvider->createRedirectUrl());
+
+        $paytrailPayment->setCallbackUrls($this->urlDataProvider->createPayAndAddCardCallbackUrl());
+
+        $paytrailPayment->setCallbackDelay($this->callbackDelay->getCallbackDelay());
+
+        // Log payment data
+        $this->log->debugLog('request', $paytrailPayment);
+
+        return $paytrailPayment;
+    }
+
+    /**
      * CreateCustomer function
      *
      * @param OrderAddressInterface $billingAddress

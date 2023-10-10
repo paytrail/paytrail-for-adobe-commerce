@@ -183,8 +183,11 @@ define(
                         checkoutConfig[self.payMethod].credit_card_providers_ids.filter(element => element['id'] === self.selectedPaymentMethodId());
                     if (foundElements.length) {
                         document.getElementById('pay_and_add_card_button').style.display = 'block';
+
                         return true;
                     }
+                    document.getElementById('pay_and_add_card_button').style.display = 'none';
+
                     return false;
                 },
                 getAddCardRedirectUrl: function () {
