@@ -10,13 +10,9 @@ use Magento\Framework\Controller\Result\JsonFactory;
 use Magento\Framework\UrlInterface;
 use Magento\Framework\Validation\ValidationException;
 use Magento\Payment\Gateway\Command\CommandManagerPoolInterface;
-use Magento\Quote\Api\CartManagementInterface;
 use Magento\Quote\Model\QuoteManagement;
-use Magento\Sales\Api\OrderRepositoryInterface;
 use Magento\Sales\Model\Order;
-use Magento\Sales\Model\OrderFactory;
 use Paytrail\PaymentService\Exceptions\CheckoutException;
-use Paytrail\PaymentService\Gateway\Config\Config;
 use Paytrail\PaymentService\Model\Receipt\ProcessService;
 use Paytrail\PaymentService\Model\Validation\PreventAdminActions;
 use Psr\Log\LoggerInterface;
@@ -32,7 +28,6 @@ class PayAndAddCard extends \Magento\Framework\App\Action\Action
      * @var $errorMsg
      */
     protected $errorMsg = null;
-
 
     /**
      * PayAndAddCard constructor.
