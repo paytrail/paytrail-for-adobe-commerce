@@ -129,10 +129,17 @@ class ManualActivation
             if ($response['data']->getStatus() === 'ok') {
                 $invoiceResult = $this->invoiceOrder->execute($orderId, true);
                 if ($invoiceResult) {
-                    $order->setState(
-                        $this->orderStateResolver->getStateForOrder($order, [OrderStateResolverInterface::IN_PROGRESS])
-                    );
-                    $order->setStatus($this->config->getStateDefaultStatus($order->getState()));
+                    $state = $this->orderStateResolver->getStateForOrder($order, [OrderStateResolverInterface::IN_PROGRESS])
+                    $order->setState($state);
+                    if ($state == 'complete' )
+                    {
+                        $order->setStatus($this->config->getStateDefaultStatus($order->getState()));
+
+                    } else {
+                        // todo: set status from paytrail config
+                    }
+
+                
                     $this->orderRepository->save($order);
                 }
             }
