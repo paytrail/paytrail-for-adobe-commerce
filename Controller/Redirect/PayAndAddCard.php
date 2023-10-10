@@ -7,11 +7,13 @@ use Magento\Customer\Model\Session as CustomerSession;
 use Magento\Framework\App\Action\Context;
 use Magento\Framework\Controller\Result\Json;
 use Magento\Framework\Controller\Result\JsonFactory;
+use Magento\Framework\UrlInterface;
 use Magento\Framework\Validation\ValidationException;
 use Magento\Payment\Gateway\Command\CommandManagerPoolInterface;
 use Magento\Quote\Api\CartManagementInterface;
 use Magento\Quote\Model\QuoteManagement;
 use Magento\Sales\Api\OrderRepositoryInterface;
+use Magento\Sales\Model\Order;
 use Magento\Sales\Model\OrderFactory;
 use Paytrail\PaymentService\Exceptions\CheckoutException;
 use Paytrail\PaymentService\Gateway\Config\Config;
@@ -21,59 +23,16 @@ use Psr\Log\LoggerInterface;
 
 class PayAndAddCard extends \Magento\Framework\App\Action\Action
 {
+    /**
+     * @var UrlInterface
+     */
     protected $urlBuilder;
-
-    /**
-     * @var Session
-     */
-    protected $checkoutSession;
-
-    /**
-     * @var JsonFactory
-     */
-    protected $jsonFactory;
-
-    /**
-     * @var LoggerInterface
-     */
-    protected $logger;
-
-    /**
-     * @var Config
-     */
-    protected $gatewayConfig;
 
     /**
      * @var $errorMsg
      */
     protected $errorMsg = null;
 
-    /**
-     * @var CustomerSession
-     */
-    protected $customerSession;
-
-    /**
-     * @var PreventAdminActions
-     */
-    protected $preventAdminActions;
-
-    /**
-     * @var OrderFactory
-     */
-    private $orderFactory;
-    /**
-     * @var CartManagementInterface
-     */
-    private $cartManagement;
-    /**
-     * @var OrderRepositoryInterface
-     */
-    private $orderRepository;
-    /**
-     * @var QuoteManagement
-     */
-    private $quoteManagement;
 
     /**
      * PayAndAddCard constructor.
@@ -82,40 +41,25 @@ class PayAndAddCard extends \Magento\Framework\App\Action\Action
      * @param Session $checkoutSession
      * @param JsonFactory $jsonFactory
      * @param LoggerInterface $logger
-     * @param Config $gatewayConfig
      * @param CustomerSession $customerSession
      * @param PreventAdminActions $preventAdminActions
-     * @param OrderRepositoryInterface $orderRepository
-     * @param CartManagementInterface $cartManagement
      * @param QuoteManagement $quoteManagement
      * @param CommandManagerPoolInterface $commandManagerPool
      * @param ProcessService $processService
      */
     public function __construct(
         Context $context,
-        Session $checkoutSession,
-        JsonFactory $jsonFactory,
-        LoggerInterface $logger,
-        Config $gatewayConfig,
-        CustomerSession $customerSession,
-        PreventAdminActions $preventAdminActions,
-        OrderRepositoryInterface $orderRepository,
-        CartManagementInterface $cartManagement,
-        QuoteManagement $quoteManagement,
+        private Session $checkoutSession,
+        private JsonFactory $jsonFactory,
+        private LoggerInterface $logger,
+        private CustomerSession $customerSession,
+        private PreventAdminActions $preventAdminActions,
+        private QuoteManagement $quoteManagement,
         private CommandManagerPoolInterface $commandManagerPool,
         private ProcessService $processService
     ) {
         $this->urlBuilder = $context->getUrl();
-        $this->checkoutSession = $checkoutSession;
-        $this->jsonFactory = $jsonFactory;
-        $this->logger = $logger;
-        $this->gatewayConfig = $gatewayConfig;
-        $this->customerSession = $customerSession;
         parent::__construct($context);
-        $this->preventAdminActions = $preventAdminActions;
-        $this->cartManagement = $cartManagement;
-        $this->orderRepository = $orderRepository;
-        $this->quoteManagement = $quoteManagement;
     }
 
     /**
@@ -164,7 +108,9 @@ class PayAndAddCard extends \Magento\Framework\App\Action\Action
     }
 
     /**
-     * @param Magento\Sales\Model\Order $order
+     * Get response from Paytail API.
+     *
+     * @param Order $order
      * @return mixed
      * @throws CheckoutException
      */
