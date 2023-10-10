@@ -135,8 +135,6 @@ class PayAndAddCard extends \Magento\Framework\App\Action\Action
         /** @var Json $resultJson */
         $resultJson = $this->jsonFactory->create();
 
-//        $orderId = $this->cartManagement->placeOrder($this->checkoutSession->getQuoteId());
-//        $order = $this->orderRepository->get($orderId);
         $order = $this->quoteManagement->submit($this->checkoutSession->getQuote());
 
         try {
