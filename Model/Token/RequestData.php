@@ -395,7 +395,8 @@ class RequestData
         $price      = 0;
 
         if ($order->getShippingAmount()) {
-            foreach ($this->taxItems->getTaxItemsByOrderId($order->getId()) as $detail) {
+            $taxItemsByOrderId = $this->taxItems->getTaxItemsByOrderId($order->getId()) ?? [];
+            foreach ($taxItemsByOrderId as $detail) {
                 if (isset($detail['taxable_item_type']) && $detail['taxable_item_type'] == 'shipping') {
                     $taxDetails = $detail;
                     break;
@@ -409,7 +410,7 @@ class RequestData
         }
 
         return [
-            'title'  => $order->getShippingDescription() ?: __('Shipping'),
+            'title'  => $order->getShippingDescription() ?: 'Shipping',
             'code'   => 'shipping-row',
             'amount' => 1,
             'price'  => $this->formatPrice($price),
