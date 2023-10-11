@@ -166,7 +166,7 @@ class SaveCard extends \Magento\Framework\App\Action\Action
         $vaultPaymentToken->setPaymentMethodCode($this->gatewayConfig->getCcVaultCode());
         $vaultPaymentToken->setExpiresAt(
             sprintf(
-                '%s-%s-01 00:00:00',
+                '%s-%s-01 23:59:59',
                 $cardData->getExpireYear(),
                 $cardData->getExpireMonth()
             )

@@ -107,7 +107,7 @@ class PayAndAddCardCallback implements \Magento\Framework\App\ActionInterface
         $vaultPaymentToken->setPaymentMethodCode($this->gatewayConfig->getCcVaultCode());
         $vaultPaymentToken->setExpiresAt(
             sprintf(
-                '%s-%s-01 00:00:00',
+                '%s-%s-01 23:59:59',
                 $params['expire_year'],
                 $params['expire_month']
             )
