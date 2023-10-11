@@ -106,11 +106,7 @@ class PayAndAddCardCallback implements \Magento\Framework\App\ActionInterface
         $vaultPaymentToken->setCustomerId($customerId);
         $vaultPaymentToken->setPaymentMethodCode($this->gatewayConfig->getCcVaultCode());
         $vaultPaymentToken->setExpiresAt(
-            sprintf(
-                '%s-%s-01 00:00:00',
-                $params['expire_year'],
-                bcadd($params['expire_month'], '1')
-            )
+            $this->getExpiresDate($params['expire_month'], $params['expire_year'])
         );
         $tokenDetails = $this->jsonSerializer->serialize(
             [
@@ -141,5 +137,23 @@ class PayAndAddCardCallback implements \Magento\Framework\App\ActionInterface
             . $this->cardTypes[$cardType]
             . $tokenDetails
         );
+    }
+
+    /**
+     * Return expires date for credit card from month/year.
+     *
+     * @param string $expMonth
+     * @param string $expYear
+     * @return string
+     */
+    private function getExpiresDate($expMonth, $expYear): string
+    {
+        $expiresDate = sprintf(
+            '%s-%s-01',
+            $expYear,
+            $expMonth
+        );
+
+        return date("Y-m-t 23:59:59", strtotime($expiresDate));
     }
 }

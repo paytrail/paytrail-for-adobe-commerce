@@ -164,13 +164,8 @@ class SaveCard extends \Magento\Framework\App\Action\Action
         $customerId = $this->customerSession->getCustomer()->getId();
         $vaultPaymentToken->setCustomerId($customerId);
         $vaultPaymentToken->setPaymentMethodCode($this->gatewayConfig->getCcVaultCode());
-//        $expiryTime = \DateTime::createFromFormat('my', $cardData->getExpireMonth().$cardData->getExpireYear(), $timezone);
         $vaultPaymentToken->setExpiresAt(
-            sprintf(
-                '%s-%s-01 00:00:00',
-                $cardData->getExpireYear(),
-                bcadd($cardData->getExpireMonth(), '1')
-            )
+            $this->getExpiresDate($cardData->getExpireMonth(), $cardData->getExpireYear())
         );
         $tokenDetails = $this->jsonSerializer->serialize(
             [
@@ -207,6 +202,24 @@ class SaveCard extends \Magento\Framework\App\Action\Action
             . $this->cardTypes[$addingCard->getType()]
             . $tokenDetails
         );
+    }
+
+    /**
+     * Return expires date for credit card from month/year.
+     *
+     * @param string $expMonth
+     * @param string $expYear
+     * @return string
+     */
+    private function getExpiresDate($expMonth, $expYear): string
+    {
+        $expiresDate = sprintf(
+            '%s-%s-01',
+            $expYear,
+            $expMonth
+        );
+
+        return date("Y-m-t 23:59:59", strtotime($expiresDate));
     }
 
     /**
