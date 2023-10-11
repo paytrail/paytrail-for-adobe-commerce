@@ -29,7 +29,7 @@
         "markup/module-paytrail": "*"
     },
     "type": "magento2-module",
-    "version": "1.4.4",
+    "version": "1.4.5",
     "license": "MIT",
     "autoload": {
         "files": [
