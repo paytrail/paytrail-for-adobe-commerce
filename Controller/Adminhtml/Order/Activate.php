@@ -5,7 +5,8 @@ namespace Paytrail\PaymentService\Controller\Adminhtml\Order;
 use Magento\Backend\App\Action;
 use Magento\Backend\App\Action\Context;
 use Magento\Framework\App\Action\HttpGetActionInterface;
-use Magento\Framework\App\RequestInterface;
+use Magento\Framework\Controller\Result\Redirect;
+use Paytrail\PaymentService\Model\Invoice\Activation\ManualActivation;
 use Paytrail\SDK\Exception\ClientException;
 use Paytrail\SDK\Exception\HmacException;
 use Paytrail\SDK\Exception\RequestException;
@@ -14,24 +15,28 @@ use Paytrail\SDK\Exception\ValidationException;
 class Activate extends Action implements HttpGetActionInterface
 {
     /**
-     * @var \Paytrail\PaymentService\Model\Invoice\Activation\ManualActivation
+     * @var ManualActivation
      */
-    private \Paytrail\PaymentService\Model\Invoice\Activation\ManualActivation $manualActivation;
+    private ManualActivation $manualActivation;
 
     /**
+     * Activate constructor.
+     *
      * @param Context $context
-     * @param \Paytrail\PaymentService\Model\Invoice\Activation\ManualActivation $manualActivation
+     * @param ManualActivation $manualActivation
      */
     public function __construct(
         Context $context,
-        \Paytrail\PaymentService\Model\Invoice\Activation\ManualActivation $manualActivation
+        ManualActivation $manualActivation
     ) {
         parent::__construct($context);
         $this->manualActivation = $manualActivation;
     }
 
     /**
-     * @return \Magento\Framework\Controller\Result\Redirect
+     * Execute
+     *
+     * @return Redirect
      */
     public function execute()
     {
@@ -44,6 +49,8 @@ class Activate extends Action implements HttpGetActionInterface
     }
 
     /**
+     * Activate invoice by order id.
+     *
      * @param int $orderId
      */
     private function activateByOrderId(int $orderId)

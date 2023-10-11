@@ -36,6 +36,7 @@ class PaymentDataProvider
      * @param CallbackDelay $callbackDelay
      * @param FinnishReferenceNumber $referenceNumber
      * @param Config $gatewayConfig
+     * @param Flag $invoiceActivationFlag
      * @param PaytrailLogger $log
      */
     public function __construct(
@@ -49,7 +50,7 @@ class PaymentDataProvider
         private FinnishReferenceNumber $referenceNumber,
         private Config $gatewayConfig,
         private Flag $invoiceActivationFlag,
-        private PaytrailLogger                      $log
+        private PaytrailLogger $log
     ) {
     }
 

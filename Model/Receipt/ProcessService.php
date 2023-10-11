@@ -3,6 +3,7 @@
 namespace Paytrail\PaymentService\Model\Receipt;
 
 use Magento\Framework\DB\TransactionFactory;
+use Magento\Framework\Exception\LocalizedException;
 use Magento\Sales\Api\OrderRepositoryInterface;
 use Magento\Sales\Api\TransactionRepositoryInterface;
 use Magento\Sales\Model\Order;
@@ -39,6 +40,7 @@ class ProcessService
      * @param PaymentTransaction $paymentTransaction
      * @param CancelOrderService $cancelOrderService
      * @param PaytrailLogger $paytrailLogger
+     * @param TransactionRepositoryInterface $transactionRepository
      */
     public function __construct(
         private Config                   $gatewayConfig,
@@ -59,8 +61,8 @@ class ProcessService
     /**
      * ProcessOrder function
      *
-     * @param $paymentVerified
-     * @param $currentOrder
+     * @param string $paymentVerified
+     * @param Order $currentOrder
      * @return $this
      */
     public function processOrder($paymentVerified, $currentOrder)
@@ -93,7 +95,7 @@ class ProcessService
     /**
      * ProcessInvoice function
      *
-     * @param $currentOrder
+     * @param Order $currentOrder
      * @return void
      * @throws \Paytrail\PaymentService\Exceptions\CheckoutException
      */
@@ -121,11 +123,11 @@ class ProcessService
     }
 
     /**
-     * ProcessPayment function
+     * ProcessPayment function.
      *
-     * @param $currentOrder
-     * @param $transactionId
-     * @param $details
+     * @param Order $currentOrder
+     * @param string $transactionId
+     * @param array $details
      * @return void
      */
     public function processPayment($currentOrder, $transactionId, $details)
@@ -144,7 +146,7 @@ class ProcessService
     /**
      * ProcessExistingTransaction function
      *
-     * @param $transaction
+     * @param Transaction $transaction
      * @return void
      * @throws \Paytrail\PaymentService\Exceptions\TransactionSuccessException
      */
@@ -159,11 +161,16 @@ class ProcessService
     /**
      * ProcessTransaction function.
      *
+     * @param string $paymentStatus
      * @param string $transactionId
      * @param Order $currentOrder
-     * @param string $orderId
-     * @throws \Paytrail\PaymentService\Exceptions\CheckoutException
-     * @throws \Paytrail\PaymentService\Exceptions\TransactionSuccessException
+     * @param string|int $orderId
+     * @param array $paymentDetails
+     * @return void
+     * @throws CheckoutException
+     * @throws TransactionSuccessException
+     * @throws LocalizedException
+     * @throws \Magento\Framework\Exception\MailException
      */
     public function processTransaction($paymentStatus, $transactionId, $currentOrder, $orderId, $paymentDetails)
     {
@@ -210,6 +217,7 @@ class ProcessService
      * Note that for backwards compatibility if transaction is missing api_status field, assume completed payment.
      *
      * @param \Magento\Sales\Model\Order\Payment\Transaction|bool $transaction
+     * @param string $transactionId
      *
      * @throws \Paytrail\PaymentService\Exceptions\TransactionSuccessException thrown if previous transaction got "ok"
      * @throws CheckoutException thrown if multiple transaction ids are present.
