@@ -10,13 +10,17 @@ use Magento\Framework\Exception\NoSuchEntityException;
 interface SubscriptionLinkRepositoryInterface
 {
     /**
-     * @param $linkId
+     * Get link.
+     *
+     * @param int $linkId
      * @return Data\SubscriptionLinkInterface
      * @throws NoSuchEntityException
      */
     public function get($linkId);
 
     /**
+     * Save link.
+     *
      * @param Data\SubscriptionLinkInterface $subscriptionLink
      * @return Data\SubscriptionLinkInterface
      * @throws CouldNotSaveException
@@ -24,32 +28,42 @@ interface SubscriptionLinkRepositoryInterface
     public function save(Data\SubscriptionLinkInterface $subscriptionLink);
 
     /**
+     * Delete link.
+     *
      * @param Data\SubscriptionLinkInterface $subscriptionLink
      * @throws CouldNotDeleteException
      */
     public function delete(Data\SubscriptionLinkInterface $subscriptionLink);
 
     /**
+     * Get list of links.
+     *
      * @param SearchCriteriaInterface $searchCriteria
      * @return Data\SubscriptionLinkSearchResultInterface
      */
     public function getList(SearchCriteriaInterface $searchCriteria): Data\SubscriptionLinkSearchResultInterface;
 
     /**
-     * @param $orderId
+     * Get subscription from order ID.
+     *
+     * @param int $orderId
      * @return mixed
      */
     public function getSubscriptionFromOrderId($orderId);
 
     /**
-     * @param $orderId
-     * @param $subscriptionId
+     * Link order to subscription.
+     *
+     * @param int $orderId
+     * @param int $subscriptionId
      * @return mixed
      */
     public function linkOrderToSubscription($orderId, $subscriptionId);
 
     /**
-     * @param $subscriptionId
+     * Get order IDs from subscription ID.
+     *
+     * @param int $subscriptionId
      * @return mixed
      */
     public function getOrderIdsBySubscriptionId($subscriptionId);

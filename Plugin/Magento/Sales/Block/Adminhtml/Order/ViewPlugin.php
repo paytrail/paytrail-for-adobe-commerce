@@ -5,8 +5,7 @@ namespace Paytrail\PaymentService\Plugin\Magento\Sales\Block\Adminhtml\Order;
 use Magento\Backend\Model\UrlInterface;
 use Magento\Framework\App\RequestInterface;
 use Magento\Sales\Block\Adminhtml\Order\View;
-use Magento\Sales\Model\ResourceModel\Order\Payment\Transaction\CollectionFactory;
-use Paytrail\PaymentService\Helper\ActivateOrder;
+use Paytrail\PaymentService\Model\Order\OrderActivation;
 use Paytrail\PaymentService\Model\Invoice\Activation\Flag;
 use Paytrail\PaymentService\Model\ReceiptDataProvider;
 use Paytrail\PaymentService\Setup\Patch\Data\InstallPaytrail;
@@ -14,54 +13,36 @@ use Paytrail\PaymentService\Setup\Patch\Data\InstallPaytrail;
 class ViewPlugin
 {
     /**
-     * @var ActivateOrder
+     * ViewPlugin constructor.
+     *
+     * @param OrderActivation $orderActivation
+     * @param RequestInterface $request
+     * @param UrlInterface $url
      */
-    private $activateOrder;
-
-    /**
-     * @var RequestInterface
-     */
-    private $request;
-
-    /**
-     * @var UrlInterface
-     */
-    private $url;
-
-    /**
-     * @var CollectionFactory
-     */
-    private CollectionFactory $transactionFactory;
-
-    /**
-     * @var \Magento\Framework\Registry
-     */
-    private $registry;
-
     public function __construct(
-        ActivateOrder $activateOrder,
-        RequestInterface $request,
-        UrlInterface $url,
-        CollectionFactory $transactionFactory,
-        \Magento\Framework\Registry $registry
+        private OrderActivation  $orderActivation,
+        private RequestInterface $request,
+        private UrlInterface     $url,
+        private \Magento\Sales\Model\ResourceModel\Order\Payment\Transaction\CollectionFactory $transactionFactory,
+        private \Magento\Framework\Registry $registry
     ) {
-        $this->activateOrder = $activateOrder;
-        $this->request = $request;
-        $this->url = $url;
-        $this->transactionFactory = $transactionFactory;
-        $this->registry = $registry;
     }
 
     /**
+     * Before setLayout plugin.
+     *
      * @param View $view
      * @return void
      */
     public function beforeSetLayout(View $view)
     {
         $orderId = (int)$this->request->getParam('order_id');
-        if ($this->activateOrder->isCanceled($orderId)) {
+        if ($this->orderActivation->isCanceled($orderId)) {
             $view->addButton('rescueOrder', [
                 'label' => __('Restore Order'),
+                'onclick' =>
+                    "confirmSetLocation('Are you sure you want to make changes to this order?'
+                    , '{$this->getRestoreOrderUrl($orderId)}')",
                 'onclick' => "confirmSetLocation('Are you sure you want to make changes to this order?', '{$this->getControllerUrl('paytrail_payment/order/restore', $orderId)}')",
             ]);
         }
@@ -71,6 +52,22 @@ class ViewPlugin
                 'onclick' => "confirmSetLocation('Are you sure you want to activate invoice for this order?', '{$this->getControllerUrl('paytrail_payment/order/activate', $orderId)}')",
             ]);
         }
+    }
+
+    /**
+     * Get restore order url.
+     *
+     * @param string $orderId
+     * @return string
+     */
+    public function getRestoreOrderUrl($orderId): string
+    {
+        return $this->url->getUrl(
+            'paytrail_payment/order/restore',
+            [
+                'order_id' => $orderId
+            ]
+        );
     }
 
     /**

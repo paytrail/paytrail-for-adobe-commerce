@@ -3,21 +3,9 @@
     <type name="Magento\Checkout\Model\CompositeConfigProvider">
         <arguments>
             <argument name="configProviders" xsi:type="array">
-                <item name="paytrail_config_provider" xsi:type="object">Paytrail\PaymentService\Model\ConfigProvider</item>
+                <item name="paytrail_config_provider" xsi:type="object">Paytrail\PaymentService\Model\Ui\ConfigProvider</item>
                 <item name="recurring_schedule_config_provider" xsi:type="object">Paytrail\PaymentService\Model\Recurring\TotalConfigProvider</item>
             </argument>
-        </arguments>
-    </type>
-
-    <virtualType name="ReceiptProviderNoHmac" type="\Paytrail\PaymentService\Model\ReceiptDataProvider">
-        <arguments>
-            <argument name="skipHmac" xsi:type="boolean">true</argument>
-        </arguments>
-    </virtualType>
-
-    <type name="\Paytrail\PaymentService\Controller\Redirect\Token">
-        <arguments>
-            <argument name="receiptDataProvider" xsi:type="object">ReceiptProviderNoHmac</argument>
         </arguments>
     </type>
 </config>

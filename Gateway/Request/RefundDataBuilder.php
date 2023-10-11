@@ -1,67 +1,52 @@
 <?php
+
 namespace Paytrail\PaymentService\Gateway\Request;
 
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Payment\Gateway\Helper\SubjectReader;
 use Magento\Payment\Gateway\Request\BuilderInterface;
-use Magento\Store\Model\StoreManagerInterface;
-use Paytrail\PaymentService\Helper\Data;
+use Paytrail\PaymentService\Exceptions\CheckoutException;
+use Paytrail\PaymentService\Model\Receipt\ProcessService;
+use Paytrail\PaymentService\Model\RefundCallback;
+use Paytrail\SDK\Request\RefundRequest;
 use Psr\Log\LoggerInterface;
 
 class RefundDataBuilder implements BuilderInterface
 {
     /**
-     * @var StoreManagerInterface
-     */
-    private $storeManager;
-
-    /**
-     * @var Data
-     */
-    private $paytrailHelper;
-
-    /**
-     * @var LoggerInterface
-     */
-    private $log;
-    /**
-     * @var SubjectReader
-     */
-    private $subjectReader;
-
-    /**
      * RefundDataBuilder constructor.
      *
-     * @param StoreManagerInterface $storeManager
-     * @param Data $paytrailHelper
+     * @param ProcessService $processService
      * @param SubjectReader $subjectReader
      * @param LoggerInterface $log
+     * @param RefundRequest $refundRequest
+     * @param RefundCallback $refundCallback
      */
     public function __construct(
-        StoreManagerInterface $storeManager,
-        Data $paytrailHelper,
-        SubjectReader $subjectReader,
-        LoggerInterface $log
+        private ProcessService $processService,
+        private readonly SubjectReader $subjectReader,
+        private readonly LoggerInterface $log,
+        private readonly RefundRequest $refundRequest,
+        private readonly RefundCallback $refundCallback
     ) {
-        $this->paytrailHelper = $paytrailHelper;
-        $this->storeManager = $storeManager;
-        $this->log = $log;
-        $this->subjectReader = $subjectReader;
     }
 
     /**
+     * Build request
+     *
      * @param array $buildSubject
+     *
      * @return array
      * @throws LocalizedException
      */
-    public function build(array $buildSubject)
+    public function build(array $buildSubject): array
     {
         $paymentDataObject = $this->subjectReader->readPayment($buildSubject);
-        $amount = $this->subjectReader->readAmount($buildSubject);
+        $amount            = $this->subjectReader->readAmount($buildSubject);
 
-        $order = $paymentDataObject->getOrder();
+        $order      = $paymentDataObject->getOrder();
         $orderItems = $order->getItems();
-        $payment = $paymentDataObject->getPayment();
+        $payment    = $paymentDataObject->getPayment();
 
         $errMsg = null;
 
@@ -79,22 +64,52 @@ class RefundDataBuilder implements BuilderInterface
 
         if (isset($errMsg)) {
             $this->log->error($errMsg);
-            $this->paytrailHelper->processError($errMsg);
+            $this->processService->processError($errMsg);
         }
 
+        // Handle request
+        $paytrailRefund = $this->refundRequest;
+        $this->setRefundRequestData($paytrailRefund, $amount);
+
         return [
-            'transaction_id' => $payment->getTransactionId(),
+            'payment'               => $payment,
+            'transaction_id'        => $payment->getTransactionId(),
             'parent_transaction_id' => $payment->getParentTransactionId(),
-            'amount' => $amount,
-            'order' => $order
+            'order'                 => $order,
+            'refund_request'        => $paytrailRefund,
         ];
     }
 
     /**
-     * @param $items
+     * SetRefundRequestData function
+     *
+     * @param RefundRequest $paytrailRefund
+     * @param float         $amount
+     *
+     * @throws CheckoutException
+     */
+    private function setRefundRequestData(RefundRequest $paytrailRefund, float $amount): void
+    {
+        if ($amount <= 0) {
+            $message = 'Refund amount must be above 0';
+            $this->log->logData(\Monolog\Logger::ERROR, $message);
+            throw new CheckoutException(__($message));
+        }
+
+        $paytrailRefund->setAmount(round($amount * 100));
+
+        $callback = $this->refundCallback->createRefundCallback();
+        $paytrailRefund->setCallbackUrls($callback);
+    }
+
+    /**
+     * Get unique tax rates from order items
+     *
+     * @param array $items
+     *
      * @return array
      */
-    protected function getTaxRates($items)
+    private function getTaxRates(array $items): array
     {
         $rates = [];
         foreach ($items as $item) {
