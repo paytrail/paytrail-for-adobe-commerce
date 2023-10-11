@@ -47,6 +47,12 @@ class Config extends \Magento\Payment\Gateway\Config\Config
     public const KEY_ACTIVATE_WITH_SHIPMENT = 'shipment_activates_invoice';
     public const GIT_URL = 'https://api.github.com/repos/paytrail/paytrail-for-adobe-commerce/releases/latest';
 
+    public const RECEIPT_PROCESSING_CACHE_PREFIX = "receipt_processing_";
+    public const PAYTRAIL_API_PAYMENT_STATUS_OK = 'ok';
+    public const PAYTRAIL_API_PAYMENT_STATUS_PENDING = 'pending';
+    public const PAYTRAIL_API_PAYMENT_STATUS_DELAYED = 'delayed';
+    public const PAYTRAIL_API_PAYMENT_STATUS_FAIL = 'fail';
+
     /**
      * @var array
      */

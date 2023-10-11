@@ -2,70 +2,36 @@
 
 namespace Paytrail\PaymentService\Model\Invoice\Activation;
 
+use Magento\Payment\Gateway\Command\CommandManagerPoolInterface;
 use Magento\Sales\Api\OrderRepositoryInterface;
 use Magento\Sales\Model\InvoiceOrder;
 use Magento\Sales\Model\Order\Config;
 use Magento\Sales\Model\Order\OrderStateResolverInterface;
 use Magento\Sales\Model\ResourceModel\Order\Payment\Transaction\CollectionFactory as TransactionCollectionFactory;
-use Paytrail\PaymentService\Helper\ApiData;
-use Paytrail\PaymentService\Model\ReceiptDataProvider;
+use Paytrail\PaymentService\Gateway\Config\Config as GatewayConfig;
 
 class ManualActivation
 {
     /**
-     * @var TransactionCollectionFactory
-     */
-    private $collectionFactory;
-
-    /**
-     * @var ApiData
-     */
-    private $apiData;
-
-    /**
-     * @var InvoiceOrder
-     */
-    private $invoiceOrder;
-
-    /**
-     * @var OrderStateResolverInterface
-     */
-    private $orderStateResolver;
-
-    /**
-     * @var OrderRepositoryInterface
-     */
-    private OrderRepositoryInterface $orderRepository;
-
-    /**
-     * @var Config
-     */
-    private Config $config;
-
-    /**
      * ManualActivation constructor.
      *
      * @param TransactionCollectionFactory $collectionFactory
-     * @param ApiData $apiData
      * @param InvoiceOrder $invoiceOrder
      * @param OrderStateResolverInterface $orderStateResolver
      * @param OrderRepositoryInterface $orderRepository
      * @param Config $config
+     * @param GatewayConfig $gatewayConfig
+     * @param CommandManagerPoolInterface $commandManagerPool
      */
     public function __construct(
-        TransactionCollectionFactory      $collectionFactory,
-        ApiData                           $apiData,
-        InvoiceOrder                      $invoiceOrder,
-        OrderStateResolverInterface       $orderStateResolver,
-        OrderRepositoryInterface          $orderRepository,
-        Config $config
+        private TransactionCollectionFactory      $collectionFactory,
+        private InvoiceOrder                      $invoiceOrder,
+        private OrderStateResolverInterface       $orderStateResolver,
+        private OrderRepositoryInterface          $orderRepository,
+        private Config $config,
+        private GatewayConfig $gatewayConfig,
+        private CommandManagerPoolInterface $commandManagerPool
     ) {
-        $this->collectionFactory = $collectionFactory;
-        $this->apiData = $apiData;
-        $this->invoiceOrder = $invoiceOrder;
-        $this->orderStateResolver = $orderStateResolver;
-        $this->orderRepository = $orderRepository;
-        $this->config = $config;
     }
 
     /**
@@ -95,7 +61,7 @@ class ManualActivation
                 && in_array(
                     $info['raw_details_info']['method'],
                     Flag::SUB_METHODS_WITH_MANUAL_ACTIVATION_SUPPORT
-                ) && $info['raw_details_info']['api_status'] === ReceiptDataProvider::PAYTRAIL_API_PAYMENT_STATUS_PENDING
+                ) && $info['raw_details_info']['api_status'] === GatewayConfig::PAYTRAIL_API_PAYMENT_STATUS_PENDING
             ) {
                 $this->sendActivation($transaction->getTxnId(), $orderId);
             }
@@ -119,27 +85,29 @@ class ManualActivation
         // TODO Use recurring payment HMAC processing here to mark order as paid if response status is "OK"
         $order = $this->orderRepository->get($orderId);
         if (!$order->hasInvoices()) {
-            $response = $this->apiData->processApiRequest(
+            $commandExecutor = $this->commandManagerPool->get('paytrail');
+            $response = $commandExecutor->executeByCode(
                 'invoice_activation',
                 null,
-                null,
-                $txnId
+                [
+                    'transaction_id' => $txnId
+                ]
             );
 
             if ($response['data']->getStatus() === 'ok') {
                 $invoiceResult = $this->invoiceOrder->execute($orderId, true);
                 if ($invoiceResult) {
-                    $state = $this->orderStateResolver->getStateForOrder($order, [OrderStateResolverInterface::IN_PROGRESS])
+                    $state = $this->orderStateResolver->getStateForOrder(
+                        $order,
+                        [OrderStateResolverInterface::IN_PROGRESS]
+                    );
                     $order->setState($state);
-                    if ($state == 'complete' )
-                    {
+                    if ($state == 'complete') {
                         $order->setStatus($this->config->getStateDefaultStatus($order->getState()));
 
                     } else {
-                        // todo: set status from paytrail config
+                        $order->setStatus($this->gatewayConfig->getDefaultOrderStatus());
                     }
-
-                
                     $this->orderRepository->save($order);
                 }
             }

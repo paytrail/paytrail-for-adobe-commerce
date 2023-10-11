@@ -26,12 +26,6 @@
         </arguments>
     </virtualType>
 
-    <type name="Paytrail\PaymentService\Helper\ApiData">
-        <arguments>
-            <argument name="log" xsi:type="object">Paytrail\PaymentService\Logger\PaytrailLogger</argument>
-        </arguments>
-    </type>
-
     <type name="Paytrail\PaymentService\Model\ReceiptDataProvider">
         <arguments>
             <argument name="logger" xsi:type="object">Paytrail\PaymentService\Logger\PaytrailLogger</argument>

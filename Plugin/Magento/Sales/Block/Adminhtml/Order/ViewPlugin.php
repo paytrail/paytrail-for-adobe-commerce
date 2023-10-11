@@ -5,6 +5,7 @@ namespace Paytrail\PaymentService\Plugin\Magento\Sales\Block\Adminhtml\Order;
 use Magento\Backend\Model\UrlInterface;
 use Magento\Framework\App\RequestInterface;
 use Magento\Sales\Block\Adminhtml\Order\View;
+use Paytrail\PaymentService\Gateway\Config\Config;
 use Paytrail\PaymentService\Model\Order\OrderActivation;
 use Paytrail\PaymentService\Model\Invoice\Activation\Flag;
 use Paytrail\PaymentService\Model\ReceiptDataProvider;
@@ -108,7 +109,7 @@ class ViewPlugin
                 && in_array(
                     $info['raw_details_info']['method'],
                     Flag::SUB_METHODS_WITH_MANUAL_ACTIVATION_SUPPORT
-                ) && $info['raw_details_info']['api_status'] === ReceiptDataProvider::PAYTRAIL_API_PAYMENT_STATUS_PENDING
+                ) && $info['raw_details_info']['api_status'] === Config::PAYTRAIL_API_PAYMENT_STATUS_PENDING
             ) {
                 return true;
             }

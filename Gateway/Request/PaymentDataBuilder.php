@@ -36,7 +36,8 @@ class PaymentDataBuilder implements BuilderInterface
             'order' => $buildSubject['order'],
             'request_data' => $this->paymentDataProvider->setPaymentRequestData(
                 $paytrailPayment,
-                $buildSubject['order']
+                $buildSubject['order'],
+                $buildSubject['payment_method']
             )
         ];
     }

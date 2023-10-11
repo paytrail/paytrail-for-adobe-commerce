@@ -5,9 +5,6 @@ namespace Paytrail\PaymentService\Model\Invoice\Activation;
 
 use Paytrail\SDK\Request\PaymentRequest;
 
-/**
- * Class InvoiceActivate
- */
 class Flag
 {
     private const ACTIVE_INVOICE_CONFIG_PATH = 'payment/paytrail/activate_invoices_separately';

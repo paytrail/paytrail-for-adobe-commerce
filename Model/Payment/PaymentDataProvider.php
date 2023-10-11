@@ -15,6 +15,7 @@ use Paytrail\PaymentService\Logger\PaytrailLogger;
 use Paytrail\PaymentService\Model\Company\CompanyRequestData;
 use Paytrail\PaymentService\Model\Config\Source\CallbackDelay;
 use Paytrail\PaymentService\Model\FinnishReferenceNumber;
+use Paytrail\PaymentService\Model\Invoice\Activation\Flag;
 use Paytrail\PaymentService\Model\UrlDataProvider;
 use Paytrail\SDK\Model\Address;
 use Paytrail\SDK\Model\Customer;
@@ -47,6 +48,7 @@ class PaymentDataProvider
         private CallbackDelay                       $callbackDelay,
         private FinnishReferenceNumber $referenceNumber,
         private Config $gatewayConfig,
+        private Flag $invoiceActivationFlag,
         private PaytrailLogger                      $log
     ) {
     }
@@ -56,10 +58,14 @@ class PaymentDataProvider
      *
      * @param PaymentRequest $paytrailPayment
      * @param Order $order
+     * @param string $paymentMethod
      * @return PaymentRequest
+     * @throws LocalizedException
      * @throws NoSuchEntityException
+     * @throws \Paytrail\PaymentService\Exceptions\CheckoutException
+     * @throws \Paytrail\SDK\Exception\ValidationException
      */
-    public function setPaymentRequestData(PaymentRequest $paytrailPayment, $order): PaymentRequest
+    public function setPaymentRequestData(PaymentRequest $paytrailPayment, $order, $paymentMethod): PaymentRequest
     {
         $billingAddress = $order->getBillingAddress() ?? $order->getShippingAddress();
         $shippingAddress = $order->getShippingAddress();
@@ -94,6 +100,13 @@ class PaymentDataProvider
         $paytrailPayment->setCallbackUrls($this->urlDataProvider->createCallbackUrl());
 
         $paytrailPayment->setCallbackDelay($this->callbackDelay->getCallbackDelay());
+
+        // Conditionally set manual invoicing flag if selected payment method supports it.
+        $this->invoiceActivationFlag->setManualInvoiceActivationFlag(
+            $paytrailPayment,
+            $paymentMethod,
+            $order
+        );
 
         // Log payment data
         $this->log->debugLog('request', $paytrailPayment);
