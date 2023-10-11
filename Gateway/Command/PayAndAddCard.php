@@ -13,6 +13,8 @@ use Magento\Payment\Gateway\Response\HandlerInterface;
 class PayAndAddCard implements CommandInterface
 {
     /**
+     * PayAndAddCard constructor.
+     *
      * @param TransferFactoryInterface $transferFactory
      * @param BuilderInterface $requestBuilder
      * @param ClientInterface $client
@@ -48,6 +50,7 @@ class PayAndAddCard implements CommandInterface
                 $response
             );
         }
+
         return $response;
     }
 }

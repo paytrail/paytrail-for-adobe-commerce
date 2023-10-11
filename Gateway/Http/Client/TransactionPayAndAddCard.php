@@ -103,7 +103,6 @@ class TransactionPayAndAddCard implements ClientInterface
 
             if ($e->hasResponse()) {
                 $response["error"] = $e->getMessage();
-                return $response;
             }
         } catch (\Exception $e) {
             $this->log->error(
@@ -114,7 +113,6 @@ class TransactionPayAndAddCard implements ClientInterface
                 $e->getTrace()
             );
             $response["error"] = $e->getMessage();
-            return $response;
         }
 
         return $response;
