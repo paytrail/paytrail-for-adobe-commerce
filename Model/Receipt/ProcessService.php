@@ -4,6 +4,8 @@ namespace Paytrail\PaymentService\Model\Receipt;
 
 use Magento\Framework\DB\TransactionFactory;
 use Magento\Sales\Api\OrderRepositoryInterface;
+use Magento\Sales\Api\TransactionRepositoryInterface;
+use Magento\Sales\Model\Order;
 use Magento\Sales\Model\Order\Email\Sender\OrderSender;
 use Magento\Sales\Model\Order\Invoice;
 use Magento\Sales\Model\Order\Payment;
@@ -18,6 +20,11 @@ use Psr\Log\LoggerInterface;
 
 class ProcessService
 {
+    private const CONTINUABLE_STATUSES = [
+        Config::PAYTRAIL_API_PAYMENT_STATUS_PENDING,
+        Config::PAYTRAIL_API_PAYMENT_STATUS_DELAYED,
+    ];
+
     /**
      * ProcessService constructor.
      *
@@ -44,7 +51,8 @@ class ProcessService
         private LoadService $loadService,
         private PaymentTransaction $paymentTransaction,
         private CancelOrderService $cancelOrderService,
-        private PaytrailLogger $paytrailLogger
+        private PaytrailLogger $paytrailLogger,
+        private TransactionRepositoryInterface $transactionRepository
     ) {
     }
 
@@ -149,23 +157,94 @@ class ProcessService
     }
 
     /**
-     * ProcessTransaction function
+     * ProcessTransaction function.
      *
-     * @param $transactionId
-     * @param $currentOrder
-     * @param $orderId
-     * @return bool
+     * @param string $transactionId
+     * @param Order $currentOrder
+     * @param string $orderId
      * @throws \Paytrail\PaymentService\Exceptions\CheckoutException
      * @throws \Paytrail\PaymentService\Exceptions\TransactionSuccessException
      */
-    public function processTransaction($transactionId, $currentOrder, $orderId): bool
+    public function processTransaction($paymentStatus, $transactionId, $currentOrder, $orderId, $paymentDetails)
     {
-        $transaction = $this->loadService->loadTransaction($transactionId, $currentOrder, $orderId);
-        if ($transaction) {
-            $this->processExistingTransaction($transaction);
-            $this->processError('Payment failed');
+        $oldTransaction = $this->loadService->loadTransaction($transactionId, $currentOrder, $orderId);
+        $this->validateOldTransaction($oldTransaction, $transactionId);
+        $oldStatus = false;
+        $paymentDetails['api_status'] = $paymentStatus;
+
+        if ($oldTransaction) {
+            // Backwards compatibility: If transaction exists without api_status, assume OK status since
+            // only 'ok' status could create transactions in old version.
+            $oldStatus = isset($oldTransaction->getAdditionalInformation(Transaction::RAW_DETAILS)['api_status'])
+                ? $oldTransaction->getAdditionalInformation(Transaction::RAW_DETAILS)['api_status']
+                : 'ok';
+
+            $transaction = $this->updateOldTransaction($oldTransaction, $paymentDetails);
+        } else {
+            $transaction = $this->paymentTransaction->addPaymentTransaction(
+                $currentOrder,
+                $transactionId,
+                $paymentDetails
+            );
         }
-        return true;
+
+        // Only append transaction comments to orders if the payment status changes
+        if ($oldStatus !== $paymentStatus) {
+            $this->currentOrderPayment->setOrder($currentOrder);
+            $this->currentOrderPayment->addTransactionCommentsToOrder(
+                $transaction,
+                __('Paytrail Api - New payment status: "%status"', ['status' => $paymentStatus])
+            );
+            $this->currentOrderPayment->setLastTransId($transactionId);
+        }
+
+        if ($currentOrder->getStatus() == 'canceled') {
+            $this->cancelOrderService->notifyCanceledOrder($orderId);
+        }
+    }
+
+    /**
+     * Validates ongoing transaction against the information in previous transaction
+     *
+     * Validate transaction id is the same as old id and that previous transaction did not finish the payment
+     * Note that for backwards compatibility if transaction is missing api_status field, assume completed payment.
+     *
+     * @param \Magento\Sales\Model\Order\Payment\Transaction|bool $transaction
+     *
+     * @throws \Paytrail\PaymentService\Exceptions\TransactionSuccessException thrown if previous transaction got "ok"
+     * @throws CheckoutException thrown if multiple transaction ids are present.
+     */
+    protected function validateOldTransaction($transaction, $transactionId)
+    {
+        if ($transaction) {
+            if ($transaction->getTxnId() !== $transactionId) {
+                $this->processError('Payment failed, multiple transactions detected');
+            }
+
+            $details = $transaction->getAdditionalInformation(Transaction::RAW_DETAILS);
+            if (isset($details['api_status']) && in_array($details['api_status'], self::CONTINUABLE_STATUSES)) {
+                return;
+            }
+
+            // transaction was already completed with 'Ok' status.
+            $this->processSuccess();
+        }
+    }
+
+    /**
+     * Update old transaction.
+     *
+     * @param bool|Transaction $oldTransaction
+     * @param array $paymentDetails
+     * @return Transaction
+     * @throws LocalizedException
+     */
+    private function updateOldTransaction(bool|Transaction $oldTransaction, array $paymentDetails): Transaction
+    {
+        $transaction = $oldTransaction->setAdditionalInformation(Transaction::RAW_DETAILS, $paymentDetails);
+        $this->transactionRepository->save($transaction);
+
+        return $transaction;
     }
 
     /**
