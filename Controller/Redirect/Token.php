@@ -45,6 +45,7 @@ class Token implements HttpPostActionInterface
      * @param SubscriptionCreate $subscriptionCreate
      * @param CommandManagerPoolInterface $commandManagerPool
      * @param ProcessService $processService
+     * @param TotalConfigProvider $totalConfigProvider
      */
     public function __construct(
         private ReceiptDataProvider      $receiptDataProvider,
@@ -58,7 +59,8 @@ class Token implements HttpPostActionInterface
         private OrderManagementInterface $orderManagementInterface,
         private SubscriptionCreate       $subscriptionCreate,
         private CommandManagerPoolInterface $commandManagerPool,
-        private ProcessService $processService
+        private ProcessService $processService,
+        private TotalConfigProvider $totalConfigProvider
     ) {
     }
 

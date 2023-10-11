@@ -381,6 +381,16 @@ class Config extends \Magento\Payment\Gateway\Config\Config
     }
 
     /**
+     * Get pay_and_add_card request redirect url.
+     *
+     * @return string
+     */
+    public function getPayAndAddCardRedirectUrl()
+    {
+        return 'paytrail/redirect/payandaddcard';
+    }
+
+    /**
      * Get token_payment request redirect url.
      *
      * @return string
