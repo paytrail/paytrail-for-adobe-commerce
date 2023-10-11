@@ -164,11 +164,12 @@ class SaveCard extends \Magento\Framework\App\Action\Action
         $customerId = $this->customerSession->getCustomer()->getId();
         $vaultPaymentToken->setCustomerId($customerId);
         $vaultPaymentToken->setPaymentMethodCode($this->gatewayConfig->getCcVaultCode());
+//        $expiryTime = \DateTime::createFromFormat('my', $cardData->getExpireMonth().$cardData->getExpireYear(), $timezone);
         $vaultPaymentToken->setExpiresAt(
             sprintf(
-                '%s-%s-01 23:59:59',
+                '%s-%s-01 00:00:00',
                 $cardData->getExpireYear(),
-                $cardData->getExpireMonth()
+                bcadd($cardData->getExpireMonth(), '1')
             )
         );
         $tokenDetails = $this->jsonSerializer->serialize(
