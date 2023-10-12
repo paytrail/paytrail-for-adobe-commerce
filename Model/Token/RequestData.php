@@ -12,6 +12,7 @@ use Magento\Sales\Model\Order;
 use Magento\Sales\Model\Order\Item as OrderItem;
 use Magento\Sales\Model\ResourceModel\Order\Tax\Item as TaxItems;
 use Magento\Tax\Helper\Data as TaxHelper;
+use Magento\Vault\Api\Data\PaymentTokenInterface;
 use Magento\Vault\Api\PaymentTokenManagementInterface;
 use Paytrail\PaymentService\Gateway\Config\Config;
 use Paytrail\PaymentService\Logger\PaytrailLogger;
@@ -61,6 +62,7 @@ class RequestData
      * @param $order
      * @param $tokenId
      * @param $rcustomer
+     *
      * @return mixed
      * @throws LocalizedException
      */
@@ -69,13 +71,17 @@ class RequestData
         $billingAddress = $order->getBillingAddress();
         $shippingAddress = $order->getShippingAddress();
 
-        $paytrailPayment->setStamp(hash($this->gatewayConfig->getCheckoutAlgorithm(), time() . $order->getIncrementId()));
+        $paytrailPayment->setStamp(
+            hash($this->gatewayConfig->getCheckoutAlgorithm(), time() . $order->getIncrementId())
+        );
 
         $reference = $this->finnishReferenceNumber->getReference($order);
 
         $paytrailPayment->setReference($reference);
 
-        $paytrailPayment->setCurrency($order->getOrderCurrencyCode())->setAmount((int)round($order->getGrandTotal() * 100));
+        $paytrailPayment->setCurrency($order->getOrderCurrencyCode())->setAmount(
+            (int)round($order->getGrandTotal() * 100)
+        );
 
         /* we should alredy have a customer */
         $customer = $this->createCustomer($billingAddress);
@@ -102,7 +108,7 @@ class RequestData
 
         $paytrailPayment->setCallbackUrls($this->createCallbackUrl());
         // set token
-        $token = $this->getPaymentToken($tokenId, $customerId);
+        $token        = $this->getPaymentToken($tokenId, $customerId);
         $paymentToken = $token->getGatewayToken();
 
         $paymentExtensionAttributes = $order->getPayment()->getExtensionAttributes();
@@ -225,14 +231,19 @@ class RequestData
         # Add line items
         /** @var $item OrderItem */
         foreach ($order->getAllItems() as $item) {
-            $discountIncl = 0;
-            if (!$this->taxHelper->priceIncludesTax()) {
-                $discountIncl += $item->getDiscountAmount() * (($item->getTaxPercent() / 100) + 1);
+            $discountInclTax = 0;
+            if (!$this->taxHelper->priceIncludesTax()
+                && $this->taxHelper->applyTaxAfterDiscount()
+            ) {
+                $discountInclTax = $this->formatPrice(
+                    $item->getDiscountAmount() * (($item->getTaxPercent() / 100) + 1)
+                );
             } else {
-                $discountIncl += $item->getDiscountAmount();
+                $discountInclTax += $item->getDiscountAmount();
             }
 
-            if (!$item->getQtyOrdered()) {
+            $qtyOrdered = $item->getQtyOrdered();
+            if (!$qtyOrdered) {
                 // Prevent division by zero errors
                 throw new LocalizedException(\__('Quantity missing for order item: %sku', ['sku' => $item->getSku()]));
             }
@@ -241,35 +252,52 @@ class RequestData
             // then also the child products has prices so we set
             if ($item->getChildrenItems() && !$item->getProductOptions()['product_calculations']) {
                 $items[] = [
-                    'title' => $item->getName(),
-                    'code' => $item->getSku(),
-                    'amount' => floatval($item->getQtyOrdered()),
-                    'price' => 0,
-                    'vat' => 0
+                    'title'  => $item->getName(),
+                    'code'   => $item->getSku(),
+                    'amount' => $qtyOrdered,
+                    'price'  => 0,
+                    'vat'    => 0
                 ];
             } else {
-                $paytrailItem = [
-                    'title' => $item->getName(),
-                    'code' => $item->getSku(),
-                    'amount' => floatval($item->getQtyOrdered()),
-                    'price' => floatval($item->getPriceInclTax()) - round(($discountIncl / $item->getQtyOrdered()), 2),
-                    'vat' => round(floatval($item->getTaxPercent()))
-                ];
+                $rowTotalInclDiscount  = $item->getRowTotalInclTax() - $discountInclTax;
+                $itemPriceInclDiscount = $this->formatPrice($rowTotalInclDiscount / $qtyOrdered);
 
-                $difference = $discountIncl - round(
-                    abs($paytrailItem['amount'] * $paytrailItem['price'] - $item->getRowTotalInclTax()),
-                    2
+                $difference = $rowTotalInclDiscount - ($itemPriceInclDiscount * $qtyOrdered);
+                // deduct/add only 0.01 per product
+                $diffAdjustment       = 0.01;
+                $differenceUnitsCount = (int)(round(abs($difference / $diffAdjustment)));
+
+                if ($differenceUnitsCount > $qtyOrdered) {
+                    throw new LocalizedException(
+                        \__('Rounding diff bigger than 0.01 per item : %sku', ['sku' => $item->getSku()])
                     );
-                if ($difference) {
-                    $paytrailItem['amount'] -= 1;
-                    $paytrailItemDiscountCorrection = $paytrailItem;
-                    $paytrailItemDiscountCorrection['amount'] = 1;
-                    $paytrailItemDiscountCorrection['price'] -= $difference;
                 }
 
+                $paytrailItem = [
+                    'title'  => $item->getName(),
+                    'code'   => $item->getSku(),
+                    'amount' => $qtyOrdered - $differenceUnitsCount,
+                    'price'  => $itemPriceInclDiscount,
+                    'vat'    => $item->getTaxPercent()
+                ];
+
                 $items [] = $paytrailItem;
-                if ($difference) {
-                    $items [] = $paytrailItemDiscountCorrection;
+
+                if ($difference <> 0) {
+                    $paytrailItemRoundingCorrection = [
+                        'title'  => $item->getName()
+                            . ' (rounding issue fix, diff: '
+                            . $this->formatPrice($difference)
+                            . ')',
+                        'code'   => $item->getSku(),
+                        'amount' => $differenceUnitsCount,
+                        'price'  => $this->formatPrice(
+                            floatval($itemPriceInclDiscount) + ($difference <=> 0) * $diffAdjustment
+                        ),
+                        'vat'    => $item->getTaxPercent()
+                    ];
+
+                    $items [] = $paytrailItemRoundingCorrection;
                 }
             }
         }
@@ -292,7 +320,7 @@ class RequestData
     {
         $opItem = new Item();
 
-        $opItem->setUnitPrice((int)($item['price'] * 100))
+        $opItem->setUnitPrice((int)bcmul((string)$item['price'], '100'))
             ->setUnits((int)$item['amount'])
             ->setVatPercentage((int)$item['vat'])
             ->setProductCode($item['code'])
@@ -311,10 +339,11 @@ class RequestData
     private function getShippingItem(Order $order)
     {
         $taxDetails = [];
-        $price = 0;
+        $price      = 0;
 
         if ($order->getShippingAmount()) {
-            foreach ($this->taxItems->getTaxItemsByOrderId($order->getId()) as $detail) {
+            $taxItemsByOrderId = $this->taxItems->getTaxItemsByOrderId($order->getId()) ?? [];
+            foreach ($taxItemsByOrderId as $detail) {
                 if (isset($detail['taxable_item_type']) && $detail['taxable_item_type'] == 'shipping') {
                     $taxDetails = $detail;
                     break;
@@ -328,11 +357,11 @@ class RequestData
         }
 
         return [
-            'title' => $order->getShippingDescription() ?: __('Shipping'),
-            'code' => 'shipping-row',
+            'title'  => $order->getShippingDescription() ?: 'Shipping',
+            'code'   => 'shipping-row',
             'amount' => 1,
-            'price' => floatval($price),
-            'vat' => $taxDetails['tax_percent'] ?? 0,
+            'price'  => $this->formatPrice($price),
+            'vat'    => $taxDetails['tax_percent'] ?? 0,
         ];
     }
 
@@ -396,5 +425,15 @@ class RequestData
     {
         $token = $this->paymentTokenManagement->getByPublicHash($tokenHash, $customerId);
         return $token;
+    }
+
+    /**
+     * @param $amount
+     *
+     * @return string
+     */
+    private function formatPrice($amount)
+    {
+        return number_format(floatval($amount), 2, '.', '');
     }
 }
