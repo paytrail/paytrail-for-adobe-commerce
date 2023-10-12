@@ -12,7 +12,6 @@ use Magento\Sales\Model\Order;
 use Magento\Sales\Model\Order\Item as OrderItem;
 use Magento\Sales\Model\ResourceModel\Order\Tax\Item as TaxItems;
 use Magento\Tax\Helper\Data as TaxHelper;
-use Magento\Vault\Api\Data\PaymentTokenInterface;
 use Magento\Vault\Api\PaymentTokenManagementInterface;
 use Paytrail\PaymentService\Gateway\Config\Config;
 use Paytrail\PaymentService\Logger\PaytrailLogger;
@@ -220,7 +219,7 @@ class RequestData
     /**
      * Item arguments.
      *
-     * @param $order
+     * @param Order $order
      * @return mixed
      * @throws LocalizedException
      */
@@ -417,8 +416,8 @@ class RequestData
     /**
      * Get payment token.
      *
-     * @param $tokenhash
-     * @param $customerId
+     * @param string $tokenHash
+     * @param string $customerId
      * @return \Magento\Vault\Api\Data\PaymentTokenInterface|null
      */
     protected function getPaymentToken($tokenHash, $customerId)
@@ -428,8 +427,9 @@ class RequestData
     }
 
     /**
-     * @param $amount
+     * Format price.
      *
+     * @param $amount
      * @return string
      */
     private function formatPrice($amount)
