@@ -5,21 +5,26 @@ namespace Paytrail\PaymentService\Observer;
 
 use Magento\Framework\Event\Observer;
 use Magento\Framework\Event\ObserverInterface;
-use Magento\Payment\Gateway\Command\CommandManagerPoolInterface;
 use Magento\Sales\Model\ResourceModel\Order\Payment\Transaction\CollectionFactory;
-use \Paytrail\PaymentService\Model\Invoice\InvoiceActivation as ActivationModel;
+use Paytrail\PaymentService\Gateway\Config\Config;
+use Paytrail\PaymentService\Model\Invoice\Activation\Flag;
+use Paytrail\PaymentService\Model\Invoice\Activation\ManualActivation;
 
 class PaymentActivation implements ObserverInterface
 {
+    public const ACTIVATE_WITH_SHIPMENT_CONFIG = 'payment/paytrail/shipment_activates_invoice';
+
     /**
      * PaymentActivation constructor.
      *
      * @param CollectionFactory $collectionFactory
-     * @param CommandManagerPoolInterface $commandManagerPool
+     * @param Config $config
+     * @param ManualActivation $manualActivation
      */
     public function __construct(
         private CollectionFactory $collectionFactory,
-        private CommandManagerPoolInterface $commandManagerPool
+        private Config $config,
+        private ManualActivation $manualActivation
     ) {
     }
 
@@ -33,7 +38,7 @@ class PaymentActivation implements ObserverInterface
     {
         /** @var \Magento\Sales\Model\Order\Shipment $shipment */
         $shipment = $observer->getEvent()->getShipment();
-        if ($shipment->getOrigData('entity_id')) {
+        if ($shipment->getOrigData('entity_id') || !$this->config->isShipmentActivateInvoice()) {
             return; // Observer only processes shipments the first time they're made.
         }
 
@@ -47,33 +52,10 @@ class PaymentActivation implements ObserverInterface
 
             if (isset($info['raw_details_info']['method']) && in_array(
                 $info['raw_details_info']['method'],
-                ActivationModel::SUB_METHODS_WITH_MANUAL_ACTIVATION_SUPPORT
+                Flag::SUB_METHODS_WITH_MANUAL_ACTIVATION_SUPPORT
             )) {
-                $this->sendActivation($transaction->getTxnId());
+                $this->manualActivation->activateInvoice((int)$shipment->getOrderId());
             }
         }
-    }
-
-    /**
-     * Send invoice activation.
-     *
-     * @param string $txnId
-     * @return void
-     */
-    private function sendActivation($txnId)
-    {
-        // Activation returns a status "OK" if the payment was completed upon activation but the return has no signature
-        // Without signature Hmac validation embedded in payment processing cannot be passed. This can be resolved with
-        // Recurring payment HMAC updates.
-        // TODO Use recurring payment HMAC processing here to mark order as paid if response status is "OK"
-
-        $commandExecutor = $this->commandManagerPool->get('paytrail');
-        $commandExecutor->executeByCode(
-            'invoice_activation',
-            null,
-            [
-                'transaction_id' => $txnId
-            ]
-        );
     }
 }

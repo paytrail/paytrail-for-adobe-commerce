@@ -63,7 +63,13 @@ class ReceiptDataProvider
 
         /** @var string|void $paymentVerified */
         $paymentVerified = $this->paymentTransaction->verifyPaymentData($params, $this->currentOrder);
-        $this->processService->processTransaction($this->transactionId, $this->currentOrder, $this->orderId);
+        $this->processService->processTransaction(
+            $paymentVerified,
+            $this->transactionId,
+            $this->currentOrder,
+            $this->orderId,
+            $this->getDetails($paymentVerified)
+        );
         if ($paymentVerified === 'ok') {
             $this->processService
                 ->processPayment($this->currentOrder, $this->transactionId, $this->getDetails($paymentVerified));

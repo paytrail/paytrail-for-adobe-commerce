@@ -11,6 +11,7 @@ use Magento\Framework\Exception\LocalizedException;
 use Magento\Payment\Gateway\Command\CommandManagerPoolInterface;
 use Magento\Sales\Api\OrderManagementInterface;
 use Magento\Sales\Api\OrderRepositoryInterface;
+use Magento\Sales\Model\Order;
 use Paytrail\PaymentService\Exceptions\CheckoutException;
 use Paytrail\PaymentService\Gateway\Config\Config;
 use Paytrail\PaymentService\Model\Email\Order\PendingOrderEmailConfirmation;
@@ -83,7 +84,7 @@ class Index implements ActionInterface
                 }
 
                 $order = $this->checkoutSession->getLastRealOrder();
-                $responseData = $this->getResponseData($order);
+                $responseData = $this->getResponseData($order, $selectedPaymentMethodId);
                 $formData = $this->getFormFields(
                     $responseData,
                     $selectedPaymentMethodId
@@ -187,20 +188,22 @@ class Index implements ActionInterface
     /**
      * GetResponseData function
      *
-     * @param \Magento\Sales\Model\Order $order
+     * @param Order $order
+     * @param string $paymentMethod
      * @return mixed
      * @throws CheckoutException
      * @throws \Magento\Framework\Exception\NotFoundException
      * @throws \Magento\Payment\Gateway\Command\CommandException
      */
-    protected function getResponseData($order)
+    protected function getResponseData($order, $paymentMethod)
     {
         $commandExecutor = $this->commandManagerPool->get('paytrail');
         $response = $commandExecutor->executeByCode(
             'payment',
             null,
             [
-                'order' => $order
+                'order' => $order,
+                'payment_method' => $paymentMethod
             ]
         );
 

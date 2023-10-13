@@ -43,8 +43,15 @@ class Config extends \Magento\Payment\Gateway\Config\Config
     public const KEY_CANCEL_ORDER_ON_FAILED_PAYMENT = 'failed_payment_cancel';
     public const VAULT_CODE = 'paytrail_cc_vault';
     public const LOGO = 'payment/paytrail/logo';
-
+    public const KEY_MANUAL_INVOICE = 'manual_invoice';
+    public const KEY_ACTIVATE_WITH_SHIPMENT = 'shipment_activates_invoice';
     public const GIT_URL = 'https://api.github.com/repos/paytrail/paytrail-for-adobe-commerce/releases/latest';
+
+    public const RECEIPT_PROCESSING_CACHE_PREFIX = "receipt_processing_";
+    public const PAYTRAIL_API_PAYMENT_STATUS_OK = 'ok';
+    public const PAYTRAIL_API_PAYMENT_STATUS_PENDING = 'pending';
+    public const PAYTRAIL_API_PAYMENT_STATUS_DELAYED = 'delayed';
+    public const PAYTRAIL_API_PAYMENT_STATUS_FAIL = 'fail';
 
     /**
      * @var array
@@ -521,5 +528,27 @@ class Config extends \Magento\Payment\Gateway\Config\Config
         $this->curlClient->setOptions($options);
         $this->curlClient->get(self::GIT_URL);
         return json_decode($this->curlClient->getBody(), true);
+    }
+
+    /**
+     * Are manual invoice activations in use
+     *
+     * @param null|int|string $storeId
+     * @return bool
+     */
+    public function isManualInvoiceEnabled($storeId = null)
+    {
+        return (bool)$this->getValue(self::KEY_MANUAL_INVOICE, $storeId);
+    }
+
+    /**
+     * Will creating a shipment to an order activate the order's invoice.
+     *
+     * @param null|int|string $storeId
+     * @return bool
+     */
+    public function isShipmentActivateInvoice($storeId = null)
+    {
+        return (bool)$this->getValue(self::KEY_ACTIVATE_WITH_SHIPMENT, $storeId);
     }
 }
