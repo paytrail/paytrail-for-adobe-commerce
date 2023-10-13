@@ -63,6 +63,8 @@ class Payments extends Template
     }
 
     /**
+     * Is Subscriptions functionality is enabled.
+     *
      * @return bool
      */
     public function isSubscriptionsEnabled(): bool

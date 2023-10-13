@@ -8,9 +8,10 @@ use Paytrail\PaymentService\Model\Recurring\TotalConfigProvider;
 class RecurringPaymentNotify
 {
     /**
-     * Constructor
+     * RecurringPaymentNotify constructor.
      *
      * @param Notify $notify
+     * @param TotalConfigProvider $totalConfigProvider
      */
     public function __construct(
         private Notify $notify,

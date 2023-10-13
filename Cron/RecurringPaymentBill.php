@@ -8,9 +8,10 @@ use Paytrail\PaymentService\Model\Recurring\TotalConfigProvider;
 class RecurringPaymentBill
 {
     /**
-     * Constructor
+     * RecurringPaymentBill constructor.
      *
      * @param Bill $bill
+     * @param TotalConfigProvider $totalConfigProvider
      */
     public function __construct(
         private Bill $bill,

@@ -47,7 +47,7 @@ class PaymentMethodProvider implements ClientInterface
     /**
      * GetPaymentMethods function
      *
-     * @param $request
+     * @param array $request
      * @return array
      */
     protected function getPaymentMethods($request)
