@@ -287,51 +287,12 @@ define(
                         }
                     }
                 },
-                payAndAddNewCard: function () {
-                    if (self.isLoggedIn()) {
-                        fullScreenLoader.startLoader();
-                        /** start here */
-
-                        $.ajax(
-                            {
-                                url: mageUrlBuilder.build(self.getPayAndAddCardRedirectUrl()),
-                                type: 'post',
-                                context: this,
-                                data: {
-                                    'is_ajax': true
-                                }
-                            }
-                        ).done(
-                            function (response) {
-                                if ($.type(response) === 'object' && response.success && response.data) {
-                                    if (response.reference) {
-                                        window.location.href = self.getDefaultSuccessUrl();
-                                    }
-                                    if (response.redirect) {
-                                        window.location.href = response.redirect;
-                                    }
-
-                                    $('#paytrail-form-wrapper').append(response.data);
-                                    return false;
-                                }
-                                fullScreenLoader.stopLoader();
-                                self.addErrorMessage(response.message);
-                            }
-                        ).fail(
-                            function (response) {
-                                fullScreenLoader.stopLoader();
-                                self.addErrorMessage(response.message);
-                            }
-                        ).always(
-                            function () {
-                                //a self.scrollTo();
-                            }
-                        );
-                    }
-                },
                 getPaymentUrl: function () {
                     if (self.selectedToken() != 0) {
                         return self.getTokenPaymentRedirectUrl();
+                    }
+                    if (self.enablePayAndAddCardButton()) {
+                        return self.getPayAndAddCardRedirectUrl();
                     }
                     return self.getBypassPaymentRedirectUrl();
                 },
