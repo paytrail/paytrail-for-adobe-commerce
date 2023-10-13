@@ -10,7 +10,6 @@ use Magento\Framework\Controller\Result\JsonFactory;
 use Magento\Framework\UrlInterface;
 use Magento\Framework\Validation\ValidationException;
 use Magento\Payment\Gateway\Command\CommandManagerPoolInterface;
-use Magento\Quote\Model\QuoteManagement;
 use Magento\Sales\Model\Order;
 use Paytrail\PaymentService\Exceptions\CheckoutException;
 use Paytrail\PaymentService\Model\Receipt\ProcessService;
@@ -38,7 +37,6 @@ class PayAndAddCard extends \Magento\Framework\App\Action\Action
      * @param LoggerInterface $logger
      * @param CustomerSession $customerSession
      * @param PreventAdminActions $preventAdminActions
-     * @param QuoteManagement $quoteManagement
      * @param CommandManagerPoolInterface $commandManagerPool
      * @param ProcessService $processService
      */
@@ -49,7 +47,6 @@ class PayAndAddCard extends \Magento\Framework\App\Action\Action
         private LoggerInterface $logger,
         private CustomerSession $customerSession,
         private PreventAdminActions $preventAdminActions,
-        private QuoteManagement $quoteManagement,
         private CommandManagerPoolInterface $commandManagerPool,
         private ProcessService $processService
     ) {
@@ -74,7 +71,7 @@ class PayAndAddCard extends \Magento\Framework\App\Action\Action
         /** @var Json $resultJson */
         $resultJson = $this->jsonFactory->create();
 
-        $order = $this->quoteManagement->submit($this->checkoutSession->getQuote());
+        $order = $this->checkoutSession->getLastRealOrder();
 
         try {
             if ($this->customerSession->getCustomerId() && $this->getRequest()->getParam('is_ajax')) {
