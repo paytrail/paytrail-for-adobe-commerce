@@ -12,6 +12,7 @@ use Magento\Sales\Model\Order;
 use Magento\Sales\Model\OrderFactory;
 use Magento\Vault\Api\PaymentTokenRepositoryInterface;
 use Magento\Vault\Model\PaymentTokenFactory;
+use Magento\Vault\Model\PaymentTokenManagement;
 use Paytrail\PaymentService\Controller\Receipt\Index as Receipt;
 use Paytrail\PaymentService\Gateway\Config\Config;
 use Paytrail\PaymentService\Model\Receipt\ProcessPayment;
@@ -42,6 +43,7 @@ class PayAndAddCardCallback implements \Magento\Framework\App\ActionInterface
      * @param PaymentTokenFactory $paymentTokenFactory
      * @param SerializerInterface $jsonSerializer
      * @param PaymentTokenRepositoryInterface $tokenRepository
+     * @param PaymentTokenManagement $paymentTokenManagement
      * @param EncryptorInterface $encryptor
      */
     public function __construct(
@@ -54,6 +56,7 @@ class PayAndAddCardCallback implements \Magento\Framework\App\ActionInterface
         private PaymentTokenFactory $paymentTokenFactory,
         private SerializerInterface $jsonSerializer,
         private PaymentTokenRepositoryInterface $tokenRepository,
+        private PaymentTokenManagement $paymentTokenManagement,
         private EncryptorInterface $encryptor
     ) {
     }
@@ -80,7 +83,7 @@ class PayAndAddCardCallback implements \Magento\Framework\App\ActionInterface
 
         // save credit card
         if ($this->request->getParam('checkout-card-token')) {
-            $this->saveToken($this->request->getParams(), $order);
+            $this->processCardToken($this->request->getParams(), $order);
         }
 
         if ($status == 'pending_payment' || in_array($status, Receipt::ORDER_CANCEL_STATUSES)) {
@@ -93,21 +96,15 @@ class PayAndAddCardCallback implements \Magento\Framework\App\ActionInterface
     }
 
     /**
-     * Save credit card from callback response data.
+     * Process token response to save credit card.
      *
      * @param array $params
      * @param Order $order
      * @return void
      */
-    private function saveToken($params, $order)
+    public function processCardToken($params, $order)
     {
-        $vaultPaymentToken = $this->paymentTokenFactory->create(PaymentTokenFactory::TOKEN_TYPE_CREDIT_CARD);
         $customerId = $order->getCustomerId();
-        $vaultPaymentToken->setCustomerId($customerId);
-        $vaultPaymentToken->setPaymentMethodCode($this->gatewayConfig->getCcVaultCode());
-        $vaultPaymentToken->setExpiresAt(
-            $this->getExpiresDate($params['expire_month'], $params['expire_year'])
-        );
         $tokenDetails = $this->jsonSerializer->serialize(
             [
                 'type' => $this->cardTypes[$params['type']],
@@ -115,9 +112,40 @@ class PayAndAddCardCallback implements \Magento\Framework\App\ActionInterface
                 'expirationDate' => $params['expire_year'] . '/' . $params['expire_month']
             ]
         );
+
+        $publicHash = $this->createPublicHash($params['type'], $customerId, $tokenDetails);
+
+        $savedCard = $this->paymentTokenManagement->getByPublicHash($publicHash, $customerId);
+
+        if ($savedCard) {
+            $savedCard->setIsActive(true);
+            $savedCard->setIsVisible(true);
+            $this->tokenRepository->save($savedCard);
+        } else {
+            $this->saveToken($params, $publicHash, $customerId, $tokenDetails);
+        }
+    }
+
+    /**
+     * Save credit card from callback response data.
+     *
+     * @param array $params
+     * @param string $publicHash
+     * @param string $customerId
+     * @param string $tokenDetails
+     * @return void
+     */
+    private function saveToken($params, $publicHash, $customerId, $tokenDetails)
+    {
+        $vaultPaymentToken = $this->paymentTokenFactory->create(PaymentTokenFactory::TOKEN_TYPE_CREDIT_CARD);
+        $vaultPaymentToken->setCustomerId($customerId);
+        $vaultPaymentToken->setPaymentMethodCode($this->gatewayConfig->getCcVaultCode());
+        $vaultPaymentToken->setExpiresAt(
+            $this->getExpiresDate($params['expire_month'], $params['expire_year'])
+        );
         $vaultPaymentToken->setGatewayToken($params['checkout-card-token']);
         $vaultPaymentToken->setTokenDetails($tokenDetails);
-        $vaultPaymentToken->setPublicHash($this->createPublicHash($params['type'], $customerId, $tokenDetails));
+        $vaultPaymentToken->setPublicHash($publicHash);
         $this->tokenRepository->save($vaultPaymentToken);
     }
 
@@ -129,7 +157,7 @@ class PayAndAddCardCallback implements \Magento\Framework\App\ActionInterface
      * @param string $tokenDetails
      * @return string
      */
-    private function createPublicHash($cardType, $customerId, $tokenDetails)
+    private function createPublicHash($cardType, $customerId, $tokenDetails): string
     {
         return $this->encryptor->getHash(
             $customerId
