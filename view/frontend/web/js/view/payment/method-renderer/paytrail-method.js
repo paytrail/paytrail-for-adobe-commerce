@@ -74,8 +74,7 @@ define(
                 },
                 isRecurringPaymentAllowed: function () {
                     if ((window.checkoutConfig.isRecurringScheduled === true && self.selectedToken() != 0)
-                        || window.checkoutConfig.isRecurringScheduled === false
-                        || (window.checkoutConfig.isRecurringScheduled === true && self.enablePayAndAddCardButton())) {
+                        || window.checkoutConfig.isRecurringScheduled === false) {
                         return true;
                     }
                     return false;
@@ -234,8 +233,7 @@ define(
                 placeAndAddCard: function () {
                     if (self.isPlaceOrderActionAllowed()
                         && additionalValidators.validate()
-                        && self.enablePayAndAddCardButton()
-                        && self.isRecurringPaymentAllowed()) {
+                        && self.enablePayAndAddCardButton()) {
                         return self.placeAndAddCardBypass();
                     }
 
