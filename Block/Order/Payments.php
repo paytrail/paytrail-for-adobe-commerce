@@ -10,13 +10,10 @@ use Magento\Framework\Phrase;
 use Magento\Framework\Serialize\SerializerInterface;
 use Magento\Framework\View\Element\Template;
 use Magento\Framework\View\Element\Template\Context;
-use Magento\Store\Model\ScopeInterface;
 use Magento\Store\Model\StoreManagerInterface;
 use Magento\Vault\Model\PaymentTokenRepository;
 use Paytrail\PaymentService\Api\Data\SubscriptionInterface;
-use Paytrail\PaymentService\Model\ConfigProvider;
 use Paytrail\PaymentService\Model\Recurring\TotalConfigProvider;
-use Paytrail\PaymentService\Model\SubscriptionRepository;
 use Paytrail\PaymentService\Model\ResourceModel\Subscription\Collection as SubscriptionCollection;
 use Paytrail\PaymentService\Model\ResourceModel\Subscription\CollectionFactory;
 
@@ -28,85 +25,36 @@ class Payments extends Template
     protected $_template = 'Paytrail_PaymentService::order/payments.phtml';
 
     /**
-     * @var CollectionFactory
-     */
-    private $subscriptionCollectionFactory;
-
-    /**
-     * @var Session
-     */
-    private $customerSession;
-
-    /**
-     * @var StoreManagerInterface
-     */
-    private $storeManager;
-
-    /**
-     * @var PaymentTokenRepository
-     */
-    private $paymentTokenRepository;
-
-    /**
-     * @var SerializerInterface
-     */
-    private $serializer;
-
-    /**
-     * @var ConfigProvider
-     */
-    private $configProvider;
-
-    /**
-     * @var MessageManagerInterface
-     */
-    private MessageManagerInterface $messageManager;
-
-    /**
-     * @var TotalConfigProvider
-     */
-    private $totalConfigProvider;
-
-    /**
+     * Payments constructor.
+     *
      * @param Context $context
-     * @param SubscriptionRepository $subscriptionRepository
      * @param CollectionFactory $subscriptionCollectionFactory
      * @param Session $customerSession
      * @param StoreManagerInterface $storeManager
      * @param PaymentTokenRepository $paymentTokenRepository
      * @param SerializerInterface $serializer
-     * @param ConfigProvider $configProvider
-     * @param MessageManagerInterface $messageManager
      * @param TotalConfigProvider $totalConfigProvider
+     * @param MessageManagerInterface $messageManager
      * @param array $data
      */
     public function __construct(
         Context                 $context,
-        SubscriptionRepository  $subscriptionRepository,
-        CollectionFactory       $subscriptionCollectionFactory,
-        Session                 $customerSession,
-        StoreManagerInterface   $storeManager,
-        PaymentTokenRepository  $paymentTokenRepository,
-        SerializerInterface     $serializer,
-        ConfigProvider          $configProvider,
-        MessageManagerInterface $messageManager,
-        TotalConfigProvider     $totalConfigProvider,
+        private CollectionFactory       $subscriptionCollectionFactory,
+        private Session                 $customerSession,
+        private StoreManagerInterface   $storeManager,
+        private PaymentTokenRepository  $paymentTokenRepository,
+        private SerializerInterface     $serializer,
+        private TotalConfigProvider $totalConfigProvider,
+        private MessageManagerInterface $messageManager,
         array                   $data = []
     ) {
-        $this->subscriptionRepository = $subscriptionRepository;
-        $this->subscriptionCollectionFactory = $subscriptionCollectionFactory;
-        $this->customerSession = $customerSession;
-        $this->storeManager = $storeManager;
-        $this->paymentTokenRepository = $paymentTokenRepository;
-        $this->serializer = $serializer;
         parent::__construct($context, $data);
-        $this->configProvider = $configProvider;
-        $this->messageManager = $messageManager;
-        $this->totalConfigProvider = $totalConfigProvider;
     }
 
     /**
+     * Payments protected constructor.
      *
+     * @return void
      */
     protected function _construct()
     {
@@ -115,6 +63,8 @@ class Payments extends Template
     }
 
     /**
+     * Is Subscriptions functionality is enabled.
+     *
      * @return bool
      */
     public function isSubscriptionsEnabled(): bool
@@ -123,6 +73,8 @@ class Payments extends Template
     }
 
     /**
+     * Get recurring payments (subscriptions).
+     *
      * @return SubscriptionCollection
      */
     public function getRecurringPayments()
@@ -133,8 +85,8 @@ class Payments extends Template
         $collection->getSelect()->join(
             ['link' => 'paytrail_subscription_link'],
             'main_table.entity_id = link.subscription_id'
-        )->columns(array('MAX(link.order_id) as max_id')
-        )->group('link.subscription_id');
+        )->columns('MAX(link.order_id) as max_id')
+            ->group('link.subscription_id');
 
         $collection->getSelect()->join(
             ['so' => 'sales_order'],
@@ -153,6 +105,8 @@ class Payments extends Template
     }
 
     /**
+     * Get closed subscriptions.
+     *
      * @return SubscriptionCollection
      */
     public function getClosedSubscriptions()
@@ -163,8 +117,8 @@ class Payments extends Template
         $collection->getSelect()->join(
             ['link' => 'paytrail_subscription_link'],
             'main_table.entity_id = link.subscription_id'
-        )->columns(array('MAX(link.order_id) as max_id')
-        )->group('link.subscription_id');
+        )->columns('MAX(link.order_id) as max_id')
+            ->group('link.subscription_id');
 
         $collection->getSelect()->join(
             ['so' => 'sales_order'],
@@ -183,18 +137,21 @@ class Payments extends Template
     }
 
     /**
-     * @param $_order
+     * Validate date.
+     *
+     * @param string $date
      * @return string
-     * @throws NoSuchEntityException
      */
     public function validateDate($date): string
     {
-        $newDate = explode(' ',$date);
+        $newDate = explode(' ', $date);
         return $newDate[0];
     }
 
     /**
-     * @param $recurringPaymentStatus
+     * Get recurring payment status name.
+     *
+     * @param string $recurringPaymentStatus
      * @return \Magento\Framework\Phrase|string
      */
     public function getRecurringPaymentStatusName($recurringPaymentStatus)
@@ -216,13 +173,22 @@ class Payments extends Template
         return '';
     }
 
+    /**
+     * Get current currency.
+     *
+     * @return string
+     * @throws NoSuchEntityException
+     * @throws \Magento\Framework\Exception\LocalizedException
+     */
     public function getCurrentCurrency()
     {
         return $this->storeManager->getStore()->getCurrentCurrency()->getCurrencySymbol();
     }
 
     /**
-     * @param $recurringPayment
+     * Get view url.
+     *
+     * @param Subscription $recurringPayment
      * @return string
      */
     public function getViewUrl($recurringPayment)
@@ -231,6 +197,8 @@ class Payments extends Template
     }
 
     /**
+     * Prepare layout.
+     *
      * @return $this|Payments
      * @throws \Magento\Framework\Exception\LocalizedException
      */
@@ -251,6 +219,8 @@ class Payments extends Template
     }
 
     /**
+     * Get pager html.
+     *
      * @return string
      */
     public function getPagerHtml()
@@ -259,6 +229,9 @@ class Payments extends Template
     }
 
     /**
+     * Get stop payment url.
+     *
+     * @param Subscription $recurringPayment
      * @return string
      */
     public function getStopPaymentUrl($recurringPayment)
@@ -267,6 +240,8 @@ class Payments extends Template
     }
 
     /**
+     * Get empty recurring payment message.
+     *
      * @return \Magento\Framework\Phrase
      */
     public function getEmptyRecurringPaymentsMessage()
@@ -275,7 +250,9 @@ class Payments extends Template
     }
 
     /**
-     * @param $recurringPayment
+     * Get credit card number.
+     *
+     * @param Subscription $recurringPayment
      * @return string
      */
     public function getCardNumber($recurringPayment)
@@ -290,6 +267,8 @@ class Payments extends Template
     }
 
     /**
+     * Get add_card request redirect url.
+     *
      * @return string|null
      * @throws NoSuchEntityException
      */
@@ -301,6 +280,8 @@ class Payments extends Template
     }
 
     /**
+     * Get previous error.
+     *
      * @return Phrase|null
      * @throws NoSuchEntityException
      */

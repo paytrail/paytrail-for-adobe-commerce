@@ -4,16 +4,12 @@ namespace Paytrail\PaymentService\Model\Subscription;
 
 use Magento\Framework\Exception\CouldNotSaveException;
 use Magento\Framework\Exception\LocalizedException;
-use Magento\Sales\Api\OrderRepositoryInterface;
-use Magento\Sales\Model\Order;
 use Magento\Sales\Model\Order\Email\Sender\OrderSender;
 use Magento\Sales\Model\OrderRepository;
 use Paytrail\PaymentService\Api\SubscriptionLinkRepositoryInterface;
 use Paytrail\PaymentService\Api\SubscriptionRepositoryInterface;
-use Paytrail\PaymentService\Helper\Data;
 use Paytrail\PaymentService\Model\ResourceModel\Subscription as SubscriptionResource;
 use Paytrail\PaymentService\Model\ResourceModel\Subscription\CollectionFactory;
-use Paytrail\PaymentService\Model\ResourceModel\VaultPaymentToken;
 use Paytrail\PaymentService\Model\Subscription;
 use Paytrail\PaymentService\Model\Token\Payment;
 use Psr\Log\LoggerInterface;
@@ -22,56 +18,8 @@ use \Paytrail\PaymentService\Model\ResourceModel\Subscription\Collection;
 class OrderBiller
 {
     /**
-     * @var PaymentCount
-     */
-    private $paymentCount;
-
-    /**
-     * @var Payment
-     */
-    private $mitPayment;
-
-    /**
-     * @var CollectionFactory
-     */
-    private $collectionFactory;
-
-    /**
-     * @var LoggerInterface
-     */
-    private $logger;
-
-    /**
-     * @var NextDateCalculator
-     */
-    private $nextDateCalculator;
-
-    /**
-     * @var SubscriptionRepositoryInterface
-     */
-    private $subscriptionRepository;
-
-    /**
-     * @var SubscriptionResource
-     */
-    private $subscriptionResource;
-
-    /**
-     * @var SubscriptionLinkRepositoryInterface
-     */
-    private $subscriptionLinkRepository;
-
-    /**
-     * @var OrderSender
-     */
-    private $orderSender;
-
-    /**
-     * @var Order
-     */
-    private $orderRepository;
-
-    /**
+     * OrderBiller constructor.
+     *
      * @param PaymentCount $paymentCount
      * @param Payment $mitPayment
      * @param CollectionFactory $collectionFactory
@@ -84,31 +32,26 @@ class OrderBiller
      * @param OrderRepository $orderRepository
      */
     public function __construct(
-        PaymentCount                    $paymentCount,
-        Payment                         $mitPayment,
-        CollectionFactory               $collectionFactory,
-        NextDateCalculator              $nextDateCalculator,
-        SubscriptionRepositoryInterface $subscriptionRepository,
-        SubscriptionResource            $subscriptionResource,
-        LoggerInterface                 $logger,
-        SubscriptionLinkRepositoryInterface $subscriptionLinkRepository,
-        OrderSender $orderSender,
-        OrderRepository $orderRepository
+        private PaymentCount                        $paymentCount,
+        private Payment                             $mitPayment,
+        private CollectionFactory                   $collectionFactory,
+        private NextDateCalculator                  $nextDateCalculator,
+        private SubscriptionRepositoryInterface     $subscriptionRepository,
+        private SubscriptionResource                $subscriptionResource,
+        private LoggerInterface                     $logger,
+        private SubscriptionLinkRepositoryInterface $subscriptionLinkRepository,
+        private OrderSender                         $orderSender,
+        private OrderRepository                     $orderRepository
     ) {
-        $this->paymentCount = $paymentCount;
-        $this->mitPayment = $mitPayment;
-        $this->collectionFactory = $collectionFactory;
-        $this->nextDateCalculator = $nextDateCalculator;
-        $this->subscriptionRepository = $subscriptionRepository;
-        $this->subscriptionResource = $subscriptionResource;
-        $this->logger = $logger;
-        $this->subscriptionLinkRepository = $subscriptionLinkRepository;
-        $this->orderSender = $orderSender;
-        $this->orderRepository = $orderRepository;
     }
 
     /**
+     * Bill orders by ID.
+     *
      * @param int[] $orderIds
+     * @return void
+     * @throws \Magento\Framework\Exception\InputException
+     * @throws \Magento\Framework\Exception\NoSuchEntityException
      */
     public function billOrdersById($orderIds)
     {
@@ -133,7 +76,9 @@ class OrderBiller
     }
 
     /**
-     * @param $subscriptionId
+     * Send order confirmation email.
+     *
+     * @param string $subscriptionId
      * @return void
      * @throws \Magento\Framework\Exception\InputException
      * @throws \Magento\Framework\Exception\NoSuchEntityException
@@ -145,6 +90,8 @@ class OrderBiller
     }
 
     /**
+     * Validate token.
+     *
      * @param Subscription $subscription
      * @return bool
      */
@@ -165,6 +112,8 @@ class OrderBiller
     }
 
     /**
+     * Create MIT payment request.
+     *
      * @param Subscription $subscription Must include order id of the subscription and public hash of the vault token.
      * @return bool
      * For subscription param @see Collection::getBillingCollectionByOrderIds
@@ -186,6 +135,13 @@ class OrderBiller
         return $paymentSuccess;
     }
 
+    /**
+     * Update next order date.
+     *
+     * @param Subscription $subscription
+     * @return void
+     * @throws \Magento\Framework\Exception\NoSuchEntityException
+     */
     private function updateNextOrderDate(Subscription $subscription)
     {
         $subscription->setNextOrderDate(
@@ -199,6 +155,8 @@ class OrderBiller
     }
 
     /**
+     * Save subscription.
+     *
      * @param Subscription $subscription
      * @return void
      */
@@ -208,7 +166,8 @@ class OrderBiller
             $this->subscriptionRepository->save($subscription);
         } catch (CouldNotSaveException $e) {
             $this->logger->critical(\__(
-                'Recurring payment: Cancelling subscription %id, unable to update subscription\'s next order date: %error',
+                'Recurring payment: 
+                    Cancelling subscription %id, unable to update subscription\'s next order date: %error',
                 [
                     'id' => $subscription->getId(),
                     'error' => $e->getMessage()

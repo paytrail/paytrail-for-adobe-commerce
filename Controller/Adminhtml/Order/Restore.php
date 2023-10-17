@@ -4,38 +4,36 @@ namespace Paytrail\PaymentService\Controller\Adminhtml\Order;
 
 use Magento\Backend\App\Action;
 use Magento\Backend\App\Action\Context;
+use Magento\Backend\Model\Session;
 use Magento\Backend\Model\View\Result\Redirect;
 use Magento\Framework\App\Action\HttpGetActionInterface;
-use Paytrail\PaymentService\Helper\ActivateOrder;
+use Magento\Framework\App\RequestInterface;
+use Paytrail\PaymentService\Model\Order\OrderActivation;
 
 class Restore extends Action implements HttpGetActionInterface
 {
     /**
-     * @var ActivateOrder $activateOrderHelper
+     * Restore constructor.
+     *
+     * @param Context $context
+     * @param OrderActivation $orderActivation
+     * @param Session $session
+     * @param RequestInterface $request
      */
-    private $activateOrderHelper;
-
-    /**
-     * @var \Magento\Backend\Model\Session
-     */
-    private $session;
-    /**
-     * @var \Magento\Framework\App\RequestInterface
-     */
-    private $request;
-
     public function __construct(
         Context $context,
-        ActivateOrder $activateOrderHelper,
-        \Magento\Backend\Model\Session $session,
-        \Magento\Framework\App\RequestInterface $request
+        private OrderActivation $orderActivation,
+        private Session $session,
+        private RequestInterface $request
     ) {
         parent::__construct($context);
-        $this->session  = $session;
-        $this->request = $request;
-        $this->activateOrderHelper = $activateOrderHelper;
     }
 
+    /**
+     * Execute
+     *
+     * @return Redirect
+     */
     public function execute()
     {
         $this->session->clearStorage();
@@ -43,8 +41,8 @@ class Restore extends Action implements HttpGetActionInterface
         /** @var Redirect $resultRedirect */
         $resultRedirect = $this->resultRedirectFactory->create();
         try {
-            if ($this->activateOrderHelper->isCanceled($orderId)) {
-                $this->activateOrderHelper->activateOrder($orderId);
+            if ($this->orderActivation->isCanceled($orderId)) {
+                $this->orderActivation->activateOrder($orderId);
             } else {
                 $this->messageManager->addErrorMessage('This order cannot be restored.');
             }

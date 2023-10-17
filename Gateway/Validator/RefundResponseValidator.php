@@ -4,26 +4,38 @@ namespace Paytrail\PaymentService\Gateway\Validator;
 
 use Magento\Payment\Gateway\Helper\SubjectReader;
 use Magento\Payment\Gateway\Validator\AbstractValidator;
+use Magento\Payment\Gateway\Validator\ResultInterface;
 use Magento\Payment\Gateway\Validator\ResultInterfaceFactory;
+use Paytrail\PaymentService\Block\Form\Paytrail;
+use Paytrail\PaymentService\Logger\PaytrailLogger;
 
 class RefundResponseValidator extends AbstractValidator
 {
     /**
-     * @var SubjectReader
+     * Constructor
+     *
+     * @param \Paytrail\PaymentService\Logger\PaytrailLogger            $log
+     * @param \Magento\Payment\Gateway\Validator\ResultInterfaceFactory $resultFactory
+     * @param \Magento\Payment\Gateway\Helper\SubjectReader             $subjectReader
      */
-    private $subjectReader;
-
     public function __construct(
-        ResultInterfaceFactory $resultFactory,
-        SubjectReader $subjectReader
+        private readonly PaytrailLogger $log,
+        private readonly ResultInterfaceFactory $resultFactory,
+        private readonly SubjectReader $subjectReader
     ) {
-        $this->subjectReader = $subjectReader;
         parent::__construct($resultFactory);
     }
 
-    public function validate(array $validationSubject)
+    /**
+     * Validate response
+     *
+     * @param array $validationSubject
+     *
+     * @return false|\Magento\Payment\Gateway\Validator\ResultInterface
+     */
+    public function validate(array $validationSubject): ResultInterface|bool
     {
-        $response = $this->subjectReader->readResponse($validationSubject);
+        $response      = $this->subjectReader->readResponse($validationSubject);
         $errorMessages = [];
 
         if (isset($response['status']) && $response['status'] === 'ok') {
@@ -32,7 +44,13 @@ class RefundResponseValidator extends AbstractValidator
                 ['status' => $response['status']]
             );
         }
-        $errorMessages[] = 'Response status is not ok.';
+
+        if (isset($response['error'])) {
+            $errorMessages[] = $response['error'];
+            $this->log->error(
+                'Error occurred email refund: ' . $response["error"]
+            );
+        }
 
         return $this->createResult(false, $errorMessages);
     }

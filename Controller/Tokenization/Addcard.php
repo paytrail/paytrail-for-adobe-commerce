@@ -2,108 +2,51 @@
 
 namespace Paytrail\PaymentService\Controller\Tokenization;
 
-use Magento\Checkout\Model\Session;
 use Magento\Customer\Model\Session as CustomerSession;
+use Magento\Framework\App\Action\Action;
 use Magento\Framework\App\Action\Context;
 use Magento\Framework\Controller\Result\Json;
 use Magento\Framework\Controller\Result\JsonFactory;
 use Magento\Framework\Validation\ValidationException;
+use Magento\Payment\Gateway\Command\CommandManagerPoolInterface;
 use Paytrail\PaymentService\Exceptions\CheckoutException;
-use Paytrail\PaymentService\Gateway\Config\Config;
-use Paytrail\PaymentService\Helper\ApiData;
-use Paytrail\PaymentService\Helper\Data as opHelper;
+use Paytrail\PaymentService\Model\Receipt\ProcessService;
 use Paytrail\PaymentService\Model\Validation\PreventAdminActions;
 use Psr\Log\LoggerInterface;
 
-/**
- * Class Addcard
- */
-class AddCard extends \Magento\Framework\App\Action\Action
+class AddCard extends Action
 {
-    protected $urlBuilder;
-
-    /**
-     * @var Session
-     */
-    protected $checkoutSession;
-
-    /**
-     * @var JsonFactory
-     */
-    protected $jsonFactory;
-
-    /**
-     * @var LoggerInterface
-     */
-    protected $logger;
-
-    /**
-     * @var ApiData
-     */
-    protected $apiData;
-
-    /**
-     * @var opHelper
-     */
-    protected $opHelper;
-
-    /**
-     * @var Config
-     */
-    protected $gatewayConfig;
-
     /**
      * @var $errorMsg
      */
     protected $errorMsg = null;
 
     /**
-     * @var CustomerSession
-     */
-    protected $customerSession;
-
-    /**
-     * @var PreventAdminActions
-     */
-    protected PreventAdminActions $preventAdminActions;
-
-    /**
      * AddCard constructor.
      *
      * @param Context $context
-     * @param Session $checkoutSession
      * @param JsonFactory $jsonFactory
      * @param LoggerInterface $logger
-     * @param ApiData $apiData
-     * @param opHelper $opHelper
-     * @param Config $gatewayConfig
      * @param CustomerSession $customerSession
      * @param PreventAdminActions $preventAdminActions
+     * @param ProcessService $processService
+     * @param CommandManagerPoolInterface $commandManagerPool
      */
     public function __construct(
         Context $context,
-        Session $checkoutSession,
-        JsonFactory $jsonFactory,
-        LoggerInterface $logger,
-        ApiData $apiData,
-        opHelper $opHelper,
-        Config $gatewayConfig,
-        CustomerSession $customerSession,
-        PreventAdminActions $preventAdminActions
+        private JsonFactory $jsonFactory,
+        private LoggerInterface $logger,
+        private CustomerSession $customerSession,
+        private PreventAdminActions $preventAdminActions,
+        private ProcessService $processService,
+        private CommandManagerPoolInterface $commandManagerPool
     ) {
-        $this->urlBuilder = $context->getUrl();
-        $this->checkoutSession = $checkoutSession;
-        $this->jsonFactory = $jsonFactory;
-        $this->logger = $logger;
-        $this->apiData = $apiData;
-        $this->opHelper = $opHelper;
-        $this->gatewayConfig = $gatewayConfig;
-        $this->customerSession = $customerSession;
         parent::__construct($context);
-        $this->preventAdminActions = $preventAdminActions;
     }
 
     /**
+     * Execute
+     *
      * @return mixed
      */
     public function execute()
@@ -142,18 +85,27 @@ class AddCard extends \Magento\Framework\App\Action\Action
     }
 
     /**
+     * Get add_card response data.
+     *
      * @return mixed
      * @throws CheckoutException
      */
     protected function getResponseData()
     {
-        $response = $this->apiData->processApiRequest('add_card');
+        $commandExecutor = $this->commandManagerPool->get('paytrail');
+        $response = $commandExecutor->executeByCode(
+            'add_card',
+            null,
+            [
+                'custom_redirect_url' => $this->getRequest()->getParam('custom_redirect_url')
+            ]
+        );
 
         $errorMsg = $response['error'];
 
         if (isset($errorMsg)) {
             $this->errorMsg = ($errorMsg);
-            $this->opHelper->processError($errorMsg);
+            $this->processService->processError($errorMsg);
         }
 
         return $response["data"];

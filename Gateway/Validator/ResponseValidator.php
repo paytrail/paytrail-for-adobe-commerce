@@ -1,49 +1,31 @@
 <?php
+
 namespace Paytrail\PaymentService\Gateway\Validator;
 
 use Magento\Payment\Gateway\Validator\AbstractValidator;
 use Magento\Payment\Gateway\Validator\ResultInterfaceFactory;
-use Paytrail\PaymentService\Helper\Data as paytrailHelper;
-use Paytrail\PaymentService\Helper\ApiData;
 use Paytrail\PaymentService\Gateway\Config\Config;
 
 class ResponseValidator extends AbstractValidator
 {
-
-    /**
-     * @var paytrailHelper
-     */
-    private $paytrailHelper;
-
-    /**
-     * @var ApiData
-     */
-    private $apiData;
-    /**
-     * @var Config
-     */
-    private $gatewayConfig;
-
     /**
      * ResponseValidator constructor.
-     * @param paytrailHelper $paytrailHelper
+     *
      * @param Config $gatewayConfig
      * @param ResultInterfaceFactory $resultFactory
-     * @param ApiData $apiData
+     * @param HmacValidator $hmacValidator
      */
     public function __construct(
-        paytrailHelper $paytrailHelper,
-        Config $gatewayConfig,
+        private Config $gatewayConfig,
         ResultInterfaceFactory $resultFactory,
-        ApiData $apiData
+        private HmacValidator $hmacValidator
     ) {
         parent::__construct($resultFactory);
-        $this->paytrailHelper = $paytrailHelper;
-        $this->apiData = $apiData;
-        $this->gatewayConfig = $gatewayConfig;
     }
 
     /**
+     * Validate.
+     *
      * @param array $validationSubject
      * @return \Magento\Payment\Gateway\Validator\ResultInterface
      */
@@ -52,7 +34,7 @@ class ResponseValidator extends AbstractValidator
         $isValid = true;
         $fails = [];
 
-        if(isset($validationSubject["skip_validation"]) && $validationSubject["skip_validation"] == 1) {
+        if (isset($validationSubject["skip_validation"]) && $validationSubject["skip_validation"] == 1) {
             return $this->createResult($isValid, $fails);
         }
 
@@ -83,7 +65,9 @@ class ResponseValidator extends AbstractValidator
     }
 
     /**
-     * @param $responseMerchantId
+     * Is merchant ID is valid.
+     *
+     * @param string $responseMerchantId
      * @return bool
      */
     public function isMerchantIdValid($responseMerchantId)
@@ -97,7 +81,9 @@ class ResponseValidator extends AbstractValidator
     }
 
     /**
-     * @param $requestMerchantId
+     * Is request Merchant ID empty.
+     *
+     * @param string $requestMerchantId
      * @return bool
      */
     public function isRequestMerchantIdEmpty($requestMerchantId)
@@ -106,7 +92,9 @@ class ResponseValidator extends AbstractValidator
     }
 
     /**
-     * @param $responseMerchantId
+     * Is sponse merchant ID empty.
+     *
+     * @param string $responseMerchantId
      * @return bool
      */
     public function isResponseMerchantIdEmpty($responseMerchantId)
@@ -115,20 +103,24 @@ class ResponseValidator extends AbstractValidator
     }
 
     /**
-     * @param $algorithm
+     * Validate algorithm.
+     *
+     * @param string $algorithm
      * @return bool
      */
     public function validateAlgorithm($algorithm)
     {
-        return in_array($algorithm, $this->paytrailHelper->getValidAlgorithms(), true);
+        return in_array($algorithm, $this->gatewayConfig->getValidAlgorithms(), true);
     }
 
     /**
-     * @param $params
+     * Validate response.
+     *
+     * @param array $params
      * @return bool
      */
     public function validateResponse($params)
     {
-        return $this->apiData->validateHmac($params, $params["signature"]);
+        return $this->hmacValidator->validateHmac($params, $params["signature"]);
     }
 }
