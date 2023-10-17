@@ -140,7 +140,7 @@
                 <button id="pay_and_add_card_button" class="action primary checkout"
                         style="margin-right: 10px; display: none;"
                         data-bind="
-                        click: placeOrder,
+                        click: placeAndAddCard,
                         attr: {title: $t('Place and add card')},
                         css: {disabled: !isPlaceOrderActionAllowed()},
                         enable: (enablePayAndAddCardButton() == true)

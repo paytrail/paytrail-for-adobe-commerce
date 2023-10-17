@@ -181,7 +181,7 @@ define(
                 enablePayAndAddCardButton: function () {
                     const foundElements =
                         checkoutConfig[self.payMethod].credit_card_providers_ids.filter(element => element['id'] === self.selectedPaymentMethodId());
-                    if (foundElements.length) {
+                    if (foundElements.length && self.isLoggedIn()) {
                         document.getElementById('pay_and_add_card_button').style.display = 'block';
 
                         return true;
@@ -229,6 +229,15 @@ define(
                         return false;
                     }
                     return self.placeOrderBypass();
+                },
+                placeAndAddCard: function () {
+                    if (self.isPlaceOrderActionAllowed()
+                        && additionalValidators.validate()
+                        && self.enablePayAndAddCardButton()) {
+                        return self.placeAndAddCardBypass();
+                    }
+
+                    return false;
                 },
                 addNewCard: function () {
                     if (self.isLoggedIn()) {
@@ -291,9 +300,7 @@ define(
                     if (self.selectedToken() != 0) {
                         return self.getTokenPaymentRedirectUrl();
                     }
-                    if (self.enablePayAndAddCardButton()) {
-                        return self.getPayAndAddCardRedirectUrl();
-                    }
+
                     return self.getBypassPaymentRedirectUrl();
                 },
                 placeOrderBypass: function () {
@@ -302,6 +309,48 @@ define(
                             fullScreenLoader.startLoader();
                             $.ajax({
                                 url: mageUrlBuilder.build(self.getPaymentUrl()),
+                                type: 'post',
+                                context: this,
+                                data: {
+                                    'is_ajax': true,
+                                    'preselected_payment_method_id': self.selectedPaymentMethodId(),
+                                    'selected_token': self.selectedToken()
+                                }
+                            }).done(
+                                function (response) {
+                                    if ($.type(response) === 'object' && response.success && response.data) {
+                                        if (response.reference) {
+                                            window.location.href = self.getDefaultSuccessUrl();
+                                        }
+                                        if (response.redirect) {
+                                            window.location.href = response.redirect;
+                                        }
+
+                                        $('#paytrail-form-wrapper').append(response.data);
+                                        return false;
+                                    }
+                                    fullScreenLoader.stopLoader();
+                                    self.addErrorMessage(response.message);
+                                }
+                            ).fail(
+                                function (response) {
+                                    fullScreenLoader.stopLoader();
+                                    self.addErrorMessage(response.message);
+                                }
+                            ).always(
+                                function () {
+                                    //a self.scrollTo();
+                                }
+                            );
+                        }
+                    );
+                },
+                placeAndAddCardBypass: function () {
+                    placeOrderAction(self.getData(), self.messageContainer).done(
+                        function () {
+                            fullScreenLoader.startLoader();
+                            $.ajax({
+                                url: mageUrlBuilder.build(self.getPayAndAddCardRedirectUrl()),
                                 type: 'post',
                                 context: this,
                                 data: {
