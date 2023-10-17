@@ -3,17 +3,20 @@ declare(strict_types=1);
 
 namespace Paytrail\PaymentService\Plugin;
 
+use Magento\Catalog\Model\Product;
 use Magento\Checkout\Model\Cart;
 use Magento\Framework\Exception\LocalizedException;
 
 class PreventDifferentScheduledCart
 {
-    private const SCHEDULE_CODE = 'recurring_payment_schedule';
+    public const SCHEDULE_CODE = 'recurring_payment_schedule';
 
     /**
+     * BeforeAddProduct plugin.
+     *
      * @param Cart $subject
-     * @param $productInfo
-     * @param $requestInfo
+     * @param Product $productInfo
+     * @param array $requestInfo
      * @return array
      * @throws LocalizedException
      */

@@ -2,36 +2,49 @@
 
 namespace Paytrail\PaymentService\Block\System\Config\Form\Field;
 
-class Version extends \Magento\Config\Block\System\Config\Form\Field
+use Magento\Backend\Block\Template\Context;
+use Magento\Config\Block\System\Config\Form\Field;
+use Magento\Framework\Data\Form\Element\AbstractElement;
+use Paytrail\PaymentService\Gateway\Config\Config;
+
+class Version extends Field
 {
     /**
-     * @var \Paytrail\PaymentService\Helper\Version
+     * Version block constructor.
+     *
+     * @param Config $gatewayConfig
+     * @param Context $context
      */
-    private $versionHelper;
-
     public function __construct(
-        \Paytrail\PaymentService\Helper\Version $versionHelper,
-        \Magento\Backend\Block\Template\Context $context
+        private Config $gatewayConfig,
+        Context $context
     ) {
-        $this->versionHelper = $versionHelper;
         parent::__construct($context);
     }
 
     /**
-     * @param \Magento\Framework\Data\Form\Element\AbstractElement $element
+     * Get element HTML.
+     *
+     * @param AbstractElement $element
      * @return string
      */
-    protected function _getElementHtml(
-        \Magento\Framework\Data\Form\Element\AbstractElement $element
-    ) {
-        $version = 'v' . $this->versionHelper->getVersion();
+    protected function _getElementHtml(AbstractElement $element)
+    {
+        $version = 'v' . $this->gatewayConfig->getVersion();
         try {
-            $githubContent = $this->versionHelper->getDecodedContentFromGithub();
+            $githubContent = $this->gatewayConfig->getDecodedContentFromGithub();
 
             if ($version != $githubContent['tag_name']) {
-                $html = '<strong style="color: red">' . $version . __(" - Newer version (%1) available. ", $githubContent['tag_name']) .
-                    "<a href= \"" . $githubContent['html_url'] . "\" target='_blank'> " .
-                    __("More details") . "</a></strong>";
+                $html =
+                    '<strong style="color: red">'
+                    . $version
+                    . __(" - Newer version (%1) available. ", $githubContent['tag_name'])
+                    .
+                    "<a href= \"" . $githubContent['html_url']
+                    . "\" target='_blank'> "
+                    .
+                    __("More details")
+                    . "</a></strong>";
             } else {
                 $html = '<strong style="color: green">' . __("%1 - Latest version", $version) . '</strong>';
 
