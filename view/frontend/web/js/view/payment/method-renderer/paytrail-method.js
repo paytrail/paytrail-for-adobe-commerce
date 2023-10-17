@@ -231,6 +231,12 @@ define(
                     return self.placeOrderBypass();
                 },
                 placeAndAddCard: function () {
+                    if (window.checkoutConfig.isRecurringScheduled) {
+                        self.addErrorMessage($t('Recurring payment purchases require using a saved card.'));
+                        self.scrollTo();
+                        return false;
+                    }
+
                     if (self.isPlaceOrderActionAllowed()
                         && additionalValidators.validate()
                         && self.enablePayAndAddCardButton()) {
