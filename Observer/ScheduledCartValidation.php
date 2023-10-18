@@ -19,7 +19,7 @@ class ScheduledCartValidation implements ObserverInterface
      */
     public function __construct(
         private CartRepositoryInterface $cartRepository,
-        private TotalConfigProvider $totalConfigProvider
+        private TotalConfigProvider     $totalConfigProvider
     ) {
     }
 
@@ -27,6 +27,7 @@ class ScheduledCartValidation implements ObserverInterface
      * Execute.
      *
      * @param Observer $observer
+     *
      * @return void
      * @throws LocalizedException
      * @throws \Magento\Framework\Exception\NoSuchEntityException
@@ -34,23 +35,20 @@ class ScheduledCartValidation implements ObserverInterface
     public function execute(Observer $observer)
     {
         $cartSchedule = null;
-        $cartId = $observer->getEvent()->getOrder()->getQuoteId();
-        $cart = $this->cartRepository->get($cartId);
+        $cartId       = $observer->getEvent()->getOrder()->getQuoteId();
+        $cart         = $this->cartRepository->get($cartId);
 
         if ($this->totalConfigProvider->isRecurringPaymentEnabled()) {
             foreach ($cart->getItems() as $cartItem) {
                 $cartItemSchedule = $cartItem
                     ->getProduct()
-                    ->getCustomAttribute(PreventDifferentScheduledCart::SCHEDULE_CODE)
-                    ->getValue();
-                if ($cartItemSchedule) {
-                    if (isset($cartSchedule) && $cartSchedule !== $cartItemSchedule) {
+                    ->getCustomAttribute(PreventDifferentScheduledCart::SCHEDULE_CODE);
+
+                if ($cartItemSchedule && $cartItemSchedule->getValue()) {
+                    if (null !== $cartSchedule && $cartSchedule !== $cartItemSchedule->getValue()) {
                         throw new LocalizedException(__("Can't place order with different scheduled products in cart"));
                     } else {
-                        $cartSchedule = $cartItem
-                            ->getProduct()
-                            ->getCustomAttribute(PreventDifferentScheduledCart::SCHEDULE_CODE)
-                            ->getValue();
+                        $cartSchedule = $cartItemSchedule->getValue();
                     }
                 }
             }
