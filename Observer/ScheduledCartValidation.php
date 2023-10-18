@@ -6,6 +6,7 @@ namespace Paytrail\PaymentService\Observer;
 use Magento\Framework\Event\Observer;
 use Magento\Framework\Event\ObserverInterface;
 use Magento\Framework\Exception\LocalizedException;
+use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Quote\Api\CartRepositoryInterface;
 use Paytrail\PaymentService\Model\Recurring\TotalConfigProvider;
 use Paytrail\PaymentService\Plugin\PreventDifferentScheduledCart;
@@ -16,6 +17,7 @@ class ScheduledCartValidation implements ObserverInterface
      * ScheduledCartValidation constructor.
      *
      * @param CartRepositoryInterface $cartRepository
+     * @param TotalConfigProvider $totalConfigProvider
      */
     public function __construct(
         private CartRepositoryInterface $cartRepository,
@@ -30,7 +32,7 @@ class ScheduledCartValidation implements ObserverInterface
      *
      * @return void
      * @throws LocalizedException
-     * @throws \Magento\Framework\Exception\NoSuchEntityException
+     * @throws NoSuchEntityException
      */
     public function execute(Observer $observer)
     {
