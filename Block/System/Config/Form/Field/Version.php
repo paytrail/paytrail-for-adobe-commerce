@@ -17,7 +17,7 @@ class Version extends Field
      */
     public function __construct(
         private Config $gatewayConfig,
-        Context $context
+        Context        $context
     ) {
         parent::__construct($context);
     }
@@ -26,18 +26,19 @@ class Version extends Field
      * Get element HTML.
      *
      * @param AbstractElement $element
+     *
      * @return string
      */
     protected function _getElementHtml(AbstractElement $element)
     {
-        $version = 'v' . $this->gatewayConfig->getVersion();
+        $currentVersion = 'v' . $this->gatewayConfig->getVersion();
         try {
             $githubContent = $this->gatewayConfig->getDecodedContentFromGithub();
 
-            if ($version != $githubContent['tag_name']) {
+            if ($currentVersion < $githubContent['tag_name']) {
                 $html =
                     '<strong style="color: red">'
-                    . $version
+                    . $currentVersion
                     . __(" - Newer version (%1) available. ", $githubContent['tag_name'])
                     .
                     "<a href= \"" . $githubContent['html_url']
@@ -45,12 +46,23 @@ class Version extends Field
                     .
                     __("More details")
                     . "</a></strong>";
+            } elseif ($currentVersion == $githubContent['tag_name']) {
+                $html = '<strong style="color: green">' . __("%1 - Latest version", $currentVersion) . '</strong>';
             } else {
-                $html = '<strong style="color: green">' . __("%1 - Latest version", $version) . '</strong>';
-
+                $html = '<strong style="color: darkorange">' . __("%1 - Custom version", $currentVersion)
+                    . '<br>'
+                    . __(
+                        "Your version is higher than latest official version (%1), this could be used only for development purposes.",
+                        $githubContent['tag_name']
+                    )
+                    . "<a href= \"" . $githubContent['html_url']
+                    . "\" target='_blank'> "
+                    .
+                    __("More details")
+                    . "</a></strong>";
             }
         } catch (\Exception $e) {
-            return '<strong>' . __("%1 - Can't check for updates now", $version) . '</strong>';
+            return '<strong>' . __("%1 - Can't check for updates now", $currentVersion) . '</strong>';
         }
         return $html;
     }
