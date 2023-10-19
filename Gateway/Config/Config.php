@@ -541,7 +541,7 @@ class Config extends \Magento\Payment\Gateway\Config\Config
             $setupVersion = $moduleInfo['setup_version'];
         }
 
-        if ( $setupVersion && $composerVersion != $setupVersion) {
+        if ($setupVersion && $composerVersion != $setupVersion) {
             $this->logger->warning(
                 'Paytrail_PaymentService: Composer version (' . $composerVersion . ') and setup version (' . $setupVersion . ') do not match.'
             );
@@ -550,7 +550,6 @@ class Config extends \Magento\Payment\Gateway\Config\Config
         $newest = max($composerVersion, $setupVersion);
 
         return $newest ?: __('Unknown');
-
     }
 
     /**

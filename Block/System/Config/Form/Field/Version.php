@@ -31,8 +31,8 @@ class Version extends Field
      */
     protected function _getElementHtml(AbstractElement $element)
     {
-        $currentVersion = 'v' . $this->gatewayConfig->getVersion();
         try {
+            $currentVersion = 'v' . $this->gatewayConfig->getVersion();
             $githubContent = $this->gatewayConfig->getDecodedContentFromGithub();
 
             if ($currentVersion < $githubContent['tag_name']) {
@@ -62,6 +62,7 @@ class Version extends Field
                     . "</a></strong>";
             }
         } catch (\Exception $e) {
+            $this->_logger->error($e->getMessage());
             return '<strong>' . __("%1 - Can't check for updates now", $currentVersion) . '</strong>';
         }
         return $html;
