@@ -52,7 +52,7 @@ class Version extends Field
                 $html = '<strong style="color: darkorange">' . __("%1 - Custom version", $currentVersion)
                     . '<br>'
                     . __(
-                        "Your version is higher than latest official version (%1), this could be used only for development purposes.",
+                        "Your version is higher than latest official version (%1), please make sure that you have installed the module from verified source.",
                         $githubContent['tag_name']
                     )
                     . "<a href= \"" . $githubContent['html_url']
