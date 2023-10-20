@@ -125,41 +125,13 @@ class PaymentDataProvider
      * @throws CheckoutException
      * @throws ValidationException
      */
-    public function setPayAndAddCardRequestData(PaymentRequest $paytrailPayment, $order): PaymentRequest
+    public function setPayAndAddCardRequestData(AbstractPaymentRequest $paytrailPayment, $order): AbstractPaymentRequest
     {
-        $billingAddress  = $order->getBillingAddress() ?? $order->getShippingAddress();
-        $shippingAddress = $order->getShippingAddress();
-
-        $paytrailPayment->setStamp(hash('sha256', time() . $order->getIncrementId()));
-
-        $reference = $this->referenceNumber->getReference($order);
-
-        $paytrailPayment->setReference($reference);
-
-        $paytrailPayment->setCurrency($order->getOrderCurrencyCode())->setAmount(round($order->getGrandTotal() * 100));
-
-        $customer = $this->createCustomer($billingAddress);
-        $paytrailPayment->setCustomer($customer);
-
-        $invoicingAddress = $this->createAddress($billingAddress);
-        $paytrailPayment->setInvoicingAddress($invoicingAddress);
-
-        if ($shippingAddress !== null) {
-            $deliveryAddress = $this->createAddress($shippingAddress);
-            $paytrailPayment->setDeliveryAddress($deliveryAddress);
-        }
-
-        $paytrailPayment->setLanguage($this->gatewayConfig->getStoreLocaleForPaymentProvider());
-
-        $items = $this->getOrderItemLines($order);
-
-        $paytrailPayment->setItems($items);
-
-        $paytrailPayment->setRedirectUrls($this->urlDataProvider->createRedirectUrl());
+        // Set payment request data - payment method is not needed for pay and add card, so we can set it to new string
+        // to mach manual invoicing flag condition
+        $this->setPaymentRequestData($paytrailPayment, $order, 'pay_and_add_card');
 
         $paytrailPayment->setCallbackUrls($this->urlDataProvider->createPayAndAddCardCallbackUrl());
-
-        $paytrailPayment->setCallbackDelay($this->callbackDelay->getCallbackDelay());
 
         // Log payment data
         $this->log->debugLog('request', $paytrailPayment);
