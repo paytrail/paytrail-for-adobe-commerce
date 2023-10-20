@@ -4,7 +4,7 @@ declare(strict_types=1);
 namespace Paytrail\PaymentService\Model\Invoice\Activation;
 
 use Paytrail\PaymentService\Gateway\Config\Config;
-use Paytrail\SDK\Request\PaymentRequest;
+use Paytrail\SDK\Request\AbstractPaymentRequest;
 
 class Flag
 {
@@ -43,16 +43,16 @@ class Flag
      *
      * Virtual orders do not support manual invoice if shipment activation is enabled as virtual orders get no shipments
      *
-     * @param PaymentRequest $paytrailPayment
+     * @param AbstractPaymentRequest $paytrailPayment
      * @param string $method
      * @param \Magento\Sales\Model\Order $order
-     * @return PaymentRequest
+     * @return AbstractPaymentRequest
      */
     public function setManualInvoiceActivationFlag(
-        PaymentRequest $paytrailPayment,
+        AbstractPaymentRequest $paytrailPayment,
         string $method,
         $order
-    ) : PaymentRequest {
+    ) : AbstractPaymentRequest {
         if ($this->isManualInvoiceEnabled()
             && in_array($method, $this->getInvoiceMethods())
             && (!$order->getIsVirtual() || !$this->config->isShipmentActivateInvoice())
