@@ -4,10 +4,13 @@ namespace Paytrail\PaymentService\Gateway\Config;
 
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\Component\ComponentRegistrar;
+use Magento\Framework\Exception\FileSystemException;
+use Magento\Framework\Exception\ValidatorException;
 use Magento\Framework\Filesystem\Directory\ReadFactory;
 use Magento\Framework\HTTP\Client\Curl;
 use Magento\Framework\Locale\Resolver;
 use Magento\Framework\Module\ModuleListInterface;
+use Magento\Framework\Phrase;
 use Magento\Framework\UrlInterface;
 use Magento\Framework\Encryption\EncryptorInterface;
 use Magento\Payment\Model\CcConfigProvider;
@@ -48,7 +51,8 @@ class Config extends \Magento\Payment\Gateway\Config\Config
     public const LOGO                                  = 'payment/paytrail/logo';
     public const KEY_MANUAL_INVOICE                    = 'manual_invoice';
     public const KEY_ACTIVATE_WITH_SHIPMENT            = 'shipment_activates_invoice';
-    public const GIT_URL                               = 'https://api.github.com/repos/paytrail/paytrail-for-adobe-commerce/releases/latest';
+
+    public const GIT_URL = 'https://api.github.com/repos/paytrail/paytrail-for-adobe-commerce/releases/latest';
 
     public const RECEIPT_PROCESSING_CACHE_PREFIX     = "receipt_processing_";
     public const PAYTRAIL_API_PAYMENT_STATUS_OK      = 'ok';
@@ -72,6 +76,9 @@ class Config extends \Magento\Payment\Gateway\Config\Config
      * @param Resolver $localeResolver
      * @param ModuleListInterface $moduleList
      * @param Curl $curlClient
+     * @param ComponentRegistrar $componentRegistrar
+     * @param ReadFactory $readFactory
+     * @param LoggerInterface $logger
      * @param string $methodCode
      * @param string $pathPattern
      */
@@ -87,8 +94,8 @@ class Config extends \Magento\Payment\Gateway\Config\Config
         private ComponentRegistrar      $componentRegistrar,
         private ReadFactory             $readFactory,
         private LoggerInterface         $logger,
-                                        $methodCode = self::CODE,
-                                        $pathPattern = self::DEFAULT_PATH_PATTERN
+        $methodCode = self::CODE,
+        $pathPattern = self::DEFAULT_PATH_PATTERN
     ) {
         parent::__construct($scopeConfig, $methodCode, $pathPattern);
         $this->paymenticons = $this->ccConfigProvider->getIcons();
@@ -543,7 +550,8 @@ class Config extends \Magento\Payment\Gateway\Config\Config
 
         if ($setupVersion && $composerVersion != $setupVersion) {
             $this->logger->warning(
-                'Paytrail_PaymentService: Composer version (' . $composerVersion . ') and setup version (' . $setupVersion . ') do not match.'
+                'Paytrail_PaymentService: Composer version (' . $composerVersion
+                . ') and setup version (' . $setupVersion . ') do not match.'
             );
         }
 
@@ -555,11 +563,13 @@ class Config extends \Magento\Payment\Gateway\Config\Config
     /**
      * Get module composer version
      *
-     * @param $moduleName
+     * @param string $moduleName
      *
-     * @return \Magento\Framework\Phrase|string|void
+     * @return Phrase|string|void
+     * @throws FileSystemException
+     * @throws ValidatorException
      */
-    public function getComposerVersion($moduleName)
+    public function getComposerVersion(string $moduleName)
     {
         $path             = $this->componentRegistrar->getPath(
             \Magento\Framework\Component\ComponentRegistrar::MODULE,

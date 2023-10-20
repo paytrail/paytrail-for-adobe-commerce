@@ -6,6 +6,7 @@ use Magento\Backend\Block\Template\Context;
 use Magento\Config\Block\System\Config\Form\Field;
 use Magento\Framework\Data\Form\Element\AbstractElement;
 use Paytrail\PaymentService\Gateway\Config\Config;
+use const _PHPStan_582a9cb8b\__;
 
 class Version extends Field
 {
@@ -52,9 +53,10 @@ class Version extends Field
                 $html = '<strong style="color: darkorange">' . __("%1 - Custom version", $currentVersion)
                     . '<br>'
                     . __(
-                        "Your version is higher than latest official version (%1), please make sure that you have installed the module from verified source.",
+                        "Your version is higher than latest official version (%1)",
                         $githubContent['tag_name']
                     )
+                    . __("please make sure that you have installed the module from verified source.")
                     . "<a href= \"" . $githubContent['html_url']
                     . "\" target='_blank'> "
                     .
