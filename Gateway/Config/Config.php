@@ -3,55 +3,62 @@
 namespace Paytrail\PaymentService\Gateway\Config;
 
 use Magento\Framework\App\Config\ScopeConfigInterface;
+use Magento\Framework\Component\ComponentRegistrar;
+use Magento\Framework\Exception\FileSystemException;
+use Magento\Framework\Exception\ValidatorException;
+use Magento\Framework\Filesystem\Directory\ReadFactory;
 use Magento\Framework\HTTP\Client\Curl;
 use Magento\Framework\Locale\Resolver;
 use Magento\Framework\Module\ModuleListInterface;
+use Magento\Framework\Phrase;
 use Magento\Framework\UrlInterface;
 use Magento\Framework\Encryption\EncryptorInterface;
 use Magento\Payment\Model\CcConfigProvider;
 use Magento\Vault\Model\CustomerTokenManagement;
+use Psr\Log\LoggerInterface;
 
 class Config extends \Magento\Payment\Gateway\Config\Config
 {
-    public const DEFAULT_PATH_PATTERN = 'payment/%s/%s';
-    public const KEY_TITLE = 'title';
-    public const CODE = 'paytrail';
-    public const CC_VAULT_CODE = 'paytrail_cc_vault';
-    public const SAVE_CARD_URL = 'tokenization/savecard';
-    public const KEY_CHECKOUT_ALGORITHM = 'checkout_algorithm';
-    public const KEY_MERCHANT_SECRET = 'merchant_secret';
-    public const KEY_MERCHANT_ID = 'merchant_id';
-    public const KEY_ACTIVE = 'active';
-    public const KEY_SKIP_BANK_SELECTION = 'skip_bank_selection';
-    public const BYPASS_PATH = 'Paytrail_PaymentService/payment/checkout-bypass';
-    public const CHECKOUT_PATH = 'Paytrail_PaymentService/payment/checkout';
-    public const KEY_GENERATE_REFERENCE = 'generate_reference';
-    public const KEY_RECOMMENDED_TAX_ALGORITHM = 'recommended_tax_algorithm';
-    public const KEY_PAYMENTGROUP_BG_COLOR = 'paytrail_personalization/payment_group_bg';
-    public const KEY_PAYMENTGROUP_HIGHLIGHT_BG_COLOR = 'paytrail_personalization/payment_group_highlight_bg';
-    public const KEY_PAYMENTGROUP_TEXT_COLOR = 'paytrail_personalization/payment_group_text';
+    public const DEFAULT_PATH_PATTERN                  = 'payment/%s/%s';
+    public const KEY_TITLE                             = 'title';
+    public const CODE                                  = 'paytrail';
+    public const CC_VAULT_CODE                         = 'paytrail_cc_vault';
+    public const SAVE_CARD_URL                         = 'tokenization/savecard';
+    public const KEY_CHECKOUT_ALGORITHM                = 'checkout_algorithm';
+    public const KEY_MERCHANT_SECRET                   = 'merchant_secret';
+    public const KEY_MERCHANT_ID                       = 'merchant_id';
+    public const KEY_ACTIVE                            = 'active';
+    public const KEY_SKIP_BANK_SELECTION               = 'skip_bank_selection';
+    public const BYPASS_PATH                           = 'Paytrail_PaymentService/payment/checkout-bypass';
+    public const CHECKOUT_PATH                         = 'Paytrail_PaymentService/payment/checkout';
+    public const KEY_GENERATE_REFERENCE                = 'generate_reference';
+    public const KEY_RECOMMENDED_TAX_ALGORITHM         = 'recommended_tax_algorithm';
+    public const KEY_PAYMENTGROUP_BG_COLOR             = 'paytrail_personalization/payment_group_bg';
+    public const KEY_PAYMENTGROUP_HIGHLIGHT_BG_COLOR   = 'paytrail_personalization/payment_group_highlight_bg';
+    public const KEY_PAYMENTGROUP_TEXT_COLOR           = 'paytrail_personalization/payment_group_text';
     public const KEY_PAYMENTGROUP_HIGHLIGHT_TEXT_COLOR = 'paytrail_personalization/payment_group_highlight_text';
-    public const KEY_PAYMENTGROUP_HOVER_COLOR = 'paytrail_personalization/payment_group_hover';
-    public const KEY_PAYMENTMETHOD_HIGHLIGHT_COLOR = 'paytrail_personalization/payment_method_highlight';
-    public const KEY_PAYMENTMETHOD_HIGHLIGHT_HOVER = 'paytrail_personalization/payment_method_hover';
-    public const KEY_PAYMENTMETHOD_ADDITIONAL =
+    public const KEY_PAYMENTGROUP_HOVER_COLOR          = 'paytrail_personalization/payment_group_hover';
+    public const KEY_PAYMENTMETHOD_HIGHLIGHT_COLOR     = 'paytrail_personalization/payment_method_highlight';
+    public const KEY_PAYMENTMETHOD_HIGHLIGHT_HOVER     = 'paytrail_personalization/payment_method_hover';
+    public const KEY_PAYMENTMETHOD_ADDITIONAL          =
         'paytrail_personalization/advanced_paytrail_personalization/additional_css';
-    public const KEY_RESPONSE_LOG = 'response_log';
-    public const KEY_REQUEST_LOG = 'request_log';
-    public const KEY_DEFAULT_ORDER_STATUS = 'order_status';
-    public const KEY_NOTIFICATION_EMAIL = 'recipient_email';
-    public const KEY_CANCEL_ORDER_ON_FAILED_PAYMENT = 'failed_payment_cancel';
-    public const VAULT_CODE = 'paytrail_cc_vault';
-    public const LOGO = 'payment/paytrail/logo';
-    public const KEY_MANUAL_INVOICE = 'manual_invoice';
-    public const KEY_ACTIVATE_WITH_SHIPMENT = 'shipment_activates_invoice';
+    public const KEY_RESPONSE_LOG                      = 'response_log';
+    public const KEY_REQUEST_LOG                       = 'request_log';
+    public const KEY_DEFAULT_ORDER_STATUS              = 'order_status';
+    public const KEY_NOTIFICATION_EMAIL                = 'recipient_email';
+    public const KEY_CANCEL_ORDER_ON_FAILED_PAYMENT    = 'failed_payment_cancel';
+    public const VAULT_CODE                            = 'paytrail_cc_vault';
+    public const LOGO                                  = 'payment/paytrail/logo';
+    public const KEY_MANUAL_INVOICE                    = 'manual_invoice';
+    public const KEY_ACTIVATE_WITH_SHIPMENT            = 'shipment_activates_invoice';
+
     public const GIT_URL = 'https://api.github.com/repos/paytrail/paytrail-for-adobe-commerce/releases/latest';
 
-    public const RECEIPT_PROCESSING_CACHE_PREFIX = "receipt_processing_";
-    public const PAYTRAIL_API_PAYMENT_STATUS_OK = 'ok';
+    public const RECEIPT_PROCESSING_CACHE_PREFIX     = "receipt_processing_";
+    public const PAYTRAIL_API_PAYMENT_STATUS_OK      = 'ok';
     public const PAYTRAIL_API_PAYMENT_STATUS_PENDING = 'pending';
     public const PAYTRAIL_API_PAYMENT_STATUS_DELAYED = 'delayed';
-    public const PAYTRAIL_API_PAYMENT_STATUS_FAIL = 'fail';
+    public const PAYTRAIL_API_PAYMENT_STATUS_FAIL    = 'fail';
 
     /**
      * @var array
@@ -69,18 +76,24 @@ class Config extends \Magento\Payment\Gateway\Config\Config
      * @param Resolver $localeResolver
      * @param ModuleListInterface $moduleList
      * @param Curl $curlClient
+     * @param ComponentRegistrar $componentRegistrar
+     * @param ReadFactory $readFactory
+     * @param LoggerInterface $logger
      * @param string $methodCode
      * @param string $pathPattern
      */
     public function __construct(
-        ScopeConfigInterface $scopeConfig,
-        private EncryptorInterface $encryptor,
-        private UrlInterface $urlBuilder,
+        ScopeConfigInterface            $scopeConfig,
+        private EncryptorInterface      $encryptor,
+        private UrlInterface            $urlBuilder,
         private CustomerTokenManagement $customerTokenManagement,
-        private CcConfigProvider $ccConfigProvider,
-        private Resolver $localeResolver,
-        private ModuleListInterface $moduleList,
-        private Curl $curlClient,
+        private CcConfigProvider        $ccConfigProvider,
+        private Resolver                $localeResolver,
+        private ModuleListInterface     $moduleList,
+        private Curl                    $curlClient,
+        private ComponentRegistrar      $componentRegistrar,
+        private ReadFactory             $readFactory,
+        private LoggerInterface         $logger,
         $methodCode = self::CODE,
         $pathPattern = self::DEFAULT_PATH_PATTERN
     ) {
@@ -92,6 +105,7 @@ class Config extends \Magento\Payment\Gateway\Config\Config
      * Gets Merchant Id.
      *
      * @param int|null $storeId
+     *
      * @return bool
      */
     public function getMerchantId($storeId = null)
@@ -103,6 +117,7 @@ class Config extends \Magento\Payment\Gateway\Config\Config
      * Gets Merchant secret.
      *
      * @param int|null $storeId
+     *
      * @return bool
      */
     public function getMerchantSecret($storeId = null)
@@ -115,17 +130,19 @@ class Config extends \Magento\Payment\Gateway\Config\Config
      * Gets Payment configuration status.
      *
      * @param int|null $storeId
+     *
      * @return bool
      */
     public function isActive($storeId = null)
     {
-        return (bool) $this->getValue(self::KEY_ACTIVE, $storeId);
+        return (bool)$this->getValue(self::KEY_ACTIVE, $storeId);
     }
 
     /**
      * Get payment method title
      *
      * @param int|null $storeId
+     *
      * @return mixed
      */
     public function getTitle($storeId = null)
@@ -137,6 +154,7 @@ class Config extends \Magento\Payment\Gateway\Config\Config
      * Get skip bank selection value.
      *
      * @param string $storeId
+     *
      * @return bool
      */
     public function getSkipBankSelection($storeId = null)
@@ -148,6 +166,7 @@ class Config extends \Magento\Payment\Gateway\Config\Config
      * Get payment group bg color value.
      *
      * @param int|null $storeId
+     *
      * @return mixed
      */
     public function getPaymentGroupBgColor($storeId = null)
@@ -159,6 +178,7 @@ class Config extends \Magento\Payment\Gateway\Config\Config
      * Get payment group highlight bg color value.
      *
      * @param int|null $storeId
+     *
      * @return mixed
      */
     public function getPaymentGroupHighlightBgColor($storeId = null)
@@ -170,6 +190,7 @@ class Config extends \Magento\Payment\Gateway\Config\Config
      * Get payment group text color value.
      *
      * @param int|null $storeId
+     *
      * @return mixed
      */
     public function getPaymentGroupTextColor($storeId = null)
@@ -181,6 +202,7 @@ class Config extends \Magento\Payment\Gateway\Config\Config
      * Get payment group highlight text color value.
      *
      * @param int|null $storeId
+     *
      * @return mixed
      */
     public function getPaymentGroupHighlightTextColor($storeId = null)
@@ -192,6 +214,7 @@ class Config extends \Magento\Payment\Gateway\Config\Config
      * Get payment group hover color value.
      *
      * @param int|null $storeId
+     *
      * @return mixed
      */
     public function getPaymentGroupHoverColor($storeId = null)
@@ -203,6 +226,7 @@ class Config extends \Magento\Payment\Gateway\Config\Config
      * Get payment method highlight color value.
      *
      * @param int|null $storeId
+     *
      * @return mixed
      */
     public function getPaymentMethodHighlightColor($storeId = null)
@@ -214,6 +238,7 @@ class Config extends \Magento\Payment\Gateway\Config\Config
      * Get payment method hover highlight value.
      *
      * @param int|null $storeId
+     *
      * @return mixed
      */
     public function getPaymentMethodHoverHighlight($storeId = null)
@@ -225,6 +250,7 @@ class Config extends \Magento\Payment\Gateway\Config\Config
      * Get additional css value.
      *
      * @param int|null $storeId
+     *
      * @return mixed
      */
     public function getAdditionalCss($storeId = null)
@@ -236,6 +262,7 @@ class Config extends \Magento\Payment\Gateway\Config\Config
      * Get generate reference for order value.
      *
      * @param int|null $storeId
+     *
      * @return bool
      */
     public function getGenerateReferenceForOrder($storeId = null)
@@ -247,6 +274,7 @@ class Config extends \Magento\Payment\Gateway\Config\Config
      * Get use recommended tax algorithm value.
      *
      * @param int|null $storeId
+     *
      * @return bool
      */
     public function getUseRecommendedTaxAlgorithm($storeId = null)
@@ -271,6 +299,7 @@ class Config extends \Magento\Payment\Gateway\Config\Config
      * Get payment template.
      *
      * @param int|null $storeId
+     *
      * @return string
      */
     public function getPaymentTemplate($storeId = null)
@@ -285,6 +314,7 @@ class Config extends \Magento\Payment\Gateway\Config\Config
      * Get response log value.
      *
      * @param string $storeId
+     *
      * @return mixed|null
      */
     public function getResponseLog($storeId = null)
@@ -296,6 +326,7 @@ class Config extends \Magento\Payment\Gateway\Config\Config
      * Get request log value.
      *
      * @param string $storeId
+     *
      * @return mixed|null
      */
     public function getRequestLog($storeId = null)
@@ -307,6 +338,7 @@ class Config extends \Magento\Payment\Gateway\Config\Config
      * Get default order status value.
      *
      * @param string $storeId
+     *
      * @return mixed
      */
     public function getDefaultOrderStatus($storeId = null)
@@ -318,6 +350,7 @@ class Config extends \Magento\Payment\Gateway\Config\Config
      * Get notification email value.
      *
      * @param string $storeId
+     *
      * @return mixed
      */
     public function getNotificationEmail($storeId = null)
@@ -339,6 +372,7 @@ class Config extends \Magento\Payment\Gateway\Config\Config
      * Get checkout algorithm.
      *
      * @param string $storeId
+     *
      * @return mixed|null
      */
     public function getCheckoutAlgorithm($storeId = null)
@@ -360,6 +394,7 @@ class Config extends \Magento\Payment\Gateway\Config\Config
      * Get cancel order failed payment value.
      *
      * @param string $storeId
+     *
      * @return int
      */
     public function getCancelOrderOnFailedPayment($storeId = null)
@@ -421,6 +456,7 @@ class Config extends \Magento\Payment\Gateway\Config\Config
      * Get icon url.
      *
      * @param string $type
+     *
      * @return array
      */
     protected function getIconUrl($type)
@@ -430,8 +466,8 @@ class Config extends \Magento\Payment\Gateway\Config\Config
         }
 
         return [
-            'url' => '',
-            'width' => 0,
+            'url'    => '',
+            'width'  => 0,
             'height' => 0
         ];
     }
@@ -443,17 +479,17 @@ class Config extends \Magento\Payment\Gateway\Config\Config
      */
     public function getCustomerTokens()
     {
-        $tokens =  $this->customerTokenManagement->getCustomerSessionTokens();
-        $t = [];
+        $tokens = $this->customerTokenManagement->getCustomerSessionTokens();
+        $t      = [];
 
         foreach ($tokens as $token) {
             if ($token->getPaymentMethodCode() == self::VAULT_CODE && $token->getIsActive() && $token->getIsVisible()) {
-                $cdata = json_decode($token->getTokenDetails(), true);
-                $t[$token->getEntityId()]["expires"] = $cdata['expirationDate'];
-                $t[$token->getEntityId()]["url"] = $this->getIconUrl($cdata["type"])['url'];
+                $cdata                                = json_decode($token->getTokenDetails(), true);
+                $t[$token->getEntityId()]["expires"]  = $cdata['expirationDate'];
+                $t[$token->getEntityId()]["url"]      = $this->getIconUrl($cdata["type"])['url'];
                 $t[$token->getEntityId()]["maskedCC"] = $cdata["maskedCC"];
-                $t[$token->getEntityId()]["type"] = $cdata["type"];
-                $t[$token->getEntityId()]["id"] = $token->getPublicHash();
+                $t[$token->getEntityId()]["type"]     = $cdata["type"];
+                $t[$token->getEntityId()]["id"]       = $token->getPublicHash();
             }
         }
 
@@ -507,10 +543,43 @@ class Config extends \Magento\Payment\Gateway\Config\Config
      */
     public function getVersion()
     {
+        $composerVersion = $this->getComposerVersion('Paytrail_PaymentService');
         if ($moduleInfo = $this->moduleList->getOne('Paytrail_PaymentService')) {
-            return $moduleInfo['setup_version'];
+            $setupVersion = $moduleInfo['setup_version'];
         }
-        return '-';
+
+        if ($setupVersion && $composerVersion != $setupVersion) {
+            $this->logger->warning(
+                'Paytrail_PaymentService: Composer version (' . $composerVersion
+                . ') and setup version (' . $setupVersion . ') do not match.'
+            );
+        }
+
+        $newest = max($composerVersion, $setupVersion);
+
+        return $newest ?: __('Unknown');
+    }
+
+    /**
+     * Get module composer version
+     *
+     * @param string $moduleName
+     *
+     * @return Phrase|string|void
+     * @throws FileSystemException
+     * @throws ValidatorException
+     */
+    public function getComposerVersion(string $moduleName)
+    {
+        $path             = $this->componentRegistrar->getPath(
+            \Magento\Framework\Component\ComponentRegistrar::MODULE,
+            $moduleName
+        );
+        $directoryRead    = $this->readFactory->create($path);
+        $composerJsonData = $directoryRead->readFile('composer.json');
+        $data             = json_decode($composerJsonData);
+
+        return !empty($data->version) ? $data->version : __('Read error!');
     }
 
     /**
@@ -523,7 +592,7 @@ class Config extends \Magento\Payment\Gateway\Config\Config
         $options = [
             CURLOPT_RETURNTRANSFER => 1,
             CURLOPT_CONNECTTIMEOUT => 1,
-            CURLOPT_USERAGENT => 'magento'
+            CURLOPT_USERAGENT      => 'magento'
         ];
         $this->curlClient->setOptions($options);
         $this->curlClient->get(self::GIT_URL);
@@ -534,6 +603,7 @@ class Config extends \Magento\Payment\Gateway\Config\Config
      * Are manual invoice activations in use
      *
      * @param null|int|string $storeId
+     *
      * @return bool
      */
     public function isManualInvoiceEnabled($storeId = null)
@@ -545,6 +615,7 @@ class Config extends \Magento\Payment\Gateway\Config\Config
      * Will creating a shipment to an order activate the order's invoice.
      *
      * @param null|int|string $storeId
+     *
      * @return bool
      */
     public function isShipmentActivateInvoice($storeId = null)
