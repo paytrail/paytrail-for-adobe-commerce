@@ -10,6 +10,7 @@ use Magento\Sales\Model\Order;
 use Magento\Sales\Model\Order\Item as OrderItem;
 use Magento\Sales\Model\ResourceModel\Order\Tax\Item as TaxItem;
 use Magento\Tax\Helper\Data as TaxHelper;
+use Paytrail\PaymentService\Exceptions\CheckoutException;
 use Paytrail\PaymentService\Gateway\Config\Config;
 use Paytrail\PaymentService\Logger\PaytrailLogger;
 use Paytrail\PaymentService\Model\Company\CompanyRequestData;
@@ -17,9 +18,11 @@ use Paytrail\PaymentService\Model\Config\Source\CallbackDelay;
 use Paytrail\PaymentService\Model\FinnishReferenceNumber;
 use Paytrail\PaymentService\Model\Invoice\Activation\Flag;
 use Paytrail\PaymentService\Model\UrlDataProvider;
+use Paytrail\SDK\Exception\ValidationException;
 use Paytrail\SDK\Model\Address;
 use Paytrail\SDK\Model\Customer;
 use Paytrail\SDK\Model\Item;
+use Paytrail\SDK\Request\AbstractPaymentRequest;
 use Paytrail\SDK\Request\PaymentRequest;
 
 class PaymentDataProvider
@@ -36,7 +39,7 @@ class PaymentDataProvider
      * @param CallbackDelay $callbackDelay
      * @param FinnishReferenceNumber $referenceNumber
      * @param Config $gatewayConfig
-     * @param Flag $invoiceActivationFlag
+     * @param Flag $flag
      * @param PaytrailLogger $log
      */
     public function __construct(
@@ -47,63 +50,58 @@ class PaymentDataProvider
         private TaxItem                             $taxItems,
         private UrlDataProvider                     $urlDataProvider,
         private CallbackDelay                       $callbackDelay,
-        private FinnishReferenceNumber $referenceNumber,
-        private Config $gatewayConfig,
-        private Flag $invoiceActivationFlag,
-        private PaytrailLogger $log
+        private FinnishReferenceNumber              $referenceNumber,
+        private Config                              $gatewayConfig,
+        private Flag                                $flag,
+        private PaytrailLogger                      $log
     ) {
     }
 
     /**
      * SetPaymentRequestData function
      *
-     * @param PaymentRequest $paytrailPayment
+     * @param AbstractPaymentRequest $paytrailPayment
      * @param Order $order
      * @param string $paymentMethod
-     * @return PaymentRequest
+     *
+     * @return AbstractPaymentRequest
      * @throws LocalizedException
      * @throws NoSuchEntityException
-     * @throws \Paytrail\PaymentService\Exceptions\CheckoutException
-     * @throws \Paytrail\SDK\Exception\ValidationException
+     * @throws CheckoutException
+     * @throws ValidationException
      */
-    public function setPaymentRequestData(PaymentRequest $paytrailPayment, $order, $paymentMethod): PaymentRequest
-    {
-        $billingAddress = $order->getBillingAddress() ?? $order->getShippingAddress();
-        $shippingAddress = $order->getShippingAddress();
+    public function setPaymentRequestData(
+        AbstractPaymentRequest $paytrailPayment,
+        Order                  $order,
+        string                 $paymentMethod
+    ): AbstractPaymentRequest {
 
-        $paytrailPayment->setStamp(hash('sha256', time() . $order->getIncrementId()));
-
-        $reference = $this->referenceNumber->getReference($order);
-
-        $paytrailPayment->setReference($reference);
-
-        $paytrailPayment->setCurrency($order->getOrderCurrencyCode())->setAmount(round($order->getGrandTotal() * 100));
-
-        $customer = $this->createCustomer($billingAddress);
-        $paytrailPayment->setCustomer($customer);
-
+        $billingAddress   = $order->getBillingAddress() ?? $order->getShippingAddress();
+        $shippingAddress  = $order->getShippingAddress();
+        $customer         = $this->createCustomer($billingAddress);
+        $reference        = $this->referenceNumber->getReference($order);
         $invoicingAddress = $this->createAddress($billingAddress);
-        $paytrailPayment->setInvoicingAddress($invoicingAddress);
+        $items            = $this->getOrderItemLines($order);
+
+        $paytrailPayment->setStamp($this->getStamp($order))
+            ->setReference($reference)
+            ->setCurrency($order->getOrderCurrencyCode())
+            ->setAmount(round($order->getGrandTotal() * 100))
+            ->setCustomer($customer)
+            ->setInvoicingAddress($invoicingAddress)
+            ->setLanguage($this->gatewayConfig->getStoreLocaleForPaymentProvider())
+            ->setItems($items)
+            ->setRedirectUrls($this->urlDataProvider->createRedirectUrl())
+            ->setCallbackUrls($this->urlDataProvider->createCallbackUrl())
+            ->setCallbackDelay($this->callbackDelay->getCallbackDelay());
 
         if ($shippingAddress !== null) {
             $deliveryAddress = $this->createAddress($shippingAddress);
             $paytrailPayment->setDeliveryAddress($deliveryAddress);
         }
 
-        $paytrailPayment->setLanguage($this->gatewayConfig->getStoreLocaleForPaymentProvider());
-
-        $items = $this->getOrderItemLines($order);
-
-        $paytrailPayment->setItems($items);
-
-        $paytrailPayment->setRedirectUrls($this->urlDataProvider->createRedirectUrl());
-
-        $paytrailPayment->setCallbackUrls($this->urlDataProvider->createCallbackUrl());
-
-        $paytrailPayment->setCallbackDelay($this->callbackDelay->getCallbackDelay());
-
         // Conditionally set manual invoicing flag if selected payment method supports it.
-        $this->invoiceActivationFlag->setManualInvoiceActivationFlag(
+        $this->flag->setManualInvoiceActivationFlag(
             $paytrailPayment,
             $paymentMethod,
             $order
@@ -120,47 +118,20 @@ class PaymentDataProvider
      *
      * @param PaymentRequest $paytrailPayment
      * @param Order $order
+     *
      * @return PaymentRequest
      * @throws LocalizedException
      * @throws NoSuchEntityException
-     * @throws \Paytrail\PaymentService\Exceptions\CheckoutException
-     * @throws \Paytrail\SDK\Exception\ValidationException
+     * @throws CheckoutException
+     * @throws ValidationException
      */
-    public function setPayAndAddCardRequestData(PaymentRequest $paytrailPayment, $order): PaymentRequest
+    public function setPayAndAddCardRequestData(AbstractPaymentRequest $paytrailPayment, $order): AbstractPaymentRequest
     {
-        $billingAddress = $order->getBillingAddress() ?? $order->getShippingAddress();
-        $shippingAddress = $order->getShippingAddress();
-
-        $paytrailPayment->setStamp(hash('sha256', time() . $order->getIncrementId()));
-
-        $reference = $this->referenceNumber->getReference($order);
-
-        $paytrailPayment->setReference($reference);
-
-        $paytrailPayment->setCurrency($order->getOrderCurrencyCode())->setAmount(round($order->getGrandTotal() * 100));
-
-        $customer = $this->createCustomer($billingAddress);
-        $paytrailPayment->setCustomer($customer);
-
-        $invoicingAddress = $this->createAddress($billingAddress);
-        $paytrailPayment->setInvoicingAddress($invoicingAddress);
-
-        if ($shippingAddress !== null) {
-            $deliveryAddress = $this->createAddress($shippingAddress);
-            $paytrailPayment->setDeliveryAddress($deliveryAddress);
-        }
-
-        $paytrailPayment->setLanguage($this->gatewayConfig->getStoreLocaleForPaymentProvider());
-
-        $items = $this->getOrderItemLines($order);
-
-        $paytrailPayment->setItems($items);
-
-        $paytrailPayment->setRedirectUrls($this->urlDataProvider->createRedirectUrl());
+        // Set payment request data - payment method is not needed for pay and add card, so we can set it to new string
+        // to mach manual invoicing flag condition
+        $this->setPaymentRequestData($paytrailPayment, $order, 'pay_and_add_card');
 
         $paytrailPayment->setCallbackUrls($this->urlDataProvider->createPayAndAddCardCallbackUrl());
-
-        $paytrailPayment->setCallbackDelay($this->callbackDelay->getCallbackDelay());
 
         // Log payment data
         $this->log->debugLog('request', $paytrailPayment);
@@ -172,6 +143,7 @@ class PaymentDataProvider
      * CreateCustomer function
      *
      * @param OrderAddressInterface $billingAddress
+     *
      * @return Customer
      */
     protected function createCustomer($billingAddress)
@@ -192,20 +164,20 @@ class PaymentDataProvider
      * CreateAddress function
      *
      * @param Order\Address $address
+     *
      * @return Address
      * @throws NoSuchEntityException
-     * @throws \Paytrail\SDK\Exception\ValidationException
+     * @throws ValidationException
      */
     protected function createAddress($address)
     {
         $paytrailAddress = new Address();
 
-        $country = $this->countryInfo->getCountryInfo(
-            $address->getCountryId()
-        )
+        $country = $this->countryInfo->getCountryInfo($address->getCountryId())
             ->getTwoLetterAbbreviation();
+
         $streetAddressRows = $address->getStreet();
-        $streetAddress = $streetAddressRows[0];
+        $streetAddress     = $streetAddressRows[0];
         if (mb_strlen($streetAddress, 'utf-8') > 50) {
             $streetAddress = mb_substr($streetAddress, 0, 50, 'utf-8');
         }
@@ -226,6 +198,7 @@ class PaymentDataProvider
      * GetOrderItemLines function
      *
      * @param Order $order
+     *
      * @return array|Item[]
      * @throws LocalizedException
      */
@@ -241,34 +214,6 @@ class PaymentDataProvider
             $orderItems
         );
 
-        $itemSum = 0;
-        $itemQty = 0;
-
-        /** @var Item $orderItem */
-        foreach ($items as $orderItem) {
-            $itemSum += floatval($orderItem->getUnitPrice() * $orderItem->getUnits());
-            $itemQty += $orderItem->getUnits();
-        }
-
-        if ($itemSum != $orderTotal) {
-            $diffValue = abs($itemSum - $orderTotal);
-
-            if ($diffValue > $itemQty) {
-                throw new \Exception(__(
-                    'Difference in rounding the prices is too big ' . $orderTotal . ' --- ' . $itemSum
-                ));
-            }
-
-            $roundingItem = new Item();
-            $roundingItem->setDescription(__('Rounding', 'paytrail-for-adobe-commerce'));
-            $roundingItem->setDeliveryDate(date('Y-m-d'));
-            $roundingItem->setVatPercentage(0);
-            $roundingItem->setUnits(($orderTotal - $itemSum > 0) ? 1 : -1);
-            $roundingItem->setUnitPrice($diffValue);
-            $roundingItem->setProductCode('rounding-row');
-
-            $items[] = $roundingItem;
-        }
         return $items;
     }
 
@@ -276,6 +221,7 @@ class PaymentDataProvider
      * CreateOrderItems function
      *
      * @param array $item
+     *
      * @return Item
      */
     protected function createOrderItems($item): Item
@@ -296,6 +242,7 @@ class PaymentDataProvider
      * ItemArgs function
      *
      * @param Order $order
+     *
      * @return array
      * @throws LocalizedException
      */
@@ -306,14 +253,19 @@ class PaymentDataProvider
         # Add line items
         /** @var $item OrderItem */
         foreach ($order->getAllItems() as $item) {
-            $discountIncl = 0;
-            if (!$this->taxHelper->priceIncludesTax()) {
-                $discountIncl += $item->getDiscountAmount() * (($item->getTaxPercent() / 100) + 1);
+            $discountInclTax = 0;
+            if (!$this->taxHelper->priceIncludesTax()
+                && $this->taxHelper->applyTaxAfterDiscount()
+            ) {
+                $discountInclTax = $this->formatPrice(
+                    $item->getDiscountAmount() * (($item->getTaxPercent() / 100) + 1)
+                );
             } else {
-                $discountIncl += $item->getDiscountAmount();
+                $discountInclTax += $item->getDiscountAmount();
             }
 
-            if (!$item->getQtyOrdered()) {
+            $qtyOrdered = $item->getQtyOrdered();
+            if (!$qtyOrdered) {
                 // Prevent division by zero errors
                 throw new LocalizedException(\__('Quantity missing for order item: %sku', ['sku' => $item->getSku()]));
             }
@@ -322,20 +274,53 @@ class PaymentDataProvider
             // then also the child products has prices so we set
             if ($item->getChildrenItems() && !$item->getProductOptions()['product_calculations']) {
                 $items[] = [
-                    'title' => $item->getName(),
-                    'code' => $item->getSku(),
-                    'amount' => floatval($item->getQtyOrdered()),
-                    'price' => 0,
-                    'vat' => 0
+                    'title'  => $item->getName(),
+                    'code'   => $item->getSku(),
+                    'amount' => $qtyOrdered,
+                    'price'  => 0,
+                    'vat'    => 0
                 ];
             } else {
-                $items[] = [
-                    'title' => $item->getName(),
-                    'code' => $item->getSku(),
-                    'amount' => floatval($item->getQtyOrdered()),
-                    'price' => floatval($item->getPriceInclTax()) - round(($discountIncl / $item->getQtyOrdered()), 2),
-                    'vat' => round(floatval($item->getTaxPercent()))
+                $rowTotalInclDiscount  = $item->getRowTotalInclTax() - $discountInclTax;
+                $itemPriceInclDiscount = $this->formatPrice($rowTotalInclDiscount / $qtyOrdered);
+
+                $difference = $rowTotalInclDiscount - ($itemPriceInclDiscount * $qtyOrdered);
+                // deduct/add only 0.01 per product
+                $diffAdjustment       = 0.01;
+                $differenceUnitsCount = (int)(round(abs($difference / $diffAdjustment)));
+
+                if ($differenceUnitsCount > $qtyOrdered) {
+                    throw new LocalizedException(
+                        \__('Rounding diff bigger than 0.01 per item : %sku', ['sku' => $item->getSku()])
+                    );
+                }
+
+                $paytrailItem = [
+                    'title'  => $item->getName(),
+                    'code'   => $item->getSku(),
+                    'amount' => $qtyOrdered - $differenceUnitsCount,
+                    'price'  => $itemPriceInclDiscount,
+                    'vat'    => $item->getTaxPercent()
                 ];
+
+                $items [] = $paytrailItem;
+
+                if ($difference <> 0) {
+                    $paytrailItemRoundingCorrection = [
+                        'title'  => $item->getName()
+                            . ' (rounding issue fix, diff: '
+                            . $this->formatPrice($difference)
+                            . ')',
+                        'code'   => $item->getSku(),
+                        'amount' => $differenceUnitsCount,
+                        'price'  => $this->formatPrice(
+                            floatval($itemPriceInclDiscount) + ($difference <=> 0) * $diffAdjustment
+                        ),
+                        'vat'    => $item->getTaxPercent()
+                    ];
+
+                    $items [] = $paytrailItemRoundingCorrection;
+                }
             }
         }
 
@@ -351,12 +336,13 @@ class PaymentDataProvider
      * GetShippingItem function
      *
      * @param Order $order
+     *
      * @return array
      */
     private function getShippingItem(Order $order): array
     {
         $taxDetails = [];
-        $price = 0;
+        $price      = 0;
 
         if ($order->getShippingAmount()) {
             foreach ($this->taxItems->getTaxItemsByOrderId($order->getId()) as $detail) {
@@ -373,11 +359,36 @@ class PaymentDataProvider
         }
 
         return [
-            'title' => $order->getShippingDescription() ?: __('Shipping'),
-            'code' => 'shipping-row',
+            'title'  => $order->getShippingDescription() ?: __('Shipping'),
+            'code'   => 'shipping-row',
             'amount' => 1,
-            'price' => floatval($price),
-            'vat' => $taxDetails['tax_percent'] ?? 0,
+            'price'  => floatval($price),
+            'vat'    => $taxDetails['tax_percent'] ?? 0,
         ];
     }
+
+    /**
+     * Getting stamp for payment request using algorithm defined in config
+     *
+     * @param Order $order
+     *
+     * @return string
+     */
+    public function getStamp(Order $order): string
+    {
+        return hash($this->gatewayConfig->getCheckoutAlgorithm(), time() . $order->getIncrementId());
+    }
+
+    /**
+     * Format price.
+     *
+     * @param  $amount
+     *
+     * @return string
+     */
+    private function formatPrice($amount): string
+    {
+        return number_format(floatval($amount), 2, '.', '');
+    }
 }
+
