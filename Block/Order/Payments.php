@@ -16,6 +16,7 @@ use Paytrail\PaymentService\Api\Data\SubscriptionInterface;
 use Paytrail\PaymentService\Model\Recurring\TotalConfigProvider;
 use Paytrail\PaymentService\Model\ResourceModel\Subscription\Collection as SubscriptionCollection;
 use Paytrail\PaymentService\Model\ResourceModel\Subscription\CollectionFactory;
+use Paytrail\PaymentService\Model\Ui\ConfigProvider;
 
 class Payments extends Template
 {
@@ -46,6 +47,7 @@ class Payments extends Template
         private SerializerInterface     $serializer,
         private TotalConfigProvider $totalConfigProvider,
         private MessageManagerInterface $messageManager,
+        private ConfigProvider $configProvider,
         array                   $data = []
     ) {
         parent::__construct($context, $data);
