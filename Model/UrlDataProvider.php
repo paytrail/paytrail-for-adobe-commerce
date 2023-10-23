@@ -71,7 +71,7 @@ class UrlDataProvider
      * @param string $param
      * @return string
      */
-    protected function getCallbackUrl($param)
+    public function getCallbackUrl($param)
     {
         $routeParams = [
             '_secure' => $this->request->isSecure(),

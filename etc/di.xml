@@ -5,10 +5,6 @@
         <plugin name="paytrail_restore_order_button"
                 type="Paytrail\PaymentService\Plugin\Magento\Sales\Block\Adminhtml\Order\ViewPlugin"/>
     </type>
-  <preference for="Paytrail\PaymentService\Api\RedirectInterface" type="Paytrail\PaymentService\Model\Redirect" />
-  <type name="Magento\Sales\Block\Adminhtml\Order\View">
-    <plugin name="add_paytrail_buttons" type="Paytrail\PaymentService\Plugin\Magento\Sales\Block\Adminhtml\Order\ViewPlugin"/>
-  </type>
 
     <type name="Magento\Tax\Model\Config">
         <plugin name="paytrail_payment_service_tax_config_plugin"
@@ -56,6 +52,20 @@
                 <item name="initialize" xsi:type="string">Paytrail\PaymentService\Gateway\Command\Initialize</item>
                 <item name="refund" xsi:type="string">PaytrailRefundCommand</item>
                 <item name="vault_authorize" xsi:type="string">PaytrailPaymentServiceVaultAuthorizeCommand</item>
+                <item name="payment" xsi:type="string">Paytrail\PaymentService\Gateway\Command\Payment</item>
+                <item name="pay_and_add_card" xsi:type="string">Paytrail\PaymentService\Gateway\Command\PayAndAddCard
+                </item>
+                <item name="method_provider" xsi:type="string">Paytrail\PaymentService\Gateway\Command\MethodProvider
+                </item>
+                <item name="email_refund" xsi:type="string">PaytrailEmailRefundCommand</item>
+                <item name="token_payment" xsi:type="string">Paytrail\PaymentService\Gateway\Command\TokenPayment</item>
+                <item name="get_payment_data" xsi:type="string">Paytrail\PaymentService\Gateway\Command\PaymentData
+                </item>
+                <item name="add_card" xsi:type="string">Paytrail\PaymentService\Gateway\Command\AddCard</item>
+                <item name="token_request" xsi:type="string">Paytrail\PaymentService\Gateway\Command\TokenRequest</item>
+                <item name="invoice_activation" xsi:type="string">
+                    Paytrail\PaymentService\Gateway\Command\InvoiceActivation
+                </item>
             </argument>
         </arguments>
     </virtualType>
@@ -100,24 +110,7 @@
         </arguments>
     </type>
 
-    <virtualType name="PaytrailCommandPool" type="Magento\Payment\Gateway\Command\CommandPool">
-        <arguments>
-            <argument name="commands" xsi:type="array">
-                <item name="initialize" xsi:type="string">Paytrail\PaymentService\Gateway\Command\Initialize</item>
-                <item name="refund" xsi:type="string">PaytrailRefundCommand</item>
-                <item name="payment" xsi:type="string">Paytrail\PaymentService\Gateway\Command\Payment</item>
-                <item name="pay_and_add_card" xsi:type="string">Paytrail\PaymentService\Gateway\Command\PayAndAddCard</item>
-                <item name="method_provider" xsi:type="string">Paytrail\PaymentService\Gateway\Command\MethodProvider
-                </item>
-                <item name="email_refund" xsi:type="string">PaytrailEmailRefundCommand</item>
-                <item name="token_payment" xsi:type="string">Paytrail\PaymentService\Gateway\Command\TokenPayment</item>
-                <item name="get_payment_data" xsi:type="string">Paytrail\PaymentService\Gateway\Command\PaymentData</item>
-                <item name="add_card" xsi:type="string">Paytrail\PaymentService\Gateway\Command\AddCard</item>
-                <item name="token_request" xsi:type="string">Paytrail\PaymentService\Gateway\Command\TokenRequest</item>
-                <item name="invoice_activation" xsi:type="string">Paytrail\PaymentService\Gateway\Command\InvoiceActivation</item>
-            </argument>
-        </arguments>
-    </virtualType>
+
 
     <virtualType name="PaytrailCommandManager" type="Magento\Payment\Gateway\Command\CommandManager">
         <arguments>
@@ -267,9 +260,12 @@
     <type name="Paytrail\PaymentService\Gateway\Command\AddCard">
         <arguments>
             <argument name="requestBuilder" xsi:type="object">PaytrailAddCardRequest</argument>
-            <argument name="transferFactory" xsi:type="object">Paytrail\PaymentService\Gateway\Http\TransferFactory</argument>
-            <argument name="client" xsi:type="object">Paytrail\PaymentService\Gateway\Http\Client\TransactionAddCard</argument>
-            <argument name="handler" xsi:type="object">Paytrail\PaymentService\Gateway\Response\AddCardHandler</argument>
+            <argument name="transferFactory" xsi:type="object">Paytrail\PaymentService\Gateway\Http\TransferFactory
+            </argument>
+            <argument name="client" xsi:type="object">Paytrail\PaymentService\Gateway\Http\Client\TransactionAddCard
+            </argument>
+            <argument name="handler" xsi:type="object">Paytrail\PaymentService\Gateway\Response\AddCardHandler
+            </argument>
         </arguments>
     </type>
 
@@ -293,9 +289,12 @@
     <type name="Paytrail\PaymentService\Gateway\Command\TokenRequest">
         <arguments>
             <argument name="requestBuilder" xsi:type="object">PaytrailTokenRequestRequest</argument>
-            <argument name="transferFactory" xsi:type="object">Paytrail\PaymentService\Gateway\Http\TransferFactory</argument>
-            <argument name="client" xsi:type="object">Paytrail\PaymentService\Gateway\Http\Client\TokenRequest</argument>
-            <argument name="handler" xsi:type="object">Paytrail\PaymentService\Gateway\Response\TokenRequestHandler</argument>
+            <argument name="transferFactory" xsi:type="object">Paytrail\PaymentService\Gateway\Http\TransferFactory
+            </argument>
+            <argument name="client" xsi:type="object">Paytrail\PaymentService\Gateway\Http\Client\TokenRequest
+            </argument>
+            <argument name="handler" xsi:type="object">Paytrail\PaymentService\Gateway\Response\TokenRequestHandler
+            </argument>
         </arguments>
     </type>
 
@@ -319,9 +318,13 @@
     <type name="Paytrail\PaymentService\Gateway\Command\InvoiceActivation">
         <arguments>
             <argument name="requestBuilder" xsi:type="object">PaytrailInvoiceActivationRequest</argument>
-            <argument name="transferFactory" xsi:type="object">Paytrail\PaymentService\Gateway\Http\TransferFactory</argument>
-            <argument name="client" xsi:type="object">Paytrail\PaymentService\Gateway\Http\Client\InvoiceActivation</argument>
-            <argument name="handler" xsi:type="object">Paytrail\PaymentService\Gateway\Response\InvoiceActivationHandler</argument>
+            <argument name="transferFactory" xsi:type="object">Paytrail\PaymentService\Gateway\Http\TransferFactory
+            </argument>
+            <argument name="client" xsi:type="object">Paytrail\PaymentService\Gateway\Http\Client\InvoiceActivation
+            </argument>
+            <argument name="handler" xsi:type="object">
+                Paytrail\PaymentService\Gateway\Response\InvoiceActivationHandler
+            </argument>
         </arguments>
     </type>
 
@@ -392,16 +395,22 @@
     <type name="Paytrail\PaymentService\Gateway\Command\PayAndAddCard">
         <arguments>
             <argument name="requestBuilder" xsi:type="object">PaytrailPayAndAddCardRequest</argument>
-            <argument name="transferFactory" xsi:type="object">Paytrail\PaymentService\Gateway\Http\TransferFactory</argument>
-            <argument name="client" xsi:type="object">Paytrail\PaymentService\Gateway\Http\Client\TransactionPayAndAddCard</argument>
-            <argument name="handler" xsi:type="object">Paytrail\PaymentService\Gateway\Response\PayAndAddCardHandler</argument>
+            <argument name="transferFactory" xsi:type="object">Paytrail\PaymentService\Gateway\Http\TransferFactory
+            </argument>
+            <argument name="client" xsi:type="object">
+                Paytrail\PaymentService\Gateway\Http\Client\TransactionPayAndAddCard
+            </argument>
+            <argument name="handler" xsi:type="object">Paytrail\PaymentService\Gateway\Response\PayAndAddCardHandler
+            </argument>
         </arguments>
     </type>
 
     <virtualType name="PaytrailPayAndAddCardRequest" type="Magento\Payment\Gateway\Request\BuilderComposite">
         <arguments>
             <argument name="builders" xsi:type="array">
-                <item name="payAndAddCardBuilder" xsi:type="string">Paytrail\PaymentService\Gateway\Request\PayAndAddCardDataBuilder</item>
+                <item name="payAndAddCardBuilder" xsi:type="string">
+                    Paytrail\PaymentService\Gateway\Request\PayAndAddCardDataBuilder
+                </item>
             </argument>
         </arguments>
     </virtualType>
@@ -524,6 +533,11 @@
     <type name="Paytrail\PaymentService\Observer\RestoreCart">
         <arguments>
             <argument name="checkoutSession" xsi:type="object">Magento\Checkout\Model\Session\Proxy</argument>
+        </arguments>
+    </type>
+    <type name="Paytrail\PaymentService\Block\Order\Payments">
+        <arguments>
+            <argument name="customerSession" xsi:type="object">Magento\Customer\Model\Session\Proxy</argument>
         </arguments>
     </type>
 </config>
