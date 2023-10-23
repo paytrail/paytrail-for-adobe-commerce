@@ -27,7 +27,7 @@ define([
     return (config) => {
         $(document).ready(() => {
             const url = new URL(window.location.href);
-            if (url.searchParams.get('open-change-card-modal') !== null && url.searchParams.get('subscription') !== null && !config.previousErrorpreviousError) {
+            if (url.searchParams.get('open-change-card-modal') !== null && url.searchParams.get('subscription') !== null && !config.previousError) {
                 $(`.show-payment-methods[data-id='${url.searchParams.get('subscription')}']`).first().trigger('click');
             }
         })
