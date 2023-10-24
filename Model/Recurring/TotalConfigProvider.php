@@ -53,6 +53,8 @@ class TotalConfigProvider implements ConfigProviderInterface
     }
 
     /**
+     * Get recurring payment values to config.
+     *
      * @return array
      * @throws LocalizedException
      * @throws NoSuchEntityException
@@ -66,6 +68,8 @@ class TotalConfigProvider implements ConfigProviderInterface
     }
 
     /**
+     * Is cart has recurring payment schedule products.
+     *
      * @return bool
      * @throws LocalizedException
      * @throws NoSuchEntityException
@@ -85,6 +89,8 @@ class TotalConfigProvider implements ConfigProviderInterface
     }
 
     /**
+     * Get recurring-payment cart subtotal value.
+     *
      * @return float
      * @throws LocalizedException
      * @throws NoSuchEntityException
