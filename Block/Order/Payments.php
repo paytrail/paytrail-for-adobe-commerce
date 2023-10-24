@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Paytrail\PaymentService\Block\Order;
 
+use Magento\Checkout\Model\Session as CheckoutSession;
 use Magento\Customer\Model\Session;
 use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Framework\Message\ManagerInterface as MessageManagerInterface;
@@ -13,6 +14,7 @@ use Magento\Framework\View\Element\Template\Context;
 use Magento\Store\Model\StoreManagerInterface;
 use Magento\Vault\Model\PaymentTokenRepository;
 use Paytrail\PaymentService\Api\Data\SubscriptionInterface;
+use Paytrail\PaymentService\Gateway\Config\Config;
 use Paytrail\PaymentService\Model\Recurring\TotalConfigProvider;
 use Paytrail\PaymentService\Model\ResourceModel\Subscription\Collection as SubscriptionCollection;
 use Paytrail\PaymentService\Model\ResourceModel\Subscription\CollectionFactory;
@@ -35,20 +37,21 @@ class Payments extends Template
      * @param PaymentTokenRepository $paymentTokenRepository
      * @param SerializerInterface $serializer
      * @param TotalConfigProvider $totalConfigProvider
-     * @param MessageManagerInterface $messageManager
+     * @param Config $config
+     * @param CheckoutSession $checkoutSession
      * @param array $data
      */
     public function __construct(
-        Context                 $context,
-        private CollectionFactory       $subscriptionCollectionFactory,
-        private Session                 $customerSession,
-        private StoreManagerInterface   $storeManager,
-        private PaymentTokenRepository  $paymentTokenRepository,
-        private SerializerInterface     $serializer,
-        private TotalConfigProvider $totalConfigProvider,
-        private MessageManagerInterface $messageManager,
-        private ConfigProvider $configProvider,
-        array                   $data = []
+        Context                                 $context,
+        private readonly CollectionFactory      $subscriptionCollectionFactory,
+        private readonly Session                $customerSession,
+        private readonly StoreManagerInterface  $storeManager,
+        private readonly PaymentTokenRepository $paymentTokenRepository,
+        private readonly SerializerInterface    $serializer,
+        private readonly TotalConfigProvider    $totalConfigProvider,
+        private readonly Config                 $config,
+        private readonly CheckoutSession        $checkoutSession,
+        array                                   $data = []
     ) {
         parent::__construct($context, $data);
     }
@@ -82,7 +85,7 @@ class Payments extends Template
     public function getRecurringPayments()
     {
         $collection = $this->subscriptionCollectionFactory->create();
-        $collection->addFieldToFilter('main_table.status', ['active','pending_payment','failed','rescheduled']);
+        $collection->addFieldToFilter('main_table.status', ['active', 'pending_payment', 'failed', 'rescheduled']);
 
         $collection->getSelect()->join(
             ['link' => 'paytrail_subscription_link'],
@@ -93,7 +96,7 @@ class Payments extends Template
         $collection->getSelect()->join(
             ['so' => 'sales_order'],
             'link.order_id = so.entity_id',
-            ['main_table.entity_id','so.base_grand_total']
+            ['main_table.entity_id', 'so.base_grand_total']
         );
         $collection->getSelect()->join(
             ['rpp' => 'recurring_payment_profiles'],
@@ -125,7 +128,7 @@ class Payments extends Template
         $collection->getSelect()->join(
             ['so' => 'sales_order'],
             'link.order_id = so.entity_id',
-            ['main_table.entity_id','so.base_grand_total']
+            ['main_table.entity_id', 'so.base_grand_total']
         );
         $collection->getSelect()->join(
             ['rpp' => 'recurring_payment_profiles'],
@@ -142,6 +145,7 @@ class Payments extends Template
      * Validate date.
      *
      * @param string $date
+     *
      * @return string
      */
     public function validateDate($date): string
@@ -154,6 +158,7 @@ class Payments extends Template
      * Get recurring payment status name.
      *
      * @param string $recurringPaymentStatus
+     *
      * @return \Magento\Framework\Phrase|string
      */
     public function getRecurringPaymentStatusName($recurringPaymentStatus)
@@ -191,6 +196,7 @@ class Payments extends Template
      * Get view url.
      *
      * @param Subscription $recurringPayment
+     *
      * @return string
      */
     public function getViewUrl($recurringPayment)
@@ -234,6 +240,7 @@ class Payments extends Template
      * Get stop payment url.
      *
      * @param Subscription $recurringPayment
+     *
      * @return string
      */
     public function getStopPaymentUrl($recurringPayment)
@@ -255,6 +262,7 @@ class Payments extends Template
      * Get credit card number.
      *
      * @param Subscription $recurringPayment
+     *
      * @return string
      */
     public function getCardNumber($recurringPayment)
@@ -272,30 +280,24 @@ class Payments extends Template
      * Get add_card request redirect url.
      *
      * @return string|null
-     * @throws NoSuchEntityException
      */
     public function getAddCardRedirectUrl(): ?string
     {
-        $config = $this->configProvider->getConfig();
-
-        return $config['payment']['paytrail']['addcard_redirect_url'] ?? null;
+        return $this->config->getAddCardRedirectUrl();
     }
 
     /**
      * Get previous error.
      *
      * @return Phrase|null
-     * @throws NoSuchEntityException
      */
     public function getPreviousError(): ?Phrase
     {
-        $config = $this->configProvider->getConfig();
-
-        $previousError = $config['payment']['paytrail']['previous_error'] ?? null;
-        if ($previousError) {
-            $this->messageManager->addErrorMessage(__($previousError));
+        if ($this->checkoutSession->getData('paytrail_previous_error')) {
+            $previousError = $this->checkoutSession
+                ->getData('paytrail_previous_error', 1);
         }
 
-        return $previousError;
+        return $previousError ?? null;
     }
 }
