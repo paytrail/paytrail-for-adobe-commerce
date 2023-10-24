@@ -37,20 +37,21 @@ class Payments extends Template
      * @param PaymentTokenRepository $paymentTokenRepository
      * @param SerializerInterface $serializer
      * @param TotalConfigProvider $totalConfigProvider
-     * @param MessageManagerInterface $messageManager
+     * @param Config $config
+     * @param CheckoutSession $checkoutSession
      * @param array $data
      */
     public function __construct(
-        Context                        $context,
-        private CollectionFactory      $subscriptionCollectionFactory,
-        private Session                $customerSession,
-        private StoreManagerInterface  $storeManager,
-        private PaymentTokenRepository $paymentTokenRepository,
-        private SerializerInterface    $serializer,
-        private TotalConfigProvider    $totalConfigProvider,
-        private Config                 $config,
-        private CheckoutSession        $checkoutSession,
-        array                          $data = []
+        Context                                 $context,
+        private readonly CollectionFactory      $subscriptionCollectionFactory,
+        private readonly Session                $customerSession,
+        private readonly StoreManagerInterface  $storeManager,
+        private readonly PaymentTokenRepository $paymentTokenRepository,
+        private readonly SerializerInterface    $serializer,
+        private readonly TotalConfigProvider    $totalConfigProvider,
+        private readonly Config                 $config,
+        private readonly CheckoutSession        $checkoutSession,
+        array                                   $data = []
     ) {
         parent::__construct($context, $data);
     }
