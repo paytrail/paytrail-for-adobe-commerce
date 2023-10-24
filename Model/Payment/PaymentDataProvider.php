@@ -303,8 +303,6 @@ class PaymentDataProvider
                     'vat'    => $item->getTaxPercent()
                 ];
 
-                $items [] = $paytrailItem;
-
                 if ($differenceUnitsCount) {
 
                     $paytrailItem['amount'] =  $qtyOrdered - $differenceUnitsCount;
@@ -324,6 +322,8 @@ class PaymentDataProvider
 
                     $items [] = $paytrailItemRoundingCorrection;
                 }
+
+                $items [] = $paytrailItem;
             }
         }
 
