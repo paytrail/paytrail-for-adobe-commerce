@@ -202,7 +202,7 @@ class PaymentDataProvider
      * @return array|Item[]
      * @throws LocalizedException
      */
-    protected function getOrderItemLines($order)
+    public function getOrderItemLines($order)
     {
         $orderItems = $this->itemArgs($order);
         $orderTotal = round($order->getGrandTotal() * 100);
