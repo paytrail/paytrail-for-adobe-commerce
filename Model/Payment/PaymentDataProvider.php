@@ -284,7 +284,7 @@ class PaymentDataProvider
                 $rowTotalInclDiscount  = $item->getRowTotalInclTax() - $discountInclTax;
                 $itemPriceInclDiscount = $this->formatPrice($rowTotalInclDiscount / $qtyOrdered);
 
-                $difference = $rowTotalInclDiscount - ($itemPriceInclDiscount * $qtyOrdered);
+                $difference = $rowTotalInclDiscount - $itemPriceInclDiscount * $qtyOrdered;
                 // deduct/add only 0.01 per product
                 $diffAdjustment       = 0.01;
                 $differenceUnitsCount = (int)(round(abs($difference / $diffAdjustment)));
@@ -298,14 +298,17 @@ class PaymentDataProvider
                 $paytrailItem = [
                     'title'  => $item->getName(),
                     'code'   => $item->getSku(),
-                    'amount' => $qtyOrdered - $differenceUnitsCount,
+                    'amount' => $qtyOrdered,
                     'price'  => $itemPriceInclDiscount,
                     'vat'    => $item->getTaxPercent()
                 ];
 
                 $items [] = $paytrailItem;
 
-                if ($difference <> 0) {
+                if ($differenceUnitsCount) {
+
+                    $paytrailItem['amount'] =  $qtyOrdered - $differenceUnitsCount;
+
                     $paytrailItemRoundingCorrection = [
                         'title'  => $item->getName()
                             . ' (rounding issue fix, diff: '
