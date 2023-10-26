@@ -13,153 +13,55 @@ use Magento\Framework\Controller\Result\JsonFactory;
 use Magento\Framework\Controller\ResultInterface;
 use Magento\Framework\Exception\CouldNotSaveException;
 use Magento\Framework\Exception\LocalizedException;
-use Magento\Quote\Model\QuoteRepository;
+use Magento\Payment\Gateway\Command\CommandManagerPoolInterface;
 use Magento\Sales\Api\OrderManagementInterface;
 use Magento\Sales\Api\OrderRepositoryInterface;
 use Magento\Sales\Model\Order;
 use Magento\Sales\Model\OrderFactory;
 use Paytrail\PaymentService\Exceptions\CheckoutException;
 use Paytrail\PaymentService\Gateway\Config\Config;
-use Paytrail\PaymentService\Gateway\Validator\ResponseValidator;
-use Paytrail\PaymentService\Helper\ApiData;
-use Paytrail\PaymentService\Helper\Data;
+use Paytrail\PaymentService\Model\Receipt\PaymentTransaction;
+use Paytrail\PaymentService\Model\Receipt\ProcessService;
 use Paytrail\PaymentService\Model\ReceiptDataProvider;
 use Paytrail\PaymentService\Model\Recurring\TotalConfigProvider;
 use Paytrail\PaymentService\Model\Subscription\SubscriptionCreate;
 
 class Token implements HttpPostActionInterface
 {
-    /**
-     * @var Session
-     */
-    protected $session;
+    public const SKIP_HMAC_VALIDATION = 'skip_hmac';
 
     /**
-     * @var ResponseValidator
-     */
-    protected $responseValidator;
-
-    /**
-     * @var ReceiptDataProvider
-     */
-    protected $receiptDataProvider;
-
-    /**
-     * @var QuoteRepository
-     */
-    protected $quoteRepository;
-
-    /**
-     * @var Config
-     */
-    private $gatewayConfig;
-
-    /**
-     * @var SubscriptionCreate
-     */
-    private $subscriptionCreate;
-
-    /**
-     * @var Data
-     */
-    private $opHelper;
-
-    /**
-     * @var RequestInterface
-     */
-    private RequestInterface $request;
-
-    /**
-     * @var OrderFactory
-     */
-    private OrderFactory $orderFactory;
-
-    /**
-     * @var Session
-     */
-    private Session $checkoutSession;
-
-    /**
-     * @var CustomerSession
-     */
-    private CustomerSession $customerSession;
-
-    /**
-     * @var ApiData
-     */
-    private ApiData $apiData;
-
-    /**
-     * @var JsonFactory
-     */
-    private JsonFactory $jsonFactory;
-
-    /**
-     * @var OrderRepositoryInterface
-     */
-    private OrderRepositoryInterface $orderRepository;
-
-    /**
-     * @var OrderManagementInterface
-     */
-    private OrderManagementInterface $orderManagementInterface;
-
-    /**
-     * @var TotalConfigProvider
-     */
-    private TotalConfigProvider $totalConfigProvider;
-
-    /**
-     * @param Session $session
-     * @param ResponseValidator $responseValidator
-     * @param QuoteRepository $quoteRepository
+     * Token constructor.
+     *
      * @param ReceiptDataProvider $receiptDataProvider
      * @param Config $gatewayConfig
-     * @param Data $opHelper
      * @param RequestInterface $request
      * @param OrderFactory $orderFactory
      * @param Session $checkoutSession
      * @param CustomerSession $customerSession
-     * @param ApiData $apiData
      * @param JsonFactory $jsonFactory
      * @param OrderRepositoryInterface $orderRepository
      * @param OrderManagementInterface $orderManagementInterface
      * @param SubscriptionCreate $subscriptionCreate
+     * @param CommandManagerPoolInterface $commandManagerPool
+     * @param ProcessService $processService
+     * @param TotalConfigProvider $totalConfigProvider
      */
     public function __construct(
-        Session                  $session,
-        ResponseValidator        $responseValidator,
-        QuoteRepository          $quoteRepository,
-        ReceiptDataProvider      $receiptDataProvider,
-        Config                   $gatewayConfig,
-        Data                     $opHelper,
-        RequestInterface         $request,
-        OrderFactory             $orderFactory,
-        Session                  $checkoutSession,
-        CustomerSession          $customerSession,
-        ApiData                  $apiData,
-        JsonFactory              $jsonFactory,
-        OrderRepositoryInterface $orderRepository,
-        OrderManagementInterface $orderManagementInterface,
-        SubscriptionCreate       $subscriptionCreate,
-        TotalConfigProvider $totalConfigProvider
+        private ReceiptDataProvider      $receiptDataProvider,
+        private Config                   $gatewayConfig,
+        private RequestInterface         $request,
+        private OrderFactory             $orderFactory,
+        private Session                  $checkoutSession,
+        private CustomerSession          $customerSession,
+        private JsonFactory              $jsonFactory,
+        private OrderRepositoryInterface $orderRepository,
+        private OrderManagementInterface $orderManagementInterface,
+        private SubscriptionCreate       $subscriptionCreate,
+        private CommandManagerPoolInterface $commandManagerPool,
+        private ProcessService $processService,
+        private TotalConfigProvider $totalConfigProvider
     ) {
-        $this->session = $session;
-        $this->responseValidator = $responseValidator;
-        $this->receiptDataProvider = $receiptDataProvider;
-        $this->quoteRepository = $quoteRepository;
-        $this->gatewayConfig = $gatewayConfig;
-        $this->opHelper = $opHelper;
-        $this->request = $request;
-        $this->orderFactory = $orderFactory;
-        $this->checkoutSession = $checkoutSession;
-        $this->customerSession = $customerSession;
-        $this->apiData = $apiData;
-        $this->jsonFactory = $jsonFactory;
-        $this->orderRepository = $orderRepository;
-        $this->orderManagementInterface = $orderManagementInterface;
-        $this->subscriptionCreate = $subscriptionCreate;
-        $this->totalConfigProvider = $totalConfigProvider;
     }
 
     /**
@@ -244,12 +146,7 @@ class Token implements HttpPostActionInterface
         }
 
         /* fetch payment response using transaction id */
-        $response = $this->apiData->processApiRequest(
-            'get_payment_data',
-            null,
-            null,
-            $responseData->getTransactionId()
-        );
+        $response = $this->getPaymentData($responseData->getTransactionId());
 
         $receiptData = [
             'checkout-account' => $this->gatewayConfig->getMerchantId(),
@@ -260,6 +157,7 @@ class Token implements HttpPostActionInterface
             'checkout-transaction-id' => $response['data']->getTransactionId(),
             'checkout-status' => $response['data']->getStatus(),
             'checkout-provider' => $response['data']->getProvider(),
+            'signature' => self::SKIP_HMAC_VALIDATION
         ];
 
         $this->receiptDataProvider->execute($receiptData);
@@ -282,25 +180,59 @@ class Token implements HttpPostActionInterface
      * @param Customer $customer
      * @return mixed
      * @throws CheckoutException
+     * @throws \Magento\Framework\Exception\NotFoundException
+     * @throws \Magento\Payment\Gateway\Command\CommandException
      */
     protected function getTokenResponseData($order, $tokenId, $customer)
     {
-        $response = $this->apiData->processApiRequest(
+        $commandExecutor = $this->commandManagerPool->get('paytrail');
+        $response = $commandExecutor->executeByCode(
             'token_payment',
-            $order,
             null,
-            null,
-            $tokenId,
-            $customer
+            [
+                'order' => $order,
+                'token_id' => $tokenId,
+                'customer' => $customer
+            ]
         );
 
         $errorMsg = $response['error'];
 
         if (isset($errorMsg)) {
             $this->errorMsg = ($errorMsg);
-            $this->opHelper->processError($errorMsg);
+            $this->processService->processError($errorMsg);
         }
 
         return $response["data"];
+    }
+
+    /**
+     * GetPaymentData function
+     *
+     * @param string $transactionId
+     * @return mixed
+     * @throws CheckoutException
+     * @throws \Magento\Framework\Exception\NotFoundException
+     * @throws \Magento\Payment\Gateway\Command\CommandException
+     */
+    protected function getPaymentData($transactionId)
+    {
+        $commandExecutor = $this->commandManagerPool->get('paytrail');
+        $response = $commandExecutor->executeByCode(
+            'get_payment_data',
+            null,
+            [
+                'transaction_id' => $transactionId
+            ]
+        );
+
+        $errorMsg = $response['error'];
+
+        if (isset($errorMsg)) {
+            $this->errorMsg = ($errorMsg);
+            $this->processService->processError($errorMsg);
+        }
+
+        return $response;
     }
 }

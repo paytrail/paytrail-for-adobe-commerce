@@ -1,4 +1,5 @@
 <?php
+
 namespace Paytrail\PaymentService\Api;
 
 use Magento\Framework\Api\SearchCriteriaInterface;
@@ -9,13 +10,17 @@ use Magento\Framework\Exception\NoSuchEntityException;
 interface RecurringProfileRepositoryInterface
 {
     /**
-     * @param $profileId
+     * Get profile.
+     *
+     * @param int $profileId
      * @return Data\RecurringProfileInterface
      * @throws NoSuchEntityException
      */
     public function get($profileId);
 
     /**
+     * Save profile.
+     *
      * @param Data\RecurringProfileInterface $profile
      * @return Data\RecurringProfileInterface
      * @throws CouldNotSaveException
@@ -23,12 +28,16 @@ interface RecurringProfileRepositoryInterface
     public function save(Data\RecurringProfileInterface $profile);
 
     /**
+     * Delete profile.
+     *
      * @param Data\RecurringProfileInterface $profile
      * @throws CouldNotDeleteException
      */
     public function delete(Data\RecurringProfileInterface $profile);
 
     /**
+     * Get list of profiles.
+     *
      * @param SearchCriteriaInterface $searchCriteria
      * @return Data\RecurringProfileSearchResultInterface
      */

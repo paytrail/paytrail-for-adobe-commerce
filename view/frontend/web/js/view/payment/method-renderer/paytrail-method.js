@@ -66,14 +66,14 @@ define(
                     }
                     return false;
                 },
-                isPlaceOrderActionAllowed: function() {
+                isPlaceOrderActionAllowed: function () {
                     if (self.selectedToken() != 0 || self.selectedPaymentMethodId() != 0) {
                         return true;
                     }
                     return false;
                 },
                 isRecurringPaymentAllowed: function () {
-                    if((window.checkoutConfig.isRecurringScheduled === true && self.selectedToken() != 0)
+                    if ((window.checkoutConfig.isRecurringScheduled === true && self.selectedToken() != 0)
                         || window.checkoutConfig.isRecurringScheduled === false) {
                         return true;
                     }
@@ -178,8 +178,23 @@ define(
                 getBypassPaymentRedirectUrl: function () {
                     return checkoutConfig[self.payMethod].payment_redirect_url;
                 },
+                enablePayAndAddCardButton: function () {
+                    const foundElements =
+                        checkoutConfig[self.payMethod].credit_card_providers_ids.filter(element => element['id'] === self.selectedPaymentMethodId());
+                    if (foundElements.length && self.isLoggedIn()) {
+                        document.getElementById('pay_and_add_card_button').style.display = 'block';
+
+                        return true;
+                    }
+                    document.getElementById('pay_and_add_card_button').style.display = 'none';
+
+                    return false;
+                },
                 getAddCardRedirectUrl: function () {
                     return checkoutConfig[self.payMethod].addcard_redirect_url;
+                },
+                getPayAndAddCardRedirectUrl: function () {
+                    return checkoutConfig[self.payMethod].pay_and_addcard_redirect_url;
                 },
                 getTokenPaymentRedirectUrl: function () {
                     return checkoutConfig[self.payMethod].token_payment_redirect_url;
@@ -201,7 +216,7 @@ define(
                 // Redirect to Paytrail
                 placeOrder: function () {
                     if (self.isPlaceOrderActionAllowed() && additionalValidators.validate()) {
-                        if(self.isRecurringPaymentAllowed()) {
+                        if (self.isRecurringPaymentAllowed()) {
                             return self.placeOrderBypass();
                         } else if (self.getSkipMethodSelection() == false || self.getSkipMethodSelection() === null) {
                             self.addErrorMessage($t('Recurring payment purchases require using a saved card.'));
@@ -214,6 +229,21 @@ define(
                         return false;
                     }
                     return self.placeOrderBypass();
+                },
+                placeAndAddCard: function () {
+                    if (window.checkoutConfig.isRecurringScheduled) {
+                        self.addErrorMessage($t('Recurring payment purchases require using a saved card.'));
+                        self.scrollTo();
+                        return false;
+                    }
+
+                    if (self.isPlaceOrderActionAllowed()
+                        && additionalValidators.validate()
+                        && self.enablePayAndAddCardButton()) {
+                        return self.placeAndAddCardBypass();
+                    }
+
+                    return false;
                 },
                 addNewCard: function () {
                     if (self.isLoggedIn()) {
@@ -273,9 +303,10 @@ define(
                     }
                 },
                 getPaymentUrl: function () {
-                    if(self.selectedToken() != 0) {
+                    if (self.selectedToken() != 0) {
                         return self.getTokenPaymentRedirectUrl();
                     }
+
                     return self.getBypassPaymentRedirectUrl();
                 },
                 placeOrderBypass: function () {
@@ -294,7 +325,49 @@ define(
                             }).done(
                                 function (response) {
                                     if ($.type(response) === 'object' && response.success && response.data) {
-                                        if(response.reference) {
+                                        if (response.reference) {
+                                            window.location.href = self.getDefaultSuccessUrl();
+                                        }
+                                        if (response.redirect) {
+                                            window.location.href = response.redirect;
+                                        }
+
+                                        $('#paytrail-form-wrapper').append(response.data);
+                                        return false;
+                                    }
+                                    fullScreenLoader.stopLoader();
+                                    self.addErrorMessage(response.message);
+                                }
+                            ).fail(
+                                function (response) {
+                                    fullScreenLoader.stopLoader();
+                                    self.addErrorMessage(response.message);
+                                }
+                            ).always(
+                                function () {
+                                    //a self.scrollTo();
+                                }
+                            );
+                        }
+                    );
+                },
+                placeAndAddCardBypass: function () {
+                    placeOrderAction(self.getData(), self.messageContainer).done(
+                        function () {
+                            fullScreenLoader.startLoader();
+                            $.ajax({
+                                url: mageUrlBuilder.build(self.getPayAndAddCardRedirectUrl()),
+                                type: 'post',
+                                context: this,
+                                data: {
+                                    'is_ajax': true,
+                                    'preselected_payment_method_id': self.selectedPaymentMethodId(),
+                                    'selected_token': self.selectedToken()
+                                }
+                            }).done(
+                                function (response) {
+                                    if ($.type(response) === 'object' && response.success && response.data) {
+                                        if (response.reference) {
                                             window.location.href = self.getDefaultSuccessUrl();
                                         }
                                         if (response.redirect) {

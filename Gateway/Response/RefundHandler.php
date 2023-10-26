@@ -1,4 +1,5 @@
 <?php
+
 namespace Paytrail\PaymentService\Gateway\Response;
 
 use Magento\Framework\Message\ManagerInterface;
@@ -8,38 +9,28 @@ use Magento\Payment\Gateway\Response\HandlerInterface;
 class RefundHandler implements HandlerInterface
 {
     /**
-     * @var ManagerInterface
-     */
-    private $messageManager;
-
-    /**
-     * @var SubjectReader
-     */
-    private $subjectReader;
-
-    /**
      * RefundHandler constructor.
      *
      * @param ManagerInterface $messageManager
-     * @param SubjectReader $subjectReader
+     * @param SubjectReader    $subjectReader
      */
     public function __construct(
-        ManagerInterface $messageManager,
-        SubjectReader $subjectReader
+        private readonly ManagerInterface $messageManager,
+        private readonly SubjectReader $subjectReader
     ) {
-        $this->messageManager = $messageManager;
-        $this->subjectReader = $subjectReader;
     }
 
     /**
+     * Handle function
+     *
      * @param array $handlingSubject
      * @param array $response
      */
-    public function handle(array $handlingSubject, array $response)
+    public function handle(array $handlingSubject, array $response): void
     {
         $payment = $this->subjectReader->readPayment($handlingSubject);
 
-        $payment = $payment->getPayment();
+        $payment       = $payment->getPayment();
         $transactionId = $payment->getTransactionId() . "-" . time();
         $payment->setIsTransactionClosed(true);
         $payment->setTransactionId($transactionId);

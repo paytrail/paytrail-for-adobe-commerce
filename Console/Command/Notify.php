@@ -5,32 +5,27 @@ namespace Paytrail\PaymentService\Console\Command;
 use Magento\Framework\App\State;
 use Magento\Framework\Console\Cli;
 use Paytrail\PaymentService\Model\Recurring\Notify as RecurringNotify;
+use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
-class Notify extends \Symfony\Component\Console\Command\Command
+class Notify extends Command
 {
-    /** @var RecurringNotify */
-    private $notify;
-
-    /** @var State */
-    private $state;
-
     /**
+     * Constructor
+     *
      * @param RecurringNotify $notify
      * @param State $state
      */
     public function __construct(
-        RecurringNotify $notify,
-        State           $state
+        private RecurringNotify $notify,
+        private State           $state
     ) {
-        $this->notify = $notify;
-        $this->state = $state;
         parent::__construct();
     }
 
     /**
-     * Configure function
+     * Configure
      *
      * @return void
      */

@@ -136,6 +136,20 @@
                     <span data-bind="i18n: 'Place Order'"></span>
                 </button>
             </div>
+            <div class="primary">
+                <button id="pay_and_add_card_button" class="action primary checkout"
+                        style="margin-right: 10px; display: none;"
+                        data-bind="
+                        click: placeAndAddCard,
+                        attr: {title: $t('Place and add card')},
+                        css: {disabled: !isPlaceOrderActionAllowed()},
+                        enable: (enablePayAndAddCardButton() == true)
+                        "
+                        disabled
+                        type="submit">
+                    <span data-bind="i18n: 'Place and add card'"></span>
+                </button>
+            </div>
         </div>
         <div id="paytrail-form-wrapper" style="display:none;"></div>
     </div>
