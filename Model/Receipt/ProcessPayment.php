@@ -1,11 +1,9 @@
 <?php
 
-namespace Paytrail\PaymentService\Helper;
+namespace Paytrail\PaymentService\Model\Receipt;
 
 use Magento\Checkout\Model\Session;
-use Magento\Framework\App\CacheInterface;
 use Magento\Quote\Api\CartRepositoryInterface;
-use Magento\Quote\Model\QuoteRepository;
 use Paytrail\PaymentService\Gateway\Config\Config;
 use Paytrail\PaymentService\Gateway\Validator\ResponseValidator;
 use Paytrail\PaymentService\Exceptions\CheckoutException;
@@ -13,81 +11,35 @@ use Paytrail\PaymentService\Model\FinnishReferenceNumber;
 use Paytrail\PaymentService\Model\ReceiptDataProvider;
 use Paytrail\PaymentService\Exceptions\TransactionSuccessException;
 
-/**
- * Class ProcessPayment
- */
 class ProcessPayment
 {
-    const PAYMENT_PROCESSING_CACHE_PREFIX = "paytrail-processing-payment-";
-
-    /**
-     * @var FinnishReferenceNumber
-     */
-    protected FinnishReferenceNumber $finnishReferenceNumber;
-
-    /**
-     * @var ResponseValidator
-     */
-    private $responseValidator;
-
-    /**
-     * @var ReceiptDataProvider
-     */
-    private $receiptDataProvider;
-
-    /**
-     * @var QuoteRepository
-     */
-    private $cartRepository;
-
-    /**
-     * @var CacheInterface
-     */
-    private $cache;
-
-    /**
-     * @var Config
-     */
-    private $gatewayConfig;
-
-    /**
-     * @var Data
-     */
-    private $paytrailHelper;
+    private const PAYMENT_PROCESSING_CACHE_PREFIX = "paytrail-processing-payment-";
 
     /**
      * ProcessPayment constructor.
+     *
      * @param ResponseValidator $responseValidator
      * @param ReceiptDataProvider $receiptDataProvider
-     * @param QuoteRepository $cartRepository
-     * @param CacheInterface $cache
+     * @param CartRepositoryInterface $cartRepository
      * @param Config $gatewayConfig
-     * @param Data $paytrailHelper
+     * @param FinnishReferenceNumber $finnishReferenceNumber
      */
     public function __construct(
-        ResponseValidator       $responseValidator,
-        ReceiptDataProvider     $receiptDataProvider,
-        CartRepositoryInterface $cartRepository,
-        CacheInterface          $cache,
-        Config                  $gatewayConfig,
-        Data                    $paytrailHelper,
-        FinnishReferenceNumber $finnishReferenceNumber
+        private ResponseValidator       $responseValidator,
+        private ReceiptDataProvider     $receiptDataProvider,
+        private CartRepositoryInterface $cartRepository,
+        private Config                  $gatewayConfig,
+        protected FinnishReferenceNumber $finnishReferenceNumber
     ) {
-        $this->responseValidator = $responseValidator;
-        $this->receiptDataProvider = $receiptDataProvider;
-        $this->cartRepository = $cartRepository;
-        $this->cache = $cache;
-        $this->gatewayConfig = $gatewayConfig;
-        $this->paytrailHelper = $paytrailHelper;
-        $this->finnishReferenceNumber = $finnishReferenceNumber;
     }
 
     /**
-     * @param array   $params
-     * @param Session $session
+     * Process function
      *
+     * @param array $params
+     * @param Session $session
      * @return array
-     * @throws \Exception
+     * @throws \Magento\Framework\Exception\LocalizedException
      */
     public function process($params, $session)
     {
@@ -117,27 +69,20 @@ class ProcessPayment
             ? $this->finnishReferenceNumber->getIdFromOrderReferenceNumber($reference)
             : $reference;
 
-        $count = 0;
-        while ($this->isPaymentLocked($orderNo) && $count < 5) {
-            $count++;
-            sleep($count);
-        }
-
-        $this->lockProcessingPayment($orderNo);
-
         /** @var array $ret */
         $ret = $this->processPayment($params, $session, $orderNo);
-
-        $this->unlockProcessingPayment($orderNo);
 
         return array_merge($ret, $errors);
     }
 
     /**
+     * ProcessPayment function
+     *
      * @param array $params
      * @param Session $session
-     * @param $orderNo
+     * @param string $orderNo
      * @return array
+     * @throws \Magento\Framework\Exception\LocalizedException
      */
     protected function processPayment($params, $session, $orderNo)
     {
@@ -160,8 +105,10 @@ class ProcessPayment
             /*
             there are 2 calls called from Paytrail Payment Service.
             One call is when a customer is redirected back to the magento store.
-            There is also the second, parallel, call from Paytrail Payment Service to make sure the payment is confirmed (if for any reason customer was not redirected back to the store).
-            Sometimes, the calls are called with too small time difference between them that Magento cannot handle them. The second call must be ignored or slowed down.
+            There is also the second, parallel, call from Paytrail Payment Service
+            to make sure the payment is confirmed (if for any reason customer was not redirected back to the store).
+            Sometimes, the calls are called with too small time difference between them that Magento cannot handle them.
+            The second call must be ignored or slowed down.
             */
             $this->receiptDataProvider->execute($params);
         } catch (CheckoutException $exception) {
@@ -182,39 +129,5 @@ class ProcessPayment
         }
 
         return $errors;
-    }
-
-    /**
-     * @param int $orderId
-     */
-    protected function lockProcessingPayment($orderId)
-    {
-        /** @var string $identifier */
-        $identifier = self::PAYMENT_PROCESSING_CACHE_PREFIX . $orderId;
-
-        $this->cache->save("locked", $identifier);
-    }
-
-    /**
-     * @param int $orderId
-     */
-    protected function unlockProcessingPayment($orderId)
-    {
-        /** @var string $identifier */
-        $identifier = self::PAYMENT_PROCESSING_CACHE_PREFIX . $orderId;
-
-        $this->cache->remove($identifier);
-    }
-
-    /**
-     * @param int $orderId
-     * @return bool
-     */
-    protected function isPaymentLocked($orderId)
-    {
-        /** @var string $identifier */
-        $identifier = self::PAYMENT_PROCESSING_CACHE_PREFIX . $orderId;
-
-        return $this->cache->load($identifier) ? true : false;
     }
 }
