@@ -43,7 +43,7 @@ class PaymentProvidersData
      */
     public function getAllPaymentMethods()
     {
-        $orderValue = $this->checkoutSession->getQuote()->getGrandTotal();
+        $orderValue = $this->checkoutSession->getQuote()->getGrandTotal() ?: 0;
 
         $commandExecutor = $this->commandManagerPool->get('paytrail');
         $response = $commandExecutor->executeByCode(
@@ -92,7 +92,7 @@ class PaymentProvidersData
             . $this->gatewayConfig->getPaymentMethodHighlightColor($storeId) . ';border-width:2px;}';
         $styles .= '.paytrail-payment-methods .paytrail-stored-token.active{ border-color:'
             . $this->gatewayConfig->getPaymentMethodHighlightColor($storeId) . ';border-width:2px;}';
-        $styles .= '.paytrail-payment-methods .paytrail-payment-method:hover, 
+        $styles .= '.paytrail-payment-methods .paytrail-payment-method:hover,
         .paytrail-payment-methods .paytrail-payment-method:not(.active):hover { border-color:'
             . $this->gatewayConfig->getPaymentMethodHoverHighlight($storeId) . ';}';
         $styles .= $this->gatewayConfig->getAdditionalCss($storeId);
