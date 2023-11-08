@@ -41,18 +41,20 @@ class Index implements ActionInterface
      * @param RequestInterface $request
      * @param CommandManagerPoolInterface $commandManagerPool
      * @param ProcessService $processService
+     * @param PaymentProvidersData $paymentProvidersData
      */
     public function __construct(
-        protected PendingOrderEmailConfirmation $pendingOrderEmailConfirmation,
-        protected Session                     $checkoutSession,
-        protected OrderRepositoryInterface    $orderRepositoryInterface,
-        protected OrderManagementInterface    $orderManagementInterface,
-        protected LoggerInterface             $logger,
-        protected Config                      $gatewayConfig,
-        protected ResultFactory               $resultFactory,
-        protected RequestInterface            $request,
-        protected CommandManagerPoolInterface $commandManagerPool,
-        protected ProcessService $processService
+        private readonly PendingOrderEmailConfirmation $pendingOrderEmailConfirmation,
+        private readonly Session                       $checkoutSession,
+        private readonly OrderRepositoryInterface      $orderRepositoryInterface,
+        private readonly OrderManagementInterface      $orderManagementInterface,
+        private readonly LoggerInterface               $logger,
+        private readonly Config                        $gatewayConfig,
+        private readonly ResultFactory                 $resultFactory,
+        private readonly RequestInterface              $request,
+        private readonly CommandManagerPoolInterface   $commandManagerPool,
+        private readonly ProcessService                $processService,
+        private readonly PaymentProvidersData          $paymentProvidersData
     ) {
     }
 
@@ -72,24 +74,21 @@ class Index implements ActionInterface
                 $selectedPaymentMethodRaw = $this->request->getParam(
                     'preselected_payment_method_id'
                 );
-                $selectedPaymentMethodId = preg_replace(
-                    '/' . PaymentProvidersData::ID_INCREMENT_SEPARATOR . '[0-9]{1,3}$/',
-                    '',
-                    $selectedPaymentMethodRaw
-                );
+
+                $selectedPaymentMethodId = $this->payment($selectedPaymentMethodRaw);
 
                 if (empty($selectedPaymentMethodId)) {
                     $this->errorMsg = __('No payment method selected');
                     throw new LocalizedException(__('No payment method selected'));
                 }
 
-                $order = $this->checkoutSession->getLastRealOrder();
+                $order        = $this->checkoutSession->getLastRealOrder();
                 $responseData = $this->getResponseData($order, $selectedPaymentMethodId);
-                $formData = $this->getFormFields(
+                $formData     = $this->getFormFields(
                     $responseData,
                     $selectedPaymentMethodId
                 );
-                $formAction = $this->getFormAction(
+                $formAction   = $this->getFormAction(
                     $responseData,
                     $selectedPaymentMethodId
                 );
@@ -103,10 +102,10 @@ class Index implements ActionInterface
                     $redirect_url = $responseData->getHref();
 
                     return $resultJson->setData([
-                        'success' => true,
-                        'data' => 'redirect',
-                        'redirect' => $redirect_url
-                    ]);
+                                                    'success'  => true,
+                                                    'data'     => 'redirect',
+                                                    'redirect' => $redirect_url
+                                                ]);
                 }
 
                 $block = $this->resultFactory->create(ResultFactory::TYPE_PAGE)
@@ -116,9 +115,9 @@ class Index implements ActionInterface
                     ->setParams($formData);
 
                 return $resultJson->setData([
-                    'success' => true,
-                    'data' => $block->toHtml(),
-                ]);
+                                                'success' => true,
+                                                'data'    => $block->toHtml(),
+                                            ]);
             }
         } catch (\Exception $e) {
             // Error will be handled below
@@ -136,9 +135,9 @@ class Index implements ActionInterface
         $this->checkoutSession->restoreQuote();
 
         return $resultJson->setData([
-            'success' => false,
-            'message' => $this->errorMsg
-        ]);
+                                        'success' => false,
+                                        'message' => $this->errorMsg
+                                    ]);
     }
 
     /**
@@ -146,6 +145,7 @@ class Index implements ActionInterface
      *
      * @param PaymentResponse $responseData
      * @param string $paymentMethodId
+     *
      * @return array
      */
     protected function getFormFields($responseData, $paymentMethodId = null): array
@@ -169,6 +169,7 @@ class Index implements ActionInterface
      *
      * @param PaymentResponse $responseData
      * @param string $paymentMethodId
+     *
      * @return string
      */
     protected function getFormAction($responseData, $paymentMethodId = null): string
@@ -190,6 +191,7 @@ class Index implements ActionInterface
      *
      * @param Order $order
      * @param string $paymentMethod
+     *
      * @return mixed
      * @throws CheckoutException
      * @throws \Magento\Framework\Exception\NotFoundException
@@ -198,11 +200,11 @@ class Index implements ActionInterface
     protected function getResponseData($order, $paymentMethod)
     {
         $commandExecutor = $this->commandManagerPool->get('paytrail');
-        $response = $commandExecutor->executeByCode(
+        $response        = $commandExecutor->executeByCode(
             'payment',
             null,
             [
-                'order' => $order,
+                'order'          => $order,
                 'payment_method' => $paymentMethod
             ]
         );

@@ -13,8 +13,8 @@ use Psr\Log\LoggerInterface;
 
 class PaymentProvidersData
 {
-    private const CREDITCARD_GROUP_ID = 'creditcard';
-    public const ID_INCREMENT_SEPARATOR = '__';
+    private const CREDITCARD_GROUP_ID    = 'creditcard';
+    public const  ID_INCREMENT_SEPARATOR = '__';
 
     /**
      * PaymentProvidersData constructor.
@@ -26,11 +26,11 @@ class PaymentProvidersData
      * @param PaytrailLogger $paytrailLogger
      */
     public function __construct(
-        private Session $checkoutSession,
-        private LoggerInterface $log,
+        private Session                     $checkoutSession,
+        private LoggerInterface             $log,
         private CommandManagerPoolInterface $commandManagerPool,
-        private Config $gatewayConfig,
-        private PaytrailLogger $paytrailLogger
+        private Config                      $gatewayConfig,
+        private PaytrailLogger              $paytrailLogger
     ) {
     }
 
@@ -46,7 +46,7 @@ class PaymentProvidersData
         $orderValue = $this->checkoutSession->getQuote()->getGrandTotal() ?: 0;
 
         $commandExecutor = $this->commandManagerPool->get('paytrail');
-        $response = $commandExecutor->executeByCode(
+        $response        = $commandExecutor->executeByCode(
             'method_provider',
             null,
             ['amount' => $orderValue]
@@ -70,6 +70,7 @@ class PaymentProvidersData
      * Create payment page styles from the values entered in Paytrail configuration.
      *
      * @param string $storeId
+     *
      * @return string
      */
     public function wrapPaymentMethodStyles($storeId)
@@ -104,15 +105,16 @@ class PaymentProvidersData
      * Create array for payment providers and groups containing unique method id
      *
      * @param array $responseData
+     *
      * @return array
      */
     public function handlePaymentProviderGroupData($responseData)
     {
         $allMethods = [];
-        $allGroups = [];
+        $allGroups  = [];
         foreach ($responseData as $group) {
             $allGroups[$group['id']] = [
-                'id' => $group['id'],
+                'id'   => $group['id'],
                 'name' => $group['name'],
                 'icon' => $group['icon']
             ];
@@ -124,10 +126,10 @@ class PaymentProvidersData
         foreach ($allGroups as $key => $group) {
             if ($group['id'] == 'creditcard') {
                 $allGroups[$key]["can_tokenize"] = true;
-                $allGroups[$key]["tokens"] = $this->gatewayConfig->getCustomerTokens();
+                $allGroups[$key]["tokens"]       = $this->gatewayConfig->getCustomerTokens();
             } else {
                 $allGroups[$key]["can_tokenize"] = false;
-                $allGroups[$key]["tokens"] = false;
+                $allGroups[$key]["tokens"]       = false;
             }
 
             $allGroups[$key]['providers'] = $this->addProviderDataToGroup($allMethods, $group['id']);
@@ -140,27 +142,45 @@ class PaymentProvidersData
      *
      * @param array $responseData
      * @param string $groupId
+     *
      * @return array
      */
     protected function addProviderDataToGroup($responseData, $groupId)
     {
         $methods = [];
-        $i = 1;
+        $i       = 1;
 
         foreach ($responseData as $key => $method) {
             if ($method->getGroup() == $groupId) {
-                $id = $groupId === self::CREDITCARD_GROUP_ID ? $method->getId() . '-' . ($i++) : $method->getId();
+                $id        = $groupId === self::CREDITCARD_GROUP_ID ? $method->getId() . '-' . ($i++) : $method->getId(
+                );
                 $methods[] = [
                     'checkoutId' => $method->getId(),
-                    'id' => $method->getId() . self::ID_INCREMENT_SEPARATOR .  ($i++),
-                    'name' => $method->getName(),
-                    'group' => $method->getGroup(),
-                    'icon' => $method->getIcon(),
-                    'svg' => $method->getSvg()
+                    'id'         => $this->getIncrementalId($method, $i),
+                    'name'       => $method->getName(),
+                    'group'      => $method->getGroup(),
+                    'icon'       => $method->getIcon(),
+                    'svg'        => $method->getSvg()
                 ];
             }
         }
 
         return $methods;
+    }
+
+    /**
+     * @param mixed $method
+     * @param int $i
+     *
+     * @return string
+     */
+    public function getIncrementalId(mixed $method, int &$i): string
+    {
+        return $method->getId() . self::ID_INCREMENT_SEPARATOR . ($i++);
+    }
+
+    public function getIdWithoutIncrement(string $id): string
+    {
+        return preg_replace('/' . self::ID_INCREMENT_SEPARATOR . '[0-9]{1,3}$/', '', $id);
     }
 }
