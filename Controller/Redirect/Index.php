@@ -15,10 +15,9 @@ use Magento\Sales\Model\Order;
 use Paytrail\PaymentService\Exceptions\CheckoutException;
 use Paytrail\PaymentService\Gateway\Config\Config;
 use Paytrail\PaymentService\Model\Email\Order\PendingOrderEmailConfirmation;
+use Paytrail\PaymentService\Model\ProviderForm;
 use Paytrail\PaymentService\Model\Receipt\ProcessService;
 use Paytrail\PaymentService\Model\Ui\DataProvider\PaymentProvidersData;
-use Paytrail\SDK\Model\Provider;
-use Paytrail\SDK\Response\PaymentResponse;
 use Psr\Log\LoggerInterface;
 
 class Index implements ActionInterface
@@ -54,7 +53,8 @@ class Index implements ActionInterface
         private readonly RequestInterface              $request,
         private readonly CommandManagerPoolInterface   $commandManagerPool,
         private readonly ProcessService                $processService,
-        private readonly PaymentProvidersData          $paymentProvidersData
+        private readonly PaymentProvidersData          $paymentProvidersData,
+        private readonly ProviderForm                  $providerForm
     ) {
     }
 
@@ -75,44 +75,43 @@ class Index implements ActionInterface
                     'preselected_payment_method_id'
                 );
 
-                $selectedPaymentMethodId = $this->payment($selectedPaymentMethodRaw);
+                $selectedPaymentMethodId = $this->paymentProvidersData->getIdWithoutIncrement(
+                    $selectedPaymentMethodRaw
+                );
 
                 if (empty($selectedPaymentMethodId)) {
                     $this->errorMsg = __('No payment method selected');
                     throw new LocalizedException(__('No payment method selected'));
                 }
 
-                $order        = $this->checkoutSession->getLastRealOrder();
-                $responseData = $this->getResponseData($order, $selectedPaymentMethodId);
-                $formData     = $this->getFormFields(
-                    $responseData,
-                    $selectedPaymentMethodId
-                );
-                $formAction   = $this->getFormAction(
-                    $responseData,
-                    $selectedPaymentMethodId
-                );
+                $order           = $this->checkoutSession->getLastRealOrder();
+                $paytrailPayment = $this->getPaytrailPayment($order, $selectedPaymentMethodId);
+
+                if ($this->gatewayConfig->getSkipBankSelection()) {
+                    $redirect_url = $paytrailPayment->getHref();
+
+                    return $resultJson->setData(
+                        [
+                            'success'  => true,
+                            'data'     => 'redirect',
+                            'redirect' => $redirect_url
+                        ]
+                    );
+                }
+
+                $formParams = $this->providerForm->getFormParams($paytrailPayment, $selectedPaymentMethodId);
 
                 // send order confirmation for pending order
-                if ($responseData) {
+                if ($paytrailPayment) {
                     $this->pendingOrderEmailConfirmation->pendingOrderEmailSend($order);
                 }
 
-                if ($this->gatewayConfig->getSkipBankSelection()) {
-                    $redirect_url = $responseData->getHref();
-
-                    return $resultJson->setData([
-                                                    'success'  => true,
-                                                    'data'     => 'redirect',
-                                                    'redirect' => $redirect_url
-                                                ]);
-                }
 
                 $block = $this->resultFactory->create(ResultFactory::TYPE_PAGE)
                     ->getLayout()
                     ->createBlock(\Paytrail\PaymentService\Block\Redirect\Paytrail::class)
-                    ->setUrl($formAction)
-                    ->setParams($formData);
+                    ->setUrl($formParams['formAction'])
+                    ->setParams($formParams['formFields']);
 
                 return $resultJson->setData([
                                                 'success' => true,
@@ -141,52 +140,6 @@ class Index implements ActionInterface
     }
 
     /**
-     * GetFormFields function
-     *
-     * @param PaymentResponse $responseData
-     * @param string $paymentMethodId
-     *
-     * @return array
-     */
-    protected function getFormFields($responseData, $paymentMethodId = null): array
-    {
-        $formFields = [];
-
-        /** @var Provider $provider */
-        foreach ($responseData->getProviders() as $provider) {
-            if ($provider->getId() == $paymentMethodId) {
-                foreach ($provider->getParameters() as $parameter) {
-                    $formFields[$parameter->name] = $parameter->value;
-                }
-            }
-        }
-
-        return $formFields;
-    }
-
-    /**
-     * GetFormAction function
-     *
-     * @param PaymentResponse $responseData
-     * @param string $paymentMethodId
-     *
-     * @return string
-     */
-    protected function getFormAction($responseData, $paymentMethodId = null): string
-    {
-        $returnUrl = '';
-
-        /** @var Provider $provider */
-        foreach ($responseData->getProviders() as $provider) {
-            if ($provider->getId() == $paymentMethodId) {
-                $returnUrl = $provider->getUrl();
-            }
-        }
-
-        return $returnUrl;
-    }
-
-    /**
      * GetResponseData function
      *
      * @param Order $order
@@ -197,7 +150,7 @@ class Index implements ActionInterface
      * @throws \Magento\Framework\Exception\NotFoundException
      * @throws \Magento\Payment\Gateway\Command\CommandException
      */
-    protected function getResponseData($order, $paymentMethod)
+    private function getPaytrailPayment(Order $order, string $paymentMethod)
     {
         $commandExecutor = $this->commandManagerPool->get('paytrail');
         $response        = $commandExecutor->executeByCode(

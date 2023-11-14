@@ -179,6 +179,11 @@ class PaymentProvidersData
         return $method->getId() . self::ID_INCREMENT_SEPARATOR . ($i++);
     }
 
+    /**
+     * @param string $id
+     *
+     * @return string
+     */
     public function getIdWithoutIncrement(string $id): string
     {
         return preg_replace('/' . self::ID_INCREMENT_SEPARATOR . '[0-9]{1,3}$/', '', $id);
