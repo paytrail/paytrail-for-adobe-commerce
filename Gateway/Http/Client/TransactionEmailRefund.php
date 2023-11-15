@@ -43,6 +43,7 @@ class TransactionEmailRefund implements ClientInterface
 
         return $this->emailRefund(
             $request['order'],
+            $request['refund_request']->getAmount(),
             $request['parent_transaction_id']
         );
     }
@@ -115,17 +116,17 @@ class TransactionEmailRefund implements ClientInterface
      * SetEmailRefundRequestData function
      *
      * @param EmailRefundRequest    $paytrailEmailRefund
-     * @param float                 $amount
+     * @param int                   $amount
      * @param OrderAdapterInterface $order
      */
     private function setEmailRefundRequestData(
         EmailRefundRequest $paytrailEmailRefund,
-        float $amount,
+        int $amount,
         OrderAdapterInterface $order
     ) {
         $paytrailEmailRefund->setEmail($order->getBillingAddress()->getEmail());
 
-        $paytrailEmailRefund->setAmount(round($amount * 100));
+        $paytrailEmailRefund->setAmount($amount);
 
         $callback = $this->refundCallback->createRefundCallback();
         $paytrailEmailRefund->setCallbackUrls($callback);

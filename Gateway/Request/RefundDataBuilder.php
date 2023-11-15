@@ -96,7 +96,7 @@ class RefundDataBuilder implements BuilderInterface
             throw new CheckoutException(__($message));
         }
 
-        $paytrailRefund->setAmount(round($amount * 100));
+        $paytrailRefund->setAmount((int)round($amount * 100));
 
         $callback = $this->refundCallback->createRefundCallback();
         $paytrailRefund->setCallbackUrls($callback);
