@@ -91,7 +91,7 @@ class StopSchedule extends \Magento\Backend\App\Action implements HttpGetActionI
                 $this->messageManager->addWarningMessage(\__(
                     'Order ID %id has a status other than %status, automatic order cancel disabled. If the order is unpaid please cancel it manually',
                     [
-                        'id' => array_first($ordersId),
+                        'id' => array_shift($ordersId),
                         'status' => self::ORDER_PENDING_STATUS
                     ]
                 ));
