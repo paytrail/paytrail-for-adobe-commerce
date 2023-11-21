@@ -56,7 +56,7 @@ class TransactionRefund implements ClientInterface
                     'email_refund',
                     $request['payment'],
                     [
-                        'amount' => $request['amount'],
+                        'amount' => $request['refund_request']->getAmount(),
                     ]
                 );
             } catch (\Exception $e) {
@@ -98,13 +98,13 @@ class TransactionRefund implements ClientInterface
                 )
             );
 
-            $response = $paytrailClient->refund($refundRequest, $transactionId);
+            $response['data'] = $paytrailClient->refund($refundRequest, $transactionId);
 
             $this->log->debugLog(
                 'response',
                 sprintf(
                     'Successful response for refund. Transaction Id: %s',
-                    $response->getTransactionId()
+                    $response['data']->getTransactionId()
                 )
             );
         } catch (RequestException $e) {
