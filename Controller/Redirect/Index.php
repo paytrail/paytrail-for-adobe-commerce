@@ -110,8 +110,8 @@ class Index implements ActionInterface
                 $block = $this->resultFactory->create(ResultFactory::TYPE_PAGE)
                     ->getLayout()
                     ->createBlock(\Paytrail\PaymentService\Block\Redirect\Paytrail::class)
-                    ->setUrl($formParams['formAction'])
-                    ->setParams($formParams['formFields']);
+                    ->setUrl($formParams['action'])
+                    ->setParams($this->getInputs($formParams['inputs']));
 
                 return $resultJson->setData([
                                                 'success' => true,
@@ -168,5 +168,20 @@ class Index implements ActionInterface
         }
 
         return $response["data"];
+    }
+
+    /**
+     * @param $inputs
+     *
+     * @return mixed
+     */
+    public function getInputs($inputs)
+    {
+        $formFields = [];
+        foreach ($inputs as $input) {
+            $formFields[$input['name']] = $input['value'];
+        }
+
+        return $formFields;
     }
 }
