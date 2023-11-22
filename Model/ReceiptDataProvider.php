@@ -4,6 +4,7 @@ namespace Paytrail\PaymentService\Model;
 
 use Magento\Checkout\Model\Session;
 use Magento\Framework\Exception\LocalizedException;
+use Magento\Sales\Model\Order;
 use Paytrail\PaymentService\Exceptions\CheckoutException;
 use Paytrail\PaymentService\Gateway\Config\Config;
 use Paytrail\PaymentService\Model\Receipt\LoadService;
@@ -12,6 +13,36 @@ use Paytrail\PaymentService\Model\Receipt\ProcessService;
 
 class ReceiptDataProvider
 {
+    /**
+     * @var string
+     */
+    private $orderIncrementalId;
+
+    /**
+     * @var string
+     */
+    private $transactionId;
+
+    /**
+     * @var string
+     */
+    private $paramsStamp;
+
+    /**
+     * @var string
+     */
+    private $paramsMethod;
+
+    /**
+     * @var Order
+     */
+    private $currentOrder;
+
+    /**
+     * @var string
+     */
+    private $orderId;
+
     /**
      * ReceiptDataProvider constructor.
      *
@@ -58,8 +89,6 @@ class ReceiptDataProvider
 
         $this->currentOrder = $this->loadService->loadOrder($this->orderIncrementalId);
         $this->orderId = $this->currentOrder->getId();
-
-        $this->currentOrderPayment = $this->currentOrder->getPayment();
 
         /** @var string|void $paymentVerified */
         $paymentVerified = $this->paymentTransaction->verifyPaymentData($params, $this->currentOrder);
