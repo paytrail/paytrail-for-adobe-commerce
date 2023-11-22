@@ -14,22 +14,22 @@ use Paytrail\PaymentService\Model\Receipt\ProcessService;
 class ReceiptDataProvider
 {
     /**
-     * @var mixed|string|null
+     * @var string
      */
     private $orderIncrementalId;
 
     /**
-     * @var mixed
+     * @var string
      */
     private $transactionId;
 
     /**
-     * @var mixed
+     * @var string
      */
     private $paramsStamp;
 
     /**
-     * @var mixed
+     * @var string
      */
     private $paramsMethod;
 
@@ -39,9 +39,9 @@ class ReceiptDataProvider
     private $currentOrder;
 
     /**
-     * @var mixed
+     * @var string
      */
-    private mixed $orderId;
+    private $orderId;
 
     /**
      * ReceiptDataProvider constructor.
