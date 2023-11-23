@@ -79,6 +79,10 @@ class Index implements ActionInterface
                     $selectedPaymentMethodRaw
                 );
 
+                $cardType = $this->paymentProvidersData->getCardType(
+                    $selectedPaymentMethodRaw
+                );
+
                 if (empty($selectedPaymentMethodId)) {
                     $this->errorMsg = __('No payment method selected');
                     throw new LocalizedException(__('No payment method selected'));
@@ -99,7 +103,7 @@ class Index implements ActionInterface
                     );
                 }
 
-                $formParams = $this->providerForm->getFormParams($paytrailPayment, $selectedPaymentMethodId);
+                $formParams = $this->providerForm->getFormParams($paytrailPayment, $selectedPaymentMethodId, $cardType);
 
                 // send order confirmation for pending order
                 if ($paytrailPayment) {

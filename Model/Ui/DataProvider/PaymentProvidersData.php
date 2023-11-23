@@ -15,6 +15,7 @@ class PaymentProvidersData
 {
     private const CREDITCARD_GROUP_ID    = 'creditcard';
     public const  ID_INCREMENT_SEPARATOR = '__';
+    public const  ID_CARD_TYPE_SEPARATOR = '__';
 
     /**
      * PaymentProvidersData constructor.
@@ -152,11 +153,10 @@ class PaymentProvidersData
 
         foreach ($responseData as $key => $method) {
             if ($method->getGroup() == $groupId) {
-                $id        = $groupId === self::CREDITCARD_GROUP_ID ? $method->getId() . '-' . ($i++) : $method->getId(
-                );
+                $id        = $groupId === self::CREDITCARD_GROUP_ID ? $method->getId() . self::ID_INCREMENT_SEPARATOR . strtolower($method->getName()) : $method->getId();
                 $methods[] = [
                     'checkoutId' => $method->getId(),
-                    'id'         => $this->getIncrementalId($method, $i),
+                    'id'         => $this->getIncrementalId($id, $i),
                     'name'       => $method->getName(),
                     'group'      => $method->getGroup(),
                     'icon'       => $method->getIcon(),
@@ -174,9 +174,9 @@ class PaymentProvidersData
      *
      * @return string
      */
-    public function getIncrementalId(mixed $method, int &$i): string
+    public function getIncrementalId($id, int &$i): string
     {
-        return $method->getId() . self::ID_INCREMENT_SEPARATOR . ($i++);
+        return $id . self::ID_INCREMENT_SEPARATOR . ($i++);
     }
 
     /**
@@ -186,6 +186,22 @@ class PaymentProvidersData
      */
     public function getIdWithoutIncrement(string $id): string
     {
-        return preg_replace('/' . self::ID_INCREMENT_SEPARATOR . '[0-9]{1,3}$/', '', $id);
+        return explode(self::ID_INCREMENT_SEPARATOR, $id)[0];
+    }
+
+    /**
+     * @param string $id
+     *
+     * @return ?string
+     */
+    public function getCardType(string $id): ?string
+    {
+        $idParts = explode(self::ID_INCREMENT_SEPARATOR, $id);
+
+        if (count($idParts)  == 3) {
+            return $idParts[1];
+        }
+
+        return null;
     }
 }
