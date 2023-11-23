@@ -79,6 +79,10 @@ class Index implements ActionInterface
                     $selectedPaymentMethodRaw
                 );
 
+                $cardType = $this->paymentProvidersData->getCardType(
+                    $selectedPaymentMethodRaw
+                );
+
                 if (empty($selectedPaymentMethodId)) {
                     $this->errorMsg = __('No payment method selected');
                     throw new LocalizedException(__('No payment method selected'));
@@ -99,7 +103,7 @@ class Index implements ActionInterface
                     );
                 }
 
-                $formParams = $this->providerForm->getFormParams($paytrailPayment, $selectedPaymentMethodId);
+                $formParams = $this->providerForm->getFormParams($paytrailPayment, $selectedPaymentMethodId, $cardType);
 
                 // send order confirmation for pending order
                 if ($paytrailPayment) {
@@ -110,8 +114,8 @@ class Index implements ActionInterface
                 $block = $this->resultFactory->create(ResultFactory::TYPE_PAGE)
                     ->getLayout()
                     ->createBlock(\Paytrail\PaymentService\Block\Redirect\Paytrail::class)
-                    ->setUrl($formParams['formAction'])
-                    ->setParams($formParams['formFields']);
+                    ->setUrl($formParams['action'])
+                    ->setParams($this->getInputs($formParams['inputs']));
 
                 return $resultJson->setData([
                                                 'success' => true,
@@ -168,5 +172,20 @@ class Index implements ActionInterface
         }
 
         return $response["data"];
+    }
+
+    /**
+     * @param $inputs
+     *
+     * @return mixed
+     */
+    public function getInputs($inputs)
+    {
+        $formFields = [];
+        foreach ($inputs as $input) {
+            $formFields[$input['name']] = $input['value'];
+        }
+
+        return $formFields;
     }
 }

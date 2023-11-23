@@ -15,11 +15,11 @@ class ProviderForm
      *
      * @return array
      */
-    public function getFormParams(PaymentResponse $paytrailPayment, string $paymentMethodId = null)
+    public function getFormParams(PaymentResponse $paytrailPayment, string $paymentMethodId = null, $cardType = null)
     {
         $formParams = [
-            'action' => $this->getFormAction($paytrailPayment, $paymentMethodId),
-            'inputs' => $this->getFormFields($paytrailPayment, $paymentMethodId),
+            'action' => $this->getFormAction($paytrailPayment, $paymentMethodId, $cardType),
+            'inputs' => $this->getFormFields($paytrailPayment, $paymentMethodId, $cardType),
             'method' => self::FORM_SUBMIT_METHOD,
         ];
 
@@ -31,16 +31,22 @@ class ProviderForm
      *
      * @param PaymentResponse $paytrailPayment
      * @param string $paymentMethodId
+     * @param $cardType
      *
      * @return string
      */
-    private function getFormAction(PaymentResponse $paytrailPayment, string $paymentMethodId): string
+    private function getFormAction(PaymentResponse $paytrailPayment, string $paymentMethodId, $cardType): string
     {
         $returnUrl = '';
 
         foreach ($paytrailPayment->getProviders() as $provider) {
             if ($provider->getId() == $paymentMethodId) {
+                if ($cardType && strtolower($provider->getName()) != $cardType) {
+                    continue;
+                }
                 $returnUrl = $provider->getUrl();
+
+                break;
             }
         }
 
@@ -52,21 +58,27 @@ class ProviderForm
      *
      * @param PaymentResponse $paytrailPayment
      * @param string $paymentMethodId
+     * @param $cardType
      *
      * @return array
      */
-    private function getFormFields(PaymentResponse $paytrailPayment, string $paymentMethodId): array
+    private function getFormFields(PaymentResponse $paytrailPayment, string $paymentMethodId, $cardType): array
     {
         $formFields = [];
 
         foreach ($paytrailPayment->getProviders() as $provider) {
             if ($provider->getId() == $paymentMethodId) {
+                if ($cardType && strtolower($provider->getName()) != $cardType) {
+                    continue;
+                }
                 foreach ($provider->getParameters() as $parameter) {
                     $formFields[] = [
                         'name'  => $parameter->name,
                         'value' => $parameter->value,
                     ];
                 }
+
+                break;
             }
         }
 
