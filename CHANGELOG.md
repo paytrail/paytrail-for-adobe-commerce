@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fix issue with invoice credit memos
 - Fix deprecated dynamic properties for PHP 8.2
 - Exchange array_first method
+- Add equalizer to check request amount before placement
 
 ## [2.0.0] - 2023-10-26
 
