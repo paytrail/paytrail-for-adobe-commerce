@@ -40,6 +40,7 @@ class PaymentDataProvider
      * @param FinnishReferenceNumber $referenceNumber
      * @param Config $gatewayConfig
      * @param Flag $flag
+     * @param AmountEqualizer $amountEqualizer
      * @param PaytrailLogger $log
      */
     public function __construct(
@@ -53,6 +54,7 @@ class PaymentDataProvider
         private FinnishReferenceNumber              $referenceNumber,
         private Config                              $gatewayConfig,
         private Flag                                $flag,
+        private AmountEqualizer                     $amountEqualizer,
         private PaytrailLogger                      $log
     ) {
     }
@@ -99,6 +101,9 @@ class PaymentDataProvider
             $deliveryAddress = $this->createAddress($shippingAddress);
             $paytrailPayment->setDeliveryAddress($deliveryAddress);
         }
+
+        // request amounts equalizer
+        $this->amountEqualizer->equal($paytrailPayment);
 
         // Conditionally set manual invoicing flag if selected payment method supports it.
         $this->flag->setManualInvoiceActivationFlag(
