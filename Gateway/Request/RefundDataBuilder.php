@@ -88,11 +88,11 @@ class RefundDataBuilder implements BuilderInterface
      *
      * @param RefundRequest $paytrailRefund
      * @param float $amount
-     * @param string $orderId
+     * @param string|int $orderId
      * @return void
      * @throws CheckoutException
      */
-    private function setRefundRequestData(RefundRequest $paytrailRefund, float $amount, string $orderId): void
+    private function setRefundRequestData(RefundRequest $paytrailRefund, float $amount, string|int $orderId): void
     {
         if ($amount <= 0) {
             $message = 'Refund amount must be above 0';
