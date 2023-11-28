@@ -305,7 +305,7 @@ class PaymentDataProvider
 
                 if ($differenceUnitsCount) {
 
-                    $paytrailItem['amount'] =  $qtyOrdered - $differenceUnitsCount;
+                    $paytrailItem['amount'] = $qtyOrdered - $differenceUnitsCount;
 
                     $paytrailItemRoundingCorrection = [
                         'title'  => $item->getName()
