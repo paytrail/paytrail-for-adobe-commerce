@@ -56,7 +56,11 @@ class Index implements \Magento\Framework\App\ActionInterface
         if ($status == 'pending_payment' || in_array($status, Receipt::ORDER_CANCEL_STATUSES)) {
             // order status could be changed by receipt
             // if not, status change needs to be forced by processing the payment
-            $response['error'] = $this->processPayment->process($this->request->getParams(), $this->session);
+            return $response->setData(
+                [
+                    'error' => $this->processPayment->process($this->request->getParams(), $this->session)
+                ]
+            );
         }
 
         return $response;
