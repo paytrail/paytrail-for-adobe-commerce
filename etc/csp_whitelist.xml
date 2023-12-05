@@ -1,0 +1,32 @@
+<?xml version="1.0"?>
+<csp_whitelist xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+               xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Csp/etc/csp_whitelist.xsd">
+    <policies>
+        <policy id="img-src">
+            <values>
+                <value id="hubspot" type="host">cdn2.hubspot.net</value>
+                <value id="resources-paytrail" type="host">resources.paytrail.com</value>
+            </values>
+        </policy>
+        <policy id="form-action">
+            <values>
+                <value id="services-paytrail" type="host">services.paytrail.com</value>
+                <value id="paytrail" type="host">paytrail.com</value>
+                <value id="nordea" type="host">epmt.nordea.fi</value>
+                <value id="dankebank" type="host">verkkopankki.danskebank.fi</value>
+                <value id="spankki" type="host">online.s-pankki.fi</value>
+                <value id="poppankki" type="host">verkkomaksu.poppankki.fi</value>
+                <value id="omasp" type="host">verkkomaksu.omasp.fi</value>
+                <value id="aktia" type="host">auth.aktia.fi</value>
+                <value id="aktiatest" type="host">auth.aktia.fi</value>
+                <value id="handelsbanken" type="host">verkkomaksu.handelsbanken.fi</value>
+                <value id="saastopankki" type="host">verkkomaksu.saastopankki.fi</value>
+                <value id="alandsbanken" type="host">online.alandsbanken.fi</value>
+                <value id="pivo" type="host">maksu.pivo.fi</value>
+                <value id="pivoqa" type="host">qa-maksu.pivo.fi</value>
+                <value id="sphstaging" type="host">v1-hub-staging.sph-test-solinor.com</value>
+                <value id="sph" type="host">v1.api.paymenthighway.io</value>
+            </values>
+        </policy>
+    </policies>
+</csp_whitelist>
