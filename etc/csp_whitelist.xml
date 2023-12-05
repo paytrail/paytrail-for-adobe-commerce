@@ -18,14 +18,13 @@
                 <value id="poppankki" type="host">verkkomaksu.poppankki.fi</value>
                 <value id="omasp" type="host">verkkomaksu.omasp.fi</value>
                 <value id="aktia" type="host">auth.aktia.fi</value>
-                <value id="aktiatest" type="host">auth.aktia.fi</value>
                 <value id="handelsbanken" type="host">verkkomaksu.handelsbanken.fi</value>
                 <value id="saastopankki" type="host">verkkomaksu.saastopankki.fi</value>
                 <value id="alandsbanken" type="host">online.alandsbanken.fi</value>
                 <value id="pivo" type="host">maksu.pivo.fi</value>
                 <value id="pivoqa" type="host">qa-maksu.pivo.fi</value>
                 <value id="sphstaging" type="host">v1-hub-staging.sph-test-solinor.com</value>
-                <value id="sph" type="host">v1.api.paymenthighway.io</value>
+                <value id="paymenthighway" type="host">v1.api.paymenthighway.io</value>
             </values>
         </policy>
     </policies>
