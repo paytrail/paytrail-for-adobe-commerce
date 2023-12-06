@@ -2,111 +2,131 @@
 
 namespace Paytrail\PaymentService\Gateway\Http\Client;
 
+use GuzzleHttp\Exception\RequestException;
+use Magento\Payment\Gateway\Data\OrderAdapterInterface;
 use Magento\Payment\Gateway\Http\ClientInterface;
-use Magento\Sales\Model\Order;
-use Paytrail\PaymentService\Helper\ApiData;
-use Paytrail\SDK\Response\RefundResponse;
-use Psr\Log\LoggerInterface;
+use Paytrail\PaymentService\Model\Adapter\Adapter;
+use \Paytrail\PaymentService\Logger\PaytrailLogger;
 use Magento\Payment\Gateway\Http\TransferInterface;
+use Magento\Payment\Gateway\Command\CommandManagerPoolInterface;
+use Paytrail\SDK\Request\RefundRequest;
 
 class TransactionRefund implements ClientInterface
 {
     /**
-     * @var ApiData
-     */
-    private $apiData;
-
-    /**
-     * @var Order
-     */
-    private $order;
-    
-    /**
-     * @var LoggerInterface
-     */
-    private $log;
-
-    /**
-     * TransactionRefund constructor.
+     * Constructor
      *
-     * @param ApiData $apiData
-     * @param Order $order
-     * @param LoggerInterface $log
+     * @param \Paytrail\PaymentService\Logger\PaytrailLogger               $log
+     * @param \Magento\Payment\Gateway\Command\CommandManagerPoolInterface $commandManagerPool
+     * @param \Paytrail\PaymentService\Model\Adapter\Adapter               $paytrailAdapter
      */
     public function __construct(
-        ApiData $apiData,
-        Order $order,
-        LoggerInterface $log
+        private readonly PaytrailLogger $log,
+        private readonly CommandManagerPoolInterface $commandManagerPool,
+        private readonly Adapter $paytrailAdapter,
     ) {
-        $this->apiData = $apiData;
-        $this->log = $log;
-        $this->order = $order;
     }
 
     /**
      * PlaceRequest function
      *
      * @param TransferInterface $transferObject
-     * @return array|void
+     *
+     * @return array
      */
     public function placeRequest(TransferInterface $transferObject)
     {
-        $request = $transferObject->getBody();
+        $request  = $transferObject->getBody();
+        $response = $this->refund(
+            $request['refund_request'],
+            $request['order'],
+            $request['parent_transaction_id']
+        );
 
-        $data = [
-            'status' => false
-        ];
+        if (isset($response['error'])) {
+            $this->log->error(
+                'Error occurred during refund: '
+                . $response['error']
+                . ', Falling back to to email refund.'
+            );
 
-        /** @var RefundResponse $response */
-        $response = $this->postRefundRequest($request);
-
-        if ($response) {
-            $data['status'] = $response->getStatus();
+            try {
+                $commandExecutor = $this->commandManagerPool->get($request['payment']->getMethodInstance()->getCode());
+                $commandExecutor->executeByCode(
+                    'email_refund',
+                    $request['payment'],
+                    [
+                        'amount' => $request['refund_request']->getAmount(),
+                    ]
+                );
+            } catch (\Exception $e) {
+                $this->log->error(
+                    'Error occurred during email refund: '
+                    . $e->getMessage()
+                );
+            }
         }
-        return $data;
+
+        return $response;
     }
 
     /**
-     * PostRefundRequest function
+     * Refund function
      *
-     * @param array $request
-     * @return bool
+     * @param \Paytrail\SDK\Request\RefundRequest                      $refundRequest
+     * @param \Magento\Payment\Gateway\Data\OrderAdapterInterface|null $order
+     * @param string|null                                              $transactionId
+     *
+     * @return array
      */
-    protected function postRefundRequest($request)
-    {
-        $orderAdapter = $request['order'];
-        $order = $this->order->loadByIncrementId($orderAdapter->getOrderIncrementId());
-        
-        $response = $this->apiData->processApiRequest(
-            'refund',
-            $order,
-            $request['amount'],
-            $request['parent_transaction_id']
-        );
-        $error = $response["error"];
+    public function refund(
+        RefundRequest $refundRequest,
+        OrderAdapterInterface $order = null,
+        string $transactionId = null
+    ): array {
+        $response = [];
 
-        if (isset($error)) {
-            $this->log->error(
-                'Error occurred during refund: '
-                . $error
-                . ', Falling back to to email refund.'
+        try {
+            $paytrailClient = $this->paytrailAdapter->initPaytrailMerchantClient();
+
+            $this->log->debugLog(
+                'request',
+                \sprintf(
+                    'Creating %s request to Paytrail API %s',
+                    'refund',
+                    isset($order) ? 'With order id: ' . $order->getId() : ''
+                )
             );
-            $emailResponse = $this->apiData->processApiRequest(
-                'email_refund',
-                $order,
-                $request['amount'],
-                $request['parent_transaction_id']
+
+            $response['data'] = $paytrailClient->refund($refundRequest, $transactionId);
+
+            $this->log->debugLog(
+                'response',
+                sprintf(
+                    'Successful response for refund. Transaction Id: %s',
+                    $response['data']->getTransactionId()
+                )
             );
-            $emailError = $emailResponse["error"];
-            if (isset($emailError)) {
-                $this->log->error(
-                    'Error occurred during email refund: '
-                    . $emailError
-                );
-                return false;
+        } catch (RequestException $e) {
+            if ($e->hasResponse()) {
+                $this->log->error(\sprintf(
+                    'Connection error to Paytrail Payment Service API: %s Error Code: %s',
+                    $e->getMessage(),
+                    $e->getCode()
+                ));
+                $response["error"] = $e->getMessage();
             }
-            return $emailResponse["data"];
+        } catch (\Exception $e) {
+            $this->log->error(
+                \sprintf(
+                    'A problem occurred during Paytrail Api connection: %s',
+                    $e->getMessage()
+                ),
+                $e->getTrace()
+            );
+            $response["error"] = $e->getMessage();
         }
-        return $response["data"];
+
+        return $response;
     }
 }

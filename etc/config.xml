@@ -36,11 +36,13 @@
         <response_log>0</response_log>
         <request_log>0</request_log>
         <generate_reference>1</generate_reference>
-        <activate_invoices_separately>0</activate_invoices_separately>
+        <manual_invoice>0</manual_invoice>
+        <shipment_activates_invoice>1</shipment_activates_invoice>
         <recommended_tax_algorithm>0</recommended_tax_algorithm>
         <logo>https://cdn2.hubspot.net/hubfs/335946/System/paytrail-logo.png</logo>
         <rounding_row_tax_percent>24</rounding_row_tax_percent>
         <failed_payment_cancel>1</failed_payment_cancel>
+        <callback_delay>120</callback_delay>
         <paytrail_personalization>
           <payment_group_bg>#ebebeb</payment_group_bg>
           <payment_group_text>#323232</payment_group_text>

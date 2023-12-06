@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Paytrail\PaymentService\Block\Order;
 
+use Magento\Checkout\Model\Session as CheckoutSession;
 use Magento\Customer\Model\Session;
 use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Framework\Message\ManagerInterface as MessageManagerInterface;
@@ -10,15 +11,14 @@ use Magento\Framework\Phrase;
 use Magento\Framework\Serialize\SerializerInterface;
 use Magento\Framework\View\Element\Template;
 use Magento\Framework\View\Element\Template\Context;
-use Magento\Store\Model\ScopeInterface;
 use Magento\Store\Model\StoreManagerInterface;
 use Magento\Vault\Model\PaymentTokenRepository;
 use Paytrail\PaymentService\Api\Data\SubscriptionInterface;
-use Paytrail\PaymentService\Model\ConfigProvider;
+use Paytrail\PaymentService\Gateway\Config\Config;
 use Paytrail\PaymentService\Model\Recurring\TotalConfigProvider;
-use Paytrail\PaymentService\Model\SubscriptionRepository;
 use Paytrail\PaymentService\Model\ResourceModel\Subscription\Collection as SubscriptionCollection;
 use Paytrail\PaymentService\Model\ResourceModel\Subscription\CollectionFactory;
+use Paytrail\PaymentService\Model\Ui\ConfigProvider;
 
 class Payments extends Template
 {
@@ -28,85 +28,38 @@ class Payments extends Template
     protected $_template = 'Paytrail_PaymentService::order/payments.phtml';
 
     /**
-     * @var CollectionFactory
-     */
-    private $subscriptionCollectionFactory;
-
-    /**
-     * @var Session
-     */
-    private $customerSession;
-
-    /**
-     * @var StoreManagerInterface
-     */
-    private $storeManager;
-
-    /**
-     * @var PaymentTokenRepository
-     */
-    private $paymentTokenRepository;
-
-    /**
-     * @var SerializerInterface
-     */
-    private $serializer;
-
-    /**
-     * @var ConfigProvider
-     */
-    private $configProvider;
-
-    /**
-     * @var MessageManagerInterface
-     */
-    private MessageManagerInterface $messageManager;
-
-    /**
-     * @var TotalConfigProvider
-     */
-    private $totalConfigProvider;
-
-    /**
+     * Payments constructor.
+     *
      * @param Context $context
-     * @param SubscriptionRepository $subscriptionRepository
      * @param CollectionFactory $subscriptionCollectionFactory
      * @param Session $customerSession
      * @param StoreManagerInterface $storeManager
      * @param PaymentTokenRepository $paymentTokenRepository
      * @param SerializerInterface $serializer
-     * @param ConfigProvider $configProvider
-     * @param MessageManagerInterface $messageManager
      * @param TotalConfigProvider $totalConfigProvider
+     * @param Config $config
+     * @param CheckoutSession $checkoutSession
      * @param array $data
      */
     public function __construct(
-        Context                 $context,
-        SubscriptionRepository  $subscriptionRepository,
-        CollectionFactory       $subscriptionCollectionFactory,
-        Session                 $customerSession,
-        StoreManagerInterface   $storeManager,
-        PaymentTokenRepository  $paymentTokenRepository,
-        SerializerInterface     $serializer,
-        ConfigProvider          $configProvider,
-        MessageManagerInterface $messageManager,
-        TotalConfigProvider     $totalConfigProvider,
-        array                   $data = []
+        Context                                 $context,
+        private readonly CollectionFactory      $subscriptionCollectionFactory,
+        private readonly Session                $customerSession,
+        private readonly StoreManagerInterface  $storeManager,
+        private readonly PaymentTokenRepository $paymentTokenRepository,
+        private readonly SerializerInterface    $serializer,
+        private readonly TotalConfigProvider    $totalConfigProvider,
+        private readonly Config                 $config,
+        private readonly CheckoutSession        $checkoutSession,
+        array                                   $data = []
     ) {
-        $this->subscriptionRepository = $subscriptionRepository;
-        $this->subscriptionCollectionFactory = $subscriptionCollectionFactory;
-        $this->customerSession = $customerSession;
-        $this->storeManager = $storeManager;
-        $this->paymentTokenRepository = $paymentTokenRepository;
-        $this->serializer = $serializer;
         parent::__construct($context, $data);
-        $this->configProvider = $configProvider;
-        $this->messageManager = $messageManager;
-        $this->totalConfigProvider = $totalConfigProvider;
     }
 
     /**
+     * Payments protected constructor.
      *
+     * @return void
      */
     protected function _construct()
     {
@@ -115,6 +68,8 @@ class Payments extends Template
     }
 
     /**
+     * Is Subscriptions functionality is enabled.
+     *
      * @return bool
      */
     public function isSubscriptionsEnabled(): bool
@@ -123,23 +78,25 @@ class Payments extends Template
     }
 
     /**
+     * Get recurring payments (subscriptions).
+     *
      * @return SubscriptionCollection
      */
     public function getRecurringPayments()
     {
         $collection = $this->subscriptionCollectionFactory->create();
-        $collection->addFieldToFilter('main_table.status', ['active','pending_payment','failed','rescheduled']);
+        $collection->addFieldToFilter('main_table.status', ['active', 'pending_payment', 'failed', 'rescheduled']);
 
         $collection->getSelect()->join(
             ['link' => 'paytrail_subscription_link'],
             'main_table.entity_id = link.subscription_id'
-        )->columns(array('MAX(link.order_id) as max_id')
-        )->group('link.subscription_id');
+        )->columns('MAX(link.order_id) as max_id')
+            ->group('link.subscription_id');
 
         $collection->getSelect()->join(
             ['so' => 'sales_order'],
             'link.order_id = so.entity_id',
-            ['main_table.entity_id','so.base_grand_total']
+            ['main_table.entity_id', 'so.base_grand_total']
         );
         $collection->getSelect()->join(
             ['rpp' => 'recurring_payment_profiles'],
@@ -153,6 +110,8 @@ class Payments extends Template
     }
 
     /**
+     * Get closed subscriptions.
+     *
      * @return SubscriptionCollection
      */
     public function getClosedSubscriptions()
@@ -163,13 +122,13 @@ class Payments extends Template
         $collection->getSelect()->join(
             ['link' => 'paytrail_subscription_link'],
             'main_table.entity_id = link.subscription_id'
-        )->columns(array('MAX(link.order_id) as max_id')
-        )->group('link.subscription_id');
+        )->columns('MAX(link.order_id) as max_id')
+            ->group('link.subscription_id');
 
         $collection->getSelect()->join(
             ['so' => 'sales_order'],
             'link.order_id = so.entity_id',
-            ['main_table.entity_id','so.base_grand_total']
+            ['main_table.entity_id', 'so.base_grand_total']
         );
         $collection->getSelect()->join(
             ['rpp' => 'recurring_payment_profiles'],
@@ -183,18 +142,23 @@ class Payments extends Template
     }
 
     /**
-     * @param $_order
+     * Validate date.
+     *
+     * @param string $date
+     *
      * @return string
-     * @throws NoSuchEntityException
      */
     public function validateDate($date): string
     {
-        $newDate = explode(' ',$date);
+        $newDate = explode(' ', $date);
         return $newDate[0];
     }
 
     /**
-     * @param $recurringPaymentStatus
+     * Get recurring payment status name.
+     *
+     * @param string $recurringPaymentStatus
+     *
      * @return \Magento\Framework\Phrase|string
      */
     public function getRecurringPaymentStatusName($recurringPaymentStatus)
@@ -216,13 +180,23 @@ class Payments extends Template
         return '';
     }
 
+    /**
+     * Get current currency.
+     *
+     * @return string
+     * @throws NoSuchEntityException
+     * @throws \Magento\Framework\Exception\LocalizedException
+     */
     public function getCurrentCurrency()
     {
         return $this->storeManager->getStore()->getCurrentCurrency()->getCurrencySymbol();
     }
 
     /**
-     * @param $recurringPayment
+     * Get view url.
+     *
+     * @param Subscription $recurringPayment
+     *
      * @return string
      */
     public function getViewUrl($recurringPayment)
@@ -231,6 +205,8 @@ class Payments extends Template
     }
 
     /**
+     * Prepare layout.
+     *
      * @return $this|Payments
      * @throws \Magento\Framework\Exception\LocalizedException
      */
@@ -251,6 +227,8 @@ class Payments extends Template
     }
 
     /**
+     * Get pager html.
+     *
      * @return string
      */
     public function getPagerHtml()
@@ -259,6 +237,10 @@ class Payments extends Template
     }
 
     /**
+     * Get stop payment url.
+     *
+     * @param Subscription $recurringPayment
+     *
      * @return string
      */
     public function getStopPaymentUrl($recurringPayment)
@@ -267,6 +249,8 @@ class Payments extends Template
     }
 
     /**
+     * Get empty recurring payment message.
+     *
      * @return \Magento\Framework\Phrase
      */
     public function getEmptyRecurringPaymentsMessage()
@@ -275,7 +259,10 @@ class Payments extends Template
     }
 
     /**
-     * @param $recurringPayment
+     * Get credit card number.
+     *
+     * @param Subscription $recurringPayment
+     *
      * @return string
      */
     public function getCardNumber($recurringPayment)
@@ -290,29 +277,27 @@ class Payments extends Template
     }
 
     /**
+     * Get add_card request redirect url.
+     *
      * @return string|null
-     * @throws NoSuchEntityException
      */
     public function getAddCardRedirectUrl(): ?string
     {
-        $config = $this->configProvider->getConfig();
-
-        return $config['payment']['paytrail']['addcard_redirect_url'] ?? null;
+        return $this->config->getAddCardRedirectUrl();
     }
 
     /**
+     * Get previous error.
+     *
      * @return Phrase|null
-     * @throws NoSuchEntityException
      */
     public function getPreviousError(): ?Phrase
     {
-        $config = $this->configProvider->getConfig();
-
-        $previousError = $config['payment']['paytrail']['previous_error'] ?? null;
-        if ($previousError) {
-            $this->messageManager->addErrorMessage(__($previousError));
+        if ($this->checkoutSession->getData('paytrail_previous_error')) {
+            $previousError = $this->checkoutSession
+                ->getData('paytrail_previous_error', 1);
         }
 
-        return $previousError;
+        return $previousError ?? null;
     }
 }

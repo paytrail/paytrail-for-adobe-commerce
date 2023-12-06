@@ -16,8 +16,8 @@
         }
     ],
     "require": {
-        "php": "^7.3|^8.0",
-        "paytrail/paytrail-php-sdk": ">=2.4.1",
+        "php": "^8.0",
+        "paytrail/paytrail-php-sdk": "^2.6",
         "magento/framework": ">=102.0.0",
         "ext-curl": "*",
         "nesbot/carbon": "^2.57.0"
@@ -29,7 +29,7 @@
         "markup/module-paytrail": "*"
     },
     "type": "magento2-module",
-    "version": "1.4.5",
+    "version": "2.0.1",
     "license": "MIT",
     "autoload": {
         "files": [

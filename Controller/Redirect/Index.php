@@ -3,128 +3,62 @@
 namespace Paytrail\PaymentService\Controller\Redirect;
 
 use Magento\Checkout\Model\Session;
+use Magento\Framework\App\ActionInterface;
 use Magento\Framework\App\RequestInterface;
 use Magento\Framework\Controller\Result\Json;
 use Magento\Framework\Controller\ResultFactory;
 use Magento\Framework\Exception\LocalizedException;
+use Magento\Payment\Gateway\Command\CommandManagerPoolInterface;
 use Magento\Sales\Api\OrderManagementInterface;
 use Magento\Sales\Api\OrderRepositoryInterface;
 use Magento\Sales\Model\Order;
-use Magento\Sales\Model\OrderFactory;
 use Paytrail\PaymentService\Exceptions\CheckoutException;
-use Paytrail\PaymentService\Helper\ApiData;
-use Paytrail\PaymentService\Helper\Data as paytrailHelper;
 use Paytrail\PaymentService\Gateway\Config\Config;
-use Paytrail\PaymentService\Model\ConfigProvider;
 use Paytrail\PaymentService\Model\Email\Order\PendingOrderEmailConfirmation;
+use Paytrail\PaymentService\Model\Receipt\ProcessService;
+use Paytrail\PaymentService\Model\Ui\DataProvider\PaymentProvidersData;
 use Paytrail\SDK\Model\Provider;
 use Paytrail\SDK\Response\PaymentResponse;
 use Psr\Log\LoggerInterface;
-use Magento\Framework\App\Action\HttpPostActionInterface;
 
-/**
- * Class Index
- */
-class Index implements HttpPostActionInterface
+class Index implements ActionInterface
 {
-    protected $urlBuilder;
-
-    /**
-     * @var Session
-     */
-    protected $checkoutSession;
-
-    /**
-     * @var OrderFactory
-     */
-    protected $orderFactory;
-
-    /**
-     * @var OrderRepositoryInterface
-     */
-    protected $orderRepositoryInterface;
-
-    /**
-     * @var OrderManagementInterface
-     */
-    protected $orderManagementInterface;
-
-    /**
-     * @var LoggerInterface
-     */
-    protected $logger;
-
-    /**
-     * @var ApiData
-     */
-    protected $apiData;
-
-    /**
-     * @var paytrailHelper
-     */
-    protected $paytrailHelper;
-
-    /**
-     * @var Config
-     */
-    protected $gatewayConfig;
-
     /**
      * @var $errorMsg
      */
     protected $errorMsg = null;
 
     /**
-     * @var ResultFactory
-     */
-    private $resultFactory;
-
-    /**
-     * @var RequestInterface
-     */
-    private $request;
-
-    private PendingOrderEmailConfirmation $pendingOrderEmailConfirmation;
-
-    /**
      * Index constructor.
      *
+     * @param PendingOrderEmailConfirmation $pendingOrderEmailConfirmation
      * @param Session $checkoutSession
      * @param OrderRepositoryInterface $orderRepositoryInterface
      * @param OrderManagementInterface $orderManagementInterface
      * @param LoggerInterface $logger
-     * @param ApiData $apiData
-     * @param paytrailHelper $paytrailHelper
      * @param Config $gatewayConfig
      * @param ResultFactory $resultFactory
      * @param RequestInterface $request
-     * @param PendingOrderEmailConfirmation $pendingOrderEmailConfirmation
+     * @param CommandManagerPoolInterface $commandManagerPool
+     * @param ProcessService $processService
      */
     public function __construct(
-        Session $checkoutSession,
-        \Magento\Sales\Api\OrderRepositoryInterface $orderRepositoryInterface,
-        OrderManagementInterface $orderManagementInterface,
-        LoggerInterface $logger,
-        ApiData $apiData,
-        paytrailHelper $paytrailHelper,
-        Config $gatewayConfig,
-        ResultFactory $resultFactory,
-        RequestInterface $request,
-        PendingOrderEmailConfirmation $pendingOrderEmailConfirmation
+        protected PendingOrderEmailConfirmation $pendingOrderEmailConfirmation,
+        protected Session                     $checkoutSession,
+        protected OrderRepositoryInterface    $orderRepositoryInterface,
+        protected OrderManagementInterface    $orderManagementInterface,
+        protected LoggerInterface             $logger,
+        protected Config                      $gatewayConfig,
+        protected ResultFactory               $resultFactory,
+        protected RequestInterface            $request,
+        protected CommandManagerPoolInterface $commandManagerPool,
+        protected ProcessService $processService
     ) {
-        $this->checkoutSession = $checkoutSession;
-        $this->orderRepositoryInterface = $orderRepositoryInterface;
-        $this->orderManagementInterface = $orderManagementInterface;
-        $this->logger = $logger;
-        $this->apiData = $apiData;
-        $this->paytrailHelper = $paytrailHelper;
-        $this->gatewayConfig = $gatewayConfig;
-        $this->resultFactory = $resultFactory;
-        $this->request = $request;
-        $this->pendingOrderEmailConfirmation = $pendingOrderEmailConfirmation;
     }
 
     /**
+     * Execute function
+     *
      * @return mixed
      */
     public function execute()
@@ -139,7 +73,7 @@ class Index implements HttpPostActionInterface
                     'preselected_payment_method_id'
                 );
                 $selectedPaymentMethodId = preg_replace(
-                    '/' . ConfigProvider::ID_INCREMENT_SEPARATOR . '[0-9]{1,3}$/',
+                    '/' . PaymentProvidersData::ID_INCREMENT_SEPARATOR . '[0-9]{1,3}$/',
                     '',
                     $selectedPaymentMethodRaw
                 );
@@ -150,7 +84,7 @@ class Index implements HttpPostActionInterface
                 }
 
                 $order = $this->checkoutSession->getLastRealOrder();
-                $responseData = $this->getResponseData($order);
+                $responseData = $this->getResponseData($order, $selectedPaymentMethodId);
                 $formData = $this->getFormFields(
                     $responseData,
                     $selectedPaymentMethodId
@@ -208,11 +142,13 @@ class Index implements HttpPostActionInterface
     }
 
     /**
+     * GetFormFields function
+     *
      * @param PaymentResponse $responseData
-     * @param $paymentMethodId
+     * @param string $paymentMethodId
      * @return array
      */
-    protected function getFormFields($responseData, $paymentMethodId = null)
+    protected function getFormFields($responseData, $paymentMethodId = null): array
     {
         $formFields = [];
 
@@ -229,11 +165,13 @@ class Index implements HttpPostActionInterface
     }
 
     /**
+     * GetFormAction function
+     *
      * @param PaymentResponse $responseData
-     * @param $paymentMethodId
+     * @param string $paymentMethodId
      * @return string
      */
-    protected function getFormAction($responseData, $paymentMethodId = null)
+    protected function getFormAction($responseData, $paymentMethodId = null): string
     {
         $returnUrl = '';
 
@@ -248,20 +186,30 @@ class Index implements HttpPostActionInterface
     }
 
     /**
+     * GetResponseData function
+     *
      * @param Order $order
-     * @param string $methodId
-     * @return PaymentResponse
+     * @param string $paymentMethod
+     * @return mixed
      * @throws CheckoutException
+     * @throws \Magento\Framework\Exception\NotFoundException
+     * @throws \Magento\Payment\Gateway\Command\CommandException
      */
-    protected function getResponseData($order)
+    protected function getResponseData($order, $paymentMethod)
     {
-        $response = $this->apiData->processApiRequest('payment', $order);
+        $commandExecutor = $this->commandManagerPool->get('paytrail');
+        $response = $commandExecutor->executeByCode(
+            'payment',
+            null,
+            [
+                'order' => $order,
+                'payment_method' => $paymentMethod
+            ]
+        );
 
-        $errorMsg = $response['error'];
-
-        if (isset($errorMsg)) {
-            $this->errorMsg = ($errorMsg);
-            $this->paytrailHelper->processError($errorMsg);
+        if ($response['error']) {
+            $this->errorMsg = ($response['error']);
+            $this->processService->processError($response['error']);
         }
 
         return $response["data"];

@@ -2,42 +2,70 @@
 
 namespace Paytrail\PaymentService\Block\System\Config\Form\Field;
 
-class Version extends \Magento\Config\Block\System\Config\Form\Field
+use Magento\Backend\Block\Template\Context;
+use Magento\Config\Block\System\Config\Form\Field;
+use Magento\Framework\Data\Form\Element\AbstractElement;
+use Paytrail\PaymentService\Gateway\Config\Config;
+use const _PHPStan_582a9cb8b\__;
+
+class Version extends Field
 {
     /**
-     * @var \Paytrail\PaymentService\Helper\Version
+     * Version block constructor.
+     *
+     * @param Config $gatewayConfig
+     * @param Context $context
      */
-    private $versionHelper;
-
     public function __construct(
-        \Paytrail\PaymentService\Helper\Version $versionHelper,
-        \Magento\Backend\Block\Template\Context $context
+        private Config $gatewayConfig,
+        Context        $context
     ) {
-        $this->versionHelper = $versionHelper;
         parent::__construct($context);
     }
 
     /**
-     * @param \Magento\Framework\Data\Form\Element\AbstractElement $element
+     * Get element HTML.
+     *
+     * @param AbstractElement $element
+     *
      * @return string
      */
-    protected function _getElementHtml(
-        \Magento\Framework\Data\Form\Element\AbstractElement $element
-    ) {
-        $version = 'v' . $this->versionHelper->getVersion();
+    protected function _getElementHtml(AbstractElement $element)
+    {
         try {
-            $githubContent = $this->versionHelper->getDecodedContentFromGithub();
+            $currentVersion = 'v' . $this->gatewayConfig->getVersion();
+            $githubContent = $this->gatewayConfig->getDecodedContentFromGithub();
 
-            if ($version != $githubContent['tag_name']) {
-                $html = '<strong style="color: red">' . $version . __(" - Newer version (%1) available. ", $githubContent['tag_name']) .
-                    "<a href= \"" . $githubContent['html_url'] . "\" target='_blank'> " .
-                    __("More details") . "</a></strong>";
+            if ($currentVersion < $githubContent['tag_name']) {
+                $html =
+                    '<strong style="color: red">'
+                    . $currentVersion
+                    . __(" - Newer version (%1) available. ", $githubContent['tag_name'])
+                    .
+                    "<a href= \"" . $githubContent['html_url']
+                    . "\" target='_blank'> "
+                    .
+                    __("More details")
+                    . "</a></strong>";
+            } elseif ($currentVersion == $githubContent['tag_name']) {
+                $html = '<strong style="color: green">' . __("%1 - Latest version", $currentVersion) . '</strong>';
             } else {
-                $html = '<strong style="color: green">' . __("%1 - Latest version", $version) . '</strong>';
-
+                $html = '<strong style="color: darkorange">' . __("%1 - Custom version", $currentVersion)
+                    . '<br>'
+                    . __(
+                        "Your version is higher than latest official version (%1)",
+                        $githubContent['tag_name']
+                    )
+                    . __("please make sure that you have installed the module from verified source.")
+                    . "<a href= \"" . $githubContent['html_url']
+                    . "\" target='_blank'> "
+                    .
+                    __("More details")
+                    . "</a></strong>";
             }
         } catch (\Exception $e) {
-            return '<strong>' . __("%1 - Can't check for updates now", $version) . '</strong>';
+            $this->_logger->error($e->getMessage());
+            return '<strong>' . __("%1 - Can't check for updates now", $currentVersion) . '</strong>';
         }
         return $html;
     }

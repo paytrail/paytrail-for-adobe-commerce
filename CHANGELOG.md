@@ -5,7 +5,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.4.5] - 2023-09-26
+## [2.0.1] - 2023-11-27
+
+- Fix issue with invoice credit memos
+- Fix deprecated dynamic properties for PHP 8.2
+- Exchange array_first method
+- Improve discount splitter
+
+## [2.0.0] - 2023-10-26
+
+- Refactored codebase
+- Remove Helpers classes and split them to smaller classes
+- Remove ApiData class with all the request and split it to GatewayCommandPool interface 
+- Refactor Model/Ui/ConfigProvider to provide only data to Ui and data getters moved to other classes. 
+- Create Receipt classes under Model/Receipt which contains services and process classes (process payment, transaction, order). 
+- Most configuration data is implemented in Gateway/Config/Config class 
+- Add Pay and add card functionality 
+- Add Manual Invoice Activation functionality
+
+
+## [1.4.5] - 2023-10-10
 
 - Fix: Rounding issue with shipping tax and int conversion
 

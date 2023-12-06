@@ -1,35 +1,44 @@
 <?php
 declare(strict_types=1);
 
-
 namespace Paytrail\PaymentService\Observer;
 
 use Magento\Framework\Event\Observer;
-use Magento\Framework\Serialize\SerializerInterface;
-use Paytrail\PaymentService\Helper\ApiData;
-use \Paytrail\PaymentService\Model\Invoice\InvoiceActivation as ActivationModel;
+use Magento\Framework\Event\ObserverInterface;
+use Magento\Sales\Model\ResourceModel\Order\Payment\Transaction\CollectionFactory;
+use Paytrail\PaymentService\Gateway\Config\Config;
+use Paytrail\PaymentService\Model\Invoice\Activation\Flag;
+use Paytrail\PaymentService\Model\Invoice\Activation\ManualActivation;
 
-class PaymentActivation implements \Magento\Framework\Event\ObserverInterface
+class PaymentActivation implements ObserverInterface
 {
-    private \Magento\Sales\Model\ResourceModel\Order\Payment\Transaction\CollectionFactory $collectionFactory;
-    private SerializerInterface $serializer;
-    private ApiData $apiData;
+    public const ACTIVATE_WITH_SHIPMENT_CONFIG = 'payment/paytrail/shipment_activates_invoice';
 
+    /**
+     * PaymentActivation constructor.
+     *
+     * @param CollectionFactory $collectionFactory
+     * @param Config $config
+     * @param ManualActivation $manualActivation
+     */
     public function __construct(
-        \Magento\Sales\Model\ResourceModel\Order\Payment\Transaction\CollectionFactory $collectionFactory,
-        SerializerInterface $serializer,
-        ApiData $apiData
+        private CollectionFactory $collectionFactory,
+        private Config $config,
+        private ManualActivation $manualActivation
     ) {
-        $this->collectionFactory = $collectionFactory;
-        $this->serializer = $serializer;
-        $this->apiData = $apiData;
     }
 
+    /**
+     * Execute.
+     *
+     * @param Observer $observer
+     * @return void
+     */
     public function execute(Observer $observer)
     {
         /** @var \Magento\Sales\Model\Order\Shipment $shipment */
         $shipment = $observer->getEvent()->getShipment();
-        if ($shipment->getOrigData('entity_id')) {
+        if ($shipment->getOrigData('entity_id') || !$this->config->isShipmentActivateInvoice()) {
             return; // Observer only processes shipments the first time they're made.
         }
 
@@ -42,29 +51,11 @@ class PaymentActivation implements \Magento\Framework\Event\ObserverInterface
             $info = $transaction->getAdditionalInformation();
 
             if (isset($info['raw_details_info']['method']) && in_array(
-                    $info['raw_details_info']['method'],
-                    ActivationModel::SUB_METHODS_WITH_MANUAL_ACTIVATION_SUPPORT
-                )) {
-                $this->sendActivation($transaction->getTxnId());
+                $info['raw_details_info']['method'],
+                Flag::SUB_METHODS_WITH_MANUAL_ACTIVATION_SUPPORT
+            )) {
+                $this->manualActivation->activateInvoice((int)$shipment->getOrderId());
             }
         }
-    }
-
-    /**
-     * @param \Magento\Sales\Api\Data\OrderInterface $transaction
-     * @return void
-     */
-    private function sendActivation($txnId)
-    {
-        // Activation returns a status "OK" if the payment was completed upon activation but the return has no signature
-        // Without signature Hmac validation embedded in payment processing cannot be passed. This can be resolved with
-        // Recurring payment HMAC updates.
-        // TODO Use recurring payment HMAC processing here to mark order as paid if response status is "OK"
-        $this->apiData->processApiRequest(
-            'invoice_activation',
-            null,
-            null,
-            $txnId
-        );
     }
 }

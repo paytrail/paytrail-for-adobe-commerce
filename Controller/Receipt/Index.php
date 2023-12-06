@@ -7,69 +7,32 @@ use Magento\Framework\App\ActionInterface;
 use Magento\Framework\App\RequestInterface;
 use Magento\Framework\Controller\ResultFactory;
 use Magento\Framework\Message\ManagerInterface;
-use Magento\Sales\Model\Order;
-use Paytrail\PaymentService\Helper\ProcessPayment;
 use Paytrail\PaymentService\Model\FinnishReferenceNumber;
+use Paytrail\PaymentService\Model\Receipt\ProcessPayment;
 
-/**
- * Class Index
- *
- * Receipt Controller
- */
 class Index implements ActionInterface
 {
-    /**
-     * @var Session
-     */
-    protected Session $session;
+    public const ORDER_SUCCESS_STATUSES = ["processing", "pending_paytrail", "pending", "complete"];
+    public const ORDER_CANCEL_STATUSES = ["canceled"];
 
     /**
-     * @var FinnishReferenceNumber
-     */
-    protected FinnishReferenceNumber $referenceNumber;
-
-    /**
-     * @var ProcessPayment
-     */
-    private ProcessPayment $processPayment;
-
-    /**
-     * @var RequestInterface
-     */
-    private RequestInterface $request;
-
-    /**
-     * @var ResultFactory
-     */
-    private ResultFactory $resultFactory;
-
-    /**
-     * @var ManagerInterface
-     */
-    private ManagerInterface $messageManager;
-
-    /**
+     * Index constructor.
+     *
+     * @param FinnishReferenceNumber $referenceNumber
      * @param Session $session
      * @param ProcessPayment $processPayment
      * @param RequestInterface $request
      * @param ResultFactory $resultFactory
      * @param ManagerInterface $messageManager
-     * @param \Paytrail\PaymentService\Model\FinnishReferenceNumber $referenceNumber
      */
     public function __construct(
-        Session                $session,
-        ProcessPayment         $processPayment,
-        RequestInterface       $request,
-        ResultFactory          $resultFactory,
-        ManagerInterface       $messageManager,
-        FinnishReferenceNumber $referenceNumber
+        private FinnishReferenceNumber $referenceNumber,
+        private Session $session,
+        private ProcessPayment $processPayment,
+        private RequestInterface $request,
+        private ResultFactory $resultFactory,
+        private ManagerInterface $messageManager
     ) {
-        $this->session         = $session;
-        $this->processPayment  = $processPayment;
-        $this->request         = $request;
-        $this->resultFactory   = $resultFactory;
-        $this->messageManager  = $messageManager;
-        $this->referenceNumber = $referenceNumber;
     }
 
     /**
@@ -77,71 +40,36 @@ class Index implements ActionInterface
      *
      * @throws \Exception
      * @see \Paytrail\PaymentService\Controller\Callback\Index
+     * execute method
      */
     public function execute()
     {
-        $successStatuses = ["processing", "pending_paytrail", "pending", "complete"];
-        $cancelStatuses  = ["canceled"];
-        $reference       = $this->request->getParam('checkout-reference');
-
-        sleep(2); //giving callback time to get processed
+        $reference = $this->request->getParam('checkout-reference');
 
         $order = $this->referenceNumber->getOrderByReference($reference);
-
         $status = $order->getStatus();
 
-        /** @var array $failMessages */
-        $failMessages = [];
-
-        if ($status == 'pending_payment' || in_array($status, $cancelStatuses)) {
-            // order status could be changed by callback, if not,
-            // status change needs to be forced by processing the payment
-            $failMessages = $this->processPayment->process($this->request->getParams(), $this->session);
-        }
+        $failMessages = $this->processPayment->process($this->request->getParams(), $this->session);
 
         if ($status == 'pending_payment') { // status could be changed by callback, if not, it needs to be forced
             $order  = $this->referenceNumber->getOrderByReference($reference); // refreshing order
             $status = $order->getStatus(); // getting current status
         }
 
-        /** @var \Magento\Framework\Controller\Result\Redirect $result */
         $result = $this->resultFactory->create(\Magento\Framework\Controller\ResultFactory::TYPE_REDIRECT);
-        if (in_array($status, $successStatuses)) {
-            return $result->setPath($this->getSuccessUrl($order));
-        } elseif (in_array($status, $cancelStatuses)) {
+        if (in_array($status, self::ORDER_SUCCESS_STATUSES)) {
+            return $result->setPath('checkout/onepage/success');
+        } elseif (in_array($status, self::ORDER_CANCEL_STATUSES)) {
             foreach ($failMessages as $failMessage) {
                 $this->messageManager->addErrorMessage($failMessage);
             }
 
-            return $result->setPath($this->getCartUrl($order));
+            return $result->setPath('checkout/cart');
         }
 
         $this->messageManager->addErrorMessage(
             __('Order processing has been aborted. Please contact customer service.')
         );
-
-        return $result->setPath($this->getCartUrl($order));
-    }
-
-    /**
-     * Method to use for plugins if pwa-graphql installed
-     *
-     * @param Order $order
-     *
-     * @return string
-     */
-    public function getSuccessUrl(Order $order): string
-    {
-        return 'checkout/onepage/success';
-    }
-
-    /**
-     * @param Order $order
-     *
-     * @return string
-     */
-    public function getCartUrl(Order $order): string
-    {
-        return 'checkout/cart';
+        return $result->setPath('checkout/cart');
     }
 }

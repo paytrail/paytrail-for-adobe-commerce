@@ -1,65 +1,43 @@
 <?php
-namespace Paytrail\PaymentService\Helper;
 
-use Magento\Framework\Exception\AlreadyExistsException;
+namespace Paytrail\PaymentService\Model\Order;
+
 use Magento\Framework\Exception\InputException;
 use Magento\Framework\Exception\LocalizedException;
+use Magento\Sales\Api\Data\InvoiceInterface;
+use Magento\Sales\Api\Data\OrderInterface;
 use Magento\Sales\Api\OrderRepositoryInterface;
 use Magento\Sales\Api\TransactionRepositoryInterface;
 use Magento\Sales\Model\Service\InvoiceService;
 use Magento\Framework\DB\TransactionFactory;
 use Psr\Log\LoggerInterface;
 
-/**
- * Class ActivateOrder
- */
-class ActivateOrder
+class OrderActivation
 {
     /**
-     * @var OrderRepositoryInterface
-     */
-    protected $orderRepository;
-    /**
-     * @var TransactionRepositoryInterface
-     */
-    private $transactionRepository;
-    /**
-     * @var InvoiceService
-     */
-    private $invoiceService;
-    /**
-     * @var TransactionFactory
-     */
-    private $transactionFactory;
-    /**
-     * @var LoggerInterface
-     */
-    private $logger;
-
-    /**
-     * ActivateOrder constructor.
+     * OrderActivation constructor.
+     *
      * @param OrderRepositoryInterface $orderRepository
      * @param TransactionRepositoryInterface $transactionRepository
      * @param InvoiceService $invoiceService
      * @param TransactionFactory $transactionFactory
+     * @param LoggerInterface $logger
      */
     public function __construct(
-        OrderRepositoryInterface $orderRepository,
-        TransactionRepositoryInterface $transactionRepository,
-        InvoiceService $invoiceService,
-        TransactionFactory $transactionFactory,
-        LoggerInterface $logger
+        private OrderRepositoryInterface $orderRepository,
+        private TransactionRepositoryInterface $transactionRepository,
+        private InvoiceService $invoiceService,
+        private TransactionFactory $transactionFactory,
+        private LoggerInterface $logger
     ) {
-        $this->orderRepository = $orderRepository;
-        $this->transactionRepository = $transactionRepository;
-        $this->invoiceService = $invoiceService;
-        $this->transactionFactory = $transactionFactory;
-        $this->logger = $logger;
     }
 
     /**
-     * @param $orderId
-     * @throws AlreadyExistsException
+     * Activate order.
+     *
+     * @param string $orderId
+     * @return void
+     * @throws InputException
      */
     public function activateOrder($orderId)
     {
@@ -77,8 +55,11 @@ class ActivateOrder
     }
 
     /**
-     * @param $orderId
+     * Is canceled value.
+     *
+     * @param string $orderId
      * @return bool
+     * @throws InputException
      */
     public function isCanceled($orderId)
     {
@@ -101,8 +82,10 @@ class ActivateOrder
     }
 
     /**
-     * @param $order
-     * @return mixed
+     * Get capture transaction.
+     *
+     * @param OrderInterface $order
+     * @return false
      * @throws InputException
      */
     protected function getCaptureTransaction($order)
@@ -118,9 +101,12 @@ class ActivateOrder
     }
 
     /**
-     * @param $order
+     * Process invoice.
+     *
+     * @param OrderInterface $order
+     * @return void
      * @throws InputException
-     * @throws \Exception
+     * @throws LocalizedException
      */
     protected function processInvoice($order)
     {
@@ -136,12 +122,14 @@ class ActivateOrder
     }
 
     /**
-     * @param \Magento\Sales\Api\Data\InvoiceInterface $invoice
-     * @param $order
+     * Save invoice and order.
+     *
+     * @param InvoiceInterface $invoice
+     * @param OrderInterface $order
      * @return void
      * @throws LocalizedException
      */
-    private function saveInvoiceAndOrder(\Magento\Sales\Api\Data\InvoiceInterface $invoice, $order): void
+    private function saveInvoiceAndOrder(InvoiceInterface $invoice, $order): void
     {
         try {
             /** @var \Magento\Framework\DB\Transaction $transactionSave */
