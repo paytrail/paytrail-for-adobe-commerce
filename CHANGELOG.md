@@ -7,7 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [2.0.2] - 2023-12-07
 
-- Add CSP whitelist for Paytrail payment providers form submission 
+- Add CSP whitelist for Paytrail payment providers form submission
+- Fixing issue with setting error on response in callback controller
 
 ## [2.0.1] - 2023-11-27
 
