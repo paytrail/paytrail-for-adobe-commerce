@@ -24,7 +24,7 @@ class PayAndAddCardCallback implements \Magento\Framework\App\ActionInterface
     /**
      * @var string[]
      */
-    protected $cardTypes = [
+    private $cardTypes = [
         'Visa'       => 'VI',
         'MasterCard' => 'MC',
         'Discover'   => 'DI',
@@ -47,6 +47,7 @@ class PayAndAddCardCallback implements \Magento\Framework\App\ActionInterface
      * @param PaymentTokenRepositoryInterface $tokenRepository
      * @param PaymentTokenManagement $paymentTokenManagement
      * @param EncryptorInterface $encryptor
+     * @param PaytrailLogger $logger
      */
     public function __construct(
         private Session                         $session,

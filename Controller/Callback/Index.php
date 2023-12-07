@@ -6,6 +6,7 @@ use Magento\Checkout\Model\Session;
 use Magento\Framework\App\RequestInterface;
 use Magento\Framework\Controller\ResultFactory;
 use Magento\Framework\Controller\ResultInterface;
+use Magento\Framework\Exception\LocalizedException;
 use Magento\Sales\Model\OrderFactory;
 use Paytrail\PaymentService\Controller\Receipt\Index as Receipt;
 use Paytrail\PaymentService\Gateway\Config\Config;
@@ -23,6 +24,7 @@ class Index implements \Magento\Framework\App\ActionInterface
      * @param ResultFactory $resultFactory
      * @param Config $gatewayConfig
      * @param OrderFactory $orderFactory
+     * @param PaytrailLogger $logger
      */
     public function __construct(
         private Session          $session,
@@ -39,7 +41,7 @@ class Index implements \Magento\Framework\App\ActionInterface
      * Execute function
      *
      * @return ResultInterface
-     * @throws \Magento\Framework\Exception\LocalizedException
+     * @throws LocalizedException
      */
     public function execute(): ResultInterface
     {
