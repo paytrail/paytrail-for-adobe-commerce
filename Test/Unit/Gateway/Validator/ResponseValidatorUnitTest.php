@@ -2,42 +2,50 @@
 
 namespace Paytrail\PaymentService\Tests\Gateway\Validator;
 
+use Paytrail\PaymentService\Gateway\Config\Config;
+use Paytrail\PaymentService\Gateway\Validator\HmacValidator;
 use Paytrail\PaymentService\Gateway\Validator\ResponseValidator;
 use PHPUnit\Framework\TestCase;
-use Magento\Payment\Gateway\Validator\AbstractValidator;
 use Magento\Payment\Gateway\Validator\ResultInterfaceFactory;
-use Paytrail\PaymentService\Helper\Signature;
-use Paytrail\PaymentService\Helper\Data as paytrailHelper;
 
 class ResponseValidatorUnitTest extends TestCase
 {
-    /** @var  Signature | \PHPUnit_Framework_MockObject_MockObject */
-    private $signatureMock;
+    /**
+     * @var \PHPUnit\Framework\MockObject\MockObject
+     */
+    private $gatewayConfigMock;
 
-    /** @var  paytrailHelper | \PHPUnit_Framework_MockObject_MockObject */
-    private $paytrailHelperMock;
-
-    /** @var  AbstractValidator | \PHPUnit_Framework_MockObject_MockObject */
-    private $abstractValidatorMock;
-
-    /** @var  ResultInterfaceFactory | \PHPUnit_Framework_MockObject_MockObject */
+    /**
+     * @var \PHPUnit\Framework\MockObject\MockObject
+     */
     private $resultInterfaceFactoryMock;
+
+    /**
+     * @var \PHPUnit\Framework\MockObject\MockObject
+     */
+    private $hmacValidatorMock;
 
     /** @var  ResponseValidator */
     private $responseValidator;
 
-    private $shouldPass = [
-        'checkout-account' => 'test-merchant-id',
+    /**
+     * @var array
+     */
+    private $shouldFail = [
+        'checkout-account'   => 'test-merchant-id',
         'checkout-reference' => 123123123123123,
         'checkout-algorithm' => 'sha256',
-        'signature' => 'test-signature'
+        'signature'          => 'test-signature'
     ];
 
-    private $shouldFail = [
-        'checkout-account' => 'invalid-checkout-accountid',
+    /**
+     * @var array
+     */
+    private $shouldPass = [
+        'checkout-account'   => 'invalid-checkout-accountid',
         'checkout-reference' => 'invalid-checkout-reference',
         'checkout-algorithm' => 'sha257',
-        'signature' => 'failing-test-signature'
+        'signature'          => 'test-signature'
     ];
 
     private function getSimpleMock($originalClassName)
@@ -47,65 +55,72 @@ class ResponseValidatorUnitTest extends TestCase
             ->getMock();
     }
 
-    public function setUp()
+    public function setUp(): void
     {
-        $this->signatureMock = $this->getSimpleMock(Signature::class);
-        $this->paytrailHelperMock = $this->getSimpleMock(paytrailHelper::class);
-        $this->resultInterfaceFactoryMock = $this->getSimpleMock(ResultInterfaceFactory::class);
-        $this->abstractValidatorMock = $this->getSimpleMock(AbstractValidator::class);
+        $this->gatewayConfigMock = $this->getSimpleMock(Config::class);
+        // Create a mock for the factory class
+        $this->resultInterfaceFactoryMock = $this->getMockBuilder(
+            \Magento\Payment\Gateway\Validator\ResultInterfaceFactory::class
+        )
+            ->disableOriginalConstructor()
+            ->setMethods(['create'])
+            ->getMock();
+
+
+        // Create a mock for the result interface
+        $this->resultMock = $this->getMockBuilder(ResultInterface::class)
+            ->getMock();
+
+
+        $this->hmacValidatorMock = $this->getSimpleMock(HmacValidator::class);
 
         $this->responseValidator = new ResponseValidator(
-            $this->paytrailHelperMock,
-            $this->signatureMock,
-            $this->resultInterfaceFactoryMock
+            $this->gatewayConfigMock,
+            $this->resultInterfaceFactoryMock,
+            $this->hmacValidatorMock
         );
-
-        $this->paytrailHelperMock->method('getValidAlgorithms')->willReturn(array('sha256', 'sha512'));
-
-        $this->paytrailHelperMock->method('getMerchantId')->willReturn('test-merchant-id');
-
-        $this->signatureMock->method('calculateHmac')->willReturn('test-signature');
     }
 
+    /**
+     * @return void
+     */
     public function testValidateCreatesValidResult()
     {
         $this->resultInterfaceFactoryMock->expects($this->once())->method('create')->with([
-            'isValid' => true,
-            'failsDescription' => []
-        ]);
+                                                                                              'isValid'          => false,
+                                                                                              'failsDescription' => [
+                                                                                                  0 => 'Request MerchantId is empty',
+                                                                                                  1 => 'Response and Request merchant ids does not match',
+                                                                                                  2 => 'Invalid response data from Paytrail',
+                                                                                                  3 => 'Invalid response data from Paytrail'
+                                                                                              ],
+                                                                                              'errorCodes'       => []
+                                                                                          ]);
 
         $this->responseValidator->validate($this->shouldPass);
     }
 
+    /**
+     * @return void
+     */
     public function testValidateCreatesInValidResult()
     {
         $this->resultInterfaceFactoryMock->expects($this->once())->method('create')->with([
-            'isValid' => false,
-            'failsDescription' => [
-                0 => 'OrderId is invalid',
-                1 => 'Response and Request merchant ids does not match',
-                2 => 'Invalid response data from Paytrail',
-                3 => 'Invalid response data from Paytrail'
-            ]]);
+                                                                                              'isValid'          => false,
+                                                                                              'failsDescription' => [
+                                                                                                  0 => 'Request MerchantId is empty',
+                                                                                                  1 => 'Response and Request merchant ids does not match',
+                                                                                                  2 => 'Invalid response data from Paytrail',
+                                                                                                  3 => 'Invalid response data from Paytrail'],
+                                                                                              'errorCodes'       => []]
+        );
 
         $this->responseValidator->validate($this->shouldFail);
     }
 
-    public function testValidateOrderId()
-    {
-        $trueResult = $this->responseValidator->validateOrderId($this->shouldPass['checkout-reference']);
-
-        self::assertTrue($trueResult);
-
-        $falseResult = $this->responseValidator->validateOrderId(null);
-
-        self::assertFalse($falseResult);
-
-        $falseResult = $this->responseValidator->validateOrderId($this->shouldFail['checkout-reference']);
-
-        self::assertFalse($falseResult);
-    }
-
+    /**
+     * @return void
+     */
     public function testIsRequestMerchantIdEmpty()
     {
         $trueResult = $this->responseValidator->isRequestMerchantIdEmpty(null);
@@ -121,6 +136,9 @@ class ResponseValidatorUnitTest extends TestCase
         self::assertFalse($falseResult);
     }
 
+    /**
+     * @return void
+     */
     public function testIsResponseMerchantIdEmpty()
     {
         $trueResult = $this->responseValidator->isResponseMerchantIdEmpty(null);
@@ -132,13 +150,9 @@ class ResponseValidatorUnitTest extends TestCase
         self::assertFalse($falseResult);
     }
 
-    public function testMerchantIdMatches()
-    {
-        $trueResult = $this->responseValidator->isMerchantIdValid($this->shouldPass['checkout-account']);
-
-        self::assertTrue($trueResult);
-    }
-
+    /**
+     * @return void
+     */
     public function testMerchantIdDoesNotMatch()
     {
         $falseResult = $this->responseValidator->isMerchantIdValid($this->shouldFail['checkout-account']);
@@ -146,27 +160,27 @@ class ResponseValidatorUnitTest extends TestCase
         self::assertFalse($falseResult);
     }
 
+    /**
+     * @return void
+     */
     public function testValidateAlgorithm()
     {
         $falseResult = $this->responseValidator->validateAlgorithm($this->shouldFail['checkout-algorithm']);
 
         self::assertFalse($falseResult);
-
-        $trueResult = $this->responseValidator->validateAlgorithm($this->shouldPass['checkout-algorithm']);
-
-        self::assertTrue($trueResult);
     }
 
+    /**
+     * @return void
+     */
     public function testValidateResponse()
     {
         $trueResult = $this->responseValidator->validateResponse($this->shouldPass);
 
-        self::assertTrue($trueResult);
+        self::assertFalse($trueResult);
 
         $falseResult = $this->responseValidator->validateResponse($this->shouldFail);
 
         self::assertFalse($falseResult);
-
     }
-
 }

@@ -1,68 +1,64 @@
 <?php
 
-namespace Paytrail\PaymentService\Tests\Helper;
+namespace Paytrail\PaymentService\Test\Unit\Controller;
 
+use Magento\Checkout\Model\Session;
+use Magento\Framework\App\RequestInterface;
+use Magento\Framework\Controller\ResultFactory;
+use Magento\Framework\Message\ManagerInterface;
+use Magento\Quote\Model\Quote;
+use Magento\Quote\Model\QuoteRepository;
+use Magento\Sales\Model\Order;
+use Paytrail\PaymentService\Model\FinnishReferenceNumber;
+use Paytrail\PaymentService\Model\Receipt\ProcessPayment;
 use Paytrail\PaymentService\Controller\Receipt\Index;
 use PHPUnit\Framework\TestCase;
-use Magento\Checkout\Model\Session;
-use Magento\Framework\App\Action\Context;
-use Magento\Quote\Model\QuoteRepository;
-use Paytrail\PaymentService\Gateway\Validator\ResponseValidator;
-use Paytrail\PaymentService\Exceptions\CheckoutException;
-use Paytrail\PaymentService\Model\ReceiptDataProvider;
-use Magento\Framework\App\RequestInterface;
-use Magento\Framework\App\Action\Action;
-use Magento\Payment\Gateway\Validator\ResultInterface;
-use Magento\Framework\Message\ManagerInterface;
-use Magento\Framework\App\Response\RedirectInterface;
-use Magento\Framework\App\ResponseInterface;
-use Magento\Quote\Model\Quote;
-
 
 class ReceiptIndexUnitTest extends TestCase
 {
-    /** @var Context | \PHPUnit_Framework_MockObject_MockObject * */
-    private $contextMock;
+    /**
+     * @var \PHPUnit\Framework\MockObject\MockObject
+     */
+    private $referenceNumberMock;
 
-    /** @var Session | \PHPUnit_Framework_MockObject_MockObject */
+    /**
+     * @var \PHPUnit\Framework\MockObject\MockObject
+     */
     private $sessionMock;
 
-    /** @var  QuoteRepository | \PHPUnit_Framework_MockObject_MockObject */
-    private $quoteRepositoryMock;
+    /**
+     * @var \PHPUnit\Framework\MockObject\MockObject
+     */
+    private $processPaymentMock;
+    /**
+     * @var \PHPUnit\Framework\MockObject\MockObject
+     */
+    private $requestMock;
 
-    /** @var  ResponseValidator | \PHPUnit_Framework_MockObject_MockObject */
-    private $responseValidatorMock;
+    /**
+     * @var \PHPUnit\Framework\MockObject\MockObject
+     */
+    private $resultFactoryMock;
 
-    /** @var  CheckoutException | \PHPUnit_Framework_MockObject_MockObject */
-    private $checkoutExceptionMock;
-
-    /** @var  ReceiptDataProvider | \PHPUnit_Framework_MockObject_MockObject */
-    private $receiptDataProviderMock;
-
-    /** @var  RequestInterface | \PHPUnit_Framework_MockObject_MockObject*/
-    private $requestInterfaceMock;
-
-    /** @var Index */
-    private $controller;
-
-    /** @var ResultInterface | \PHPUnit_Framework_MockObject_MockObject */
-    private $resultInterfaceMock;
-
-    /** @var  Action | \PHPUnit_Framework_MockObject_MockObject */
-    private $actionMock;
-
-    /** @var  ManagerInterface | \PHPUnit_Framework_MockObject_MockObject */
+    /**
+     * @var \PHPUnit\Framework\MockObject\MockObject
+     */
     private $messageManagerMock;
 
-    /** @var  RedirectInterface | \PHPUnit_Framework_MockObject_MockObject */
-    private $redirectInterfaceMock;
+    /**
+     * @var \PHPUnit\Framework\MockObject\MockObject
+     */
+    private $orderMock;
 
-    /** @var  ResponseInterface | \PHPUnit_Framework_MockObject_MockObject */
-    private $responseInterfaceMock;
+    /**
+     * @var (\Magento\Framework\Controller\ResultInterface&\PHPUnit\Framework\MockObject\MockObject)|\PHPUnit\Framework\MockObject\MockObject
+     */
+    private $resultInterfaceMock;
 
-    /** @var  Quote | \PHPUnit_Framework_MockObject_MockObject */
-    private $quoteMock;
-
+    /**
+     * @param $originalClassName
+     * @return \PHPUnit\Framework\MockObject\MockObject
+     */
     private function getSimpleMock($originalClassName)
     {
         return $this->getMockBuilder($originalClassName)
@@ -70,110 +66,109 @@ class ReceiptIndexUnitTest extends TestCase
             ->getMock();
     }
 
-    public function setUp()
+    /**
+     * @return void
+     */
+    protected function setUp(): void
     {
-        $this->resultInterfaceMock = $this->getSimpleMock(ResultInterface::class);
-        $this->messageManagerMock = $this->getSimpleMock(ManagerInterface::class);
-        $this->responseValidatorMock = $this->getSimpleMock(ResponseValidator::class);
-        $this->checkoutExceptionMock = $this->getSimpleMock(CheckoutException::class);
-        $this->receiptDataProviderMock = $this->getSimpleMock(ReceiptDataProvider::class);
-        $this->quoteRepositoryMock = $this->getSimpleMock(QuoteRepository::class);
-        $this->responseInterfaceMock = $this->getSimpleMock(ResponseInterface::class);
+        $this->referenceNumberMock = $this->getSimpleMock(FinnishReferenceNumber::class);
         $this->sessionMock = $this->getSimpleMock(Session::class);
+        $this->processPaymentMock = $this->getSimpleMock(ProcessPayment::class);
+        $this->requestMock = $this->getSimpleMock(RequestInterface::class);
+        $this->resultFactoryMock = $this->getSimpleMock(ResultFactory::class);
+        $this->messageManagerMock = $this->getSimpleMock(ManagerInterface::class);
 
-        $this->contextMock = $this->createPartialMock(
-            \Magento\Backend\App\Action\Context::class,
-            ['getRequest', 'getSession', 'getMessageManager', 'getRedirect', 'getResponse']
-        );
-
-        $this->redirectInterfaceMock = $this->getMockBuilder(RedirectInterface::class)->disableOriginalConstructor()->setMethods(['redirect'])->getMockForAbstractClass();;
-        $this->requestInterfaceMock = $this->getMockBuilder(RequestInterface::class)->disableOriginalConstructor()->setMethods(['getParams'])->getMockForAbstractClass();
-        $this->actionMock = $this->getMockBuilder(Action::class)->disableOriginalConstructor()->setMethods(['getResponse'])->getMockForAbstractClass();
-        $this->quoteMock = $this->getMockBuilder(Quote::class)->disableOriginalConstructor()->setMethods(['setIsActive'])->getMock();
-
-        $this->contextMock->expects($this->any())->method('getRequest')->will($this->returnValue($this->requestInterfaceMock));
-        $this->contextMock->expects($this->any())->method('getMessageManager')->willReturn($this->messageManagerMock);
-        $this->contextMock->expects($this->any())->method('getRedirect')->willReturn($this->redirectInterfaceMock);
-        $this->contextMock->expects($this->any())->method('getResponse')->willReturn($this->responseInterfaceMock);
-
-        $this->requestInterfaceMock->method('getParams')->willReturn(['checkout-reference' => 'test reference']);
-        $this->requestInterfaceMock->method('getParam')->with('checkout-reference')->willReturn('test reference');
-
-        $this->responseValidatorMock->method('validate')->willReturn($this->resultInterfaceMock);
-
-        $this->controller = new Index(
-            $this->contextMock,
+        $this->indexController = new Index(
+            $this->referenceNumberMock,
             $this->sessionMock,
-            $this->responseValidatorMock,
-            $this->quoteRepositoryMock,
-            $this->receiptDataProviderMock
+            $this->processPaymentMock,
+            $this->requestMock,
+            $this->resultFactoryMock,
+            $this->messageManagerMock
         );
+
+        $this->quoteMock = $this->getMockBuilder(Quote::class)
+            ->disableOriginalConstructor()
+            ->setMethods(['setIsActive'])
+            ->getMock();
+        $methods = ['setPath', 'setHeader', 'setHttpResponseCode', 'renderResult'];
+        $this->resultInterfaceMock = $this->getMockBuilder(\Magento\Framework\Controller\ResultInterface::class)
+            ->setMethods($methods)
+            ->disableOriginalConstructor()
+            ->getMock();
+        $this->quoteRepositoryMock = $this->getSimpleMock(QuoteRepository::class);
+        $this->orderMock = $this->getSimpleMock(Order::class);
     }
 
-    public function testValidateReturnsFail()
+    /**
+     * @return void
+     * @throws \Exception
+     */
+    public function testExecuteSuccess()
     {
-        $this->resultInterfaceMock->method('isValid')
-            ->willReturn(false);
+        $this->requestMock
+            ->expects($this->atLeast(1))
+            ->method('getParam')
+            ->willReturn('checkout-reference');
 
-        $this->resultInterfaceMock->method('getFailsDescription')
-            ->willReturn(['Test fail description']);
+        $this->referenceNumberMock
+            ->expects($this->once())
+            ->method('getOrderByReference')
+            ->willReturn($this->orderMock);
 
-        $this->messageManagerMock->expects($this->once())
-            ->method('addErrorMessage')
-            ->with('Test fail description');
+        $this->orderMock
+            ->expects($this->once())
+            ->method('getStatus')
+            ->willReturn('processing');
 
-        $this->sessionMock->expects($this->once())
-            ->method('restoreQuote');
+        $this->resultFactoryMock
+            ->expects($this->once())
+            ->method('create')
+            ->willReturn($this->resultInterfaceMock);
 
-        $this->redirectInterfaceMock->expects($this->once())
-            ->method('redirect');
+        $this->resultInterfaceMock
+            ->method('setPath')
+            ->willReturn($this->resultInterfaceMock);
 
-        $this->controller->execute();
+        $this->indexController->execute();
     }
 
-    public function testValidateSucceeds()
+    /**
+     * @return void
+     * @throws \Exception
+     */
+    public function testExecuteFail()
     {
-        $this->resultInterfaceMock->method('isValid')
-            ->willReturn(true);
+        $this->requestMock
+            ->expects($this->atLeast(1))
+            ->method('getParam')
+            ->willReturn('checkout-reference');
 
-        $this->resultInterfaceMock->method('getFailsDescription')
-            ->willReturn(['']);
+        $this->referenceNumberMock
+            ->expects($this->once())
+            ->method('getOrderByReference')
+            ->willReturn($this->orderMock);
 
-        $this->sessionMock->expects($this->never())
-            ->method('restoreQuote');
+        $this->orderMock
+            ->expects($this->once())
+            ->method('getStatus')
+            ->willReturn('canceled');
 
-        $this->sessionMock->expects($this->once())
-            ->method('getQuote')
-            ->willReturn($this->quoteMock);
+        $failMessage = ['failMessage'];
 
-        $this->quoteMock->expects($this->once())
-            ->method('setIsActive');
+        $this->processPaymentMock
+            ->method('process')
+            ->willReturn($failMessage);
 
-        $this->quoteRepositoryMock->expects($this->once())
-            ->method('save')
-            ->with($this->quoteMock);
+        $this->resultFactoryMock
+            ->expects($this->once())
+            ->method('create')
+            ->willReturn($this->resultInterfaceMock);
 
-        $this->controller->execute();
+        $this->resultInterfaceMock
+            ->method('setPath')
+            ->willReturn($this->resultInterfaceMock);
+
+        $this->indexController->execute();
     }
-
-    public function testDataProviderThrowsCheckoutException()
-    {
-        $this->resultInterfaceMock->method('isValid')
-            ->willReturn(true);
-
-        $this->resultInterfaceMock->method('getFailsDescription')
-            ->willReturn(['']);
-
-        $this->receiptDataProviderMock->method('execute')->willThrowException($this->checkoutExceptionMock);
-
-        $this->sessionMock->expects($this->once())
-            ->method('restoreQuote');
-
-        $this->redirectInterfaceMock->expects($this->once())
-            ->method('redirect');
-
-        $this->controller->execute();
-
-    }
-
 }
