@@ -5,6 +5,7 @@ namespace Paytrail\PaymentService\Gateway\Request;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Payment\Gateway\Helper\SubjectReader;
 use Magento\Payment\Gateway\Request\BuilderInterface;
+use Magento\Sales\Api\OrderRepositoryInterface;
 use Paytrail\PaymentService\Exceptions\CheckoutException;
 use Paytrail\PaymentService\Model\Receipt\ProcessService;
 use Paytrail\PaymentService\Model\RefundCallback;
@@ -21,13 +22,15 @@ class RefundDataBuilder implements BuilderInterface
      * @param LoggerInterface $log
      * @param RefundRequest $refundRequest
      * @param RefundCallback $refundCallback
+     * @param OrderRepositoryInterface $orderRepository
      */
     public function __construct(
         private ProcessService $processService,
         private readonly SubjectReader $subjectReader,
         private readonly LoggerInterface $log,
         private readonly RefundRequest $refundRequest,
-        private readonly RefundCallback $refundCallback
+        private readonly RefundCallback $refundCallback,
+        private readonly OrderRepositoryInterface $orderRepository
     ) {
     }
 
@@ -69,7 +72,7 @@ class RefundDataBuilder implements BuilderInterface
 
         // Handle request
         $paytrailRefund = $this->refundRequest;
-        $this->setRefundRequestData($paytrailRefund, $amount);
+        $this->setRefundRequestData($paytrailRefund, $amount, $order->getId());
 
         return [
             'payment'               => $payment,
@@ -84,11 +87,12 @@ class RefundDataBuilder implements BuilderInterface
      * SetRefundRequestData function
      *
      * @param RefundRequest $paytrailRefund
-     * @param float         $amount
-     *
+     * @param float $amount
+     * @param string|int $orderId
+     * @return void
      * @throws CheckoutException
      */
-    private function setRefundRequestData(RefundRequest $paytrailRefund, float $amount): void
+    private function setRefundRequestData(RefundRequest $paytrailRefund, float $amount, string|int $orderId): void
     {
         if ($amount <= 0) {
             $message = 'Refund amount must be above 0';
@@ -96,7 +100,10 @@ class RefundDataBuilder implements BuilderInterface
             throw new CheckoutException(__($message));
         }
 
-        $paytrailRefund->setAmount(round($amount * 100));
+        $paytrailRefund->setAmount((int)round($amount * 100));
+
+        $order = $this->orderRepository->get((int)$orderId);
+        $paytrailRefund->setEmail($order->getCustomerEmail());
 
         $callback = $this->refundCallback->createRefundCallback();
         $paytrailRefund->setCallbackUrls($callback);

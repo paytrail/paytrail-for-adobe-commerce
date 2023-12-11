@@ -4,12 +4,13 @@ namespace Paytrail\PaymentService\Model\Payment;
 
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\Exception\LocalizedException;
+use function Symfony\Component\Translation\t;
 
 class DiscountSplitter
 {
-    private const ROUNDING_TYPE_FINAL = 'splitter_unit';
+    private const ROUNDING_TYPE_FINAL            = 'splitter_unit';
     private const SMALLEST_ACCEPTABLE_DIFFERENCE = 0.0001;
-    private const CONFIG_PATH_ROUNDING_ROW_TAX = 'payment/paytrail/rounding_row_tax_percent';
+    private const CONFIG_PATH_ROUNDING_ROW_TAX   = 'payment/paytrail/rounding_row_tax_percent';
 
     /**
      * @var DiscountGetterInterface[]
@@ -26,12 +27,12 @@ class DiscountSplitter
 
     public function __construct(
         \Magento\SalesRule\Model\DeltaPriceRound $deltaPriceRound,
-        ScopeConfigInterface $scopeConfig,
-        $discountGetters = []
+        ScopeConfigInterface                     $scopeConfig,
+                                                 $discountGetters = []
     ) {
         $this->deltaPriceRound = $deltaPriceRound;
         $this->discountGetters = $discountGetters;
-        $this->scopeConfig = $scopeConfig;
+        $this->scopeConfig     = $scopeConfig;
     }
 
     /**
@@ -40,6 +41,7 @@ class DiscountSplitter
      *
      * @param array $items
      * @param \Magento\Sales\Model\Order $order
+     *
      * @return array
      * @throws LocalizedException
      */
@@ -47,14 +49,16 @@ class DiscountSplitter
     {
         $discountTotal = $this->getDiscountsFromOrder($order);
         if (!$discountTotal) {
+            //fix for rounding errors
+            $this->correctRoundingErrors($items, $order->getGrandTotal(), $this->getItemTotal($items));
             return $items;
         }
 
-        $itemTotal = $this->getItemTotal($items);
+        $itemTotal           = $this->getItemTotal($items);
         $discountedItemTotal = 0;
         foreach ($items as $index => $item) {
-            $percentage = $this->calculateItemPercentageOfTotal($itemTotal, $item);
-            $productDiscount = $discountTotal * $percentage;
+            $percentage             = $this->calculateItemPercentageOfTotal($itemTotal, $item);
+            $productDiscount        = $discountTotal * $percentage;
             $items[$index]['price'] = $this->deltaPriceRound->round(
                 $item['price'] - $productDiscount / $item['amount'],
                 self::ROUNDING_TYPE_FINAL
@@ -66,9 +70,11 @@ class DiscountSplitter
         $this->correctRoundingErrors($items, $order->getGrandTotal(), $discountedItemTotal);
         $finalTotal = $this->getItemTotal($items);
         if (abs(($order->getGrandTotal() - $finalTotal) / $finalTotal) > self::SMALLEST_ACCEPTABLE_DIFFERENCE) {
-            throw new LocalizedException(__(
-                'Order discount error: unable to split discount between products'
-            ));
+            throw new LocalizedException(
+                __(
+                    'Order discount error: unable to split discount between products'
+                )
+            );
         }
 
         return $items;
@@ -85,6 +91,7 @@ class DiscountSplitter
      * @param array $items
      * @param float $discountedTotal
      * @param float $itemDiscountedTotal
+     *
      * @throws LocalizedException
      */
     private function correctRoundingErrors(array &$items, float $discountedTotal, float $itemDiscountedTotal): void
@@ -100,17 +107,18 @@ class DiscountSplitter
 
         if ($delta > 0) {
             $items[] = [
-                'title' => 'Discount rounding correction',
-                'code' => 'discount-rounding-correction',
-                'price' => $delta,
+                'title'  => 'Discount rounding correction',
+                'code'   => 'discount-rounding-correction',
+                'price'  => $delta,
                 'amount' => 1,
-                'vat' => $this->getRoundingRowTax(),
+                'vat'    => $this->getRoundingRowTax(),
             ];
         }
     }
 
     /**
      * @param \Magento\Sales\Model\Order $order
+     *
      * @return float|int
      * @throws LocalizedException
      */
@@ -124,10 +132,12 @@ class DiscountSplitter
         /** @var \Paytrail\PaymentService\Model\Payment\DiscountGetterInterface $discountGetter */
         foreach ($this->discountGetters as $discountGetter) {
             if (!$discountGetter instanceof \Paytrail\PaymentService\Model\Payment\DiscountGetterInterface) {
-                throw new LocalizedException(__(
-                    'Discount getters must implement %interface!',
-                    ['interface' => \Paytrail\PaymentService\Model\Payment\DiscountGetterInterface::class]
-                ));
+                throw new LocalizedException(
+                    __(
+                        'Discount getters must implement %interface!',
+                        ['interface' => \Paytrail\PaymentService\Model\Payment\DiscountGetterInterface::class]
+                    )
+                );
             }
 
             $discountTotal += $discountGetter->getDiscount($order);
@@ -139,6 +149,7 @@ class DiscountSplitter
     /**
      * @param float $total
      * @param array $item
+     *
      * @return float
      */
     private function calculateItemPercentageOfTotal(float $total, array $item)
@@ -150,6 +161,7 @@ class DiscountSplitter
 
     /**
      * @param array $items
+     *
      * @return float|int
      * @throws LocalizedException
      */
@@ -161,9 +173,7 @@ class DiscountSplitter
         }
 
         if (!$total) {
-            throw new LocalizedException(\__(
-                'Item total should not be 0'
-            ));
+            throw new LocalizedException(\__('Item total should not be 0'));
         }
 
         return $total;
@@ -174,6 +184,7 @@ class DiscountSplitter
      *
      * @param float $delta
      * @param array $items
+     *
      * @return float new delta value after negative delta was embedded
      * @throws LocalizedException
      */
@@ -188,8 +199,8 @@ class DiscountSplitter
             $lowestAmountIndex = $items[$lowestAmountIndex]['amount'] > $item['amount'] ? $index : $lowestAmountIndex;
         }
 
-        $deltaToEmbed = round($delta / $items[$lowestAmountIndex]['amount'], 2);
-        $deltaToEmbed = $deltaToEmbed == 0 ? -0.01 : $deltaToEmbed;
+        $deltaToEmbed                       = round($delta / $items[$lowestAmountIndex]['amount'], 2);
+        $deltaToEmbed                       = $deltaToEmbed == 0 ? -0.01 : $deltaToEmbed;
         $items[$lowestAmountIndex]['price'] += $deltaToEmbed;
 
         return round($discountedTotal - $this->getItemTotal($items), 2);
@@ -198,7 +209,7 @@ class DiscountSplitter
     /**
      * @return int
      */
-    private function getRoundingRowTax() : float
+    private function getRoundingRowTax(): float
     {
         return $this->scopeConfig->getValue(
             self::CONFIG_PATH_ROUNDING_ROW_TAX,
