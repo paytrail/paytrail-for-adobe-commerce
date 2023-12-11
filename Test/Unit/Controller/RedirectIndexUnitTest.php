@@ -119,7 +119,9 @@ class RedirectIndexUnitTest extends TestCase
         $this->loggerMock                        = $this->getSimpleMock(LoggerInterface::class);
         $this->gatewayConfigMock                 = $this->getSimpleMock(Config::class);
         $this->resultFactoryMock                 = $this->getSimpleMock(ResultFactory::class);
-        $this->resultMock = $this->getSimpleMock(\Magento\Framework\Controller\Result\Json::class);
+        $this->resultMock                        = $this->getSimpleMock(
+            \Magento\Framework\Controller\Result\Json::class
+        );
         $this->resultFactoryMock
             ->method('create')
             ->willReturn($this->resultMock);
@@ -188,6 +190,7 @@ class RedirectIndexUnitTest extends TestCase
                        'success' => false,
                        'message' => 'No payment method selected'
                    ]);
+
         $this->redirectIndex->execute();
     }
 }
