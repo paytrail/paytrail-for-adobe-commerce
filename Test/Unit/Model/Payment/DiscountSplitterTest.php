@@ -43,10 +43,10 @@ class DiscountSplitterTest extends TestCase
     {
         $items = $this->mockItemArray($items);
         $order = $this->createOrderMock($items, $discounts);
-        $orderTotalWithoutDiscount = 0;
-        $availableDiscount = 0;
+        $orderTotalWithoutDiscount = '0.00';
+        $availableDiscount = "0.00";
         foreach ($items as $item) {
-            $orderTotalWithoutDiscount += $item['price'] * $item['amount'];
+            $orderTotalWithoutDiscount += bcmul($item['price'] , $item['amount'],2);
         }
         foreach ($discounts as $discount) {
             $availableDiscount += $discount;
@@ -79,11 +79,11 @@ class DiscountSplitterTest extends TestCase
                     ]
                 )
             );
-            $discountedTotal += $result['price'] * $result['amount'];
+            $discountedTotal +=  bcmul($result['price'] , $result['amount'],2);
         }
 
         $this->assertEquals(
-            $orderTotalWithoutDiscount - $availableDiscount,
+            bcsub($orderTotalWithoutDiscount, $availableDiscount, 2),
             $discountedTotal,
             'Discounted total does not match expected total'
         );
@@ -131,41 +131,45 @@ class DiscountSplitterTest extends TestCase
         return $items;
     }
 
-    public function processDataProvider()
+    public static function processDataProvider()
     {
         // expectations are calculated using following formula
         // expectation = productPrice - (discountAmount * (productPrice * amount / orderTotal) / productAmount)
+
+        // change all numeric values to string in order to avoid rounding errors
+        // https://stackoverflow.com/questions/3730019/why-is-this-floating-point-calculation-incorrect
+        // change it to all values in array below
 
         return [
             'no discounts' => [
                 'items' => [
                     [
                         'code' => 'testSku',
-                        'price' => floatval(30),
+                        'price' => "30",
                         'amount' => 1
                     ],
                     [
                         'code' => 'shipping',
-                        'price' => floatval(5),
+                        'price' => "5",
                         'amount' => 1
                     ]
                 ],
                 'discounts' => [],
                 'expected' => [
-                    'testSku' => floatval(30),
-                    'shipping' => floatval(5),
+                    'testSku' => "30",
+                    'shipping' => "5",
                 ]
             ],
             'Product + shipping: 10 € discount' => [
                 'items' => [
                     [
                         'code' => 'testSku',
-                        'price' => floatval(70),
+                        'price' => "70",
                         'amount' => 1
                     ],
                     [
                         'code' => 'shipping',
-                        'price' => floatval(30),
+                        'price' => "30",
                         'amount' => 1
                     ]
                 ],
@@ -173,20 +177,20 @@ class DiscountSplitterTest extends TestCase
                     'giftCardsAmount' => 10
                 ],
                 'expected' => [
-                    'testSku' => floatval(63),
-                    'shipping' => floatval(27),
+                    'testSku' => "63",
+                    'shipping' => "27",
                 ]
             ],
             '5€ Product x 3: 10 € discount' => [
                 'items' => [
                     [
                         'code' => 'testSku',
-                        'price' => floatval(5),
+                        'price' => "5",
                         'amount' => 3
                     ],
                     [
                         'code' => 'shipping',
-                        'price' => floatval(0),
+                        'price' => "0",
                         'amount' => 1
                     ]
                 ],
@@ -195,7 +199,7 @@ class DiscountSplitterTest extends TestCase
                 ],
                 'expected' => [
                     'testSku' => 1.66,
-                    'shipping' => floatval(0),
+                    'shipping' => "0",
                     'discount-rounding-correction' => 0.02,
                 ]
             ],
@@ -203,12 +207,12 @@ class DiscountSplitterTest extends TestCase
                 'items' => [
                     [
                         'code' => 'testSku',
-                        'price' => floatval(30),
+                        'price' => "30",
                         'amount' => 1
                     ],
                     [
                         'code' => 'shipping',
-                        'price' => floatval(5),
+                        'price' => "5",
                         'amount' => 1
                     ]
                 ],
@@ -224,17 +228,17 @@ class DiscountSplitterTest extends TestCase
                 'items' => [
                     [
                         'code' => 'testSku',
-                        'price' => floatval(30),
+                        'price' => "30",
                         'amount' => 1
                     ],
                     [
                         'code' => 'testSku2',
-                        'price' => floatval(0),
+                        'price' => "0",
                         'amount' => 1
                     ],
                     [
                         'code' => 'shipping',
-                        'price' => floatval(5),
+                        'price' => "5",
                         'amount' => 1
                     ]
                 ],
@@ -251,17 +255,17 @@ class DiscountSplitterTest extends TestCase
                 'items' => [
                     [
                         'code' => 'testSku',
-                        'price' => floatval(30),
+                        'price' => "30",
                         'amount' => 1
                     ],
                     [
                         'code' => 'testSku2',
-                        'price' => floatval(25),
+                        'price' => "25",
                         'amount' => 1
                     ],
                     [
                         'code' => 'shipping',
-                        'price' => floatval(5),
+                        'price' => "5",
                         'amount' => 1
                     ]
                 ],
@@ -278,7 +282,7 @@ class DiscountSplitterTest extends TestCase
                 'items' => [
                     [
                         'code' => 'testSku',
-                        'price' => floatval(30),
+                        'price' => "30",
                         'amount' => 2
                     ],
                     [
@@ -299,7 +303,7 @@ class DiscountSplitterTest extends TestCase
                 'items' => [
                     [
                         'code' => 'testSku',
-                        'price' => floatval(30),
+                        'price' => '30.00',
                         'amount' => 2
                     ],
                     [

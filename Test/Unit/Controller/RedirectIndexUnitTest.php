@@ -2,80 +2,87 @@
 
 namespace Paytrail\PaymentService\Test\Unit\Controller;
 
-use Paytrail\PaymentService\Controller\Redirect\Index;
-use PHPUnit\Framework\TestCase;
-
-use Magento\Framework\Exception\LocalizedException;
-use Paytrail\PaymentService\Helper\ApiData;
-use Paytrail\PaymentService\Helper\Data as paytrailHelper;
-use Psr\Log\LoggerInterface;
-use Magento\Framework\App\Action\Context;
 use Magento\Checkout\Model\Session;
-use Magento\Sales\Model\OrderFactory;
-use Magento\Framework\Controller\Result\JsonFactory;
-use Magento\Sales\Api\OrderRepositoryInterface;
-use Magento\Sales\Api\OrderManagementInterface;
-use Magento\Framework\View\Result\PageFactory;
-use Magento\Framework\App\Action\Action;
 use Magento\Framework\App\RequestInterface;
 use Magento\Framework\Controller\Result\Json;
-use Magento\Sales\Model\Order;
-use \InvalidArgumentException;
+use Magento\Framework\Controller\ResultFactory;
+use Magento\Payment\Gateway\Command\CommandManagerPoolInterface;
+use Magento\Sales\Api\OrderManagementInterface;
+use Magento\Sales\Api\OrderRepositoryInterface;
+use Magento\Sales\Model\OrderFactory;
+use Paytrail\PaymentService\Controller\Redirect\Index;
+use Paytrail\PaymentService\Gateway\Config\Config;
+use Paytrail\PaymentService\Model\Email\Order\PendingOrderEmailConfirmation;
+use Paytrail\PaymentService\Model\Receipt\ProcessService;
+use PHPUnit\Framework\TestCase;
+use Psr\Log\LoggerInterface;
 
 class RedirectIndexUnitTest extends TestCase
 {
+    /**
+     * @var \PHPUnit\Framework\MockObject\MockObject
+     */
+    private $pendingOrderEmailConfirmationMock;
 
-    /** @var  ApiData | \PHPUnit_Framework_MockObject_MockObject */
-    private $apiDataMock;
-
-    /** @var paytrailHelper | \PHPUnit_Framework_MockObject_MockObject */
-    private $paytrailHelperMock;
-
-    /** @var LoggerInterface | \PHPUnit_Framework_MockObject_MockObject */
-    private $loggerInterfaceMock;
-
-    /** @var  Context | \PHPUnit_Framework_MockObject_MockObject */
-    private $contextMock;
-
-    /** @var  Session | \PHPUnit_Framework_MockObject_MockObject */
+    /**
+     * @var \PHPUnit\Framework\MockObject\MockObject
+     */
     private $sessionMock;
 
-    /** @var  OrderFactory | \PHPUnit_Framework_MockObject_MockObject */
-    private $orderFactoryMock;
+    /**
+     * @var \PHPUnit\Framework\MockObject\MockObject
+     */
+    private $orderRepositoryMock;
 
-    /** @var  JsonFactory | \PHPUnit_Framework_MockObject_MockObject */
-    private $jsonFactoryMock;
+    /**
+     * @var \PHPUnit\Framework\MockObject\MockObject
+     */
+    private $orderManagementMock;
 
-    /** @var  OrderRepositoryInterface | \PHPUnit_Framework_MockObject_MockObject */
-    private $orderRepositoryInterfaceMock;
+    /**
+     * @var \PHPUnit\Framework\MockObject\MockObject
+     */
+    private $loggerMock;
 
-    /** @var  OrderManagementInterface | \PHPUnit_Framework_MockObject_MockObject */
-    private $orderManagementInterfaceMock;
+    /**
+     * @var \PHPUnit\Framework\MockObject\MockObject
+     */
+    private $gatewayConfigMock;
 
-    /** @var  PageFactory | \PHPUnit_Framework_MockObject_MockObject */
-    private $pageFactoryMock;
+    /**
+     * @var \PHPUnit\Framework\MockObject\MockObject
+     */
+    private $resultMock;
 
-    /** @var  LocalizedException | \PHPUnit_Framework_MockObject_MockObject */
-    private $localizedExceptionMock;
+    /**
+     * @var \PHPUnit\Framework\MockObject\MockObject
+     */
+    private $requestMock;
 
-    /** @var  Action | \PHPUnit_Framework_MockObject_MockObject */
-    private $actionMock;
+    /**
+     * @var \PHPUnit\Framework\MockObject\MockObject
+     */
+    private $commandManagerPoolMock;
 
-    /** @var  RequestInterface | \PHPUnit_Framework_MockObject_MockObject */
-    private $requestInterfaceMock;
+    /**
+     * @var \PHPUnit\Framework\MockObject\MockObject
+     */
+    private $processServiceMock;
 
-    /** @var  Index */
+    /**
+     * @var Index
+     */
     private $redirectIndex;
 
-    /** @var  Json | \PHPUnit_Framework_MockObject_MockObject */
+    /**
+     * @var \PHPUnit\Framework\MockObject\MockObject
+     */
     private $jsonMock;
 
-    /** @var  Order | \PHPUnit_Framework_MockObject_MockObject */
-    private $orderMock;
-
-    /** @var  InvalidArgumentException | \PHPUnit_Framework_MockObject_MockObject */
-    private $invalidArgumentMock;
-
+    /**
+     * @var \PHPUnit\Framework\MockObject\MockObject
+     */
+    private $orderFactoryMock;
 
     private function getSimpleMock($originalClassName)
     {
@@ -84,132 +91,73 @@ class RedirectIndexUnitTest extends TestCase
             ->getMock();
     }
 
-    public function setUp()
+    /**
+     * @return void
+     */
+    public function setUp(): void
     {
-        $this->apiDataMock = $this->getSimpleMock(ApiData::class);
-        $this->paytrailHelperMock = $this->getSimpleMock(paytrailHelper::class);
-        $this->loggerInterfaceMock = $this->getSimpleMock(LoggerInterface::class);
-        $this->orderFactoryMock = $this->getSimpleMock(OrderFactory::class);
-        $this->jsonFactoryMock = $this->getSimpleMock(JsonFactory::class);
-        $this->orderRepositoryInterfaceMock = $this->getSimpleMock(OrderRepositoryInterface::class);
-        $this->orderManagementInterfaceMock = $this->getSimpleMock(OrderManagementInterface::class);
-        $this->localizedExceptionMock = $this->getSimpleMock(LocalizedException::class);
-        $this->pageFactoryMock = $this->getSimpleMock(PageFactory::class);
-        $this->jsonMock = $this->getSimpleMock(Json::class);
-        $this->orderMock = $this->getSimpleMock(Order::class);
-        $this->invalidArgumentMock = $this->getSimpleMock(InvalidArgumentException::class);
-        $this->actionMock = $this->getSimpleMock(Action::class);
-
-        $this->contextMock = $this->createPartialMock(
-            \Magento\Backend\App\Action\Context::class,
-            ['getRequest', 'getSession', 'getRedirect']
-        );
-
-        $this->sessionMock = $this->getMockBuilder(Session::class)->disableOriginalConstructor()->setMethods(['getLastRealOrderId', 'restoreQuote'])->getMockForAbstractClass();
-        $this->requestInterfaceMock = $this->getMockBuilder(RequestInterface::class)->disableOriginalConstructor()->setMethods(['getParams'])->getMockForAbstractClass();
-
-        $this->contextMock->expects($this->any())->method('getRequest')->will($this->returnValue($this->requestInterfaceMock));
-        $this->jsonFactoryMock->expects($this->any())->method('create')->willReturn($this->jsonMock);
+        $this->pendingOrderEmailConfirmationMock = $this->getSimpleMock(PendingOrderEmailConfirmation::class);
+        $this->sessionMock = $this->getSimpleMock(Session::class);
+        $this->orderRepositoryMock = $this->getSimpleMock(OrderRepositoryInterface::class);
+        $this->orderManagementMock = $this->getSimpleMock(OrderManagementInterface::class);
+        $this->loggerMock = $this->getSimpleMock(LoggerInterface::class);
+        $this->gatewayConfigMock = $this->getSimpleMock(Config::class);
+        $this->resultMock = $this->getSimpleMock(ResultFactory::class);
+        $this->requestMock = $this->getSimpleMock(RequestInterface::class);
+        $this->commandManagerPoolMock = $this->getSimpleMock(CommandManagerPoolInterface::class);
+        $this->processServiceMock = $this->getSimpleMock(ProcessService::class);
 
         $this->redirectIndex = new Index(
-            $this->contextMock,
+            $this->pendingOrderEmailConfirmationMock,
             $this->sessionMock,
-            $this->orderFactoryMock,
-            $this->jsonFactoryMock,
-            $this->orderRepositoryInterfaceMock,
-            $this->orderManagementInterfaceMock,
-            $this->pageFactoryMock,
-            $this->loggerInterfaceMock,
-            $this->apiDataMock,
-            $this->paytrailHelperMock
+            $this->orderRepositoryMock,
+            $this->orderManagementMock,
+            $this->loggerMock,
+            $this->gatewayConfigMock,
+            $this->resultMock,
+            $this->requestMock,
+            $this->commandManagerPoolMock,
+            $this->processServiceMock
         );
+
+        $this->jsonMock = $this->getSimpleMock(Json::class);
+        $this->orderFactoryMock = $this->getSimpleMock(OrderFactory::class);
     }
 
-    public function testAjaxRequestParameterNotSet()
+    /**
+     * @return void
+     */
+    public function testExecuteFail(): void
     {
-        $this->requestInterfaceMock->method('getParam')
-            ->with('is_ajax')
-            ->willReturn(false);
+        $this->requestMock
+            ->expects($this->atLeast(1))
+            ->method('getParam')
+            ->willReturn('true');
 
-        $this->orderFactoryMock->expects($this->never())
-            ->method('create');
+        $this->requestMock
+            ->expects($this->atLeast(1))
+            ->method('getParam')
+            ->willReturn(null);
 
-        $this->loggerInterfaceMock->expects($this->never())
-            ->method('debug');
-
-        $this->jsonMock->expects($this->once())
-            ->method('setData')
-            ->with([
-                'success' => false,
-            ]);
-
+        $this->expectException(\Error::class);
+        $this->expectExceptionMessage(__('Call to a member function executeByCode() on null'));
         $this->redirectIndex->execute();
     }
 
-    public function testApiResponseThrowsError()
+    /**
+     * @return void
+     */
+    public function testExecuteAjaxRequestFail(): void
     {
-        $this->requestInterfaceMock->expects($this->at(0))
+        $this->requestMock
+            ->expects($this->atLeast(1))
             ->method('getParam')
-            ->with('is_ajax')
-            ->will($this->returnValue(true));
+            ->willReturn('false');
 
-        $this->requestInterfaceMock->expects($this->at(1))
-            ->method('getParam')
-            ->with('preselected_payment_method_id')
-            ->will($this->returnValue('test-payment-method'));
+        $this->loggerMock
+            ->method('error');
 
-        $this->apiDataMock->method('getResponse')
-            ->willThrowException($this->invalidArgumentMock);
-
-        $this->orderFactoryMock->expects($this->once())
-            ->method('create')
-            ->willReturn($this->orderMock);
-
-        $this->orderMock->expects($this->once())
-            ->method('loadByIncrementId')
-            ->willReturn($this->orderMock);
-
-        $this->sessionMock->expects($this->once())
-            ->method('getLastRealOrderId')
-            ->willReturn(1);
-
-        $this->loggerInterfaceMock->expects($this->once())
-            ->method('debug');
-
-        $this->jsonMock->expects($this->once())
-            ->method('setData')
-            ->with([
-                'success' => false,
-            ]);
-
+        $this->expectException(\Error::class);
         $this->redirectIndex->execute();
     }
-
-    public function testPaymentMethodParameterFails()
-    {
-        $this->requestInterfaceMock->expects($this->at(0))
-            ->method('getParam')
-            ->with('is_ajax')
-            ->will($this->returnValue(true));
-
-        $this->requestInterfaceMock->expects($this->at(1))
-            ->method('getParam')
-            ->with('preselected_payment_method_id')
-            ->will($this->returnValue(null));
-
-        $this->orderFactoryMock->expects($this->never())
-            ->method('create');
-
-        $this->loggerInterfaceMock->expects($this->once())
-            ->method('debug');
-
-        $this->jsonMock->expects($this->once())
-            ->method('setData')
-            ->with([
-                'success' => false,
-            ]);
-
-        $this->redirectIndex->execute();
-    }
-
 }

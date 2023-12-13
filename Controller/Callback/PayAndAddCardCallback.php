@@ -7,6 +7,7 @@ use Magento\Framework\App\RequestInterface;
 use Magento\Framework\Controller\ResultFactory;
 use Magento\Framework\Controller\ResultInterface;
 use Magento\Framework\Encryption\EncryptorInterface;
+use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Serialize\SerializerInterface;
 use Magento\Sales\Model\Order;
 use Magento\Sales\Model\OrderFactory;
@@ -15,6 +16,7 @@ use Magento\Vault\Model\PaymentTokenFactory;
 use Magento\Vault\Model\PaymentTokenManagement;
 use Paytrail\PaymentService\Controller\Receipt\Index as Receipt;
 use Paytrail\PaymentService\Gateway\Config\Config;
+use Paytrail\PaymentService\Logger\PaytrailLogger;
 use Paytrail\PaymentService\Model\Receipt\ProcessPayment;
 
 class PayAndAddCardCallback implements \Magento\Framework\App\ActionInterface
@@ -22,13 +24,13 @@ class PayAndAddCardCallback implements \Magento\Framework\App\ActionInterface
     /**
      * @var string[]
      */
-    protected $cardTypes = [
-        'Visa' => 'VI',
+    private $cardTypes = [
+        'Visa'       => 'VI',
         'MasterCard' => 'MC',
-        'Discover' => 'DI',
-        'Amex' => 'AE',
-        'Maestro' => 'SM',
-        'Solo' => 'SO'
+        'Discover'   => 'DI',
+        'Amex'       => 'AE',
+        'Maestro'    => 'SM',
+        'Solo'       => 'SO'
     ];
 
     /**
@@ -45,19 +47,21 @@ class PayAndAddCardCallback implements \Magento\Framework\App\ActionInterface
      * @param PaymentTokenRepositoryInterface $tokenRepository
      * @param PaymentTokenManagement $paymentTokenManagement
      * @param EncryptorInterface $encryptor
+     * @param PaytrailLogger $logger
      */
     public function __construct(
-        private Session $session,
-        private ProcessPayment $processPayment,
-        private RequestInterface $request,
-        private ResultFactory $resultFactory,
-        private Config $gatewayConfig,
-        private OrderFactory $orderFactory,
-        private PaymentTokenFactory $paymentTokenFactory,
-        private SerializerInterface $jsonSerializer,
+        private Session                         $session,
+        private ProcessPayment                  $processPayment,
+        private RequestInterface                $request,
+        private ResultFactory                   $resultFactory,
+        private Config                          $gatewayConfig,
+        private OrderFactory                    $orderFactory,
+        private PaymentTokenFactory             $paymentTokenFactory,
+        private SerializerInterface             $jsonSerializer,
         private PaymentTokenRepositoryInterface $tokenRepository,
-        private PaymentTokenManagement $paymentTokenManagement,
-        private EncryptorInterface $encryptor
+        private PaymentTokenManagement          $paymentTokenManagement,
+        private EncryptorInterface              $encryptor,
+        private PaytrailLogger                  $logger
     ) {
     }
 
@@ -65,21 +69,30 @@ class PayAndAddCardCallback implements \Magento\Framework\App\ActionInterface
      * Execute function
      *
      * @return ResultInterface
-     * @throws \Magento\Framework\Exception\LocalizedException
+     * @throws LocalizedException
      */
     public function execute(): ResultInterface
     {
-        $reference = $this->request->getParam('checkout-reference');
-        $response = $this->resultFactory->create(ResultFactory::TYPE_JSON);
+        $reference     = $this->request->getParam('checkout-reference');
+        $response      = $this->resultFactory->create(ResultFactory::TYPE_JSON);
+        $responseError = [];
 
         /** @var string $orderNo */
         $orderNo = $this->gatewayConfig->getGenerateReferenceForOrder()
             ? $this->gatewayConfig->getIdFromOrderReferenceNumber($reference)
             : $reference;
 
-        /** @var \Magento\Sales\Model\Order $order */
-        $order = $this->orderFactory->create()->loadByIncrementId($orderNo);
+        /** @var Order $order */
+        $order  = $this->orderFactory->create()->loadByIncrementId($orderNo);
         $status = $order->getStatus();
+
+        $this->logger->debugLog(
+            'request',
+            'PayAndAddCard callback received' . PHP_EOL .
+            'order status: ' . $status . PHP_EOL .
+            'orderNo: ' . $orderNo . PHP_EOL .
+            'params: ' . json_encode($this->request->getParams(), JSON_PRETTY_PRINT)
+        );
 
         // save credit card
         if ($this->request->getParam('checkout-card-token')) {
@@ -89,10 +102,20 @@ class PayAndAddCardCallback implements \Magento\Framework\App\ActionInterface
         if ($status == 'pending_payment' || in_array($status, Receipt::ORDER_CANCEL_STATUSES)) {
             // order status could be changed by receipt
             // if not, status change needs to be forced by processing the payment
-            $response['error'] = $this->processPayment->process($this->request->getParams(), $this->session);
+            $responseError = $this->processPayment->process($this->request->getParams(), $this->session);
         }
 
-        return $response;
+        $responseData = ['error' => $responseError];
+
+        $this->logger->debugLog(
+            'request',
+            'PayAndAddCard callback response' . PHP_EOL .
+            'order status: ' . $status . PHP_EOL .
+            'orderNo: ' . $orderNo . PHP_EOL .
+            'response: ' . json_encode($responseData, JSON_PRETTY_PRINT)
+        );
+
+        return $response->setData($responseData);
     }
 
     /**
@@ -100,15 +123,16 @@ class PayAndAddCardCallback implements \Magento\Framework\App\ActionInterface
      *
      * @param array $params
      * @param Order $order
+     *
      * @return void
      */
     public function processCardToken($params, $order)
     {
-        $customerId = $order->getCustomerId();
+        $customerId   = $order->getCustomerId();
         $tokenDetails = $this->jsonSerializer->serialize(
             [
-                'type' => $this->cardTypes[$params['type']],
-                'maskedCC' => $params['partial_pan'],
+                'type'           => $this->cardTypes[$params['type']],
+                'maskedCC'       => $params['partial_pan'],
                 'expirationDate' => $params['expire_year'] . '/' . $params['expire_month']
             ]
         );
@@ -133,6 +157,7 @@ class PayAndAddCardCallback implements \Magento\Framework\App\ActionInterface
      * @param string $publicHash
      * @param string $customerId
      * @param string $tokenDetails
+     *
      * @return void
      */
     private function saveToken($params, $publicHash, $customerId, $tokenDetails)
@@ -155,6 +180,7 @@ class PayAndAddCardCallback implements \Magento\Framework\App\ActionInterface
      * @param string $cardType
      * @param string $customerId
      * @param string $tokenDetails
+     *
      * @return string
      */
     private function createPublicHash($cardType, $customerId, $tokenDetails): string
@@ -172,6 +198,7 @@ class PayAndAddCardCallback implements \Magento\Framework\App\ActionInterface
      *
      * @param string $expMonth
      * @param string $expYear
+     *
      * @return string
      */
     private function getExpiresDate($expMonth, $expYear): string
