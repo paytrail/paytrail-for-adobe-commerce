@@ -51,6 +51,9 @@ class ViewPlugin
                     , '{$this->getRestoreOrderUrl($orderId)}')",]);
         }
         if ($this->isManualInvoiceOrder()) {
+            // remove default invoice button
+            $view->removeButton('order_invoice');
+            // add manual invoice activation button
             $view->addButton('manualInvoice', [
                 'label' => __('Activate Invoice'),
                 'onclick' =>
