@@ -21,9 +21,9 @@ class VersionNotification implements MessageInterface
      * @param PaytrailLogger $paytrailLogger
      */
     public function __construct(
-        private Session $authSession,
-        private InboxFactory $inboxFactory,
-        private Config $gatewayConfig,
+        private Session        $authSession,
+        private InboxFactory   $inboxFactory,
+        private Config         $gatewayConfig,
         private PaytrailLogger $paytrailLogger
     ) {
     }
@@ -53,32 +53,30 @@ class VersionNotification implements MessageInterface
              * This will compare the currently installed version with the latest available one.
              * A message will appear after the login if the two are not matching.
              */
-            if (isset($githubContent)) {
-                if ('v' . $this->gatewayConfig->getVersion() != $githubContent['tag_name']) {
-                    $versionData[] = [
-                        'severity' => self::SEVERITY_CRITICAL,
-                        'date_added' => date('Y-m-d H:i:s'),
-                        'title' => __(
-                            "Paytrail Payment Service extension version %1 available!",
-                            $githubContent['tag_name']
-                        ),
-                        'description' => $githubContent['body'],
-                        'url' => $githubContent['html_url'],
-                    ];
-
-                    /*
-                     * The parse function checks if the $versionData message exists in the inbox,
-                     * otherwise it will create it and add it to the inbox.
-                     */
-                    $this->inboxFactory->create()->parse(array_reverse($versionData));
-
-                    return true;
-                }
-            } else {
+            if (empty($githubContent)) {
                 $this->paytrailLogger->logData(
                     \Monolog\Logger::WARNING,
                     'Github content data not provided.'
                 );
+            } elseif ('v' . $this->gatewayConfig->getVersion() != $githubContent['tag_name']) {
+                $versionData[] = [
+                    'severity' => self::SEVERITY_CRITICAL,
+                    'date_added' => date('Y-m-d H:i:s'),
+                    'title' => __(
+                        "Paytrail Payment Service extension version %1 available!",
+                        $githubContent['tag_name']
+                    ),
+                    'description' => $githubContent['body'],
+                    'url' => $githubContent['html_url'],
+                ];
+
+                /*
+                 * The parse function checks if the $versionData message exists in the inbox,
+                 * otherwise it will create it and add it to the inbox.
+                 */
+                $this->inboxFactory->create()->parse(array_reverse($versionData));
+
+                return true;
             }
         } catch (\Exception $e) {
             return false;
