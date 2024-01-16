@@ -549,4 +549,9 @@
             <argument name="checkoutSession" xsi:type="object">Magento\Checkout\Model\Session\Proxy</argument>
         </arguments>
     </type>
+    <type name="Magento\Payment\Block\Form\Container">
+        <plugin name="solteq_prevent_vault_cc_method"
+                type="Paytrail\PaymentService\Plugin\PreventVaultCCMethod"
+                sortOrder="10"/>
+    </type>
 </config>
