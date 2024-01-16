@@ -7,13 +7,14 @@ use Magento\Framework\App\ActionInterface;
 use Magento\Framework\App\RequestInterface;
 use Magento\Framework\Controller\ResultFactory;
 use Magento\Framework\Message\ManagerInterface;
+use Magento\Sales\Model\Order;
 use Paytrail\PaymentService\Model\FinnishReferenceNumber;
 use Paytrail\PaymentService\Model\Receipt\ProcessPayment;
 
 class Index implements ActionInterface
 {
     public const ORDER_SUCCESS_STATUSES = ["processing", "pending_paytrail", "pending", "complete"];
-    public const ORDER_CANCEL_STATUSES = ["canceled"];
+    public const ORDER_CANCEL_STATUSES  = ["canceled"];
 
     /**
      * Index constructor.
@@ -27,11 +28,11 @@ class Index implements ActionInterface
      */
     public function __construct(
         private FinnishReferenceNumber $referenceNumber,
-        private Session $session,
-        private ProcessPayment $processPayment,
-        private RequestInterface $request,
-        private ResultFactory $resultFactory,
-        private ManagerInterface $messageManager
+        private Session                $session,
+        private ProcessPayment         $processPayment,
+        private RequestInterface       $request,
+        private ResultFactory          $resultFactory,
+        private ManagerInterface       $messageManager
     ) {
     }
 
@@ -46,7 +47,7 @@ class Index implements ActionInterface
     {
         $reference = $this->request->getParam('checkout-reference');
 
-        $order = $this->referenceNumber->getOrderByReference($reference);
+        $order  = $this->referenceNumber->getOrderByReference($reference);
         $status = $order->getStatus();
 
         $failMessages = $this->processPayment->process($this->request->getParams(), $this->session);
@@ -58,18 +59,42 @@ class Index implements ActionInterface
 
         $result = $this->resultFactory->create(\Magento\Framework\Controller\ResultFactory::TYPE_REDIRECT);
         if (in_array($status, self::ORDER_SUCCESS_STATUSES)) {
-            return $result->setPath('checkout/onepage/success');
+            return $result->setPath($this->getSuccessUrl($order));
         } elseif (in_array($status, self::ORDER_CANCEL_STATUSES)) {
             foreach ($failMessages as $failMessage) {
                 $this->messageManager->addErrorMessage($failMessage);
             }
 
-            return $result->setPath('checkout/cart');
+            return $result->setPath($this->getCartUrl($order));
         }
 
         $this->messageManager->addErrorMessage(
             __('Order processing has been aborted. Please contact customer service.')
         );
-        return $result->setPath('checkout/cart');
+
+        return $result->setPath($this->getCartUrl($order));
+    }
+
+    /**
+     * Method to use for plugins if pwa-graphql installed
+     *
+     * @param Order $order
+     *
+     * @return string
+     */
+    public function getSuccessUrl(Order $order): string
+    {
+        return 'checkout/onepage/success';
+    }
+
+
+    /**
+     * @param Order $order
+     *
+     * @return string
+     */
+    public function getCartUrl(Order $order): string
+    {
+        return 'checkout/cart';
     }
 }
