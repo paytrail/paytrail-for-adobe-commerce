@@ -95,10 +95,6 @@ class PaymentDataProvider
             ->setCallbackUrls($this->urlDataProvider->createCallbackUrl())
             ->setCallbackDelay($this->callbackDelay->getCallbackDelay());
 
-//        if ($paymentMethod) {
-//            $paytrailPayment->setPaymentMethod($paymentMethod);
-//        }
-
         if ($shippingAddress !== null) {
             $deliveryAddress = $this->createAddress($shippingAddress);
             $paytrailPayment->setDeliveryAddress($deliveryAddress);
