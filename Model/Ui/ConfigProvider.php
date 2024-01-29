@@ -10,6 +10,7 @@ use Magento\Payment\Helper\Data as PaymentHelper;
 use Magento\Store\Model\StoreManagerInterface;
 use Paytrail\PaymentService\Gateway\Config\Config;
 use Paytrail\PaymentService\Model\Card\VaultConfig;
+use Paytrail\PaymentService\Model\ApplePay\ApplePayConfig;
 use Paytrail\PaymentService\Model\Ui\DataProvider\PaymentProvidersData;
 
 class ConfigProvider implements ConfigProviderInterface
@@ -35,6 +36,7 @@ class ConfigProvider implements ConfigProviderInterface
      * @param Config $gatewayConfig
      * @param StoreManagerInterface $storeManager
      * @param PaymentProvidersData $paymentProvidersData
+     * @param ApplePayConfig $applePayConfig
      * @throws LocalizedException
      */
     public function __construct(
@@ -43,7 +45,8 @@ class ConfigProvider implements ConfigProviderInterface
         private Config                $gatewayConfig,
         private StoreManagerInterface $storeManager,
         private PaymentProvidersData  $paymentProvidersData,
-        private VaultConfig $vaultConfig
+        private VaultConfig $vaultConfig,
+        private ApplePayConfig $applePayConfig
     ) {
         foreach ($this->methodCodes as $code) {
             $this->methods[$code] = $paymentHelper->getMethodInstance($code);
@@ -73,6 +76,12 @@ class ConfigProvider implements ConfigProviderInterface
                 ->handlePaymentProviderGroupData($groupData['groups']))) {
                 $scheduledMethod[] = $this->paymentProvidersData
                     ->handlePaymentProviderGroupData($groupData['groups'])['creditcard'];
+            }
+
+            // TODO: Add Apple Pay config and Safari browser validation
+            $applePayEnabled = true;
+            if ($applePayEnabled) {
+                $groupData['groups'] = $this->applePayConfig->addApplePayPaymentMethod($groupData['groups']);
             }
 
             $config = [
