@@ -100,6 +100,8 @@
 
 .paytrail-group-logo {
   margin-right:1em;
+  width: 32px;
+  height: 34px;
 }
 
 .paytrail-group-collapsible.active img {
