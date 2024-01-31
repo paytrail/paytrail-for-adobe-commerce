@@ -79,8 +79,7 @@ class ConfigProvider implements ConfigProviderInterface
             }
 
             // TODO: Add Apple Pay config and Safari browser validation
-            $applePayEnabled = true;
-            if ($applePayEnabled) {
+            if ($this->applePayConfig->canApplePay()) {
                 $groupData['groups'] = $this->applePayConfig->addApplePayPaymentMethod($groupData['groups']);
             }
 
