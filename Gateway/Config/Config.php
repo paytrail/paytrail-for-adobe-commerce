@@ -50,6 +50,8 @@ class Config extends \Magento\Payment\Gateway\Config\Config
     public const VAULT_CODE                            = 'paytrail_cc_vault';
     public const LOGO                                  = 'payment/paytrail/logo';
     public const KEY_MANUAL_INVOICE                    = 'manual_invoice';
+
+    public const APPLE_PAY_CONFIG = 'paytrail_apple_pay';
     public const KEY_ACTIVATE_WITH_SHIPMENT            = 'shipment_activates_invoice';
 
     public const GIT_URL = 'https://api.github.com/repos/paytrail/paytrail-for-adobe-commerce/releases/latest';
@@ -622,5 +624,10 @@ class Config extends \Magento\Payment\Gateway\Config\Config
     public function isShipmentActivateInvoice($storeId = null)
     {
         return (bool)$this->getValue(self::KEY_ACTIVATE_WITH_SHIPMENT, $storeId);
+    }
+
+    public function isApplePayEnabled($storeId = null): bool
+    {
+        return (bool)$this->getValue(self::APPLE_PAY_CONFIG, $storeId);
     }
 }
