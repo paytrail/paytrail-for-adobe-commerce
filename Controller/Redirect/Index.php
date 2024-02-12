@@ -104,6 +104,15 @@ class Index implements ActionInterface
 
                 $formParams = $this->providerForm->getFormParams($paytrailPayment, $selectedPaymentMethodId, $cardType);
 
+                if ($selectedPaymentMethodId === 'applepay') {
+                    return $resultJson->setData([
+                        'success' => true,
+                        'applePay' => true,
+                        // TODO: change to real customProviders from the $responseData
+                        'customProviders' => $paytrailPayment->getCustomProviders()
+                    ]);
+                }
+
                 // send order confirmation for pending order
                 if ($paytrailPayment) {
                     $this->pendingOrderEmailConfirmation->pendingOrderEmailSend($order);
