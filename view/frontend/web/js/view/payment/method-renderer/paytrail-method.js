@@ -20,8 +20,9 @@ define(
         'Magento_Checkout/js/model/totals',
         'Magento_Ui/js/model/messageList',
         'mage/translate',
+        'Magento_Ui/js/modal/modal'
     ],
-    function (ko, $, _, storage, Component, placeOrderAction, selectPaymentMethodAction, additionalValidators, quote, getTotalsAction, urlBuilder, mageUrlBuilder, fullScreenLoader, customer, checkoutData, totals, messageList, $t) {
+    function (ko, $, _, storage, Component, placeOrderAction, selectPaymentMethodAction, additionalValidators, quote, getTotalsAction, urlBuilder, mageUrlBuilder, fullScreenLoader, customer, checkoutData, totals, messageList, $t, modal) {
         'use strict';
         var self;
         var checkoutConfig = window.checkoutConfig.payment;
@@ -330,6 +331,66 @@ define(
                                 }
                             }).done(
                                 function (response) {
+                                    if (response.applePay) {
+                                        function myFunction(item, index)
+                                        {
+                                            inputText += `<input type="hidden" name="${item.name}" value="${item.value}" />`
+                                        }
+
+                                        const applePayParameters = response.customProviders.parameters;
+                                        const element = document.createElement('div');
+                                        let inputText = '';
+
+                                        element.setAttribute('id','apple-pay-button');
+                                        applePayParameters.forEach(myFunction)
+
+                                        element.innerHTML = inputText;
+                                        document.body.appendChild(element);
+
+                                        const applePayButton = checkoutFinland.applePayButton;
+                                        if (applePayButton.canMakePayment()) {
+                                            // Mount the button to the element you created earlier, here e.g. #apple-pay-button.
+                                            applePayButton.mount('#apple-pay-button', (redirectUrl) => {
+                                                setTimeout(() => {
+                                                    window.location.replace(redirectUrl);
+                                                }, 1500);
+                                            });
+
+                                            let options = {
+                                                type: 'popup',
+                                                modalClass: 'apple-pay-popup-modal',
+                                                label: 'Proceed to Apple Pay',
+                                                responsive: true,
+                                                innerScroll: true,
+                                                clickableOverlay: false,
+                                                opened: function ($Event) {
+                                                    $('.modal-header', $Event.srcElement).hide();
+                                                    $('.modal-content', $Event.srcElement).hide();
+                                                },
+                                                buttons: [{
+                                                    class: 'apple-pay-popup-button',
+                                                    attr: {},
+
+                                                    /**
+                                                     * Default action on button click
+                                                     */
+                                                    click: function (event) {
+                                                        element.click();
+                                                        fullScreenLoader.startLoader();
+                                                    }
+                                                }]
+                                            };
+
+                                            let modalContainer = $('#apple-pay-popup-wrapper');
+
+                                            let popup = modal(options, modalContainer);
+                                            modalContainer.modal('openModal');
+                                            fullScreenLoader.stopLoader();
+                                        }
+
+                                        return false;
+                                    }
+
                                     if ($.type(response) === 'object' && response.success && response.data) {
                                         if (response.reference) {
                                             window.location.href = self.getDefaultSuccessUrl();

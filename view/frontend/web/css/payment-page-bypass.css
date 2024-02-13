@@ -301,6 +301,18 @@
   background-color: lightgrey;
 }
 
+/* Apple Pay CSS section */
+.modal-inner-wrap {
+  top: 50%;
+}
+.apple-pay-popup-button {
+  -webkit-appearance: -apple-pay-button;
+  -apple-pay-button-type: reload;
+  -apple-pay-button-style: black-outline;
+  height: 50px;
+  width: 100%;
+}
+
 @media only screen and (max-width : 1023px) {
   .paytrail-payment-methods .paytrail-payment-method {
     width: 23.6%;
