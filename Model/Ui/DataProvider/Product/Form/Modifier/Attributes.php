@@ -49,14 +49,23 @@ class Attributes extends AbstractModifier
      */
     public function modifyMeta(array $meta)
     {
-        if (!$this->totalConfigProvider->isRecurringPaymentEnabled()) {
+        if (isset($meta['product-details']['children']['container_recurring_payment_schedule'])) {
             $attribute = 'recurring_payment_schedule';
             $path = $this->arrayManager->findPath($attribute, $meta, null, 'children');
-            $meta = $this->arrayManager->set(
-                "{$path}/arguments/data/config/visible",
-                $meta,
-                false
-            );
+
+            if (!$this->totalConfigProvider->isRecurringPaymentEnabled()) {
+                $meta = $this->arrayManager->set(
+                    "{$path}/arguments/data/config/visible",
+                    $meta,
+                    false
+                );
+            } else {
+                $meta = $this->arrayManager->set(
+                    "{$path}/arguments/data/config/visible",
+                    $meta,
+                    true
+                );
+            }
         }
 
         return $meta;
