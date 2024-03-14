@@ -14,6 +14,7 @@
                 <value id="paytrail" type="host">paytrail.com</value>
                 <value id="all-paytrail" type="host">*.paytrail.com</value>
                 <value id="nordea" type="host">epmt.nordea.fi</value>
+                <value id="nordea_com" type="host">*.nordea.com</value>
                 <value id="dankebank" type="host">verkkopankki.danskebank.fi</value>
                 <value id="spankki" type="host">online.s-pankki.fi</value>
                 <value id="poppankki" type="host">verkkomaksu.poppankki.fi</value>
