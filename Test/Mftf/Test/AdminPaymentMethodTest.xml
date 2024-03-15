@@ -1,0 +1,22 @@
+<!-- File: app/code/Vendor/Module/Test/Mftf/Test/AdminPaymentMethodTest.xml -->
+<tests xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:noNamespaceSchemaLocation="urn:magento:mftf:Test/etc/testSchema.xsd">
+    <test name="PaytrailPaymentMethodAvailableInAdmin">
+        <annotations>
+            <title value="Payment visible in admin panel"/>
+            <description
+                value="User can enable payment method in admin panel and save without any errors"/>
+            <severity value="CRITICAL"/>
+            <stories value="Payment Config"/>
+            <group value="paytrail"/>
+        </annotations>
+        <before>
+            <actionGroup ref="AdminLoginActionGroup" stepKey="loginGetFromGeneralFile"/>
+            <actionGroup ref="AdminOpenConfigurationSalesPaymentMethodActionGroup" stepKey="goToPaymentConfig" />
+
+        </before>
+        <after>
+            <actionGroup ref="AdminLogoutActionGroup" stepKey="logout"/>
+        </after>
+    </test>
+</tests>
