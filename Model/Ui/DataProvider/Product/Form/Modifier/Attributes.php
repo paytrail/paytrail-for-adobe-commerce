@@ -23,7 +23,7 @@ class Attributes extends AbstractModifier
      * @param TotalConfigProvider $totalConfigProvider
      */
     public function __construct(
-        ArrayManager $arrayManager,
+        ArrayManager        $arrayManager,
         TotalConfigProvider $totalConfigProvider
     ) {
         $this->arrayManager = $arrayManager;
