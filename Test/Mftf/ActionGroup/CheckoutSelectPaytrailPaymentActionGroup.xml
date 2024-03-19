@@ -10,7 +10,7 @@
               xsi:noNamespaceSchemaLocation="urn:magento:mftf:Test/etc/actionGroupSchema.xsd">
     <actionGroup name="CheckoutSelectPaytrailPaymentActionGroup">
         <annotations>
-            <description>Selects the 'Paytrauk' Payment Method on the Storefront Checkout page.</description>
+            <description>Selects the 'Paytrail' Payment Method on the Storefront Checkout page.</description>
         </annotations>
 
         <waitForPageLoad stepKey="waitForLoadingMask"/>

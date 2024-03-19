@@ -5,18 +5,17 @@
         <annotations>
             <title value="Payment visible in admin panel"/>
             <description
-                value="User can enable payment method in admin panel and save without any errors"/>
+                value="User can see Paytrail config in admin panel"/>
             <severity value="CRITICAL"/>
             <stories value="Payment Config"/>
             <group value="paytrail"/>
         </annotations>
         <before>
             <actionGroup ref="AdminLoginActionGroup" stepKey="loginGetFromGeneralFile"/>
-            <actionGroup ref="AdminOpenConfigurationSalesPaymentMethodActionGroup" stepKey="goToPaymentConfig" />
-
         </before>
         <after>
             <actionGroup ref="AdminLogoutActionGroup" stepKey="logout"/>
         </after>
+        <actionGroup ref="AdminOpenConfigurationSalesPaymentMethodActionGroup" stepKey="goToPaymentConfig"/>
     </test>
 </tests>
