@@ -337,7 +337,7 @@ define(
                                             inputText += `<input type="hidden" name="${item.name}" value="${item.value}" />`
                                         }
 
-                                        const applePayParameters = response.customProviders.parameters;
+                                        const applePayParameters = response.customProviders.applepay.parameters;
                                         const element = document.createElement('div');
                                         let inputText = '';
 
