@@ -90,6 +90,20 @@ class Index implements ActionInterface
                 $order           = $this->checkoutSession->getLastRealOrder();
                 $paytrailPayment = $this->getPaytrailPayment($order, $selectedPaymentMethodId);
 
+                if ($selectedPaymentMethodId === Config::APPLE_PAY_PAYMENT_CODE) {
+                    return $resultJson->setData([
+                        'success' => true,
+                        'applePay' => true,
+                        // TODO: change to real customProviders from the $responseData
+                        'customProviders' => $paytrailPayment->getCustomProvider()
+                    ]);
+                }
+
+                // send order confirmation for pending order
+                if ($paytrailPayment) {
+                    $this->pendingOrderEmailConfirmation->pendingOrderEmailSend($order);
+                }
+
                 if ($this->gatewayConfig->getSkipBankSelection()) {
                     $redirect_url = $paytrailPayment->getHref();
 
