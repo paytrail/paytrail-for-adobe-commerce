@@ -2,51 +2,37 @@
 
 namespace Paytrail\PaymentService\Controller\Adminhtml\Recurring;
 
-use Magento\Backend\App\Action;
 use Magento\Backend\App\Action\Context;
 use Magento\Framework\App\Action\HttpPostActionInterface;
 use Magento\Framework\Controller\ResultFactory;
+use Magento\Ui\Component\MassAction\Filter;
+use Paytrail\PaymentService\Model\ResourceModel\Subscription;
+use Paytrail\PaymentService\Model\ResourceModel\Subscription\CollectionFactory;
 
-class MassDelete extends Action implements HttpPostActionInterface
+class MassDelete implements HttpPostActionInterface
 {
-    /**
-     * @var \Magento\Ui\Component\MassAction\Filter
-     */
-    private $filter;
-    /**
-     * @var \Paytrail\PaymentService\Model\ResourceModel\Subscription\CollectionFactory
-     */
-    private $factory;
-    /**
-     * @var \Paytrail\PaymentService\Model\ResourceModel\Subscription\Profile
-     */
-    private $recurringResource;
-
     public function __construct(
-        Context                                                         $context,
-        \Magento\Ui\Component\MassAction\Filter                         $filter,
-        \Paytrail\PaymentService\Model\ResourceModel\Subscription\CollectionFactory $factory,
-        \Paytrail\PaymentService\Model\ResourceModel\Subscription                   $subscription
+        private Context           $context,
+        private Filter            $filter,
+        private CollectionFactory $factory,
+        private Subscription      $subscription
     ) {
-        parent::__construct($context);
-        $this->filter = $filter;
-        $this->factory = $factory;
-        $this->recurringResource = $subscription;
     }
 
     public function execute()
     {
-        /** @var \Magento\Backend\Model\View\Result\Redirect $resultRedirect */
-        $resultRedirect = $this->resultFactory->create(ResultFactory::TYPE_REDIRECT);
+        $resultRedirect = $this->context->getResultFactory()->create(ResultFactory::TYPE_REDIRECT);
 
-        $collection = $this->filter->getCollection($this->factory->create());
+        $collection     = $this->filter->getCollection($this->factory->create());
         $collectionSize = $collection->getSize();
 
         foreach ($collection as $item) {
-            $this->recurringResource->delete($item);
+            $this->subscription->delete($item);
         }
 
-        $this->messageManager->addSuccessMessage(__('A total of %1 record(s) have been deleted.', $collectionSize));
+        $this->context->getMessageManager()->addSuccessMessage(
+            __('A total of %1 record(s) have been deleted.', $collectionSize)
+        );
 
         return $resultRedirect->setPath('*/*/');
     }

@@ -4,61 +4,24 @@ declare(strict_types=1);
 namespace Paytrail\PaymentService\Controller\Payments;
 
 use Magento\Customer\Model\Session;
+use Magento\Framework\App\Action;
 use Magento\Framework\App\Action\Context;
 use Magento\Framework\Controller\ResultFactory;
-use Magento\Framework\App\Action;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Message\ManagerInterface;
-use Magento\Framework\Registry;
 use Magento\Sales\Api\OrderManagementInterface;
 use Magento\Sales\Api\OrderRepositoryInterface;
 use Magento\Sales\Model\Order;
-use Paytrail\PaymentService\Api\SubscriptionRepositoryInterface;
 use Paytrail\PaymentService\Api\SubscriptionLinkRepositoryInterface;
+use Paytrail\PaymentService\Api\SubscriptionRepositoryInterface;
 use Paytrail\PaymentService\Model\Validation\PreventAdminActions;
 use Psr\Log\LoggerInterface;
 
-class Stop extends Action\Action implements Action\HttpGetActionInterface
+class Stop implements Action\HttpGetActionInterface
 {
-    protected const STATUS_CLOSED = 'closed';
+    protected const STATUS_CLOSED        = 'closed';
     protected const ORDER_PENDING_STATUS = 'pending';
 
-    /**
-     * @var Registry
-     */
-    protected $_coreRegistry;
-
-    /**
-     * @var Session
-     */
-    protected $customerSession;
-
-    /**
-     * @var SubscriptionRepositoryInterface
-     */
-    protected $subscriptionRepositoryInterface;
-
-    /**
-     * @var OrderRepositoryInterface
-     */
-    protected $orderRepositoryInterface;
-
-    /**
-     * @var OrderManagementInterface
-     */
-    protected $orderManagementInterface;
-
-    /**
-     * @var LoggerInterface
-     */
-    protected $logger;
-
-    /**
-     * @var SubscriptionLinkRepositoryInterface
-     */
-    protected $subscriptionLinkRepositoryInterface;
-
-    private PreventAdminActions $preventAdminActions;
 
     /**
      * @param Context $context
@@ -71,35 +34,22 @@ class Stop extends Action\Action implements Action\HttpGetActionInterface
      * @param PreventAdminActions $preventAdminActions
      */
     public function __construct(
-        Context                             $context,
-        Session                             $customerSession,
-        SubscriptionRepositoryInterface     $subscriptionRepositoryInterface,
-        OrderRepositoryInterface            $orderRepositoryInterface,
-        OrderManagementInterface            $orderManagementInterface,
-        LoggerInterface                     $logger,
-        SubscriptionLinkRepositoryInterface $subscriptionLinkRepositoryInterface,
-        PreventAdminActions                 $preventAdminActions,
-        ManagerInterface                    $messageManager
-    )
-    {
-        parent::__construct($context);
-        $this->customerSession = $customerSession;
-        $this->subscriptionRepositoryInterface = $subscriptionRepositoryInterface;
-        $this->orderRepositoryInterface = $orderRepositoryInterface;
-        $this->orderManagementInterface = $orderManagementInterface;
-        $this->logger = $logger;
-        $this->subscriptionLinkRepositoryInterface = $subscriptionLinkRepositoryInterface;
-        $this->preventAdminActions = $preventAdminActions;
-        $this->messageManager = $messageManager;
+        private Context                             $context,
+        private Session                             $customerSession,
+        private SubscriptionRepositoryInterface     $subscriptionRepositoryInterface,
+        private OrderRepositoryInterface            $orderRepositoryInterface,
+        private OrderManagementInterface            $orderManagementInterface,
+        private LoggerInterface                     $logger,
+        private SubscriptionLinkRepositoryInterface $subscriptionLinkRepositoryInterface,
+        private PreventAdminActions                 $preventAdminActions,
+        private ManagerInterface                    $messageManager
+    ) {
     }
 
-    /**
-     * @return \Magento\Framework\App\ResponseInterface|\Magento\Framework\Controller\Result\Redirect|\Magento\Framework\Controller\ResultInterface
-     */
     public function execute()
     {
-        $subscriptionId = $this->getRequest()->getParam('payment_id');
-        $resultRedirect = $this->resultFactory->create(ResultFactory::TYPE_REDIRECT);
+        $subscriptionId = $this->context->getRequest()->getParam('payment_id');
+        $resultRedirect = $this->context->getResultFactory()->create(ResultFactory::TYPE_REDIRECT);
 
         if ($this->preventAdminActions->isAdminAsCustomer()) {
             $this->messageManager->addErrorMessage(__('Admin user is not authorized for this operation'));
@@ -110,7 +60,9 @@ class Stop extends Action\Action implements Action\HttpGetActionInterface
 
         try {
             $subscription = $this->subscriptionRepositoryInterface->get((int)$subscriptionId);
-            $orderIds = $this->subscriptionLinkRepositoryInterface->getOrderIdsBySubscriptionId((int)$subscriptionId);
+            $orderIds     = $this->subscriptionLinkRepositoryInterface->getOrderIdsBySubscriptionId(
+                (int)$subscriptionId
+            );
 
             foreach ($orderIds as $orderId) {
                 $order = $this->orderRepositoryInterface->get($orderId);
