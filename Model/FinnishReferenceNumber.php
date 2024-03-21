@@ -72,7 +72,7 @@ class FinnishReferenceNumber
                                         ->getItems();
 
         if (count($orders) > 1) {
-            throw new \Exception('Multiple orders found with same reference number');
+            throw new CheckoutException(__('Multiple orders found with same reference number'));
         }
 
         return reset($orders);
