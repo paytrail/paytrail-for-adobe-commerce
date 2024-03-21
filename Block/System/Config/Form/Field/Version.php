@@ -6,7 +6,6 @@ use Magento\Backend\Block\Template\Context;
 use Magento\Config\Block\System\Config\Form\Field;
 use Magento\Framework\Data\Form\Element\AbstractElement;
 use Paytrail\PaymentService\Gateway\Config\Config;
-use const _PHPStan_582a9cb8b\__;
 
 class Version extends Field
 {
@@ -65,7 +64,7 @@ class Version extends Field
             }
         } catch (\Exception $e) {
             $this->_logger->error($e->getMessage());
-            return '<strong>' . __("%1 - Can't check for updates now", $currentVersion) . '</strong>';
+            return '<strong>' . __("%1 - Can't check for updates now", $currentVersion ?? '') . '</strong>';
         }
         return $html;
     }

@@ -6,8 +6,10 @@ namespace Paytrail\PaymentService\Setup\Patch\Data;
 use Magento\Eav\Model\Entity\Attribute\ScopedAttributeInterface;
 use Magento\Eav\Setup\EavSetup;
 use Magento\Eav\Setup\EavSetupFactory;
+use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Setup\ModuleDataSetupInterface;
 use Magento\Framework\Setup\Patch\DataPatchInterface;
+use Magento\Framework\Validator\ValidateException;
 use Paytrail\PaymentService\Model\Attribute\SelectData;
 
 class AddRecurringPaymentScheduleAttribute implements DataPatchInterface
@@ -35,9 +37,9 @@ class AddRecurringPaymentScheduleAttribute implements DataPatchInterface
     }
 
     /**
-     * @return AddRecurringPaymentScheduleAttribute|void
-     * @throws \Magento\Framework\Exception\LocalizedException
-     * @throws \Zend_Validate_Exception
+     * @return DataPatchInterface
+     * @throws LocalizedException
+     * @throws ValidateException
      */
     public function apply()
     {
@@ -64,6 +66,8 @@ class AddRecurringPaymentScheduleAttribute implements DataPatchInterface
             'used_in_product_listing' => true,
             'unique' => false,
         ]);
+
+        return $this;
     }
 
     /**

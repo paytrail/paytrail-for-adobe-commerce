@@ -103,13 +103,11 @@ class ProcessService
     {
         if ($currentOrder->canInvoice()) {
             try {
-                /** @var /Magento/Sales/Api/Data/InvoiceInterface|/Magento/Sales/Model/Order/Invoice $invoice */
                 $invoice = $this->invoiceService->prepareInvoice($currentOrder);
                 //TODO: catch \InvalidArgumentException which extends \Exception
                 $invoice->setRequestedCaptureCase(Invoice::CAPTURE_ONLINE);
                 $invoice->setTransactionId($this->currentOrderPayment->getLastTransId());
                 $invoice->register();
-                /** @var /Magento/Framework/DB/Transaction $transactionSave */
                 $transactionSave = $this->transactionFactory->create();
                 $transactionSave->addObject(
                     $invoice

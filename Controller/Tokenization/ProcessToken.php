@@ -13,9 +13,7 @@ use Psr\Log\LoggerInterface;
 
 class ProcessToken extends Action
 {
-    /**
-     * @var $errorMsg
-     */
+
     protected $errorMsg = null;
 
     /**
@@ -28,10 +26,10 @@ class ProcessToken extends Action
      * @param CommandManagerPoolInterface $commandManagerPool
      */
     public function __construct(
-        Context $context,
-        private JsonFactory $jsonFactory,
-        private LoggerInterface $logger,
-        private ProcessService $processService,
+        Context                             $context,
+        private JsonFactory                 $jsonFactory,
+        private LoggerInterface             $logger,
+        private ProcessService              $processService,
         private CommandManagerPoolInterface $commandManagerPool
     ) {
         parent::__construct($context);
@@ -55,8 +53,8 @@ class ProcessToken extends Action
 
                 return $resultJson->setData(
                     [
-                        'success' => true,
-                        'data' => 'redirect',
+                        'success'  => true,
+                        'data'     => 'redirect',
                         'redirect' => $redirect_url
                     ]
                 );
@@ -83,7 +81,7 @@ class ProcessToken extends Action
     protected function getResponseData()
     {
         $commandExecutor = $this->commandManagerPool->get('paytrail');
-        $response = $commandExecutor->executeByCode('add_card');
+        $response        = $commandExecutor->executeByCode('add_card');
 
         $errorMsg = $response['error'];
 

@@ -23,9 +23,6 @@ class PayAndAddCard extends \Magento\Framework\App\Action\Action
      */
     protected $urlBuilder;
 
-    /**
-     * @var $errorMsg
-     */
     protected $errorMsg = null;
 
     /**

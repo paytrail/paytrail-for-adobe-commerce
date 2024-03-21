@@ -12,29 +12,29 @@ use Magento\Payment\Gateway\Command\CommandManagerPoolInterface;
 use Magento\Vault\Api\PaymentTokenManagementInterface;
 use Magento\Vault\Api\PaymentTokenRepositoryInterface;
 use Magento\Vault\Model\PaymentTokenFactory;
+use Paytrail\PaymentService\Exceptions\CheckoutException;
 use Paytrail\PaymentService\Gateway\Config\Config;
 use Paytrail\PaymentService\Model\Receipt\ProcessService;
 use Paytrail\SDK\Model\Token\Card;
 use Paytrail\SDK\Response\GetTokenResponse;
 use Psr\Log\LoggerInterface;
 
+
 class SaveCard extends \Magento\Framework\App\Action\Action
 {
-    /**
-     * @var $errorMsg
-     */
+
     protected $errorMsg = null;
 
     /**
      * @var string[]
      */
     protected $cardTypes = [
-        'Visa' => 'VI',
+        'Visa'       => 'VI',
         'MasterCard' => 'MC',
-        'Discover' => 'DI',
-        'Amex' => 'AE',
-        'Maestro' => 'SM',
-        'Solo' => 'SO'
+        'Discover'   => 'DI',
+        'Amex'       => 'AE',
+        'Maestro'    => 'SM',
+        'Solo'       => 'SO'
     ];
 
     /**
@@ -54,24 +54,25 @@ class SaveCard extends \Magento\Framework\App\Action\Action
      * @param ProcessService $processService
      */
     public function __construct(
-        Context $context,
-        private CommandManagerPoolInterface $commandManagerPool,
-        private CustomerSession $customerSession,
-        private PaymentTokenFactory $paymentTokenFactory,
-        private SerializerInterface $jsonSerializer,
-        private EncryptorInterface $encryptor,
+        Context                                 $context,
+        private CommandManagerPoolInterface     $commandManagerPool,
+        private CustomerSession                 $customerSession,
+        private PaymentTokenFactory             $paymentTokenFactory,
+        private SerializerInterface             $jsonSerializer,
+        private EncryptorInterface              $encryptor,
         private PaymentTokenRepositoryInterface $tokenRepository,
-        private LoggerInterface $logger,
-        private Config $gatewayConfig,
+        private LoggerInterface                 $logger,
+        private Config                          $gatewayConfig,
         private PaymentTokenManagementInterface $paymentTokenManagementInterface,
-        private Session $checkoutSession,
-        private ProcessService $processService
+        private Session                         $checkoutSession,
+        private ProcessService                  $processService
     ) {
         parent::__construct($context);
     }
 
     /**
-     * Execute
+     * @return ResponseInterface
+     * @throws CheckoutException
      */
     public function execute()
     {
@@ -83,12 +84,11 @@ class SaveCard extends \Magento\Framework\App\Action\Action
                 'paytrail_previous_error',
                 __('Card saving has been aborted. Please contact customer service.')
             );
-            $this->redirect();
-            return;
+            return $this->redirect();
         }
         $responseData = $this->getResponseData($tokenizationId);
         try {
-            $customerId = $this->customerSession->getCustomerId();
+            $customerId   = $this->customerSession->getCustomerId();
             $paymentToken = $this->paymentTokenManagementInterface->getByPublicHash(
                 $this->createPublicHash($responseData->getCard(), $customerId),
                 $customerId
@@ -105,26 +105,26 @@ class SaveCard extends \Magento\Framework\App\Action\Action
         } catch (\Magento\Framework\Exception\AlreadyExistsException $e) {
             $this->messageManager->addErrorMessage('This card has already been added to your vault');
             $this->logger->error($e->getMessage());
-            $this->redirect();
-            return;
+            return $this->redirect();
         }
 
         // success
         $this->checkoutSession->setData('paytrail_previous_success', __('Card added successfully'));
-        $this->redirect();
+        return $this->redirect();
     }
 
     /**
      * Get token response data.
      *
      * @param string $tokenizationId
+     *
      * @return mixed
-     * @throws \Paytrail\PaymentService\Exceptions\CheckoutException
+     * @throws CheckoutException
      */
     protected function getResponseData($tokenizationId)
     {
         $commandExecutor = $this->commandManagerPool->get('paytrail');
-        $response = $commandExecutor->executeByCode(
+        $response        = $commandExecutor->executeByCode(
             'token_request',
             null,
             [
@@ -161,7 +161,7 @@ class SaveCard extends \Magento\Framework\App\Action\Action
         $cardData = $responseData->getCard();
 
         $vaultPaymentToken = $this->paymentTokenFactory->create(PaymentTokenFactory::TOKEN_TYPE_CREDIT_CARD);
-        $customerId = $this->customerSession->getCustomer()->getId();
+        $customerId        = $this->customerSession->getCustomer()->getId();
         $vaultPaymentToken->setCustomerId($customerId);
         $vaultPaymentToken->setPaymentMethodCode($this->gatewayConfig->getCcVaultCode());
         $vaultPaymentToken->setExpiresAt(
@@ -169,8 +169,8 @@ class SaveCard extends \Magento\Framework\App\Action\Action
         );
         $tokenDetails = $this->jsonSerializer->serialize(
             [
-                'type' => $this->cardTypes[$cardData->getType()],
-                'maskedCC' => $cardData->getPartialPan(),
+                'type'           => $this->cardTypes[$cardData->getType()],
+                'maskedCC'       => $cardData->getPartialPan(),
                 'expirationDate' => $cardData->getExpireYear() . '/' . $cardData->getExpireMonth()
             ]
         );
@@ -185,14 +185,15 @@ class SaveCard extends \Magento\Framework\App\Action\Action
      *
      * @param Card $addingCard
      * @param string $customerId
+     *
      * @return string
      */
     private function createPublicHash($addingCard, $customerId)
     {
         $tokenDetails = $this->jsonSerializer->serialize(
             [
-                'type' => $this->cardTypes[$addingCard->getType()],
-                'maskedCC' => $addingCard->getPartialPan(),
+                'type'           => $this->cardTypes[$addingCard->getType()],
+                'maskedCC'       => $addingCard->getPartialPan(),
                 'expirationDate' => $addingCard->getExpireYear() . '/' . $addingCard->getExpireMonth()
             ]
         );
@@ -209,6 +210,7 @@ class SaveCard extends \Magento\Framework\App\Action\Action
      *
      * @param string $expMonth
      * @param string $expYear
+     *
      * @return string
      */
     private function getExpiresDate($expMonth, $expYear): string

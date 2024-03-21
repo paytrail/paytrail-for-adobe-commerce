@@ -36,16 +36,16 @@ class Save extends Action implements HttpPostActionInterface
     private $scopeConfig;
 
     public function __construct(
-        Context $context,
-        \Paytrail\PaymentService\Api\RecurringProfileRepositoryInterface $profileRepository,
+        Context                                                            $context,
+        \Paytrail\PaymentService\Api\RecurringProfileRepositoryInterface   $profileRepository,
         \Paytrail\PaymentService\Api\Data\RecurringProfileInterfaceFactory $factory,
-        SerializerInterface $serializer,
-        ScopeConfigInterface $scopeConfig
+        SerializerInterface                                                $serializer,
+        ScopeConfigInterface                                               $scopeConfig
     ) {
         parent::__construct($context);
         $this->profileRepo = $profileRepository;
-        $this->factory = $factory;
-        $this->serializer = $serializer;
+        $this->factory     = $factory;
+        $this->serializer  = $serializer;
         $this->scopeConfig = $scopeConfig;
     }
 
@@ -58,14 +58,15 @@ class Save extends Action implements HttpPostActionInterface
             $profile = $this->factory->create();
         }
 
-        $data = $this->getRequestData();
+        $data           = $this->getRequestData();
         $resultRedirect = $this->resultFactory->create(ResultFactory::TYPE_REDIRECT);
 
-        if($this->validateProfile($data) === false) {
+        if ($this->validateProfile($data) === false) {
             $this->messageManager->addErrorMessage(
                 "Schedule can't be saved due to the profile's payment period exceeding your store's quote lifetime.
                 Please make sure the quote lifetime is longer than your profile's payment schedule in days.
-                See Stores->Configuration->Sales->Checkout->Shopping Cart->Quote Lifetime (days)");
+                See Stores->Configuration->Sales->Checkout->Shopping Cart->Quote Lifetime (days)"
+            );
             $resultRedirect->setPath('recurring_payments/profile/edit', ['id' => $id]);
             return $resultRedirect;
         }
@@ -89,7 +90,7 @@ class Save extends Action implements HttpPostActionInterface
         if (isset($data['interval_period']) && isset($data['interval_unit'])) {
             $schedule = [
                 'interval' => $data['interval_period'],
-                'unit' => $data['interval_unit'],
+                'unit'     => $data['interval_unit'],
             ];
 
             $data['schedule'] = $this->serializer->serialize($schedule);
@@ -102,29 +103,30 @@ class Save extends Action implements HttpPostActionInterface
         return $data;
     }
 
-   private function validateProfile($data)
-   {
-       $quoteLimit = $this->scopeConfig->getValue(
-           self::DELETE_QUOTE_AFTER,
-           \Magento\Store\Model\ScopeInterface::SCOPE_STORE
-       );
-       switch ($data['interval_unit']) {
-           case 'D':
-               $days = 1;
-               break;
-           case 'W':
-               $days = 7;
-               break;
-           case 'M':
-               $days = 30.436875;
-               break;
-           case 'Y':
-               $days = 365.2425;
-               break;
-       }
-       if($data['interval_period'] * $days > $quoteLimit) {
-           return false;
-       }
-       return true;
-   }
+    private function validateProfile($data)
+    {
+        $quoteLimit = $this->scopeConfig->getValue(
+            self::DELETE_QUOTE_AFTER,
+            \Magento\Store\Model\ScopeInterface::SCOPE_STORE
+        );
+        switch ($data['interval_unit']) {
+            case 'D':
+                $days = 1;
+                break;
+            case 'W':
+                $days = 7;
+                break;
+            case 'M':
+                $days = 30.436875;
+                break;
+            case 'Y':
+                $days = 365.2425;
+                break;
+        }
+        if (isset($days) && $data['interval_period'] * $days > $quoteLimit) {
+            return false;
+        }
+
+        return true;
+    }
 }

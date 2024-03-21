@@ -58,6 +58,8 @@ class InstallProfilesPatch implements
         $this->moduleDataSetup->getConnection()->startSetup();
         $this->addDefaultProfiles();
         $this->moduleDataSetup->getConnection()->endSetup();
+
+        return $this;
     }
 
     /**

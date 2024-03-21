@@ -205,16 +205,13 @@ class PaymentDataProvider
     public function getOrderItemLines($order)
     {
         $orderItems = $this->itemArgs($order);
-        $orderTotal = round($order->getGrandTotal() * 100);
 
-        $items = array_map(
-            function ($item) use ($order) {
+        return array_map(
+            function ($item) {
                 return $this->createOrderItems($item);
             },
             $orderItems
         );
-
-        return $items;
     }
 
     /**
@@ -251,7 +248,6 @@ class PaymentDataProvider
         $items = [];
 
         # Add line items
-        /** @var $item OrderItem */
         foreach ($order->getAllItems() as $item) {
             $discountInclTax = 0;
             if (!$this->taxHelper->priceIncludesTax()
@@ -284,7 +280,7 @@ class PaymentDataProvider
                 $rowTotalInclDiscount  = $item->getRowTotalInclTax() - $discountInclTax;
                 $itemPriceInclDiscount = $this->formatPrice($rowTotalInclDiscount / $qtyOrdered);
 
-                $difference = $rowTotalInclDiscount - $itemPriceInclDiscount * $qtyOrdered;
+                $difference = $rowTotalInclDiscount - (float)$itemPriceInclDiscount * $qtyOrdered;
                 // deduct/add only 0.01 per product
                 $diffAdjustment       = 0.01;
                 $differenceUnitsCount = (int)(round(abs($difference / $diffAdjustment)));

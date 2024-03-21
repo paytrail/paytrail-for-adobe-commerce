@@ -16,9 +16,7 @@ use Psr\Log\LoggerInterface;
 
 class AddCard extends Action
 {
-    /**
-     * @var $errorMsg
-     */
+
     protected $errorMsg = null;
 
     /**
@@ -33,12 +31,12 @@ class AddCard extends Action
      * @param CommandManagerPoolInterface $commandManagerPool
      */
     public function __construct(
-        Context $context,
-        private JsonFactory $jsonFactory,
-        private LoggerInterface $logger,
-        private CustomerSession $customerSession,
-        private PreventAdminActions $preventAdminActions,
-        private ProcessService $processService,
+        Context                             $context,
+        private JsonFactory                 $jsonFactory,
+        private LoggerInterface             $logger,
+        private CustomerSession             $customerSession,
+        private PreventAdminActions         $preventAdminActions,
+        private ProcessService              $processService,
         private CommandManagerPoolInterface $commandManagerPool
     ) {
         parent::__construct($context);
@@ -65,8 +63,8 @@ class AddCard extends Action
 
                 return $resultJson->setData(
                     [
-                        'success' => true,
-                        'data' => 'redirect',
+                        'success'  => true,
+                        'data'     => 'redirect',
                         'redirect' => $redirect_url
                     ]
                 );
@@ -93,7 +91,7 @@ class AddCard extends Action
     protected function getResponseData()
     {
         $commandExecutor = $this->commandManagerPool->get('paytrail');
-        $response = $commandExecutor->executeByCode(
+        $response        = $commandExecutor->executeByCode(
             'add_card',
             null,
             [

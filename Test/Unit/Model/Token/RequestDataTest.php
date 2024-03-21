@@ -24,7 +24,8 @@ use PHPUnit\Framework\TestCase;
 
 class RequestDataTest extends TestCase
 {
-    private PaymentDataProvider $requestDataObject;
+    private PaymentDataProvider                                        $requestDataObject;
+    private \Magento\Framework\TestFramework\Unit\Helper\ObjectManager $objectManager;
 
     protected function setUp(): void
     {

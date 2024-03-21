@@ -26,7 +26,6 @@ class DiscountSplitterTest extends TestCase
         $configMock = $this->getMockForAbstractClass(ScopeConfigInterface::class);
         $configMock->method('getValue')->willReturn(24);
 
-        /** @var \Paytrail\PaymentService\Model\Payment\DiscountSplitter $discountSplitter */
         $this->discountSplitter = new DiscountSplitter(
             new DeltaPriceRound($priceCurrency),
             $configMock
