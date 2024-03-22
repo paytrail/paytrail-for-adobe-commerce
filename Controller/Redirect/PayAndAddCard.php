@@ -6,8 +6,10 @@ use Magento\Checkout\Model\Session;
 use Magento\Customer\Model\Session as CustomerSession;
 use Magento\Framework\App\Action\Context;
 use Magento\Framework\App\ActionInterface;
+use Magento\Framework\App\ResponseInterface;
 use Magento\Framework\Controller\Result\Json;
 use Magento\Framework\Controller\Result\JsonFactory;
+use Magento\Framework\Controller\ResultInterface;
 use Magento\Framework\Exception\NotFoundException;
 use Magento\Framework\UrlInterface;
 use Magento\Framework\Validation\ValidationException;
@@ -44,7 +46,7 @@ class PayAndAddCard implements ActionInterface
      * @param ProcessService $processService
      */
     public function __construct(
-        Context                             $context,
+        private Context                     $context,
         private Session                     $checkoutSession,
         private JsonFactory                 $jsonFactory,
         private LoggerInterface             $logger,
@@ -57,7 +59,7 @@ class PayAndAddCard implements ActionInterface
     }
 
     /**
-     * @return \Magento\Framework\App\ResponseInterface|Json|\Magento\Framework\Controller\ResultInterface
+     * @return ResponseInterface|Json|ResultInterface
      * @throws ValidationException
      */
     public function execute()
@@ -71,7 +73,7 @@ class PayAndAddCard implements ActionInterface
         $order = $this->checkoutSession->getLastRealOrder();
 
         try {
-            if ($this->customerSession->getCustomerId() && $this->getRequest()->getParam('is_ajax')) {
+            if ($this->customerSession->getCustomerId() && $this->context->getRequest()->getParam('is_ajax')) {
                 $responseData = $this->getResponseData($order);
                 $redirectUrl  = $responseData->getRedirectUrl();
 

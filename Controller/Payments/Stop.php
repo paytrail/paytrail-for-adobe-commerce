@@ -7,6 +7,7 @@ use Magento\Customer\Model\Session;
 use Magento\Framework\App\Action;
 use Magento\Framework\App\Action\Context;
 use Magento\Framework\Controller\ResultFactory;
+use Magento\Framework\Controller\ResultInterface;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Message\ManagerInterface;
 use Magento\Sales\Api\OrderManagementInterface;
@@ -32,6 +33,7 @@ class Stop implements Action\HttpGetActionInterface
      * @param LoggerInterface $logger
      * @param SubscriptionLinkRepositoryInterface $subscriptionLinkRepositoryInterface
      * @param PreventAdminActions $preventAdminActions
+     * @param ManagerInterface $messageManager
      */
     public function __construct(
         private Context                             $context,
@@ -46,6 +48,9 @@ class Stop implements Action\HttpGetActionInterface
     ) {
     }
 
+    /**
+     * @return ResultInterface
+     */
     public function execute()
     {
         $subscriptionId = $this->context->getRequest()->getParam('payment_id');
