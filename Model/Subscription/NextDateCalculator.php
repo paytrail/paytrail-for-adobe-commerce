@@ -6,11 +6,12 @@ use Carbon\Carbon;
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Serialize\SerializerInterface;
+use Paytrail\PaymentService\Api\RecurringProfileRepositoryInterface;
 
 class NextDateCalculator
 {
     /**
-     * @var \Paytrail\PaymentService\Api\RecurringProfileRepositoryInterface $profileRepo
+     * @var RecurringProfileRepositoryInterface $profileRepo
      */
     private $profileRepo;
     /**
@@ -26,7 +27,7 @@ class NextDateCalculator
     private bool                 $forceWeekdays;
 
     public function __construct(
-        \Paytrail\PaymentService\Api\RecurringProfileRepositoryInterface $profileRepository,
+        RecurringProfileRepositoryInterface $profileRepository,
         SerializerInterface                                              $serializer,
         ScopeConfigInterface                                             $scopeConfig
     ) {
@@ -56,7 +57,7 @@ class NextDateCalculator
      * @return string
      * @throws \Exception
      */
-    protected function calculateNextDate($schedule, $startDate)
+    private function calculateNextDate($schedule, $startDate)
     {
         $schedule   = $this->serializer->unserialize($schedule);
         $carbonDate = $startDate === 'now' ? Carbon::now() : Carbon::createFromFormat('Y-m-d H:i:s', $startDate);
@@ -91,7 +92,7 @@ class NextDateCalculator
      * @return \Paytrail\PaymentService\Api\Data\RecurringProfileInterface
      * @throws \Magento\Framework\Exception\NoSuchEntityException
      */
-    protected function getProfileById($profileId): \Paytrail\PaymentService\Api\Data\RecurringProfileInterface
+    private function getProfileById($profileId): \Paytrail\PaymentService\Api\Data\RecurringProfileInterface
     {
         if (!isset($this->profiles[$profileId])) {
             $this->profiles[$profileId] = $this->profileRepo->get($profileId);
@@ -103,7 +104,7 @@ class NextDateCalculator
     /**
      * @return false
      */
-    protected function isForceWeekdays()
+    private function isForceWeekdays()
     {
         if (!isset($this->forceWeekdays)) {
             $this->forceWeekdays = $this->scopeConfig->isSetFlag('sales/recurring_payment/force_weekdays');
@@ -134,7 +135,7 @@ class NextDateCalculator
      *
      * @return \Carbon\Carbon
      */
-    protected function addMonthsNoOverflow($carbonDate, $interval)
+    private function addMonthsNoOverflow($carbonDate, $interval)
     {
         $isLastOfMonth = $carbonDate->isLastOfMonth();
         $nextDate      = $carbonDate->addMonthsNoOverflow($interval);

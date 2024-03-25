@@ -24,7 +24,7 @@ use Psr\Log\LoggerInterface;
 class Index implements ActionInterface
 {
 
-    protected $errorMsg = null;
+    private $errorMsg = null;
 
     /**
      * Index constructor.
@@ -147,7 +147,7 @@ class Index implements ActionInterface
      *
      * @return array
      */
-    protected function getFormFields($responseData, $paymentMethodId = null): array
+    private function getFormFields($responseData, $paymentMethodId = null): array
     {
         $formFields = [];
 
@@ -171,7 +171,7 @@ class Index implements ActionInterface
      *
      * @return string
      */
-    protected function getFormAction($responseData, $paymentMethodId = null): string
+    private function getFormAction($responseData, $paymentMethodId = null): string
     {
         $returnUrl = '';
 
@@ -196,7 +196,7 @@ class Index implements ActionInterface
      * @throws \Magento\Framework\Exception\NotFoundException
      * @throws \Magento\Payment\Gateway\Command\CommandException
      */
-    protected function getResponseData($order, $paymentMethod)
+    private function getResponseData($order, $paymentMethod)
     {
         $commandExecutor = $this->commandManagerPool->get('paytrail');
         $response        = $commandExecutor->executeByCode(

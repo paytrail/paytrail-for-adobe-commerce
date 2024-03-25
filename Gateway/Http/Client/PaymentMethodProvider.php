@@ -50,7 +50,7 @@ class PaymentMethodProvider implements ClientInterface
      * @param array $request
      * @return array
      */
-    protected function getPaymentMethods($request)
+    private function getPaymentMethods($request)
     {
         $response["data"] = null;
         $response["error"] = null;

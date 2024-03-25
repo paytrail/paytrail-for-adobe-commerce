@@ -92,7 +92,7 @@ class PaymentProvidersData
             . $this->gatewayConfig->getPaymentMethodHighlightColor($storeId) . ';border-width:2px;}';
         $styles .= '.paytrail-payment-methods .paytrail-stored-token.active{ border-color:'
             . $this->gatewayConfig->getPaymentMethodHighlightColor($storeId) . ';border-width:2px;}';
-        $styles .= '.paytrail-payment-methods .paytrail-payment-method:hover, 
+        $styles .= '.paytrail-payment-methods .paytrail-payment-method:hover,
         .paytrail-payment-methods .paytrail-payment-method:not(.active):hover { border-color:'
             . $this->gatewayConfig->getPaymentMethodHoverHighlight($storeId) . ';}';
         $styles .= $this->gatewayConfig->getAdditionalCss($storeId);
@@ -142,7 +142,7 @@ class PaymentProvidersData
      * @param string $groupId
      * @return array
      */
-    protected function addProviderDataToGroup($responseData, $groupId)
+    private function addProviderDataToGroup($responseData, $groupId)
     {
         $methods = [];
         $i = 1;

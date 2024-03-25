@@ -17,7 +17,7 @@ use Psr\Log\LoggerInterface;
 class AddCard implements \Magento\Framework\App\ActionInterface
 {
 
-    protected $errorMsg = null;
+    private $errorMsg = null;
 
     /**
      * AddCard constructor.
@@ -89,7 +89,7 @@ class AddCard implements \Magento\Framework\App\ActionInterface
      * @throws NotFoundException
      * @throws CommandException
      */
-    protected function getResponseData()
+    private function getResponseData()
     {
         $commandExecutor = $this->commandManagerPool->get('paytrail');
         $response        = $commandExecutor->executeByCode(

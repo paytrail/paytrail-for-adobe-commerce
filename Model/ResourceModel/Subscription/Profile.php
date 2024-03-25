@@ -7,8 +7,6 @@ use Magento\Framework\Model\ResourceModel\Db\AbstractDb;
 
 class Profile extends AbstractDb
 {
-    protected $_eventPrefix = 'recurring_profile';
-
     protected function _construct()
     {
         $this->_init('recurring_payment_profiles', 'profile_id');

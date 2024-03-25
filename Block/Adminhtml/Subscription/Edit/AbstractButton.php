@@ -13,14 +13,14 @@ abstract class AbstractButton implements ButtonProviderInterface
      *
      * @var \Magento\Framework\UrlInterface
      */
-    protected $urlBuilder;
+    private $urlBuilder;
 
     /**
      * Registry
      *
-     * @var \Magento\Framework\App\RequestInterface
+     * @var RequestInterface
      */
-    protected $request;
+    private $request;
 
     /**
      * Constructor
@@ -29,8 +29,8 @@ abstract class AbstractButton implements ButtonProviderInterface
      * @param RequestInterface $request
      */
     public function __construct(
-        \Magento\Backend\Block\Widget\Context   $context,
-        \Magento\Framework\App\RequestInterface $request
+        Context          $context,
+        RequestInterface $request
     ) {
         $this->urlBuilder = $context->getUrlBuilder();
         $this->request    = $request;

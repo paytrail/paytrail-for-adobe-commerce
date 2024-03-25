@@ -3,89 +3,36 @@
 namespace Paytrail\PaymentService\Model\Token;
 
 use Magento\Authorization\Model\UserContextInterface;
-use Magento\Framework\Api\SearchCriteriaBuilder;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Serialize\Serializer\Json;
 use Magento\Payment\Model\CcConfigProvider;
 use Magento\Vault\Api\PaymentTokenManagementInterface;
-use Magento\Vault\Model\PaymentTokenFactory;
 use Paytrail\PaymentService\Api\CustomerTokensManagementInterface;
+use Paytrail\PaymentService\Api\Data\CustomerTokensResultInterface;
 use Psr\Log\LoggerInterface;
 
 class CustomerTokensManagement implements CustomerTokensManagementInterface
 {
     /**
-     * @var UserContextInterface
-     */
-    protected $userContext;
-
-    /**
-     * @var PaymentTokenManagementInterface
-     */
-    protected $paymentTokenManagement;
-
-    /**
-     * @var SearchCriteriaBuilder
-     */
-    protected $searchCriteriaBuilder;
-
-    /**
-     * @var Json
-     */
-    protected $jsonSerializer;
-
-    /**
-     * @var PaymentTokenFactory
-     */
-    protected $paymentTokenFactory;
-
-    /**
-     * @var CustomerTokensResultFactory
-     */
-    protected $customerTokensResultFactory;
-
-    /**
-     * @var LoggerInterface
-     */
-    protected $logger;
-
-    /**
-     * @var CcConfigProvider
-     */
-    protected $ccConfigProvider;
-
-    /**
      * @param UserContextInterface $userContext
      * @param PaymentTokenManagementInterface $paymentTokenManagement
-     * @param SearchCriteriaBuilder $searchCriteriaBuilder
      * @param Json $jsonSerializer
-     * @param PaymentTokenFactory $paymentTokenFactory
      * @param CustomerTokensResultFactory $customerTokensResultFactory
      * @param LoggerInterface $logger
      * @param CcConfigProvider $ccConfigProvider
      */
     public function __construct(
-        UserContextInterface            $userContext,
-        PaymentTokenManagementInterface $paymentTokenManagement,
-        SearchCriteriaBuilder           $searchCriteriaBuilder,
-        Json                            $jsonSerializer,
-        PaymentTokenFactory             $paymentTokenFactory,
-        CustomerTokensResultFactory     $customerTokensResultFactory,
-        LoggerInterface                 $logger,
-        CcConfigProvider                $ccConfigProvider
+       private UserContextInterface            $userContext,
+       private PaymentTokenManagementInterface $paymentTokenManagement,
+       private Json                            $jsonSerializer,
+       private CustomerTokensResultFactory     $customerTokensResultFactory,
+       private LoggerInterface                 $logger,
+       private CcConfigProvider                $ccConfigProvider
     ) {
-        $this->userContext = $userContext;
-        $this->paymentTokenManagement = $paymentTokenManagement;
-        $this->searchCriteriaBuilder = $searchCriteriaBuilder;
-        $this->jsonSerializer = $jsonSerializer;
-        $this->paymentTokenFactory = $paymentTokenFactory;
-        $this->customerTokensResultFactory = $customerTokensResultFactory;
-        $this->logger = $logger;
-        $this->ccConfigProvider = $ccConfigProvider;
     }
 
     /**
-     * @return \Paytrail\PaymentService\Api\Data\CustomerTokensResultInterface[]
+     * @return CustomerTokensResultInterface[]
      * @throws LocalizedException
      */
     public function showCustomerPaymentMethods(): array

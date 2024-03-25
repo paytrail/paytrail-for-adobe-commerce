@@ -459,7 +459,7 @@ class Config extends \Magento\Payment\Gateway\Config\Config
      *
      * @return array
      */
-    protected function getIconUrl($type)
+    private function getIconUrl($type)
     {
         if (isset($this->paymenticons[$type])) {
             return $this->paymenticons[$type];

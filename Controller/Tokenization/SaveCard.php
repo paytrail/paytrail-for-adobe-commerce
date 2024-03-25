@@ -26,12 +26,12 @@ use Psr\Log\LoggerInterface;
 class SaveCard implements ActionInterface
 {
 
-    protected $errorMsg = null;
+    private $errorMsg = null;
 
     /**
      * @var string[]
      */
-    protected $cardTypes = [
+    private $cardTypes = [
         'Visa'       => 'VI',
         'MasterCard' => 'MC',
         'Discover'   => 'DI',
@@ -75,6 +75,8 @@ class SaveCard implements ActionInterface
     /**
      * @return ResponseInterface
      * @throws CheckoutException
+     * @throws CommandException
+     * @throws NotFoundException
      */
     public function execute()
     {

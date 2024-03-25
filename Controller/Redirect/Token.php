@@ -13,6 +13,7 @@ use Magento\Framework\Controller\Result\JsonFactory;
 use Magento\Framework\Controller\ResultInterface;
 use Magento\Framework\Exception\CouldNotSaveException;
 use Magento\Framework\Exception\LocalizedException;
+use Magento\Framework\Phrase;
 use Magento\Payment\Gateway\Command\CommandManagerPoolInterface;
 use Magento\Sales\Api\OrderManagementInterface;
 use Magento\Sales\Api\OrderRepositoryInterface;
@@ -20,7 +21,6 @@ use Magento\Sales\Model\Order;
 use Magento\Sales\Model\OrderFactory;
 use Paytrail\PaymentService\Exceptions\CheckoutException;
 use Paytrail\PaymentService\Gateway\Config\Config;
-use Paytrail\PaymentService\Model\Receipt\PaymentTransaction;
 use Paytrail\PaymentService\Model\Receipt\ProcessService;
 use Paytrail\PaymentService\Model\ReceiptDataProvider;
 use Paytrail\PaymentService\Model\Recurring\TotalConfigProvider;
@@ -29,7 +29,7 @@ use Paytrail\PaymentService\Model\Subscription\SubscriptionCreate;
 class Token implements HttpPostActionInterface
 {
     public const SKIP_HMAC_VALIDATION = 'skip_hmac';
-    private \Magento\Framework\Phrase $errorMsg;
+    private Phrase $errorMsg;
 
     /**
      * Token constructor.
@@ -184,7 +184,7 @@ class Token implements HttpPostActionInterface
      * @throws \Magento\Framework\Exception\NotFoundException
      * @throws \Magento\Payment\Gateway\Command\CommandException
      */
-    protected function getTokenResponseData($order, $tokenId, $customer)
+    private function getTokenResponseData($order, $tokenId, $customer)
     {
         $commandExecutor = $this->commandManagerPool->get('paytrail');
         $response = $commandExecutor->executeByCode(
@@ -216,7 +216,7 @@ class Token implements HttpPostActionInterface
      * @throws \Magento\Framework\Exception\NotFoundException
      * @throws \Magento\Payment\Gateway\Command\CommandException
      */
-    protected function getPaymentData($transactionId)
+    private function getPaymentData($transactionId)
     {
         $commandExecutor = $this->commandManagerPool->get('paytrail');
         $response = $commandExecutor->executeByCode(

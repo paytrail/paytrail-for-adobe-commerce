@@ -6,6 +6,8 @@ use Magento\Framework\App\Action\Context;
 use Magento\Framework\App\ActionInterface;
 use Magento\Framework\Controller\Result\Json;
 use Magento\Framework\Controller\Result\JsonFactory;
+use Magento\Framework\Exception\NotFoundException;
+use Magento\Payment\Gateway\Command\CommandException;
 use Magento\Payment\Gateway\Command\CommandManagerPoolInterface;
 use Paytrail\PaymentService\Exceptions\CheckoutException;
 use Paytrail\PaymentService\Model\Receipt\ProcessService;
@@ -14,7 +16,7 @@ use Psr\Log\LoggerInterface;
 class ProcessToken implements ActionInterface
 {
 
-    protected $errorMsg = null;
+    private $errorMsg = null;
 
     /**
      * ProcessToken constructor
@@ -76,8 +78,10 @@ class ProcessToken implements ActionInterface
      *
      * @return mixed
      * @throws CheckoutException
+     * @throws NotFoundException
+     * @throws CommandException
      */
-    protected function getResponseData()
+    private function getResponseData()
     {
         $commandExecutor = $this->commandManagerPool->get('paytrail');
         $response        = $commandExecutor->executeByCode('add_card');

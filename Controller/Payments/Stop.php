@@ -20,8 +20,8 @@ use Psr\Log\LoggerInterface;
 
 class Stop implements Action\HttpGetActionInterface
 {
-    protected const STATUS_CLOSED        = 'closed';
-    protected const ORDER_PENDING_STATUS = 'pending';
+    public const STATUS_CLOSED        = 'closed';
+    public const ORDER_PENDING_STATUS = 'pending';
 
 
     /**

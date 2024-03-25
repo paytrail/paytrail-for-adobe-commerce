@@ -26,9 +26,9 @@ class PayAndAddCard implements ActionInterface
     /**
      * @var UrlInterface
      */
-    protected $urlBuilder;
+    private $urlBuilder;
 
-    protected $errorMsg = null;
+    private $errorMsg = null;
 
     /**
      * PayAndAddCard constructor.

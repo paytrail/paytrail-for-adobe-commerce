@@ -16,7 +16,7 @@ class ConfigProvider implements ConfigProviderInterface
     /**
      * @var string[]
      */
-    protected $methodCodes = [
+    private $methodCodes = [
         Config::CODE,
         Config::CC_VAULT_CODE
     ];

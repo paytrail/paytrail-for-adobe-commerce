@@ -146,7 +146,7 @@ class PaymentDataProvider
      *
      * @return Customer
      */
-    protected function createCustomer($billingAddress)
+    private function createCustomer($billingAddress)
     {
         $customer = new Customer();
 
@@ -169,7 +169,7 @@ class PaymentDataProvider
      * @throws NoSuchEntityException
      * @throws ValidationException
      */
-    protected function createAddress($address)
+    private function createAddress($address)
     {
         $paytrailAddress = new Address();
 
@@ -221,7 +221,7 @@ class PaymentDataProvider
      *
      * @return Item
      */
-    protected function createOrderItems($item): Item
+    private function createOrderItems($item): Item
     {
         $paytrailItem = new Item();
 
@@ -243,7 +243,7 @@ class PaymentDataProvider
      * @return array
      * @throws LocalizedException
      */
-    protected function itemArgs($order): array
+    private function itemArgs($order): array
     {
         $items = [];
 
