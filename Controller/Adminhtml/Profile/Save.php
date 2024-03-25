@@ -68,7 +68,10 @@ class Save implements HttpPostActionInterface
         $data = $this->context->getRequest()->getParams();
 
         if (isset($data['interval_period']) && isset($data['interval_unit'])) {
-            $schedule = ['interval' => $data['interval_period'], 'unit' => $data['interval_unit'],];
+            $schedule = [
+                'interval' => $data['interval_period'],
+                'unit'     => $data['interval_unit'],
+            ];
 
             $data['schedule'] = $this->serializer->serialize($schedule);
         }
@@ -100,9 +103,9 @@ class Save implements HttpPostActionInterface
                 $days = 365.2425;
                 break;
         }
-        if ($data['interval_period'] * $days > $quoteLimit) {
-            return false;
-        }
+        if (isset($days) &&$data['interval_period'] * $days > $quoteLimit) {
+            return false;}
+
         return true;
     }
 }

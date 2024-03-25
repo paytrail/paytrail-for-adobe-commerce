@@ -64,9 +64,8 @@ class InvoiceActivation implements ClientInterface
             $this->log->debugLog(
                 'request',
                 \sprintf(
-                    'Creating %s request to Paytrail API %s',
-                    'payment',
-                    isset($order) ? 'With order id: ' . $order->getId() : ''
+                    'Creating %s request to Paytrail API',
+                    'payment'
                 )
             );
 

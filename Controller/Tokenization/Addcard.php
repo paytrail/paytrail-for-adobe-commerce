@@ -16,9 +16,7 @@ use Psr\Log\LoggerInterface;
 
 class AddCard implements \Magento\Framework\App\ActionInterface
 {
-    /**
-     * @var $errorMsg
-     */
+
     protected $errorMsg = null;
 
     /**

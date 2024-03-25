@@ -28,9 +28,6 @@ class PayAndAddCard implements ActionInterface
      */
     protected $urlBuilder;
 
-    /**
-     * @var $errorMsg
-     */
     protected $errorMsg = null;
 
     /**

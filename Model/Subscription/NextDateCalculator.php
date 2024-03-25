@@ -21,22 +21,24 @@ class NextDateCalculator
     /**
      * @var \Paytrail\PaymentService\Api\Data\RecurringProfileInterface[]
      */
-    private $profiles = [];
+    private                      $profiles = [];
     private ScopeConfigInterface $scopeConfig;
+    private bool                 $forceWeekdays;
 
     public function __construct(
         \Paytrail\PaymentService\Api\RecurringProfileRepositoryInterface $profileRepository,
-        SerializerInterface                                  $serializer,
-        ScopeConfigInterface                                 $scopeConfig
+        SerializerInterface                                              $serializer,
+        ScopeConfigInterface                                             $scopeConfig
     ) {
         $this->profileRepo = $profileRepository;
-        $this->serializer = $serializer;
+        $this->serializer  = $serializer;
         $this->scopeConfig = $scopeConfig;
     }
 
     /**
      * @param $profileId
      * @param string $startDate
+     *
      * @return string
      * @throws \Magento\Framework\Exception\NoSuchEntityException
      */
@@ -50,12 +52,13 @@ class NextDateCalculator
     /**
      * @param $schedule
      * @param $startDate
+     *
      * @return string
      * @throws \Exception
      */
     protected function calculateNextDate($schedule, $startDate)
     {
-        $schedule = $this->serializer->unserialize($schedule);
+        $schedule   = $this->serializer->unserialize($schedule);
         $carbonDate = $startDate === 'now' ? Carbon::now() : Carbon::createFromFormat('Y-m-d H:i:s', $startDate);
 
         switch ($schedule['unit']) {
@@ -84,6 +87,7 @@ class NextDateCalculator
 
     /**
      * @param $profileId
+     *
      * @return \Paytrail\PaymentService\Api\Data\RecurringProfileInterface
      * @throws \Magento\Framework\Exception\NoSuchEntityException
      */
@@ -109,6 +113,7 @@ class NextDateCalculator
 
     /**
      * @param $nextDate
+     *
      * @return Carbon
      */
     private function getNextWeekday($nextDate)
@@ -126,12 +131,13 @@ class NextDateCalculator
     /**
      * @param \Carbon\Carbon $carbonDate
      * @param int $interval
+     *
      * @return \Carbon\Carbon
      */
     protected function addMonthsNoOverflow($carbonDate, $interval)
     {
         $isLastOfMonth = $carbonDate->isLastOfMonth();
-        $nextDate = $carbonDate->addMonthsNoOverflow($interval);
+        $nextDate      = $carbonDate->addMonthsNoOverflow($interval);
 
         // adjust date to match the last day of month if the previous date was also last date of month.
         if ($isLastOfMonth) {

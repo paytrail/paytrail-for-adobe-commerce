@@ -13,9 +13,7 @@ use Psr\Log\LoggerInterface;
 
 class ProcessToken implements ActionInterface
 {
-    /**
-     * @var $errorMsg
-     */
+
     protected $errorMsg = null;
 
     /**

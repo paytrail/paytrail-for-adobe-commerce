@@ -29,6 +29,7 @@ use Paytrail\PaymentService\Model\Subscription\SubscriptionCreate;
 class Token implements HttpPostActionInterface
 {
     public const SKIP_HMAC_VALIDATION = 'skip_hmac';
+    private \Magento\Framework\Phrase $errorMsg;
 
     /**
      * Token constructor.
@@ -86,7 +87,7 @@ class Token implements HttpPostActionInterface
         $order = $order->loadByIncrementId(
             $this->checkoutSession->getLastRealOrderId()
         );
-        
+
         $resultJson = $this->jsonFactory->create();
         if ($order->getStatus() === Order::STATE_PROCESSING) {
             $this->errorMsg = __('Payment already processed');

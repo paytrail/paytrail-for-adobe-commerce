@@ -1,15 +1,10 @@
 <?php
-/**
- * Copyright © Magento, Inc. All rights reserved.
- * See COPYING.txt for license details.
- */
 
 namespace Paytrail\PaymentService\Setup\Patch\Data;
 
 use Magento\Framework\Serialize\SerializerInterface;
 use Magento\Framework\Setup\ModuleDataSetupInterface;
 use Magento\Framework\Setup\Patch\DataPatchInterface;
-use Magento\Framework\Setup\Patch\PatchRevertableInterface;
 
 class InstallProfilesPatch implements
     DataPatchInterface
@@ -58,6 +53,8 @@ class InstallProfilesPatch implements
         $this->moduleDataSetup->getConnection()->startSetup();
         $this->addDefaultProfiles();
         $this->moduleDataSetup->getConnection()->endSetup();
+
+        return $this;
     }
 
     /**

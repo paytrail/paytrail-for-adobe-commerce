@@ -1,0 +1,91 @@
+<tests xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:noNamespaceSchemaLocation="urn:magento:mftf:Test/etc/testSchema.xsd">
+    <test name="PaytrailGuestUserPlaceOrderNordea">
+        <annotations>
+            <title value="Place an order using Nordea"/>
+            <description
+                value="User can go trough the checkout and place the order."/>
+            <severity value="CRITICAL"/>
+            <stories value="Payment Checkout"/>
+            <group value="paytrail"/>
+        </annotations>
+        <before>
+            <magentoCLI stepKey="EnablePaytrailPayment"
+                        command="config:set {{EnablePaytrailConfigData.path}} {{EnablePaytrailConfigData.value}}"/>
+            <magentoCLI stepKey="SetTestMerchantId"
+                        command="config:set payment/paytrail/merchant_id {{_CREDS.paytrail/payment_paytrail_merchant_id}}"/>
+            <magentoCLI stepKey="SetTestSecret"
+                        command="config:set payment/paytrail/merchant_secret {{_CREDS.paytrail/payment_paytrail_merchant_secret}}"/>
+
+            <!-- Set Currency options for Default Config -->
+            <magentoCLI command="config:set {{SetCurrencyEURBaseConfig.path}} {{SetCurrencyEURBaseConfig.value}}"
+                        stepKey="setCurrencyBaseEUR"/>
+            <magentoCLI
+                command="config:set {{SetAllowedCurrenciesConfigForUSD.path}} {{SetAllowedCurrenciesConfigForUSD.value}},{{SetAllowedCurrenciesConfigForEUR.value}}"
+                stepKey="setAllowedCurrencyEURandUSD"/>
+            <magentoCLI command="config:set {{SetDefaultCurrencyEURConfig.path}} {{SetDefaultCurrencyEURConfig.value}}"
+                        stepKey="setCurrencyDefaultEUR"/>
+
+            <createData entity="SimpleProduct2" stepKey="createSimpleProduct">
+                <field key="price">20</field>
+            </createData>
+
+        </before>
+        <after>
+            <magentoCLI stepKey="DisablePaytrailPayment"
+                        command="config:set {{DisablePaytrailConfigData.path}} {{DisablePaytrailConfigData.value}}"/>
+
+            <!-- Reset currency configurations -->
+            <magentoCLI command="config:set {{SetCurrencyUSDBaseConfig.path}} {{SetCurrencyUSDBaseConfig.value}}"
+                        stepKey="setCurrencyBaseUSD"/>
+            <magentoCLI command="config:set {{SetDefaultCurrencyUSDConfig.path}} {{SetDefaultCurrencyUSDConfig.value}}"
+                        stepKey="setCurrencyDefaultUSD"/>
+            <magentoCLI
+                command="config:set {{SetAllowedCurrenciesConfigForUSD.path}} {{SetAllowedCurrenciesConfigForUSD.value}}"
+                stepKey="setAllowedCurrencyUSD"/>
+
+            <deleteData createDataKey="createSimpleProduct" stepKey="deleteSimpleProduct"/>
+        </after>
+
+        <!-- Reindex and flush cache -->
+        <actionGroup ref="CliIndexerReindexActionGroup" stepKey="reindex">
+            <argument name="indices" value=""/>
+        </actionGroup>
+        <actionGroup ref="CliCacheFlushActionGroup" stepKey="flushCache">
+            <argument name="tags" value=""/>
+        </actionGroup>
+
+        <!-- Add Simple Product to cart -->
+        <amOnPage url="{{StorefrontProductPage.url($$createSimpleProduct.custom_attributes[url_key]$$)}}"
+                  stepKey="navigateToSimpleProductPage"/>
+        <waitForPageLoad stepKey="waitForSimpleProductPageLoad"/>
+        <actionGroup ref="AddToCartFromStorefrontProductPageActionGroup"
+                     stepKey="addToCartSimpleProductFromStorefrontProductPage">
+            <argument name="productName" value="$$createSimpleProduct.name$$"/>
+        </actionGroup>
+
+        <!-- Go to shopping cart -->
+        <actionGroup ref="ClickViewAndEditCartFromMiniCartActionGroup" stepKey="goToShoppingCartFromMinicart"/>
+        <actionGroup ref="StorefrontClickProceedToCheckoutActionGroup" stepKey="goToCheckout"/>
+        <waitForPageLoad stepKey="waitForCheckoutPageLoad2"/>
+        <actionGroup ref="GuestCheckoutFillingShippingSectionActionGroup" stepKey="fillOrderShippingInfo2">
+            <argument name="customerVar" value="Simple_US_Customer_CA"/>
+            <argument name="customerAddressVar" value="US_Address_CA"/>
+            <argument name="shippingMethod" value="Fixed"/>
+        </actionGroup>
+        <actionGroup ref="CheckoutSelectPaytrailPaymentActionGroup" stepKey="selectPaytrailPayment"/>
+        <click selector="//div[contains(@id, 'paytrail-payment-method-nordea')]" stepKey="clickOnNordea"/>
+        <waitForPageLoad stepKey="waitForPageLoad"/>
+        <waitForElementVisible selector="{{CheckoutPaymentSection.placeOrder}}" time="30"
+                               stepKey="waitForPlaceOrderButton"/>
+        <waitForElementClickable selector="{{CheckoutPaymentSection.placeOrder}}"
+                                 stepKey="waitForPlaceOrderButtonClickable"/>
+        <click selector="{{CheckoutPaymentSection.placeOrderWithoutTimeout}}" stepKey="clickPlaceOrder"/>
+        <waitForPageLoad stepKey="waitForNordeaRedirect" time="10"/>
+        <seeCurrentUrlMatches regex="~\//epmt.nordea.fi/~" stepKey="assertNordeaRedirect"/>
+        <!-- click on simulate success -->
+        <click selector="//a[contains(@href, 'nordea/success')]" stepKey="clickNordeaSimulateSuccess"/>
+
+        <waitForElementVisible selector="{{CheckoutSuccessMainSection.orderNumber}}" stepKey="waitForOrderNumber"/>
+    </test>
+</tests>

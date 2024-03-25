@@ -25,9 +25,7 @@ use Psr\Log\LoggerInterface;
 
 class SaveCard implements ActionInterface
 {
-    /**
-     * @var $errorMsg
-     */
+
     protected $errorMsg = null;
 
     /**
@@ -75,7 +73,8 @@ class SaveCard implements ActionInterface
     }
 
     /**
-     * Execute
+     * @return ResponseInterface
+     * @throws CheckoutException
      */
     public function execute()
     {
@@ -87,8 +86,7 @@ class SaveCard implements ActionInterface
                 'paytrail_previous_error',
                 __('Card saving has been aborted. Please contact customer service.')
             );
-            $this->redirect();
-            return;
+            return $this->redirect();
         }
         $responseData = $this->getResponseData($tokenizationId);
         try {
@@ -109,13 +107,12 @@ class SaveCard implements ActionInterface
         } catch (AlreadyExistsException $e) {
             $this->context->getMessageManager()->addErrorMessage('This card has already been added to your vault');
             $this->logger->error($e->getMessage());
-            $this->redirect();
-            return;
+            return $this->redirect();
         }
 
         // success
         $this->checkoutSession->setData('paytrail_previous_success', __('Card added successfully'));
-        $this->redirect();
+        return $this->redirect();
     }
 
     /**
