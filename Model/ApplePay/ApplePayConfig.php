@@ -16,6 +16,15 @@ class ApplePayConfig
     ) {
     }
 
+    public function canApplePay(): bool
+    {
+        if ($this->isSafariBrowser() && $this->gatewayConfig->isApplePayEnabled()) {
+            return true;
+        }
+    
+        return false;
+    }
+
     /**
      * Adds Apple Pay method data into payment methods groups.
      *
