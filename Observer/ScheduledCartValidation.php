@@ -37,10 +37,10 @@ class ScheduledCartValidation implements ObserverInterface
     public function execute(Observer $observer)
     {
         $cartSchedule = null;
-        $cartId       = $observer->getEvent()->getOrder()->getQuoteId();
-        $cart         = $this->cartRepository->get($cartId);
+        $cartId = $observer->getEvent()->getOrder()->getQuoteId();
+        $cart = $this->cartRepository->get($cartId);
 
-        if ($this->totalConfigProvider->isRecurringPaymentEnabled()) {
+        if ($cart->getItems() && $this->totalConfigProvider->isRecurringPaymentEnabled()) {
             foreach ($cart->getItems() as $cartItem) {
                 $cartItemSchedule = $cartItem
                     ->getProduct()

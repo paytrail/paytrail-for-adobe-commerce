@@ -6,6 +6,7 @@ use Magento\AdminNotification\Model\InboxFactory;
 use Magento\Backend\Model\Auth\Session;
 use Magento\Framework\Notification\MessageInterface;
 use Paytrail\PaymentService\Gateway\Config\Config;
+use Paytrail\PaymentService\Logger\PaytrailLogger;
 
 class VersionNotification implements MessageInterface
 {
@@ -17,11 +18,13 @@ class VersionNotification implements MessageInterface
      * @param Session $authSession
      * @param InboxFactory $inboxFactory
      * @param Config $gatewayConfig
+     * @param PaytrailLogger $paytrailLogger
      */
     public function __construct(
-        private Session $authSession,
-        private InboxFactory $inboxFactory,
-        private Config $gatewayConfig,
+        private Session        $authSession,
+        private InboxFactory   $inboxFactory,
+        private Config         $gatewayConfig,
+        private PaytrailLogger $paytrailLogger
     ) {
     }
 
@@ -50,7 +53,12 @@ class VersionNotification implements MessageInterface
              * This will compare the currently installed version with the latest available one.
              * A message will appear after the login if the two are not matching.
              */
-            if ('v' . $this->gatewayConfig->getVersion() != $githubContent['tag_name']) {
+            if (empty($githubContent)) {
+                $this->paytrailLogger->logData(
+                    \Monolog\Logger::WARNING,
+                    'Github content data not provided.'
+                );
+            } elseif ('v' . $this->gatewayConfig->getVersion() != $githubContent['tag_name']) {
                 $versionData[] = [
                     'severity' => self::SEVERITY_CRITICAL,
                     'date_added' => date('Y-m-d H:i:s'),

@@ -15,10 +15,9 @@ use Magento\Sales\Model\Order;
 use Paytrail\PaymentService\Exceptions\CheckoutException;
 use Paytrail\PaymentService\Gateway\Config\Config;
 use Paytrail\PaymentService\Model\Email\Order\PendingOrderEmailConfirmation;
+use Paytrail\PaymentService\Model\ProviderForm;
 use Paytrail\PaymentService\Model\Receipt\ProcessService;
 use Paytrail\PaymentService\Model\Ui\DataProvider\PaymentProvidersData;
-use Paytrail\SDK\Model\Provider;
-use Paytrail\SDK\Response\PaymentResponse;
 use Psr\Log\LoggerInterface;
 
 class Index implements ActionInterface
@@ -39,18 +38,22 @@ class Index implements ActionInterface
      * @param RequestInterface $request
      * @param CommandManagerPoolInterface $commandManagerPool
      * @param ProcessService $processService
+     * @param PaymentProvidersData $paymentProvidersData
+     * @param ProviderForm $providerForm
      */
     public function __construct(
-        protected PendingOrderEmailConfirmation $pendingOrderEmailConfirmation,
-        protected Session                       $checkoutSession,
-        protected OrderRepositoryInterface      $orderRepositoryInterface,
-        protected OrderManagementInterface      $orderManagementInterface,
-        protected LoggerInterface               $logger,
-        protected Config                        $gatewayConfig,
-        protected ResultFactory                 $resultFactory,
-        protected RequestInterface              $request,
-        protected CommandManagerPoolInterface   $commandManagerPool,
-        protected ProcessService                $processService
+        private readonly PendingOrderEmailConfirmation $pendingOrderEmailConfirmation,
+        private readonly Session                       $checkoutSession,
+        private readonly OrderRepositoryInterface      $orderRepositoryInterface,
+        private readonly OrderManagementInterface      $orderManagementInterface,
+        private readonly LoggerInterface               $logger,
+        private readonly Config                        $gatewayConfig,
+        private readonly ResultFactory                 $resultFactory,
+        private readonly RequestInterface              $request,
+        private readonly CommandManagerPoolInterface   $commandManagerPool,
+        private readonly ProcessService                $processService,
+        private readonly PaymentProvidersData          $paymentProvidersData,
+        private readonly ProviderForm                  $providerForm
     ) {
     }
 
@@ -70,9 +73,12 @@ class Index implements ActionInterface
                 $selectedPaymentMethodRaw = $this->request->getParam(
                     'preselected_payment_method_id'
                 );
-                $selectedPaymentMethodId  = preg_replace(
-                    '/' . PaymentProvidersData::ID_INCREMENT_SEPARATOR . '[0-9]{1,3}$/',
-                    '',
+
+                $selectedPaymentMethodId = $this->paymentProvidersData->getIdWithoutIncrement(
+                    $selectedPaymentMethodRaw
+                );
+
+                $cardType = $this->paymentProvidersData->getCardType(
                     $selectedPaymentMethodRaw
                 );
 
@@ -81,37 +87,34 @@ class Index implements ActionInterface
                     throw new LocalizedException(__('No payment method selected'));
                 }
 
-                $order        = $this->checkoutSession->getLastRealOrder();
-                $responseData = $this->getResponseData($order, $selectedPaymentMethodId);
-                $formData     = $this->getFormFields(
-                    $responseData,
-                    $selectedPaymentMethodId
-                );
-                $formAction   = $this->getFormAction(
-                    $responseData,
-                    $selectedPaymentMethodId
-                );
+                $order           = $this->checkoutSession->getLastRealOrder();
+                $paytrailPayment = $this->getPaytrailPayment($order, $selectedPaymentMethodId);
+
+                if ($this->gatewayConfig->getSkipBankSelection()) {
+                    $redirect_url = $paytrailPayment->getHref();
+
+                    return $resultJson->setData(
+                        [
+                            'success'  => true,
+                            'data'     => 'redirect',
+                            'redirect' => $redirect_url
+                        ]
+                    );
+                }
+
+                $formParams = $this->providerForm->getFormParams($paytrailPayment, $selectedPaymentMethodId, $cardType);
 
                 // send order confirmation for pending order
-                if ($responseData) {
+                if ($paytrailPayment) {
                     $this->pendingOrderEmailConfirmation->pendingOrderEmailSend($order);
                 }
 
-                if ($this->gatewayConfig->getSkipBankSelection()) {
-                    $redirect_url = $responseData->getHref();
-
-                    return $resultJson->setData([
-                                                    'success'  => true,
-                                                    'data'     => 'redirect',
-                                                    'redirect' => $redirect_url
-                                                ]);
-                }
 
                 $block = $this->resultFactory->create(ResultFactory::TYPE_PAGE)
                     ->getLayout()
                     ->createBlock(\Paytrail\PaymentService\Block\Redirect\Paytrail::class)
-                    ->setUrl($formAction)
-                    ->setParams($formData);
+                    ->setUrl($formParams['action'])
+                    ->setParams($this->getInputs($formParams['inputs']));
 
                 return $resultJson->setData([
                                                 'success' => true,
@@ -140,52 +143,6 @@ class Index implements ActionInterface
     }
 
     /**
-     * GetFormFields function
-     *
-     * @param PaymentResponse $responseData
-     * @param string $paymentMethodId
-     *
-     * @return array
-     */
-    private function getFormFields($responseData, $paymentMethodId = null): array
-    {
-        $formFields = [];
-
-        /** @var Provider $provider */
-        foreach ($responseData->getProviders() as $provider) {
-            if ($provider->getId() == $paymentMethodId) {
-                foreach ($provider->getParameters() as $parameter) {
-                    $formFields[$parameter->name] = $parameter->value;
-                }
-            }
-        }
-
-        return $formFields;
-    }
-
-    /**
-     * GetFormAction function
-     *
-     * @param PaymentResponse $responseData
-     * @param string $paymentMethodId
-     *
-     * @return string
-     */
-    private function getFormAction($responseData, $paymentMethodId = null): string
-    {
-        $returnUrl = '';
-
-        /** @var Provider $provider */
-        foreach ($responseData->getProviders() as $provider) {
-            if ($provider->getId() == $paymentMethodId) {
-                $returnUrl = $provider->getUrl();
-            }
-        }
-
-        return $returnUrl;
-    }
-
-    /**
      * GetResponseData function
      *
      * @param Order $order
@@ -196,7 +153,7 @@ class Index implements ActionInterface
      * @throws \Magento\Framework\Exception\NotFoundException
      * @throws \Magento\Payment\Gateway\Command\CommandException
      */
-    private function getResponseData($order, $paymentMethod)
+    private function getPaytrailPayment(Order $order, string $paymentMethod)
     {
         $commandExecutor = $this->commandManagerPool->get('paytrail');
         $response        = $commandExecutor->executeByCode(
@@ -214,5 +171,20 @@ class Index implements ActionInterface
         }
 
         return $response["data"];
+    }
+
+    /**
+     * @param $inputs
+     *
+     * @return mixed
+     */
+    public function getInputs($inputs)
+    {
+        $formFields = [];
+        foreach ($inputs as $input) {
+            $formFields[$input['name']] = $input['value'];
+        }
+
+        return $formFields;
     }
 }
