@@ -30,7 +30,7 @@ class PreventDifferentScheduledCart
                 $request = null,
                 $processMode = AbstractType::PROCESS_MODE_FULL
     ) {
-        $cartItems       = $subject->getQuote()->getItems() ?: [];
+        $cartItems       = $subject->getItems() ?: [];
         $addItemSchedule = $product->getCustomAttribute(self::SCHEDULE_CODE);
         if (!$addItemSchedule) {
             return [$product, $request, $processMode];
