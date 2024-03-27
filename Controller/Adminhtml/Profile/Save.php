@@ -7,6 +7,7 @@ use Magento\Framework\App\Action\HttpPostActionInterface;
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\Controller\ResultFactory;
 use Magento\Framework\Exception\CouldNotSaveException;
+use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Framework\Serialize\SerializerInterface;
 use Magento\Store\Model\ScopeInterface;
 use Paytrail\PaymentService\Api\Data\RecurringProfileInterfaceFactory;
@@ -28,6 +29,7 @@ class Save implements HttpPostActionInterface
 
     /**
      * @return \Magento\Framework\App\ResponseInterface|\Magento\Framework\Controller\ResultInterface
+     * @throws NoSuchEntityException
      */
     public function execute()
     {
@@ -39,7 +41,7 @@ class Save implements HttpPostActionInterface
         }
 
         $data           = $this->getRequestData();
-        $resultRedirect = $this->resultFactory->create(ResultFactory::TYPE_REDIRECT);
+        $resultRedirect = $this->context->getResultFactory()->create(ResultFactory::TYPE_REDIRECT);
 
         if ($this->validateProfile($data) === false) {
             $this->context->getMessageManager()->addErrorMessage(
