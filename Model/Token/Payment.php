@@ -5,7 +5,9 @@ namespace Paytrail\PaymentService\Model\Token;
 
 use Magento\Customer\Api\CustomerRepositoryInterface;
 use Magento\Framework\DB\Transaction;
+use Magento\Framework\Exception\CouldNotSaveException;
 use Magento\Framework\Exception\LocalizedException;
+use Magento\Payment\Gateway\Command\CommandManagerPool;
 use Magento\Sales\Api\Data\OrderInterface;
 use Magento\Sales\Api\Data\OrderStatusHistoryInterfaceFactory;
 use Magento\Sales\Api\OrderManagementInterface;
@@ -13,8 +15,10 @@ use Magento\Sales\Api\OrderRepositoryInterface;
 use Magento\Sales\Api\OrderStatusHistoryRepositoryInterface;
 use Magento\Sales\Model\Order\Payment\Transaction\BuilderInterface;
 use Magento\Sales\Model\Service\InvoiceService;
+use Paytrail\PaymentService\Gateway\Request\TokenRequestDataBuilder;
 use Paytrail\PaymentService\Logger\PaytrailLogger;
 use Paytrail\PaymentService\Model\Adapter\Adapter;
+use Paytrail\PaymentService\Model\Subscription;
 use Paytrail\SDK\Request\MitPaymentRequest;
 use Paytrail\SDK\Response\MitPaymentResponse;
 
@@ -34,48 +38,58 @@ class Payment
      * @param OrderStatusHistoryInterfaceFactory $orderStatusHistoryFactory
      * @param OrderStatusHistoryRepositoryInterface $orderStatusHistoryRepository
      * @param PaytrailLogger $paytrailLogger
+     * @param TokenRequestDataBuilder $tokenRequestDataBuilder
+     * @param CommandManagerPool $commandManagerPool
      */
     public function __construct(
-        private OrderRepositoryInterface $orderRepository,
-        private Adapter $adapter,
-        private RequestData $requestData,
-        private CustomerRepositoryInterface $customerRepository,
-        private InvoiceService $invoiceService,
-        private Transaction $transaction,
-        private BuilderInterface $transactionBuilder,
-        private OrderManagementInterface $orderManagement,
-        private OrderStatusHistoryInterfaceFactory $orderStatusHistoryFactory,
+        private OrderRepositoryInterface              $orderRepository,
+        private Adapter                               $adapter,
+        private RequestData                           $requestData,
+        private CustomerRepositoryInterface           $customerRepository,
+        private InvoiceService                        $invoiceService,
+        private Transaction                           $transaction,
+        private BuilderInterface                      $transactionBuilder,
+        private OrderManagementInterface              $orderManagement,
+        private OrderStatusHistoryInterfaceFactory    $orderStatusHistoryFactory,
         private OrderStatusHistoryRepositoryInterface $orderStatusHistoryRepository,
-        private PaytrailLogger $paytrailLogger
+        private PaytrailLogger                        $paytrailLogger,
+        private TokenRequestDataBuilder               $tokenRequestDataBuilder,
+        private CommandManagerPool                    $commandManagerPool
     ) {
     }
 
     /**
      * Make MIT payment request.
+     * @see https://checkoutfinland.github.io/psp-api/#/?id=merchant-initiated-transactions-mit
      *
-     * @param $orderId
-     * @param $cardToken
-     * @return bool
+     * @param Subscription $subscription Subscription object.
+     *
+     * @return boolean
+     * @throws CouldNotSaveException
      * @throws LocalizedException
      */
     public function makeMitPayment($orderId, $cardToken)
     {
         try {
-            $order = $this->orderRepository->get($orderId);
-            $client = $this->adapter->initPaytrailMerchantClient();
-            $customer = $this->customerRepository->getById((int)$order->getCustomerId());
+            $order           = $this->orderRepository->get($orderId);
+            $customer        = $this->customerRepository->getById((int)$order->getCustomerId());
+            $commandExecutor = $this->commandManagerPool->get('paytrail');
 
-            $mitPayment = $this->getMitPaymentRequest();
-            $mitPayment = $this->requestData->setTokenPaymentRequestData($mitPayment, $order, $cardToken, $customer);
+            $mitResponse = $commandExecutor->executeByCode(
+                'token_payment_mit',
+                null,
+                [
+                    'order'    => $order,
+                    'token_id' => $cardToken,
+                    'customer' => $customer,
+                ]
+            );
 
-            /** @var MitPaymentResponse $mitResponse */
-            $mitResponse = $client->createMitPaymentCharge($mitPayment);
-            if (!$mitResponse->getTransactionId()) {
+            if ($mitResponse['data']?->getTransactionId() === null) {
                 $this->paytrailLogger->logCheckoutData(
                     'response',
                     'error',
-                    'A problem occurred: '
-                    . 'Payment transaction id missing in request response'
+                    'A problem occurred: Payment transaction id missing in request response'
                 );
 
                 return false;
@@ -84,14 +98,14 @@ class Payment
             $this->paytrailLogger->logCheckoutData(
                 'response',
                 'error',
-                'A problem occurred: '
-                . $e->getMessage()
+                'A problem occurred: ' . $e->getMessage()
             );
             return false;
-        }
-        $this->createInvoice($order, $mitResponse);
-        $this->createTransaction($order, $mitResponse);
-        $this->updateOrder($order, $mitResponse);
+        }//end try
+
+        $this->createInvoice($order, $mitResponse['data']);
+        $this->createTransaction($order, $mitResponse['data']);
+        $this->updateOrder($order, $mitResponse['data']);
 
         return true;
     }

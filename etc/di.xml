@@ -59,6 +59,7 @@
                 </item>
                 <item name="email_refund" xsi:type="string">PaytrailEmailRefundCommand</item>
                 <item name="token_payment" xsi:type="string">Paytrail\PaymentService\Gateway\Command\TokenPayment</item>
+                <item name="token_payment_mit" xsi:type="string">TokenPaymentMit</item>
                 <item name="get_payment_data" xsi:type="string">Paytrail\PaymentService\Gateway\Command\PaymentData
                 </item>
                 <item name="add_card" xsi:type="string">Paytrail\PaymentService\Gateway\Command\AddCard</item>
@@ -109,7 +110,6 @@
             </argument>
         </arguments>
     </type>
-
 
 
     <virtualType name="PaytrailCommandManager" type="Magento\Payment\Gateway\Command\CommandManager">
@@ -186,6 +186,30 @@
     <virtualType name="PaytrailTokenPaymentRedirect" type="Paytrail\PaymentService\Controller\Redirect\Token">
         <arguments>
             <argument name="commandManager" xsi:type="object">PaytrailTokenPaymentCommandManager</argument>
+        </arguments>
+    </virtualType>
+
+<!--    command for MIT token payments-->
+    <virtualType name="PaytrailTokenPaymentMitRequest" type="Magento\Payment\Gateway\Request\BuilderComposite">
+        <arguments>
+            <argument name="builders" xsi:type="array">
+                <item name="paymentBuilder" xsi:type="string">
+                    Paytrail\PaymentService\Gateway\Request\TokenPaymentDataBuilderMit
+                </item>
+            </argument>
+        </arguments>
+    </virtualType>
+
+    <virtualType name="TokenPaymentMit" type="Paytrail\PaymentService\Gateway\Command\TokenPayment">
+        <arguments>
+            <argument name="requestBuilder" xsi:type="object">PaytrailTokenPaymentMitRequest</argument>
+            <argument name="transferFactory" xsi:type="object">Paytrail\PaymentService\Gateway\Http\TransferFactory
+            </argument>
+            <argument name="client" xsi:type="object">
+                Paytrail\PaymentService\Gateway\Http\Client\TransactionTokenPaymentMit
+            </argument>
+            <argument name="handler" xsi:type="object">Paytrail\PaymentService\Gateway\Response\TokenPaymentHandler
+            </argument>
         </arguments>
     </virtualType>
 
@@ -358,7 +382,8 @@
     <virtualType name="PaytrailEmailRefundRequest" type="Magento\Payment\Gateway\Request\BuilderComposite">
         <arguments>
             <argument name="builders" xsi:type="array">
-                <item name="refund" xsi:type="string">Paytrail\PaymentService\Gateway\Request\EmailRefundDataBuilder</item>
+                <item name="refund" xsi:type="string">Paytrail\PaymentService\Gateway\Request\EmailRefundDataBuilder
+                </item>
             </argument>
         </arguments>
     </virtualType>

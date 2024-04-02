@@ -6,6 +6,7 @@ use Magento\Framework\Exception\CouldNotSaveException;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Sales\Model\Order\Email\Sender\OrderSender;
 use Magento\Sales\Model\OrderRepository;
+use Magento\Sales\Model\Service\InvoiceService;
 use Paytrail\PaymentService\Api\SubscriptionLinkRepositoryInterface;
 use Paytrail\PaymentService\Api\SubscriptionRepositoryInterface;
 use Paytrail\PaymentService\Model\ResourceModel\Subscription as SubscriptionResource;
@@ -41,7 +42,9 @@ class OrderBiller
         private LoggerInterface                     $logger,
         private SubscriptionLinkRepositoryInterface $subscriptionLinkRepository,
         private OrderSender                         $orderSender,
-        private OrderRepository                     $orderRepository
+        private OrderRepository                     $orderRepository,
+        private InvoiceService $invoiceService,
+
     ) {
     }
 
@@ -166,7 +169,7 @@ class OrderBiller
             $this->subscriptionRepository->save($subscription);
         } catch (CouldNotSaveException $e) {
             $this->logger->critical(\__(
-                'Recurring payment: 
+                'Recurring payment:
                     Cancelling subscription %id, unable to update subscription\'s next order date: %error',
                 [
                     'id' => $subscription->getId(),
