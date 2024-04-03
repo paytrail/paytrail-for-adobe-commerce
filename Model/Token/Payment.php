@@ -60,9 +60,11 @@ class Payment
 
     /**
      * Make MIT payment request.
+     *
      * @see https://checkoutfinland.github.io/psp-api/#/?id=merchant-initiated-transactions-mit
      *
-     * @param Subscription $subscription Subscription object.
+     * @param int $orderId
+     * @param string $cardToken
      *
      * @return boolean
      * @throws CouldNotSaveException
@@ -113,9 +115,8 @@ class Payment
     /**
      * Create invoice.
      *
-     * @param $order
-     * @param $mitResponse
-     * @throws LocalizedException
+     * @param OrderInterface $order
+     * @param MitPaymentResponse $mitResponse
      */
     private function createInvoice($order, $mitResponse)
     {
@@ -145,8 +146,9 @@ class Payment
     /**
      * Create transaction.
      *
-     * @param $order
-     * @param $mitResponse
+     * @param OrderInterface $order
+     * @param MitPaymentResponse $mitResponse
+     *
      * @return int|void
      */
     private function createTransaction($order, $mitResponse)
@@ -156,15 +158,15 @@ class Payment
             $payment->setLastTransId($mitResponse->getTransactionId());
             $payment->setTransactionId($mitResponse->getTransactionId());
             $payment->setAdditionalInformation(
-                [\Magento\Sales\Model\Order\Payment\Transaction::RAW_DETAILS => (array) $mitResponse]
+                [\Magento\Sales\Model\Order\Payment\Transaction::RAW_DETAILS => (array)$mitResponse]
             );
 
-            $trans = $this->transactionBuilder;
+            $trans       = $this->transactionBuilder;
             $transaction = $trans->setPayment($payment)
                 ->setOrder($order)
                 ->setTransactionId($mitResponse->getTransactionId())
                 ->setAdditionalInformation(
-                    [\Magento\Sales\Model\Order\Payment\Transaction::RAW_DETAILS => (array) $mitResponse]
+                    [\Magento\Sales\Model\Order\Payment\Transaction::RAW_DETAILS => (array)$mitResponse]
                 )
                 ->setFailSafe(true)
                 //build method creates the transaction and returns the object
@@ -174,7 +176,7 @@ class Payment
             $payment->save();
             $order->save();
 
-            return  $transaction->save()->getTransactionId();
+            return $transaction->save()->getTransactionId();
         } catch (\Exception $e) {
             $this->paytrailLogger->logCheckoutData(
                 'response',
@@ -190,7 +192,7 @@ class Payment
      *
      * @return MitPaymentRequest
      */
-    private function getMitPaymentRequest()
+    private function getMitPaymentRequest(): MitPaymentRequest
     {
         return new MitPaymentRequest();
     }
@@ -200,17 +202,18 @@ class Payment
      *
      * @param OrderInterface $order
      * @param MitPaymentResponse $mitResponse
+     *
      * @return void
      * @throws \Magento\Framework\Exception\CouldNotSaveException
      */
     private function updateOrder(
-        OrderInterface $order,
+        OrderInterface     $order,
         MitPaymentResponse $mitResponse
     ): void {
 
         $commentsArray = [
             'pending_payment' => __('Transaction ID: ') . $mitResponse->getTransactionId(),
-            'processing' => __('Payment has been completed')
+            'processing'      => __('Payment has been completed')
         ];
 
         foreach ($commentsArray as $status => $comment) {

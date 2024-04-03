@@ -17,13 +17,13 @@ class TransactionTokenPaymentMit implements ClientInterface
     /**
      * TransactionPayment constructor.
      *
-     * @param Adapter        $paytrailAdapter
-     * @param Json           $json
+     * @param Adapter $paytrailAdapter
+     * @param Json $json
      * @param PaytrailLogger $log
      */
     public function __construct(
-        private readonly Adapter $paytrailAdapter,
-        private readonly Json $json,
+        private readonly Adapter        $paytrailAdapter,
+        private readonly Json           $json,
         private readonly PaytrailLogger $log
     ) {
     }
@@ -31,7 +31,8 @@ class TransactionTokenPaymentMit implements ClientInterface
     /**
      * @inheritdoc
      *
-     * @param  TransferInterface $transferObject
+     * @param TransferInterface $transferObject
+     *
      * @return array
      */
     public function placeRequest(TransferInterface $transferObject): array
@@ -46,7 +47,7 @@ class TransactionTokenPaymentMit implements ClientInterface
 
         if ($error) {
             $this->log->error(
-                'Error occurred during refund: '.$error.', Falling back to to email refund.'
+                'Error occurred during request: ' . $error . '.'
             );
         }
 
@@ -56,11 +57,12 @@ class TransactionTokenPaymentMit implements ClientInterface
     /**
      * Payment function
      *
-     * @param  MitPaymentRequest $paytrailPayment
-     * @param  Order             $order
+     * @param MitPaymentRequest $paytrailPayment
+     * @param Order $order
+     *
      * @return array
      */
-    public function tokenPayment(MitPaymentRequest$paytrailPayment, OrderInterface $order): array
+    public function tokenPayment(MitPaymentRequest $paytrailPayment, OrderInterface $order): array
     {
         $response['data']  = null;
         $response['error'] = null;
@@ -73,7 +75,7 @@ class TransactionTokenPaymentMit implements ClientInterface
                 \sprintf(
                     'Creating %s request to Paytrail API %s',
                     'payment',
-                    isset($order) ? 'With order id: '.$order->getId() : ''
+                    isset($order) ? 'With order id: ' . $order->getId() : ''
                 )
             );
 
