@@ -31,7 +31,6 @@ class OrderBiller
      * @param SubscriptionLinkRepositoryInterface $subscriptionLinkRepository
      * @param OrderSender $orderSender
      * @param OrderRepository $orderRepository
-     * @param InvoiceService $invoiceService
      */
     public function __construct(
         private PaymentCount                        $paymentCount,
@@ -44,7 +43,6 @@ class OrderBiller
         private SubscriptionLinkRepositoryInterface $subscriptionLinkRepository,
         private OrderSender                         $orderSender,
         private OrderRepository                     $orderRepository,
-        private InvoiceService                      $invoiceService,
     ) {
     }
 
