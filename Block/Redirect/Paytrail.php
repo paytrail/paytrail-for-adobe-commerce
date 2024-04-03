@@ -2,25 +2,28 @@
 
 namespace Paytrail\PaymentService\Block\Redirect;
 
+use Magento\Framework\Data\Form;
+use Magento\Framework\View\Element\Context;
+
 /**
  * Class Paytrail
  */
 class Paytrail extends \Magento\Framework\View\Element\AbstractBlock
 {
-    protected $form;
-    protected $params;
-    protected $url;
-    protected $formId = 'checkout_form';
+    private $form;
+    private $params;
+    private $url;
+    private $formId = 'checkout_form';
 
     /**
      * Paytrail constructor.
-     * @param \Magento\Framework\Data\Form $form
-     * @param \Magento\Framework\View\Element\Context $context
+     * @param Form $form
+     * @param Context $context
      * @param array $data
      */
     public function __construct(
-        \Magento\Framework\Data\Form $form,
-        \Magento\Framework\View\Element\Context $context,
+        Form $form,
+        Context $context,
         array $data = []
     ) {
         $this->form = $form;
@@ -71,7 +74,7 @@ class Paytrail extends \Magento\Framework\View\Element\AbstractBlock
     /**
      * @return string
      */
-    protected function _jsSubmit()
+    private function _jsSubmit()
     {
         return '<script type="text/javascript">document.getElementById("' . $this->formId . '").submit();</script>';
     }

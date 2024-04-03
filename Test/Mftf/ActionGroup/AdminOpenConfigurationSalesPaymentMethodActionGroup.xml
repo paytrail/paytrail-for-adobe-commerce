@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<actionGroups xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+              xsi:noNamespaceSchemaLocation="urn:magento:mftf:Test/etc/actionGroupSchema.xsd">
+    <actionGroup name="AdminOpenConfigurationSalesPaymentMethodActionGroup">
+        <annotations>
+            <description>Open payment configuration page.</description>
+        </annotations>
+
+        <amOnPage url="{{AdminConfigurationPaymentPage.url}}" stepKey="goToConfigurationPaymentPage"/>
+        <waitForPageLoad stepKey="waitPageLoad"/>
+        <click selector="{{PaytrailPaymentServiceForAdobeCommerceSection.ExpandSection}}" stepKey="clickToExpandSettings"/>
+        <see userInput="Paytrail Payment Service for Adobe Commerce" stepKey="checkLabel"/>
+    </actionGroup>
+</actionGroups>

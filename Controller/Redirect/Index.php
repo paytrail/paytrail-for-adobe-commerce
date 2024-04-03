@@ -22,10 +22,8 @@ use Psr\Log\LoggerInterface;
 
 class Index implements ActionInterface
 {
-    /**
-     * @var $errorMsg
-     */
-    protected $errorMsg = null;
+
+    private $errorMsg = null;
 
     /**
      * Index constructor.

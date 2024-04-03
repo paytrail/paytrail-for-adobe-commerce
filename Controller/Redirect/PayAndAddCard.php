@@ -5,10 +5,15 @@ namespace Paytrail\PaymentService\Controller\Redirect;
 use Magento\Checkout\Model\Session;
 use Magento\Customer\Model\Session as CustomerSession;
 use Magento\Framework\App\Action\Context;
+use Magento\Framework\App\ActionInterface;
+use Magento\Framework\App\ResponseInterface;
 use Magento\Framework\Controller\Result\Json;
 use Magento\Framework\Controller\Result\JsonFactory;
+use Magento\Framework\Controller\ResultInterface;
+use Magento\Framework\Exception\NotFoundException;
 use Magento\Framework\UrlInterface;
 use Magento\Framework\Validation\ValidationException;
+use Magento\Payment\Gateway\Command\CommandException;
 use Magento\Payment\Gateway\Command\CommandManagerPoolInterface;
 use Magento\Sales\Model\Order;
 use Paytrail\PaymentService\Exceptions\CheckoutException;
@@ -16,17 +21,14 @@ use Paytrail\PaymentService\Model\Receipt\ProcessService;
 use Paytrail\PaymentService\Model\Validation\PreventAdminActions;
 use Psr\Log\LoggerInterface;
 
-class PayAndAddCard extends \Magento\Framework\App\Action\Action
+class PayAndAddCard implements ActionInterface
 {
     /**
      * @var UrlInterface
      */
-    protected $urlBuilder;
+    private $urlBuilder;
 
-    /**
-     * @var $errorMsg
-     */
-    protected $errorMsg = null;
+    private $errorMsg = null;
 
     /**
      * PayAndAddCard constructor.
@@ -41,26 +43,21 @@ class PayAndAddCard extends \Magento\Framework\App\Action\Action
      * @param ProcessService $processService
      */
     public function __construct(
-        Context $context,
-        private Session $checkoutSession,
-        private JsonFactory $jsonFactory,
-        private LoggerInterface $logger,
-        private CustomerSession $customerSession,
-        private PreventAdminActions $preventAdminActions,
+        private Context                     $context,
+        private Session                     $checkoutSession,
+        private JsonFactory                 $jsonFactory,
+        private LoggerInterface             $logger,
+        private CustomerSession             $customerSession,
+        private PreventAdminActions         $preventAdminActions,
         private CommandManagerPoolInterface $commandManagerPool,
-        private ProcessService $processService
+        private ProcessService              $processService
     ) {
         $this->urlBuilder = $context->getUrl();
-        parent::__construct($context);
     }
 
     /**
-     * Execute.
-     *
-     * @return \Magento\Framework\App\ResponseInterface|Json|\Magento\Framework\Controller\ResultInterface
+     * @return ResponseInterface|Json|ResultInterface
      * @throws ValidationException
-     * @throws \Magento\Framework\Exception\LocalizedException
-     * @throws \Magento\Framework\Exception\NoSuchEntityException
      */
     public function execute()
     {
@@ -68,21 +65,20 @@ class PayAndAddCard extends \Magento\Framework\App\Action\Action
             throw new ValidationException(__('Admin user is not authorized for this operation'));
         }
 
-        /** @var Json $resultJson */
         $resultJson = $this->jsonFactory->create();
 
         $order = $this->checkoutSession->getLastRealOrder();
 
         try {
-            if ($this->customerSession->getCustomerId() && $this->getRequest()->getParam('is_ajax')) {
+            if ($this->customerSession->getCustomerId() && $this->context->getRequest()->getParam('is_ajax')) {
                 $responseData = $this->getResponseData($order);
-                $redirect_url = $responseData->getRedirectUrl();
+                $redirectUrl  = $responseData->getRedirectUrl();
 
                 return $resultJson->setData(
                     [
-                        'success' => true,
-                        'data' => 'redirect',
-                        'redirect' => $redirect_url
+                        'success'  => true,
+                        'data'     => 'redirect',
+                        'redirect' => $redirectUrl
                     ]
                 );
             }
@@ -100,16 +96,19 @@ class PayAndAddCard extends \Magento\Framework\App\Action\Action
     }
 
     /**
-     * Get response from Paytail API.
+     * Get response from Paytrail API.
      *
      * @param Order $order
+     *
      * @return mixed
      * @throws CheckoutException
+     * @throws NotFoundException
+     * @throws CommandException
      */
-    protected function getResponseData($order)
+    private function getResponseData($order): mixed
     {
         $commandExecutor = $this->commandManagerPool->get('paytrail');
-        $response = $commandExecutor->executeByCode(
+        $response        = $commandExecutor->executeByCode(
             'pay_and_add_card',
             null,
             [

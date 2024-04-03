@@ -8,8 +8,6 @@ use Paytrail\PaymentService\Api\Data\SubscriptionLinkInterface;
 class SubscriptionLink extends AbstractDb
 {
     public const LINK_TABLE_NAME = 'paytrail_subscription_link';
-    protected $_eventPrefix = 'subscription_link';
-
     /**
      * @return void
      */

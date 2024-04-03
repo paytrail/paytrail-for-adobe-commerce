@@ -73,7 +73,7 @@ class VaultRequestBuilder implements BuilderInterface
      * @param OrderItemInterface[] $items
      * @return array
      */
-    protected function getTaxRates($items)
+    private function getTaxRates($items)
     {
         $rates = [];
         foreach ($items as $item) {

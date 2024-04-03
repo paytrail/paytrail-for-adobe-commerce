@@ -78,7 +78,7 @@ class NextDateCalculator
      * @return string
      * @throws Exception
      */
-    protected function calculateNextDate($schedule, $startDate)
+    private function calculateNextDate($schedule, $startDate)
     {
         $schedule   = $this->serializer->unserialize($schedule);
         $carbonDate = $startDate === 'now' ? Carbon::now() : Carbon::createFromFormat('Y-m-d H:i:s', $startDate);
@@ -115,7 +115,7 @@ class NextDateCalculator
      * @return RecurringProfileInterface
      * @throws NoSuchEntityException
      */
-    protected function getProfileById($profileId): RecurringProfileInterface
+    private function getProfileById($profileId): \Paytrail\PaymentService\Api\Data\RecurringProfileInterface
     {
         if (!isset($this->profiles[$profileId])) {
             $this->profiles[$profileId] = $this->profileRepo->get($profileId);
@@ -129,7 +129,7 @@ class NextDateCalculator
      *
      * @return bool
      */
-    protected function isForceWeekdays()
+    private function isForceWeekdays()
     {
         if (!isset($this->forceWeekdays)) {
             $this->forceWeekdays = $this->scopeConfig->isSetFlag('sales/recurring_payment/force_weekdays');
@@ -164,7 +164,7 @@ class NextDateCalculator
      *
      * @return Carbon
      */
-    protected function addMonthsNoOverflow($carbonDate, $interval)
+    private function addMonthsNoOverflow($carbonDate, $interval)
     {
         $isLastOfMonth = $carbonDate->isLastOfMonth();
         $nextDate      = $carbonDate->addMonthsNoOverflow($interval);

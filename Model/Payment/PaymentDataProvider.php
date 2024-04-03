@@ -146,7 +146,7 @@ class PaymentDataProvider
      *
      * @return Customer
      */
-    protected function createCustomer($billingAddress)
+    private function createCustomer($billingAddress)
     {
         $customer = new Customer();
 
@@ -169,7 +169,7 @@ class PaymentDataProvider
      * @throws NoSuchEntityException
      * @throws ValidationException
      */
-    protected function createAddress($address)
+    private function createAddress($address)
     {
         $paytrailAddress = new Address();
 
@@ -205,16 +205,13 @@ class PaymentDataProvider
     public function getOrderItemLines($order)
     {
         $orderItems = $this->itemArgs($order);
-        $orderTotal = round($order->getGrandTotal() * 100);
 
-        $items = array_map(
-            function ($item) use ($order) {
+        return array_map(
+            function ($item) {
                 return $this->createOrderItems($item);
             },
             $orderItems
         );
-
-        return $items;
     }
 
     /**
@@ -224,7 +221,7 @@ class PaymentDataProvider
      *
      * @return Item
      */
-    protected function createOrderItems($item): Item
+    private function createOrderItems($item): Item
     {
         $paytrailItem = new Item();
 
@@ -246,12 +243,11 @@ class PaymentDataProvider
      * @return array
      * @throws LocalizedException
      */
-    protected function itemArgs($order): array
+    private function itemArgs($order): array
     {
         $items = [];
 
         # Add line items
-        /** @var $item OrderItem */
         foreach ($order->getAllItems() as $item) {
             $discountInclTax = 0;
             if (!$this->taxHelper->priceIncludesTax()
@@ -284,7 +280,7 @@ class PaymentDataProvider
                 $rowTotalInclDiscount  = $item->getRowTotalInclTax() - $discountInclTax;
                 $itemPriceInclDiscount = $this->formatPrice($rowTotalInclDiscount / $qtyOrdered);
 
-                $difference = $rowTotalInclDiscount - $itemPriceInclDiscount * $qtyOrdered;
+                $difference = $rowTotalInclDiscount - (float)$itemPriceInclDiscount * $qtyOrdered;
                 // deduct/add only 0.01 per product
                 $diffAdjustment       = 0.01;
                 $differenceUnitsCount = (int)(round(abs($difference / $diffAdjustment)));

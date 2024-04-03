@@ -24,68 +24,9 @@ use Psr\Log\LoggerInterface;
 
 class SubscriptionManagement implements SubscriptionManagementInterface
 {
-    protected const STATUS_CLOSED = 'closed';
-    protected const ORDER_PENDING_STATUS = 'pending';
+    private const STATUS_CLOSED        = 'closed';
+    private const ORDER_PENDING_STATUS = 'pending';
 
-    /**
-     * @var UserContextInterface
-     */
-    protected $userContext;
-
-    /**
-     * @var SubscriptionRepositoryInterface
-     */
-    protected $subscriptionRepository;
-
-    /**
-     * @var SubscriptionLinkRepositoryInterface
-     */
-    protected $subscriptionLinkRepository;
-
-    /**
-     * @var OrderRepositoryInterface
-     */
-    protected $orderRepository;
-
-    /**
-     * @var OrderManagementInterface
-     */
-    protected $orderManagementInterface;
-
-    /**
-     * @var SearchCriteriaBuilder
-     */
-    protected $searchCriteriaBuilder;
-
-    /**
-     * @var LoggerInterface
-     */
-    protected $logger;
-
-    /**
-     * @var FilterBuilder
-     */
-    protected $filterBuilder;
-
-    /**
-     * @var FilterGroupBuilder
-     */
-    protected $groupBuilder;
-
-    /**
-     * @var PaymentTokenRepositoryInterface
-     */
-    private PaymentTokenRepositoryInterface $paymentTokenRepository;
-
-    /**
-     * @var CustomerData
-     */
-    private $customerData;
-
-    /**
-     * @var ShowSubscriptionsDataProvider
-     */
-    private $showSubscriptionsDataProvider;
 
     /**
      * @param UserContextInterface $userContext
@@ -96,37 +37,26 @@ class SubscriptionManagement implements SubscriptionManagementInterface
      * @param SearchCriteriaBuilder $searchCriteriaBuilder
      * @param LoggerInterface $logger
      * @param FilterBuilder $filterBuilder
-     * @param FilterGroupBuilder $filterGroupBuilder
+     * @param FilterGroupBuilder $groupBuilder
      * @param PaymentTokenRepositoryInterface $paymentTokenRepository
      * @param CustomerData $customerData
      * @param ShowSubscriptionsDataProvider $showSubscriptionsDataProvider
      */
     public function __construct(
-        UserContextInterface                $userContext,
-        SubscriptionRepositoryInterface     $subscriptionRepository,
-        SubscriptionLinkRepositoryInterface $subscriptionLinkRepository,
-        OrderRepositoryInterface            $orderRepository,
-        OrderManagementInterface            $orderManagementInterface,
-        SearchCriteriaBuilder               $searchCriteriaBuilder,
-        LoggerInterface                     $logger,
-        FilterBuilder                       $filterBuilder,
-        FilterGroupBuilder                  $filterGroupBuilder,
-        PaymentTokenRepositoryInterface     $paymentTokenRepository,
-        CustomerData                        $customerData,
-        ShowSubscriptionsDataProvider $showSubscriptionsDataProvider
+        private UserContextInterface                $userContext,
+        private SubscriptionRepositoryInterface     $subscriptionRepository,
+        private SubscriptionLinkRepositoryInterface $subscriptionLinkRepository,
+        private OrderRepositoryInterface            $orderRepository,
+        private OrderManagementInterface            $orderManagementInterface,
+        private SearchCriteriaBuilder               $searchCriteriaBuilder,
+        private LoggerInterface                     $logger,
+        private FilterBuilder                       $filterBuilder,
+        private FilterGroupBuilder                  $groupBuilder,
+        private PaymentTokenRepositoryInterface     $paymentTokenRepository,
+        private CustomerData                        $customerData,
+        private ShowSubscriptionsDataProvider       $showSubscriptionsDataProvider
     ) {
-        $this->userContext = $userContext;
-        $this->subscriptionRepository = $subscriptionRepository;
-        $this->subscriptionLinkRepository = $subscriptionLinkRepository;
-        $this->orderRepository = $orderRepository;
-        $this->orderManagementInterface = $orderManagementInterface;
-        $this->searchCriteriaBuilder = $searchCriteriaBuilder;
-        $this->filterBuilder = $filterBuilder;
-        $this->groupBuilder = $filterGroupBuilder;
-        $this->logger = $logger;
-        $this->paymentTokenRepository = $paymentTokenRepository;
-        $this->customerData = $customerData;
-        $this->showSubscriptionsDataProvider = $showSubscriptionsDataProvider;
+
     }
 
     /**
@@ -145,12 +75,12 @@ class SubscriptionManagement implements SubscriptionManagementInterface
                 return __('Subscription is closed')->render();
             }
 
-            $customerId = $this->userContext->getUserId();
-            $orderIds = $this->subscriptionLinkRepository->getOrderIdsBySubscriptionId((int)$subscriptionId);
+            $customerId     = $this->userContext->getUserId();
+            $orderIds       = $this->subscriptionLinkRepository->getOrderIdsBySubscriptionId((int)$subscriptionId);
             $searchCriteria = $this->searchCriteriaBuilder
                 ->addFilter('entity_id', $orderIds, 'in')
                 ->create();
-            $orders = $this->orderRepository->getList($searchCriteria);
+            $orders         = $this->orderRepository->getList($searchCriteria);
 
             foreach ($orders->getItems() as $order) {
                 if ($customerId != $order->getCustomerId()) {
@@ -174,6 +104,7 @@ class SubscriptionManagement implements SubscriptionManagementInterface
 
     /**
      * @param SearchCriteriaInterface $searchCriteria
+     *
      * @return array
      * @throws LocalizedException
      */
@@ -184,23 +115,23 @@ class SubscriptionManagement implements SubscriptionManagementInterface
             if ($this->userContext->getUserId()) {
                 $this->filterByCustomer($searchCriteria);
                 $subscriptionCollection = $this->subscriptionRepository->getList($searchCriteria)->getItems();
-                $paymentToken = $this->showSubscriptionsDataProvider->getMaskedCCById($searchCriteria);
+                $paymentToken           = $this->showSubscriptionsDataProvider->getMaskedCCById($searchCriteria);
 
                 foreach ($subscriptionCollection as $subscription) {
-                    $orderData = $this->showSubscriptionsDataProvider
+                    $orderData       = $this->showSubscriptionsDataProvider
                         ->getOrderDataFromSubscriptionId($subscription->getId());
                     $subscriptions[] = [
-                        'entity_id' => $subscription->getId(),
-                        'customer_id' => $subscription->getCustomerId(),
-                        'status' => $subscription->getStatus(),
-                        'next_order_date' => $subscription->getNextOrderDate(),
-                        'recurring_profile_id' => $subscription->getRecurringProfileId(),
-                        'updated_at' => $subscription->getUpdatedAt(),
-                        'repeat_count_left' => $subscription->getRepeatCountLeft(),
-                        'retry_count' => $subscription->getRetryCount(),
-                        'selected_token' => $subscription->getSelectedToken(),
-                        'masked_cc' => $paymentToken[$subscription->getSelectedToken()],
-                        'grand_total' => $orderData['grand_total'],
+                        'entity_id'               => $subscription->getId(),
+                        'customer_id'             => $subscription->getCustomerId(),
+                        'status'                  => $subscription->getStatus(),
+                        'next_order_date'         => $subscription->getNextOrderDate(),
+                        'recurring_profile_id'    => $subscription->getRecurringProfileId(),
+                        'updated_at'              => $subscription->getUpdatedAt(),
+                        'repeat_count_left'       => $subscription->getRepeatCountLeft(),
+                        'retry_count'             => $subscription->getRetryCount(),
+                        'selected_token'          => $subscription->getSelectedToken(),
+                        'masked_cc'               => $paymentToken[$subscription->getSelectedToken()],
+                        'grand_total'             => $orderData['grand_total'],
                         'last_order_increment_id' => $orderData['increment_id']
                     ];
                 }
@@ -217,18 +148,19 @@ class SubscriptionManagement implements SubscriptionManagementInterface
 
     /**
      * @param SearchCriteriaInterface $searchCriteria
+     *
      * @return void
      */
     private function filterByCustomer(SearchCriteriaInterface $searchCriteria): void
     {
-        $customerFilter = $this->filterBuilder
+        $customerFilter      = $this->filterBuilder
             ->setField('customer_id')
             ->setValue($this->userContext->getUserId())
             ->setConditionType('eq')
             ->create();
         $customerFilterGroup = $this->groupBuilder->addFilter($customerFilter)->create();
-        $groups = $searchCriteria->getFilterGroups();
-        $groups[] = $customerFilterGroup;
+        $groups              = $searchCriteria->getFilterGroups();
+        $groups[]            = $customerFilterGroup;
         $searchCriteria->setFilterGroups($groups);
     }
 
@@ -259,6 +191,7 @@ class SubscriptionManagement implements SubscriptionManagementInterface
 
     /**
      * @param SubscriptionInterface $subscription
+     *
      * @return bool
      */
     private function save(SubscriptionInterface $subscription): bool

@@ -5,20 +5,20 @@ namespace Paytrail\PaymentService\Block\Order;
 
 use Magento\Checkout\Model\Session as CheckoutSession;
 use Magento\Customer\Model\Session;
+use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Exception\NoSuchEntityException;
-use Magento\Framework\Message\ManagerInterface as MessageManagerInterface;
 use Magento\Framework\Phrase;
 use Magento\Framework\Serialize\SerializerInterface;
 use Magento\Framework\View\Element\Template;
 use Magento\Framework\View\Element\Template\Context;
 use Magento\Store\Model\StoreManagerInterface;
+use Magento\Theme\Block\Html\Pager;
 use Magento\Vault\Model\PaymentTokenRepository;
 use Paytrail\PaymentService\Api\Data\SubscriptionInterface;
 use Paytrail\PaymentService\Gateway\Config\Config;
 use Paytrail\PaymentService\Model\Recurring\TotalConfigProvider;
 use Paytrail\PaymentService\Model\ResourceModel\Subscription\Collection as SubscriptionCollection;
 use Paytrail\PaymentService\Model\ResourceModel\Subscription\CollectionFactory;
-use Paytrail\PaymentService\Model\Ui\ConfigProvider;
 
 class Payments extends Template
 {
@@ -159,9 +159,9 @@ class Payments extends Template
      *
      * @param string $recurringPaymentStatus
      *
-     * @return \Magento\Framework\Phrase|string
+     * @return Phrase|string
      */
-    public function getRecurringPaymentStatusName($recurringPaymentStatus)
+    public function getRecurringPaymentStatusName(string $recurringPaymentStatus): Phrase|string
     {
         switch ($recurringPaymentStatus) {
             case 'active':
@@ -185,7 +185,7 @@ class Payments extends Template
      *
      * @return string
      * @throws NoSuchEntityException
-     * @throws \Magento\Framework\Exception\LocalizedException
+     * @throws LocalizedException
      */
     public function getCurrentCurrency()
     {
@@ -195,11 +195,11 @@ class Payments extends Template
     /**
      * Get view url.
      *
-     * @param Subscription $recurringPayment
+     * @param SubscriptionInterface $recurringPayment
      *
      * @return string
      */
-    public function getViewUrl($recurringPayment)
+    public function getViewUrl(SubscriptionInterface $recurringPayment)
     {
         return $this->getUrl('sales/order/view', ['order_id' => $recurringPayment->getOrderId()]);
     }
@@ -208,14 +208,14 @@ class Payments extends Template
      * Prepare layout.
      *
      * @return $this|Payments
-     * @throws \Magento\Framework\Exception\LocalizedException
+     * @throws LocalizedException
      */
     protected function _prepareLayout()
     {
         parent::_prepareLayout();
         if ($this->getRecurringPayments()) {
             $pager = $this->getLayout()->createBlock(
-                \Magento\Theme\Block\Html\Pager::class,
+                Pager::class,
                 'checkout.order.recurring.payments.pager'
             )->setCollection(
                 $this->getRecurringPayments()
@@ -239,11 +239,11 @@ class Payments extends Template
     /**
      * Get stop payment url.
      *
-     * @param Subscription $recurringPayment
+     * @param SubscriptionInterface $recurringPayment
      *
      * @return string
      */
-    public function getStopPaymentUrl($recurringPayment)
+    public function getStopPaymentUrl(SubscriptionInterface $recurringPayment)
     {
         return $this->getUrl('paytrail/payments/stop', ['payment_id' => $recurringPayment->getId()]);
     }
@@ -251,9 +251,9 @@ class Payments extends Template
     /**
      * Get empty recurring payment message.
      *
-     * @return \Magento\Framework\Phrase
+     * @return Phrase
      */
-    public function getEmptyRecurringPaymentsMessage()
+    public function getEmptyRecurringPaymentsMessage(): Phrase
     {
         return __('You have no payments to display.');
     }
@@ -261,11 +261,11 @@ class Payments extends Template
     /**
      * Get credit card number.
      *
-     * @param Subscription $recurringPayment
+     * @param SubscriptionInterface $recurringPayment
      *
      * @return string
      */
-    public function getCardNumber($recurringPayment)
+    public function getCardNumber(SubscriptionInterface $recurringPayment): string
     {
         $token = $this->paymentTokenRepository->getById($recurringPayment->getSelectedToken());
         if ($token) {

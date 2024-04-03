@@ -25,6 +25,7 @@
     <type name="Paytrail\PaymentService\Model\ReceiptDataProvider">
         <arguments>
             <argument name="logger" xsi:type="object">Paytrail\PaymentService\Logger\PaytrailLogger</argument>
+            <argument name="session" xsi:type="object">Magento\Checkout\Model\Session\Proxy</argument>
         </arguments>
     </type>
 
@@ -528,7 +529,7 @@
                 type="Paytrail\PaymentService\Model\Token\CustomerTokensManagement"/>
 
     <!-- Plugins -->
-    <type name="Magento\Checkout\Model\Cart">
+    <type name="Magento\Quote\Model\Quote">
         <plugin name="prevent_different_scheduled_cart"
                 type="Paytrail\PaymentService\Plugin\PreventDifferentScheduledCart"/>
     </type>
@@ -571,6 +572,43 @@
     <type name="Paytrail\PaymentService\Block\Order\Payments">
         <arguments>
             <argument name="customerSession" xsi:type="object">Magento\Customer\Model\Session\Proxy</argument>
+            <argument name="checkoutSession" xsi:type="object">Magento\Checkout\Model\Session\Proxy</argument>
+        </arguments>
+    </type>
+    <type name="Paytrail\PaymentService\Controller\Card\Change">
+        <arguments>
+            <argument name="customerSession" xsi:type="object">Magento\Customer\Model\Session\Proxy</argument>
+        </arguments>
+    </type>
+    <type name="Paytrail\PaymentService\Controller\Payments\Stop">
+        <arguments>
+            <argument name="customerSession" xsi:type="object">Magento\Customer\Model\Session\Proxy</argument>
+        </arguments>
+    </type>
+    <type name="Paytrail\PaymentService\Controller\Redirect\PayAndAddCard">
+        <arguments>
+            <argument name="customerSession" xsi:type="object">Magento\Customer\Model\Session\Proxy</argument>
+            <argument name="checkoutSession" xsi:type="object">Magento\Checkout\Model\Session\Proxy</argument>
+        </arguments>
+    </type>
+    <type name="Paytrail\PaymentService\Controller\Tokenization\AddCard">
+        <arguments>
+            <argument name="customerSession" xsi:type="object">Magento\Customer\Model\Session\Proxy</argument>
+        </arguments>
+    </type>
+    <type name="Paytrail\PaymentService\Controller\Tokenization\SaveCard">
+        <arguments>
+            <argument name="customerSession" xsi:type="object">Magento\Customer\Model\Session\Proxy</argument>
+            <argument name="checkoutSession" xsi:type="object">Magento\Checkout\Model\Session\Proxy</argument>
+        </arguments>
+    </type>
+    <type name="Paytrail\PaymentService\Controller\Redirect\Index">
+        <arguments>
+            <argument name="checkoutSession" xsi:type="object">Magento\Checkout\Model\Session\Proxy</argument>
+        </arguments>
+    </type>
+    <type name="Paytrail\PaymentService\Model\Ui\ConfigProvider">
+        <arguments>
             <argument name="checkoutSession" xsi:type="object">Magento\Checkout\Model\Session\Proxy</argument>
         </arguments>
     </type>

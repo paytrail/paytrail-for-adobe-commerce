@@ -19,8 +19,8 @@ class Bill
     private $activeOrders;
 
     /**
-     * @param Subscription $recurringResource
      * @param OrderBiller $orderBiller
+     * @param ActiveOrderProvider $activeOrderProvider
      */
     public function __construct(
         OrderBiller $orderBiller,

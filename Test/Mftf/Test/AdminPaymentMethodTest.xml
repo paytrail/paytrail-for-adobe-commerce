@@ -1,0 +1,20 @@
+<tests xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:noNamespaceSchemaLocation="urn:magento:mftf:Test/etc/testSchema.xsd">
+    <test name="PaytrailPaymentMethodAvailableInAdmin">
+        <annotations>
+            <title value="Payment visible in admin panel"/>
+            <description
+                value="User can see Paytrail config in admin panel"/>
+            <severity value="CRITICAL"/>
+            <stories value="Payment Config"/>
+            <group value="paytrail"/>
+        </annotations>
+        <before>
+            <actionGroup ref="AdminLoginActionGroup" stepKey="loginGetFromGeneralFile"/>
+        </before>
+        <after>
+            <actionGroup ref="AdminLogoutActionGroup" stepKey="logout"/>
+        </after>
+        <actionGroup ref="AdminOpenConfigurationSalesPaymentMethodActionGroup" stepKey="goToPaymentConfig"/>
+    </test>
+</tests>
