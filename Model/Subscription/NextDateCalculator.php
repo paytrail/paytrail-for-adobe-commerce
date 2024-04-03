@@ -115,7 +115,7 @@ class NextDateCalculator
      * @return RecurringProfileInterface
      * @throws NoSuchEntityException
      */
-    private function getProfileById($profileId): \Paytrail\PaymentService\Api\Data\RecurringProfileInterface
+    private function getProfileById($profileId): RecurringProfileInterface
     {
         if (!isset($this->profiles[$profileId])) {
             $this->profiles[$profileId] = $this->profileRepo->get($profileId);
