@@ -5,6 +5,7 @@ namespace Paytrail\PaymentService\Gateway\Http\Client;
 use GuzzleHttp\Exception\RequestException;
 use Magento\Framework\Serialize\Serializer\Json;
 use Magento\Payment\Gateway\Http\ClientInterface;
+use Magento\Sales\Api\Data\OrderInterface;
 use Magento\Sales\Model\Order;
 use Paytrail\PaymentService\Logger\PaytrailLogger;
 use Paytrail\PaymentService\Model\Adapter\Adapter;
@@ -13,8 +14,6 @@ use Paytrail\SDK\Request\MitPaymentRequest;
 
 class TransactionTokenPaymentMit implements ClientInterface
 {
-
-
     /**
      * TransactionPayment constructor.
      *
@@ -27,17 +26,15 @@ class TransactionTokenPaymentMit implements ClientInterface
         private readonly Json $json,
         private readonly PaytrailLogger $log
     ) {
-
-    }//end __construct()
-
+    }
 
     /**
      * @inheritdoc
      *
      * @param  TransferInterface $transferObject
-     * @return array|void
+     * @return array
      */
-    public function placeRequest(TransferInterface $transferObject)
+    public function placeRequest(TransferInterface $transferObject): array
     {
         $request = $transferObject->getBody();
 
@@ -54,9 +51,7 @@ class TransactionTokenPaymentMit implements ClientInterface
         }
 
         return $response;
-
-    }//end placeRequest()
-
+    }
 
     /**
      * Payment function
@@ -65,7 +60,7 @@ class TransactionTokenPaymentMit implements ClientInterface
      * @param  Order             $order
      * @return array
      */
-    public function tokenPayment($paytrailPayment, $order): array
+    public function tokenPayment(MitPaymentRequest$paytrailPayment, OrderInterface $order): array
     {
         $response['data']  = null;
         $response['error'] = null;
@@ -123,8 +118,5 @@ class TransactionTokenPaymentMit implements ClientInterface
         }//end try
 
         return $response;
-
-    }//end tokenPayment()
-
-
-}//end class
+    }
+}
