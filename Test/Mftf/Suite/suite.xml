@@ -7,48 +7,6 @@
         <include>
             <group name="paytrail"/>
         </include>
-        <before>
-            <magentoCLI stepKey="EnablePaytrailPayment"
-                        command="config:set {{EnablePaytrailConfigData.path}} {{EnablePaytrailConfigData.value}}"/>
-            <magentoCLI stepKey="SetTestMerchantId"
-                        command="config:set payment/paytrail/merchant_id {{_CREDS.paytrail/payment_paytrail_merchant_id}}"/>
-            <magentoCLI stepKey="SetTestSecret"
-                        command="config:set payment/paytrail/merchant_secret {{_CREDS.paytrail/payment_paytrail_merchant_secret}}"/>
 
-            <!-- Set Currency options for Default Config -->
-            <magentoCLI command="config:set {{SetCurrencyEURBaseConfig.path}} {{SetCurrencyEURBaseConfig.value}}"
-                        stepKey="setCurrencyBaseEUR"/>
-            <magentoCLI
-                command="config:set {{SetAllowedCurrenciesConfigForUSD.path}} {{SetAllowedCurrenciesConfigForUSD.value}},{{SetAllowedCurrenciesConfigForEUR.value}}"
-                stepKey="setAllowedCurrencyEURandUSD"/>
-            <magentoCLI command="config:set {{SetDefaultCurrencyEURConfig.path}} {{SetDefaultCurrencyEURConfig.value}}"
-                        stepKey="setCurrencyDefaultEUR"/>
-
-            <createData entity="SimpleProduct2" stepKey="createSimpleProduct">
-                <field key="price">20</field>
-            </createData>
-            <!-- Reindex and flush cache -->
-            <actionGroup ref="CliIndexerReindexActionGroup" stepKey="reindex">
-                <argument name="indices" value=""/>
-            </actionGroup>
-            <actionGroup ref="CliCacheFlushActionGroup" stepKey="flushCache">
-                <argument name="tags" value=""/>
-            </actionGroup>
-        </before>
-        <after>
-            <magentoCLI stepKey="DisablePaytrailPayment"
-                        command="config:set {{DisablePaytrailConfigData.path}} {{DisablePaytrailConfigData.value}}"/>
-
-            <!-- Reset currency configurations -->
-            <magentoCLI command="config:set {{SetCurrencyUSDBaseConfig.path}} {{SetCurrencyUSDBaseConfig.value}}"
-                        stepKey="setCurrencyBaseUSD"/>
-            <magentoCLI command="config:set {{SetDefaultCurrencyUSDConfig.path}} {{SetDefaultCurrencyUSDConfig.value}}"
-                        stepKey="setCurrencyDefaultUSD"/>
-            <magentoCLI
-                command="config:set {{SetAllowedCurrenciesConfigForUSD.path}} {{SetAllowedCurrenciesConfigForUSD.value}}"
-                stepKey="setAllowedCurrencyUSD"/>
-
-            <deleteData createDataKey="createSimpleProduct" stepKey="deleteSimpleProduct"/>
-        </after>
     </suite>
 </suites>
