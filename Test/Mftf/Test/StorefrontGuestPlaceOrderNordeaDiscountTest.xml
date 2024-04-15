@@ -1,8 +1,8 @@
 <tests xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
        xsi:noNamespaceSchemaLocation="urn:magento:mftf:Test/etc/testSchema.xsd">
-    <test name="PaytrailGuestUserPlaceOrderNordea">
+    <test name="PaytrailGuestUserPlaceOrderNordeaDiscount">
         <annotations>
-            <title value="Place an order using Nordea"/>
+            <title value="Place an order using Nordea with 10€ discount"/>
             <description
                 value="User can go trough the checkout and place the order."/>
             <severity value="CRITICAL"/>
@@ -27,9 +27,25 @@
             <magentoCLI command="config:set {{SetDefaultCurrencyEURConfig.path}} {{SetDefaultCurrencyEURConfig.value}}"
                         stepKey="setCurrencyDefaultEUR"/>
 
+            <!-- Create 10€ discount sales rule -->
+            <createData entity="ApiSalesRule" stepKey="createCoupon10">
+                <field key="name">10€ discount</field>
+                <field key="discount_amount">10</field>
+                <field key="simple_action">cart_fixed</field>
+            </createData>
+
+            <!-- Create coupon DISCOUNT10 for the sales rule -->
+            <createData entity="ApiSalesRuleCoupon" stepKey="createCartPriceRuleCoupon">
+                <requiredEntity createDataKey="createCoupon10"/>
+                <field key="code" unique="suffix">DISCOUNT10_</field>
+            </createData>
+
+
+            <!-- Create  Simple Product -->
             <createData entity="SimpleProduct2" stepKey="createSimpleProduct">
                 <field key="price">20</field>
             </createData>
+
             <!-- Reindex and flush cache -->
             <magentoCLI command="indexer:reindex" stepKey="indexerReindx"/>
             <magentoCLI command="cache:flush" stepKey="flushCache"/>
@@ -49,6 +65,7 @@
                 command="config:set {{SetAllowedCurrenciesConfigForUSD.path}} {{SetAllowedCurrenciesConfigForUSD.value}}"
                 stepKey="setAllowedCurrencyUSD"/>
 
+            <deleteData createDataKey="createCoupon10" stepKey="deleteCoupon10"/>
             <deleteData createDataKey="createSimpleProduct" stepKey="deleteSimpleProduct"/>
         </after>
 
@@ -57,9 +74,20 @@
                   stepKey="navigateToSimpleProductPage"/>
         <waitForPageLoad stepKey="waitForSimpleProductPageLoad"/>
         <actionGroup ref="AddToCartFromStorefrontProductPageActionGroup"
-                     stepKey="addToCartSimpleProductFromStorefrontProductPage">
+                     stepKey="addToCartSimpleProductFromStorefrontProductPage1">
             <argument name="productName" value="$$createSimpleProduct.name$$"/>
         </actionGroup>
+
+        <actionGroup ref="AddToCartFromStorefrontProductPageActionGroup"
+                     stepKey="addToCartSimpleProductFromStorefrontProductPage2">
+            <argument name="productName" value="$$createSimpleProduct.name$$"/>
+        </actionGroup>
+
+        <actionGroup ref="AddToCartFromStorefrontProductPageActionGroup"
+                     stepKey="addToCartSimpleProductFromStorefrontProductPage3">
+            <argument name="productName" value="$$createSimpleProduct.name$$"/>
+        </actionGroup>
+
 
         <!-- Go to shopping cart -->
         <actionGroup ref="ClickViewAndEditCartFromMiniCartActionGroup" stepKey="goToShoppingCartFromMinicart"/>
@@ -70,6 +98,13 @@
             <argument name="customerAddressVar" value="US_Address_CA"/>
             <argument name="shippingMethod" value="Fixed"/>
         </actionGroup>
+
+        <!-- Add discount code -->
+        <click stepKey="clickToAddDiscount" selector="#block-discount-heading"/>
+        <fillField stepKey="fillDiscountCode" selector="#discount-code" userInput="$createCartPriceRuleCoupon.code$"/>
+        <actionGroup ref="StorefrontCheckoutClickApplyDiscountButtonActionGroup" stepKey="clickApplyDiscountButton"/>
+
+        <!-- Go to payment -->
         <actionGroup ref="CheckoutSelectPaytrailPaymentActionGroup" stepKey="selectPaytrailPayment"/>
         <click selector="//div[contains(@id, 'paytrail-payment-method-nordea')]" stepKey="clickOnNordea"/>
         <waitForPageLoad stepKey="waitForPageLoad"/>

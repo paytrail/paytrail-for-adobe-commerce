@@ -3,8 +3,10 @@
 <suites xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:noNamespaceSchemaLocation="urn:magento:mftf:Suite/etc/suiteSchema.xsd">
     <suite name="PaytrailSuite">
+
         <include>
             <group name="paytrail"/>
         </include>
+
     </suite>
 </suites>
