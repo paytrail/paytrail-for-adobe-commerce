@@ -9,6 +9,7 @@ use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Payment\Helper\Data as PaymentHelper;
 use Magento\Store\Model\StoreManagerInterface;
 use Paytrail\PaymentService\Gateway\Config\Config;
+use Paytrail\PaymentService\Model\Card\VaultConfig;
 use Paytrail\PaymentService\Model\Ui\DataProvider\PaymentProvidersData;
 
 class ConfigProvider implements ConfigProviderInterface
@@ -41,7 +42,8 @@ class ConfigProvider implements ConfigProviderInterface
         private Session               $checkoutSession,
         private Config                $gatewayConfig,
         private StoreManagerInterface $storeManager,
-        private PaymentProvidersData  $paymentProvidersData
+        private PaymentProvidersData  $paymentProvidersData,
+        private VaultConfig $vaultConfig
     ) {
         foreach ($this->methodCodes as $code) {
             $this->methods[$code] = $paymentHelper->getMethodInstance($code);
@@ -89,7 +91,8 @@ class ConfigProvider implements ConfigProviderInterface
                         'pay_and_addcard_redirect_url' => $this->gatewayConfig->getPayAndAddCardRedirectUrl(),
                         'credit_card_providers_ids' => array_shift($scheduledMethod)['providers'] ?? [],
                         'token_payment_redirect_url' => $this->gatewayConfig->getTokenPaymentRedirectUrl(),
-                        'default_success_page_url' => $this->gatewayConfig->getDefaultSuccessPageUrl()
+                        'default_success_page_url' => $this->gatewayConfig->getDefaultSuccessPageUrl(),
+                        'is_vault_for_paytrail' => $this->vaultConfig->isVaultForPaytralEnabled()
                     ]
                 ]
             ];
