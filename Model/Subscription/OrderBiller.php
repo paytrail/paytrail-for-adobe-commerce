@@ -6,6 +6,7 @@ use Magento\Framework\Exception\CouldNotSaveException;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Sales\Model\Order\Email\Sender\OrderSender;
 use Magento\Sales\Model\OrderRepository;
+use Magento\Sales\Model\Service\InvoiceService;
 use Paytrail\PaymentService\Api\SubscriptionLinkRepositoryInterface;
 use Paytrail\PaymentService\Api\SubscriptionRepositoryInterface;
 use Paytrail\PaymentService\Model\ResourceModel\Subscription as SubscriptionResource;
@@ -41,7 +42,7 @@ class OrderBiller
         private LoggerInterface                     $logger,
         private SubscriptionLinkRepositoryInterface $subscriptionLinkRepository,
         private OrderSender                         $orderSender,
-        private OrderRepository                     $orderRepository
+        private OrderRepository                     $orderRepository,
     ) {
     }
 
@@ -49,6 +50,7 @@ class OrderBiller
      * Bill orders by ID.
      *
      * @param int[] $orderIds
+     *
      * @return void
      * @throws \Magento\Framework\Exception\InputException
      * @throws \Magento\Framework\Exception\NoSuchEntityException
@@ -79,6 +81,7 @@ class OrderBiller
      * Send order confirmation email.
      *
      * @param string $subscriptionId
+     *
      * @return void
      * @throws \Magento\Framework\Exception\InputException
      * @throws \Magento\Framework\Exception\NoSuchEntityException
@@ -93,16 +96,19 @@ class OrderBiller
      * Validate token.
      *
      * @param Subscription $subscription
+     *
      * @return bool
      */
     private function validateToken($subscription)
     {
         $valid = true;
         if (!$subscription->getData('token_active') || !$subscription->getData('token_visible')) {
-            $this->logger->warning(\__(
-                'Unable to charge subscription id: %id token is invalid',
-                ['id' => $subscription->getId()]
-            ));
+            $this->logger->warning(
+                \__(
+                    'Unable to charge subscription id: %id token is invalid',
+                    ['id' => $subscription->getId()]
+                )
+            );
             $this->paymentCount->reduceFailureRetryCount($subscription);
 
             $valid = false;
@@ -115,6 +121,7 @@ class OrderBiller
      * Create MIT payment request.
      *
      * @param Subscription $subscription Must include order id of the subscription and public hash of the vault token.
+     *
      * @return bool
      * For subscription param @see Collection::getBillingCollectionByOrderIds
      */
@@ -127,10 +134,12 @@ class OrderBiller
                 $subscription->getData('token')
             );
         } catch (LocalizedException $e) {
-            $this->logger->error(\__(
-                'Recurring Payment: Unable to create a charge to customer token error: %error',
-                ['error' => $e->getMessage()]
-            ));
+            $this->logger->error(
+                \__(
+                    'Recurring Payment: Unable to create a charge to customer token error: %error',
+                    ['error' => $e->getMessage()]
+                )
+            );
         }
         return $paymentSuccess;
     }
@@ -139,6 +148,7 @@ class OrderBiller
      * Update next order date.
      *
      * @param Subscription $subscription
+     *
      * @return void
      * @throws \Magento\Framework\Exception\NoSuchEntityException
      */
@@ -158,6 +168,7 @@ class OrderBiller
      * Save subscription.
      *
      * @param Subscription $subscription
+     *
      * @return void
      */
     private function saveSubscription(Subscription $subscription): void
@@ -165,14 +176,16 @@ class OrderBiller
         try {
             $this->subscriptionRepository->save($subscription);
         } catch (CouldNotSaveException $e) {
-            $this->logger->critical(\__(
-                'Recurring payment: 
+            $this->logger->critical(
+                \__(
+                    'Recurring payment:
                     Cancelling subscription %id, unable to update subscription\'s next order date: %error',
-                [
-                    'id' => $subscription->getId(),
-                    'error' => $e->getMessage()
-                ]
-            ));
+                    [
+                        'id'    => $subscription->getId(),
+                        'error' => $e->getMessage()
+                    ]
+                )
+            );
 
             // Prevent subscription from being rebilled over and over again
             // if for some reason the subscription is unable to be saved.

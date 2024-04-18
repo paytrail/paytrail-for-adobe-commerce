@@ -2,37 +2,40 @@
 
 namespace Paytrail\PaymentService\Controller\Adminhtml\Profile;
 
-use Magento\Backend\App\Action;
 use Magento\Backend\App\Action\Context;
 use Magento\Framework\App\Action\HttpPostActionInterface;
 use Magento\Framework\Controller\ResultFactory;
 use Paytrail\PaymentService\Api\RecurringProfileRepositoryInterface;
+use Magento\Framework\App\ResponseInterface;
+use Magento\Framework\Controller\ResultInterface;
 
-class Delete extends Action implements HttpPostActionInterface
+class Delete implements HttpPostActionInterface
 {
-    /** @var RecurringProfileRepositoryInterface  */
-    private $profileRepo;
-
+    /**
+     * @param Context $context
+     * @param RecurringProfileRepositoryInterface $profileRepo
+     */
     public function __construct(
-        Context $context,
-        RecurringProfileRepositoryInterface $profileRepository
+        private Context                             $context,
+        private RecurringProfileRepositoryInterface $profileRepo
     ) {
-        parent::__construct($context);
-        $this->profileRepo = $profileRepository;
     }
 
+    /**
+     * @return ResponseInterface|ResultInterface
+     */
     public function execute()
     {
-        $id = $this->getRequest()->getParam('id');
-        $resultRedirect = $this->resultFactory->create(ResultFactory::TYPE_REDIRECT);
+        $id             = $this->context->getRequest()->getParam('id');
+        $resultRedirect = $this->context->getResultFactory()->create(ResultFactory::TYPE_REDIRECT);
 
         try {
             $profile = $this->profileRepo->get($id);
             $this->profileRepo->delete($profile);
             $resultRedirect->setPath('recurring_payments/profile');
-            $this->messageManager->addSuccessMessage('Recurring profile deleted');
+            $this->context->getMessageManager()->addSuccessMessage('Recurring profile deleted');
         } catch (\Throwable $e) {
-            $this->messageManager->addErrorMessage($e->getMessage());
+            $this->context->getMessageManager()->addErrorMessage($e->getMessage());
             $resultRedirect->setPath('recurring_payments/profile/edit', ['id' => $id]);
         }
 

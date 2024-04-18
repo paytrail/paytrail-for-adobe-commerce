@@ -29,7 +29,7 @@ class ProcessPayment
         private ReceiptDataProvider     $receiptDataProvider,
         private CartRepositoryInterface $cartRepository,
         private Config                  $gatewayConfig,
-        protected FinnishReferenceNumber $finnishReferenceNumber
+        private FinnishReferenceNumber $finnishReferenceNumber
     ) {
     }
 
@@ -84,7 +84,7 @@ class ProcessPayment
      * @return array
      * @throws \Magento\Framework\Exception\LocalizedException
      */
-    protected function processPayment($params, $session, $orderNo)
+    private function processPayment($params, $session, $orderNo)
     {
         /** @var array $errors */
         $errors = [];

@@ -88,7 +88,7 @@ class NotifyTest extends TestCase
     /**
      * @return \Magento\Sales\Model\ResourceModel\Order\Collection
      */
-    protected function validateOrders(): \Magento\Sales\Model\ResourceModel\Order\Collection
+    private function validateOrders(): \Magento\Sales\Model\ResourceModel\Order\Collection
     {
         /** @var \Magento\Sales\Model\ResourceModel\Order\Collection $orders */
         $orders = $this->orderCollection->create();

@@ -79,6 +79,12 @@ define(
                     }
                     return false;
                 },
+                isVaultForCardPaymentEnabled: function () {
+                    if (checkoutConfig[self.payMethod].is_vault_for_paytrail) {
+                        return true;
+                    }
+                    return false;
+                },
                 setPaymentMethodId: function (paymentMethod) {
                     self.selectedToken(0);
                     self.selectedPaymentMethodId(paymentMethod.id);
@@ -181,7 +187,7 @@ define(
                 enablePayAndAddCardButton: function () {
                     const foundElements =
                         checkoutConfig[self.payMethod].credit_card_providers_ids.filter(element => element['id'] === self.selectedPaymentMethodId());
-                    if (foundElements.length && self.isLoggedIn()) {
+                    if (foundElements.length && self.isLoggedIn() && this.isVaultForCardPaymentEnabled()) {
                         document.getElementById('pay_and_add_card_button').style.display = 'block';
 
                         return true;

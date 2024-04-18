@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.0] - 2024-04-18
+
+- Fix for recurring payments 
+- Refactoring related to Adobe App Assurance Program
+- Hide pay and add card buttons when payment method is not available
+- fix for issue https://github.com/paytrail/paytrail-for-adobe-commerce/issues/81
+- Added module MFTF tests
+
 ## [2.0.4] - 2024-03-14
 
 - Fix empty array issue when credit cards payments are disabled on merchant panel

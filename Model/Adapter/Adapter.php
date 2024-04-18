@@ -12,40 +12,20 @@ class Adapter
     /**
      * @var string MODULE_CODE
      */
-    const MODULE_CODE = 'Paytrail_PaymentService';
+    const MODULE_CODE   = 'Paytrail_PaymentService';
     const CC_VAULT_CODE = 'paytrail_cc_vault';
 
-    /**
-     * @var int
-     */
-    protected $merchantId;
-    /**
-     * @var string
-     */
-    protected $merchantSecret;
-
-    /**
-     * @var ModuleListInterface
-     */
-    private $moduleList;
-
-    /**
-     * @var Config
-     */
-    private $gatewayConfig;
 
     /**
      * Adapter constructor.
      *
-     * @param Config              $gatewayConfig
+     * @param Config $gatewayConfig
      * @param ModuleListInterface $moduleList
      */
     public function __construct(
-        Config $gatewayConfig,
-        ModuleListInterface $moduleList
+        private Config              $gatewayConfig,
+        private ModuleListInterface $moduleList
     ) {
-        $this->gatewayConfig = $gatewayConfig;
-        $this->moduleList    = $moduleList;
     }
 
     /**
@@ -69,14 +49,16 @@ class Adapter
                 throw new LocalizedException(__('Paytrail\SDK\Client does not exist'));
             }
         } catch (\Error $e) {
-            throw new LocalizedException(__('An error has occured during checkout process, please contact the store owners'));
+            throw new LocalizedException(
+                __('An error has occured during checkout process, please contact the store owners')
+            );
         }
     }
 
     /**
      * @return string module version in format x.x.x
      */
-    protected function getExtensionVersion()
+    private function getExtensionVersion()
     {
         return $this->moduleList->getOne(self::MODULE_CODE)['setup_version'];
     }

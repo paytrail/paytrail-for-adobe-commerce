@@ -5,36 +5,39 @@ namespace Paytrail\PaymentService\Controller\Tokenization;
 use Magento\Checkout\Model\Session;
 use Magento\Customer\Model\Session as CustomerSession;
 use Magento\Framework\App\Action\Context;
+use Magento\Framework\App\ActionInterface;
 use Magento\Framework\App\ResponseInterface;
 use Magento\Framework\Encryption\EncryptorInterface;
+use Magento\Framework\Exception\AlreadyExistsException;
+use Magento\Framework\Exception\NotFoundException;
 use Magento\Framework\Serialize\SerializerInterface;
+use Magento\Payment\Gateway\Command\CommandException;
 use Magento\Payment\Gateway\Command\CommandManagerPoolInterface;
 use Magento\Vault\Api\PaymentTokenManagementInterface;
 use Magento\Vault\Api\PaymentTokenRepositoryInterface;
 use Magento\Vault\Model\PaymentTokenFactory;
+use Paytrail\PaymentService\Exceptions\CheckoutException;
 use Paytrail\PaymentService\Gateway\Config\Config;
 use Paytrail\PaymentService\Model\Receipt\ProcessService;
 use Paytrail\SDK\Model\Token\Card;
 use Paytrail\SDK\Response\GetTokenResponse;
 use Psr\Log\LoggerInterface;
 
-class SaveCard extends \Magento\Framework\App\Action\Action
+class SaveCard implements ActionInterface
 {
-    /**
-     * @var $errorMsg
-     */
-    protected $errorMsg = null;
+
+    private $errorMsg = null;
 
     /**
      * @var string[]
      */
-    protected $cardTypes = [
-        'Visa' => 'VI',
+    private $cardTypes = [
+        'Visa'       => 'VI',
         'MasterCard' => 'MC',
-        'Discover' => 'DI',
-        'Amex' => 'AE',
-        'Maestro' => 'SM',
-        'Solo' => 'SO'
+        'Discover'   => 'DI',
+        'Amex'       => 'AE',
+        'Maestro'    => 'SM',
+        'Solo'       => 'SO'
     ];
 
     /**
@@ -54,41 +57,42 @@ class SaveCard extends \Magento\Framework\App\Action\Action
      * @param ProcessService $processService
      */
     public function __construct(
-        Context $context,
-        private CommandManagerPoolInterface $commandManagerPool,
-        private CustomerSession $customerSession,
-        private PaymentTokenFactory $paymentTokenFactory,
-        private SerializerInterface $jsonSerializer,
-        private EncryptorInterface $encryptor,
+        private Context                         $context,
+        private CommandManagerPoolInterface     $commandManagerPool,
+        private CustomerSession                 $customerSession,
+        private PaymentTokenFactory             $paymentTokenFactory,
+        private SerializerInterface             $jsonSerializer,
+        private EncryptorInterface              $encryptor,
         private PaymentTokenRepositoryInterface $tokenRepository,
-        private LoggerInterface $logger,
-        private Config $gatewayConfig,
+        private LoggerInterface                 $logger,
+        private Config                          $gatewayConfig,
         private PaymentTokenManagementInterface $paymentTokenManagementInterface,
-        private Session $checkoutSession,
-        private ProcessService $processService
+        private Session                         $checkoutSession,
+        private ProcessService                  $processService
     ) {
-        parent::__construct($context);
     }
 
     /**
-     * Execute
+     * @return ResponseInterface
+     * @throws CheckoutException
+     * @throws CommandException
+     * @throws NotFoundException
      */
     public function execute()
     {
         /** @var string $tokenizationId */
-        $tokenizationId = $this->getRequest()->getParam('checkout-tokenization-id');
+        $tokenizationId = $this->context->getRequest()->getParam('checkout-tokenization-id');
 
         if (!$tokenizationId || $tokenizationId === '') {
             $this->checkoutSession->setData(
                 'paytrail_previous_error',
                 __('Card saving has been aborted. Please contact customer service.')
             );
-            $this->redirect();
-            return;
+            return $this->redirect();
         }
         $responseData = $this->getResponseData($tokenizationId);
         try {
-            $customerId = $this->customerSession->getCustomerId();
+            $customerId   = $this->customerSession->getCustomerId();
             $paymentToken = $this->paymentTokenManagementInterface->getByPublicHash(
                 $this->createPublicHash($responseData->getCard(), $customerId),
                 $customerId
@@ -102,29 +106,31 @@ class SaveCard extends \Magento\Framework\App\Action\Action
             } else {
                 $this->saveToken($responseData);
             }
-        } catch (\Magento\Framework\Exception\AlreadyExistsException $e) {
-            $this->messageManager->addErrorMessage('This card has already been added to your vault');
+        } catch (AlreadyExistsException $e) {
+            $this->context->getMessageManager()->addErrorMessage('This card has already been added to your vault');
             $this->logger->error($e->getMessage());
-            $this->redirect();
-            return;
+            return $this->redirect();
         }
 
         // success
         $this->checkoutSession->setData('paytrail_previous_success', __('Card added successfully'));
-        $this->redirect();
+        return $this->redirect();
     }
 
     /**
      * Get token response data.
      *
      * @param string $tokenizationId
+     *
      * @return mixed
-     * @throws \Paytrail\PaymentService\Exceptions\CheckoutException
+     * @throws CheckoutException
+     * @throws NotFoundException
+     * @throws CommandException
      */
-    protected function getResponseData($tokenizationId)
+    private function getResponseData($tokenizationId)
     {
         $commandExecutor = $this->commandManagerPool->get('paytrail');
-        $response = $commandExecutor->executeByCode(
+        $response        = $commandExecutor->executeByCode(
             'token_request',
             null,
             [
@@ -150,18 +156,21 @@ class SaveCard extends \Magento\Framework\App\Action\Action
     private function saveToken($responseData)
     {
         if (!$responseData) {
-            $this->messageManager->addErrorMessage('There is a problem communicating with the provider');
+            $this->context->getMessageManager()->addErrorMessage('There is a problem communicating with the provider');
             $this->logger->error('There is a problem communicating with the provider. Response data: ' . $responseData);
-            $this->_redirect('checkout', ['_fragment' => 'payment']);
-            return;
+            $this->context->getRedirect()->redirect(
+                $this->context->getResponse(),
+                'checkout',
+                ['_fragment' => 'payment']
+            );
+            return $this->context->getResponse();
         }
-        /** @var string $gatewayToken */
+
         $gatewayToken = $responseData->getToken();
-        /** @var Card $cardData */
-        $cardData = $responseData->getCard();
+        $cardData     = $responseData->getCard();
 
         $vaultPaymentToken = $this->paymentTokenFactory->create(PaymentTokenFactory::TOKEN_TYPE_CREDIT_CARD);
-        $customerId = $this->customerSession->getCustomer()->getId();
+        $customerId        = $this->customerSession->getCustomer()->getId();
         $vaultPaymentToken->setCustomerId($customerId);
         $vaultPaymentToken->setPaymentMethodCode($this->gatewayConfig->getCcVaultCode());
         $vaultPaymentToken->setExpiresAt(
@@ -169,8 +178,8 @@ class SaveCard extends \Magento\Framework\App\Action\Action
         );
         $tokenDetails = $this->jsonSerializer->serialize(
             [
-                'type' => $this->cardTypes[$cardData->getType()],
-                'maskedCC' => $cardData->getPartialPan(),
+                'type'           => $this->cardTypes[$cardData->getType()],
+                'maskedCC'       => $cardData->getPartialPan(),
                 'expirationDate' => $cardData->getExpireYear() . '/' . $cardData->getExpireMonth()
             ]
         );
@@ -185,14 +194,15 @@ class SaveCard extends \Magento\Framework\App\Action\Action
      *
      * @param Card $addingCard
      * @param string $customerId
+     *
      * @return string
      */
     private function createPublicHash($addingCard, $customerId)
     {
         $tokenDetails = $this->jsonSerializer->serialize(
             [
-                'type' => $this->cardTypes[$addingCard->getType()],
-                'maskedCC' => $addingCard->getPartialPan(),
+                'type'           => $this->cardTypes[$addingCard->getType()],
+                'maskedCC'       => $addingCard->getPartialPan(),
                 'expirationDate' => $addingCard->getExpireYear() . '/' . $addingCard->getExpireMonth()
             ]
         );
@@ -209,6 +219,7 @@ class SaveCard extends \Magento\Framework\App\Action\Action
      *
      * @param string $expMonth
      * @param string $expYear
+     *
      * @return string
      */
     private function getExpiresDate($expMonth, $expYear): string
@@ -227,12 +238,23 @@ class SaveCard extends \Magento\Framework\App\Action\Action
      *
      * @return ResponseInterface
      */
-    protected function redirect(): ResponseInterface
+    private function redirect(): ResponseInterface
     {
-        $customRedirectUrl = $this->_request->getParam('custom_redirect_url');
+        $customRedirectUrl = $this->context->getRequest()->getParam('custom_redirect_url');
 
-        return $customRedirectUrl
-            ? $this->_redirect($customRedirectUrl)
-            : $this->_redirect('checkout', ['_fragment' => 'payment']);
+        if ($customRedirectUrl) {
+            $this->context->getRedirect()->redirect(
+                $this->context->getResponse(),
+                $customRedirectUrl
+            );
+        } else {
+            $this->context->getRedirect()->redirect(
+                $this->context->getResponse(),
+                'checkout',
+                ['_fragment' => 'payment']
+            );
+        }
+
+        return $this->context->getResponse();
     }
 }

@@ -50,7 +50,7 @@ class PaymentMethodProvider implements ClientInterface
      * @param array $request
      * @return array
      */
-    protected function getPaymentMethods($request)
+    private function getPaymentMethods($request)
     {
         $response["data"] = null;
         $response["error"] = null;
@@ -61,9 +61,8 @@ class PaymentMethodProvider implements ClientInterface
             $this->log->debugLog(
                 'request',
                 \sprintf(
-                    'Creating %s request to Paytrail API %s',
-                    'payment_providers',
-                    isset($order) ? 'With order id: ' . $order->getId() : ''
+                    'Creating %s request to Paytrail API',
+                    'payment_providers'
                 )
             );
 

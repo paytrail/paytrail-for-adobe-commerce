@@ -13,11 +13,6 @@ class Subscription extends AbstractDb
     public const PAYTRAIL_SUBSCRIPTIONS_TABLENAME = 'paytrail_subscriptions';
 
     /**
-     * @var string
-     */
-    protected $_eventPrefix = 'paytrail_subscriptions';
-
-    /**
      * Subscription constructor.
      *
      * @return void
@@ -159,7 +154,7 @@ class Subscription extends AbstractDb
             []
         );
         $select->where(
-            'so.grand_total != 0 
+            'so.grand_total != 0
             AND so.grand_total = so.total_paid'
         );
 

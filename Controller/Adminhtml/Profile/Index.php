@@ -3,11 +3,21 @@
 namespace Paytrail\PaymentService\Controller\Adminhtml\Profile;
 
 use Magento\Backend\App\Action;
+use Magento\Backend\App\Action\Context;
+use Magento\Backend\Model\View\Result\Page;
 use Magento\Framework\App\Action\HttpGetActionInterface;
 use Magento\Framework\App\ResponseInterface;
 
-class Index extends Action implements HttpGetActionInterface
+class Index implements HttpGetActionInterface
 {
+    /**
+     * @param Context $context
+     */
+    public function __construct(
+        private Context $context
+    ) {
+    }
+
     public function execute()
     {
         $page = $this->initialize();
@@ -18,8 +28,8 @@ class Index extends Action implements HttpGetActionInterface
 
     private function initialize()
     {
-        /** @var \Magento\Backend\Model\View\Result\Page $resultPage */
-        $resultPage = $this->resultFactory->create(\Magento\Framework\Controller\ResultFactory::TYPE_PAGE);
+        $resultPage = $this->context->getResultFactory()
+            ->create(\Magento\Framework\Controller\ResultFactory::TYPE_PAGE);
         $resultPage->setActiveMenu('Magento_Sales::sales_order');
 
         return $resultPage;
