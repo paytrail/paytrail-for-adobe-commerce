@@ -1,8 +1,8 @@
 <tests xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
        xsi:noNamespaceSchemaLocation="urn:magento:mftf:Test/etc/testSchema.xsd">
-    <test name="PaytrailGuestUserPlaceOrderNordea">
+    <test name="PaytrailLoggedinUserPlaceOrderNordea">
         <annotations>
-            <title value="Place an order using Nordea"/>
+            <title value="Logged in user places an order using Nordea"/>
             <description
                 value="User can go trough the checkout and place the order."/>
             <severity value="CRITICAL"/>
@@ -34,6 +34,11 @@
             <magentoCLI command="indexer:reindex" stepKey="indexerReindx"/>
             <magentoCLI command="cache:flush" stepKey="flushCache"/>
             <magentoCLI command="config:show" stepKey="showConfigToWarmupCache"/>
+
+            <createData entity="Simple_US_Customer" stepKey="createCustomer">
+                <field key="firstname">John1</field>
+                <field key="lastname">Doe1</field>
+            </createData>
         </before>
 
         <after>
@@ -50,8 +55,13 @@
                 stepKey="setAllowedCurrencyUSD"/>
 
             <deleteData createDataKey="createSimpleProduct" stepKey="deleteSimpleProduct"/>
+            <deleteData createDataKey="createCustomer" stepKey="deleteCustomer"/>
+
         </after>
 
+        <actionGroup ref="LoginToStorefrontActionGroup" stepKey="customerLogin">
+            <argument name="Customer" value="$$createCustomer$$"/>
+        </actionGroup>
         <!-- Add Simple Product to cart -->
         <amOnPage url="{{StorefrontProductPage.url($$createSimpleProduct.custom_attributes[url_key]$$)}}"
                   stepKey="navigateToSimpleProductPage"/>
@@ -65,11 +75,9 @@
         <actionGroup ref="ClickViewAndEditCartFromMiniCartActionGroup" stepKey="goToShoppingCartFromMinicart"/>
         <actionGroup ref="StorefrontClickProceedToCheckoutActionGroup" stepKey="goToCheckout"/>
         <waitForPageLoad stepKey="waitForCheckoutPageLoad2"/>
-        <actionGroup ref="GuestCheckoutFillingShippingSectionActionGroup" stepKey="fillOrderShippingInfo2">
-            <argument name="customerVar" value="Simple_US_Customer_CA"/>
-            <argument name="customerAddressVar" value="US_Address_CA"/>
-            <argument name="shippingMethod" value="Fixed"/>
-        </actionGroup>
+        <actionGroup ref="CheckoutSelectFlatRateShippingMethodActionGroup" stepKey="selectFlatrate" />
+        <actionGroup ref="StorefrontGuestCheckoutProceedToPaymentStepActionGroup" stepKey="proceedToPaymentStep"/>
+
         <actionGroup ref="CheckoutSelectPaytrailPaymentActionGroup" stepKey="selectPaytrailPayment"/>
         <click selector="//div[contains(@id, 'paytrail-payment-method-nordea')]" stepKey="clickOnNordea"/>
         <waitForPageLoad stepKey="waitForPageLoad"/>
@@ -82,7 +90,7 @@
         <seeCurrentUrlMatches regex="~\//epmt.nordea.fi/~" stepKey="assertNordeaRedirect"/>
         <!-- click on simulate success -->
         <click selector="//a[contains(@href, 'nordea/success')]" stepKey="clickNordeaSimulateSuccess"/>
-
-        <waitForElementVisible selector="{{CheckoutSuccessMainSection.orderNumber}}" stepKey="waitForOrderNumber"/>
+        <!-- see success message -->
+        <see userInput="Thank you for your purchase!" stepKey="seeSuccessMessage"/>
     </test>
 </tests>
