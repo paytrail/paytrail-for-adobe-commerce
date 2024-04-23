@@ -62,6 +62,8 @@ class Config extends \Magento\Payment\Gateway\Config\Config
     public const PAYTRAIL_API_PAYMENT_STATUS_DELAYED = 'delayed';
     public const PAYTRAIL_API_PAYMENT_STATUS_FAIL    = 'fail';
 
+    public const APPLE_PAY_PAYMENT_CODE = 'applepay';
+
     /**
      * @var array
      */
