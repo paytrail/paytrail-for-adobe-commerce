@@ -94,7 +94,7 @@ class Index implements ActionInterface
                     return $resultJson->setData([
                         'success' => true,
                         'applePay' => true,
-                        'customProviders' => $paytrailPayment->getCustomProvider()
+                        'customProviders' => $paytrailPayment->getCustomProviders()
                     ]);
                 }
 
