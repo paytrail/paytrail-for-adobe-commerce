@@ -613,7 +613,7 @@ class Config extends \Magento\Payment\Gateway\Config\Config
     }
 
     /**
-     * Will creating a shipment to an order activate the order's invoice.
+     * Will creating a shipment to an order activate the order's invoice. test chanve
      *
      * @param null|int|string $storeId
      *
