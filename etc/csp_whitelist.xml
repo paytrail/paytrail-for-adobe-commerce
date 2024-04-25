@@ -29,5 +29,10 @@
                 <value id="paymenthighway" type="host">v1.api.paymenthighway.io</value>
             </values>
         </policy>
+        <policy id="script-src">
+            <values>
+                <value id="paytrail-form" type="hash" algorithm="sha256">nyuJ902j4bh+Bk201CS4WCVJJWHk9Pd0Qy4EZla4CeA=</value>
+            </values>
+        </policy>
     </policies>
 </csp_whitelist>
