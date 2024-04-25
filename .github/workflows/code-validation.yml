@@ -43,7 +43,7 @@ jobs:
   validate-php:
     runs-on: ubuntu-latest
 
-    name: Run php code validation
+    name: Run php code validation and Unit tests
 
     needs: changed-files
 
@@ -96,3 +96,8 @@ jobs:
         run: |
           vendor/bin/phpcs --config-set installed_paths ../../magento/magento-coding-standard/,../../phpcompatibility/php-compatibility
           vendor/bin/phpcs --standard=Magento2 -q --report=checkstyle ${{needs.changed-files.outputs.php}} | cs2pr --graceful-warnings
+
+      - name: Run Unit test
+        run: |
+          vendor/bin/phpunit Test/Unit/Model/ | cs2pr --graceful-warnings
+
