@@ -49,7 +49,6 @@
             <!-- Reindex and flush cache -->
             <magentoCLI command="indexer:reindex" stepKey="indexerReindx"/>
             <magentoCLI command="cache:flush" stepKey="flushCache"/>
-            <magentoCLI command="config:show" stepKey="showConfigToWarmupCache"/>
         </before>
 
         <after>
