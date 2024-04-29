@@ -24,9 +24,6 @@
             <!-- ko template: getTemplate() --><!-- /ko -->
             <!--/ko-->
         </div>
-        <div class="paytrail-payment-terms-container">
-            <span data-bind="html: getTerms()"></span>
-        </div>
 
         <div class="paytrail-payment-methods">
             <!-- Collapsible elements for payment groups-->
@@ -116,6 +113,9 @@
                 </div>
                 <!-- /ko -->
             </div>
+        </div>
+        <div class="paytrail-payment-terms-container">
+            <span data-bind="html: getTerms()"></span>
         </div>
         <div class="paytrail-agreements-block">
             <!-- ko foreach: $parent.getRegion('before-place-order') -->
