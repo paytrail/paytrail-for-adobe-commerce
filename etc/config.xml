@@ -49,8 +49,8 @@
           <payment_group_highlight_bg>#ffffff</payment_group_highlight_bg>
           <payment_group_highlight_text>#000000</payment_group_highlight_text>
           <payment_group_hover>#ffffff</payment_group_hover>
-          <payment_method_highlight>#007b90</payment_method_highlight>
-          <payment_method_hover>#007b90</payment_method_hover>
+          <payment_method_highlight>#6f6f6f</payment_method_highlight>
+          <payment_method_hover>#6f6f6f</payment_method_hover>
           <advanced_paytrail_personalization>
             <additional_css></additional_css>
           </advanced_paytrail_personalization>
