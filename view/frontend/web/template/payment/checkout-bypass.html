@@ -24,9 +24,6 @@
             <!-- ko template: getTemplate() --><!-- /ko -->
             <!--/ko-->
         </div>
-        <div class="paytrail-payment-terms-container">
-            <span data-bind="html: getTerms()"></span>
-        </div>
 
         <div class="paytrail-payment-methods">
             <!-- Collapsible elements for payment groups-->
@@ -36,21 +33,8 @@
                 <!-- ko foreach:  { data: getMethodGroups(), as: 'methodGroup' } -->
                 <div class='paytrail-group-collapsible' data-bind="attr: {id: methodGroup['id']}"
                      data-role='collapsible'>
-                    <div class="paytrail-group-header-wrapper" data-role="trigger">
-                        <div class="paytrail-group-title">
-                            <!-- ko if: $parent.getGroupIcon(methodGroup['id']) -->
-                            <img class="paytrail-group-logo"
-                                 data-bind="attr: {src: $parent.getGroupIcon(methodGroup['id'])}"/>
-                            <!--/ko-->
-                            <span data-bind="text: name"></span>
-                        </div>
-                        <div class="paytrail-group-method-list">
-                            <ul>
-                                <!-- ko foreach: methodGroup['providers'], as: 'paymentMethod' -->
-                                <li data-bind="text: name"></li>
-                                <!--/ko-->
-                            </ul>
-                        </div>
+                    <div class="paytrail-group-title">
+                        <span data-bind="text: name"></span>
                     </div>
                 </div>
                 <div class="paytrail-group-wrapper" data-role="content">
@@ -116,6 +100,9 @@
                 </div>
                 <!-- /ko -->
             </div>
+        </div>
+        <div class="paytrail-payment-terms-container">
+            <span data-bind="html: getTerms()"></span>
         </div>
         <div class="paytrail-agreements-block">
             <!-- ko foreach: $parent.getRegion('before-place-order') -->
