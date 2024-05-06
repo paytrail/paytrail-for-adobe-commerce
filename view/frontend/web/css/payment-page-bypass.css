@@ -88,10 +88,6 @@
   padding: 5px 10px;
 }
 
-.paytrail-payment-methods {
-  margin-bottom: 20px;
-}
-
 .paytrail-payment-methods:after {
   content: "";
   display: table;
