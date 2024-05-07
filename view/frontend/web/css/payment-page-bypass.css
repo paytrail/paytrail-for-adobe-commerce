@@ -28,6 +28,7 @@
   flex-wrap: nowrap;
   align-items: center;
   max-width: 60%;
+  margin: 1% 0% 2%;
 }
 
 .paytrail-group-title span {
@@ -88,6 +89,8 @@
   box-sizing: border-box;
   text-align: center;
   padding: 5px 10px;
+  background-color: #f0f0f0;
+  box-shadow: 2px 3px #c2c2c2;
 }
 
 .paytrail-payment-methods:after {
