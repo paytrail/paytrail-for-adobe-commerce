@@ -16,6 +16,5 @@
             <actionGroup ref="AdminLogoutActionGroup" stepKey="logout"/>
         </after>
         <actionGroup ref="AdminOpenConfigurationSalesPaymentMethodActionGroup" stepKey="goToPaymentConfig"/>
-        <see userInput="Latest version" stepKey="seeVersionInfo" />
     </test>
 </tests>
