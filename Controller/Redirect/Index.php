@@ -181,7 +181,9 @@ class Index implements ActionInterface
     }
 
     /**
-     * @param $inputs
+     * GetInputs function.
+     *
+     * @param array $inputs
      *
      * @return mixed
      */
