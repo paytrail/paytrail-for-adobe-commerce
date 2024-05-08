@@ -362,10 +362,12 @@ define(
                                                 label: 'Proceed to Apple Pay',
                                                 responsive: true,
                                                 innerScroll: true,
-                                                clickableOverlay: false,
+                                                clickableOverlay: true,
                                                 opened: function ($Event) {
-                                                    $('.modal-header', $Event.srcElement).hide();
-                                                    $('.modal-content', $Event.srcElement).hide();
+                                                    $('.modal-header', $Event.srcElement).addClass('apple-pay-popup-head');
+                                                    $('.modal-content', $Event.srcElement).addClass('apple-pay-popup-cont');
+                                                    $('.modal-footer', $Event.srcElement).addClass('apple-pay-popup-foot');
+                                                    $('.modal-inner-wrap', $Event.srcElement).addClass('apple-pay-popup-wrap');
                                                 },
                                                 buttons: [{
                                                     class: 'apple-pay-popup-button',

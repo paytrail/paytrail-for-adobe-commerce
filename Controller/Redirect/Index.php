@@ -117,21 +117,6 @@ class Index implements ActionInterface
 
                 $formParams = $this->providerForm->getFormParams($paytrailPayment, $selectedPaymentMethodId, $cardType);
 
-                if ($selectedPaymentMethodId === 'applepay') {
-                    return $resultJson->setData([
-                        'success' => true,
-                        'applePay' => true,
-                        // TODO: change to real customProviders from the $responseData
-                        'customProviders' => $paytrailPayment->getCustomProviders()
-                    ]);
-                }
-
-                // send order confirmation for pending order
-                if ($paytrailPayment) {
-                    $this->pendingOrderEmailConfirmation->pendingOrderEmailSend($order);
-                }
-
-
                 $block = $this->resultFactory->create(ResultFactory::TYPE_PAGE)
                     ->getLayout()
                     ->createBlock(\Paytrail\PaymentService\Block\Redirect\Paytrail::class)
@@ -139,9 +124,9 @@ class Index implements ActionInterface
                     ->setParams($this->getInputs($formParams['inputs']));
 
                 return $resultJson->setData([
-                                                'success' => true,
-                                                'data'    => $block->toHtml(),
-                                            ]);
+                    'success' => true,
+                    'data'    => $block->toHtml(),
+                ]);
             }
         } catch (\Exception $e) {
             // Error will be handled below
@@ -159,9 +144,9 @@ class Index implements ActionInterface
         $this->checkoutSession->restoreQuote();
 
         return $resultJson->setData([
-                                        'success' => false,
-                                        'message' => $this->errorMsg
-                                    ]);
+            'success' => false,
+            'message' => $this->errorMsg
+        ]);
     }
 
     /**
