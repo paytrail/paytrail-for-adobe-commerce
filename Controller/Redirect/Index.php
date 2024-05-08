@@ -112,12 +112,12 @@ class Index implements ActionInterface
                     );
                 }
 
+                $formParams = $this->providerForm->getFormParams($paytrailPayment, $selectedPaymentMethodId, $cardType);
+
                 // send order confirmation for pending order
                 if ($paytrailPayment) {
                     $this->pendingOrderEmailConfirmation->pendingOrderEmailSend($order);
                 }
-
-                $formParams = $this->providerForm->getFormParams($paytrailPayment, $selectedPaymentMethodId, $cardType);
 
                 $block = $this->resultFactory->create(ResultFactory::TYPE_PAGE)
                     ->getLayout()
