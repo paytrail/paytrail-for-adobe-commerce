@@ -22,7 +22,9 @@ use Psr\Log\LoggerInterface;
 
 class Index implements ActionInterface
 {
-
+    /**
+     * @var null
+     */
     private $errorMsg = null;
 
     /**
@@ -98,11 +100,6 @@ class Index implements ActionInterface
                     ]);
                 }
 
-                // send order confirmation for pending order
-                if ($paytrailPayment) {
-                    $this->pendingOrderEmailConfirmation->pendingOrderEmailSend($order);
-                }
-
                 if ($this->gatewayConfig->getSkipBankSelection()) {
                     $redirect_url = $paytrailPayment->getHref();
 
@@ -116,6 +113,11 @@ class Index implements ActionInterface
                 }
 
                 $formParams = $this->providerForm->getFormParams($paytrailPayment, $selectedPaymentMethodId, $cardType);
+
+                // send order confirmation for pending order
+                if ($paytrailPayment) {
+                    $this->pendingOrderEmailConfirmation->pendingOrderEmailSend($order);
+                }
 
                 $block = $this->resultFactory->create(ResultFactory::TYPE_PAGE)
                     ->getLayout()

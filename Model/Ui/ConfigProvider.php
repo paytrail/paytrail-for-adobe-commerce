@@ -78,7 +78,6 @@ class ConfigProvider implements ConfigProviderInterface
                     ->handlePaymentProviderGroupData($groupData['groups'])['creditcard'];
             }
 
-            // TODO: Add Apple Pay config and Safari browser validation
             if ($this->applePayConfig->canApplePay()) {
                 $groupData['groups'] = $this->applePayConfig->addApplePayPaymentMethod($groupData['groups']);
             }
