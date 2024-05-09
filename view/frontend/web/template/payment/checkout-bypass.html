@@ -59,9 +59,14 @@
                   attr: {id: 'paytrail-payment-method-' + id},
                   css: { active: $parents[1].selectedPaymentMethodId() == id },
                   click: $parents[1].setPaymentMethodId">
+                        <!-- ko if: methodGroup['id'] === 'applepay' -->
+                        <div class="apple-pay-button apple-pay-button-black"></div>
+                        <!--/ko-->
+                        <!-- ko ifnot: methodGroup['id'] === 'applepay' -->
                         <div class="paytrail-payment-method-logo">
                             <img data-bind="attr: { src: icon }">
                         </div>
+                        <!--/ko-->
                         <div class="paytrail-payment-method-title" data-bind="text: name"></div>
 
                         <div>

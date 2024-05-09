@@ -305,8 +305,16 @@
 .modal-inner-wrap {
   top: 50%;
 }
+
+.apple-pay-button {
+  -webkit-appearance: -apple-pay-button;
+  -apple-pay-button-type: plain;
+  -apple-pay-button-style: black-outline;
+}
+
 .apple-pay-popup-button {
   -webkit-appearance: -apple-pay-button;
+  -webkit-locale: fr;
   -apple-pay-button-type: plain;
   -apple-pay-button-style: black-outline;
   height: 50px;
