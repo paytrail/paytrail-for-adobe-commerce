@@ -93,7 +93,7 @@ define(
                     return true;
                 },
                 setPaymentMethodIdOnKeyUp: function (data, event) {
-                    if (event.keyCode === 13) {
+                    if (event.key === "Enter") {
                         self.setPaymentMethodId(data);
                     }
 
