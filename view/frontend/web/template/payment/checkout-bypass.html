@@ -40,10 +40,11 @@
                 </div>
                 <div class="paytrail-group-wrapper" data-role="content">
                     <!-- ko foreach: methodGroup['providers'], as: 'paymentMethod' -->
-                    <div class="paytrail-payment-method" data-bind="
+                    <div tabindex="0" class="paytrail-payment-method" data-bind="
                   attr: {id: 'paytrail-payment-method-' + id},
                   css: { active: $parents[1].selectedPaymentMethodId() == id },
-                  click: $parents[1].setPaymentMethodId">
+                  click: $parents[1].setPaymentMethodId,
+                  event: { keyup: $parents[1].setPaymentMethodIdOnKeyUp }">
                         <div class="paytrail-payment-method-logo">
                             <img data-bind="attr: { src: icon }">
                         </div>
@@ -69,10 +70,11 @@
             </div>
             <div class="paytrail-group-wrapper" data-role="content">
                 <!-- ko foreach: methodGroup['providers'], as: 'paymentMethod' -->
-                <div class="paytrail-payment-method" data-bind="
+                <div tabindex="0" class="paytrail-payment-method" data-bind="
               attr: {id: 'paytrail-payment-method-' + id},
               css: { active: $parents[1].selectedPaymentMethodId() == id },
-              click: $parents[1].setPaymentMethodId">
+              click: $parents[1].setPaymentMethodId,
+              event: { keyup: $parents[1].setPaymentMethodIdOnKeyUp }">
                     <div class="paytrail-payment-method-logo">
                         <img data-bind="attr: { src: icon }">
                     </div>
@@ -97,11 +99,11 @@
 
                 <div class="paytrail-stored-cards">
                     <!-- ko foreach : { data: $parent.getTokensData(methodGroup.tokens), as: 'token' } -->
-                    <div class="paytrail-stored-token" data-bind="
+                    <div tabindex="0" class="paytrail-stored-token" data-bind="
                     click: $parents[1].setToken,
                     attr: {id: token.id },
-                    css: { active: $parents[1].selectedToken() == token.id }">
-
+                    css: { active: $parents[1].selectedToken() == token.id },
+                    event: { keyup: $parents[1].setTokenOnKeyUp }">
                         <input class="radio" type="radio" name="optoken" data-bind="attr: {value: token.id}, checked: $parents[1].selectedToken()"/>
                         <div class="paytrail-stored-token-data">
 
