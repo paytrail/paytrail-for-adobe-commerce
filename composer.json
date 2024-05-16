@@ -23,13 +23,15 @@
         "nesbot/carbon": "^2.57.0"
     },
     "require-dev": {
-        "magento/magento-coding-standard": "*"
+        "magento/magento-coding-standard": "*",
+        "phpunit/phpunit": "^9",
+        "magento/product-enterprise-edition": "> 2.4.3"
     },
     "conflict": {
         "markup/module-paytrail": "*"
     },
     "type": "magento2-module",
-    "version": "2.1.0",
+    "version": "2.1.1",
     "license": "MIT",
     "autoload": {
         "files": [

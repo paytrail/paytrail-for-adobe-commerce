@@ -11,6 +11,12 @@
                 type="Paytrail\PaymentService\Plugin\Model\TaxConfigPlugin" sortOrder="1" disabled="false"/>
     </type>
 
+    <type name="Paytrail\PaymentService\Gateway\Config\Config">
+        <arguments>
+            <argument name="methodCode" xsi:type="const">Paytrail\PaymentService\Gateway\Config\Config::CODE</argument>
+        </arguments>
+    </type>
+
     <virtualType name="PaytrailAdapter" type="Magento\Payment\Model\Method\Adapter">
         <arguments>
             <argument name="code" xsi:type="const">Paytrail\PaymentService\Gateway\Config\Config::CODE</argument>
