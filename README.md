@@ -96,6 +96,15 @@ Available statuses:
 - Closed
 - Canceled
 
+## Setting up Apple Pay
+The payment module supports Apple pay payments.
+
+Steps:
+1. Enable Apple Pay for your Paytrail Merchant Panel.
+2. [Verify your domain with association file](https://docs.paytrail.com/#/?id=verifying-your-domain-with-apple-pay)
+3. Enable Apple Pay in admin panel __Stores -> Configuration -> Sales -> Payment Methods -> Apple Pay Configuration__
+
+
 ## Multiple stores
 If you have multiple stores, you can set up the payment module differently depending on the selected store. In configuration settings, there is a selection for Store View.
 
