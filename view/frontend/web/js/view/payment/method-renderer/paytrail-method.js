@@ -378,16 +378,35 @@ define(
                                                      */
                                                     click: function (event) {
                                                         element.click();
-                                                        fullScreenLoader.startLoader();
                                                     }
                                                 }]
                                             };
 
                                             let modalContainer = $('#apple-pay-popup-wrapper');
-
                                             let popup = modal(options, modalContainer);
                                             modalContainer.modal('openModal');
                                             fullScreenLoader.stopLoader();
+
+                                            modalContainer.on('modalclosed', function () {
+                                                $.ajax({
+                                                    url:mageUrlBuilder.build('paytrail/receipt/applepayfailedreceipt'),
+                                                    type:'post',
+                                                    dataType:'json',
+                                                    data: {
+                                                        'params':response.customProviders.applepay.parameters
+                                                    }
+                                                }).done(
+                                                    function (response) {
+                                                        self.addErrorMessage($t(response.message));
+                                                        self.scrollTo();
+                                                        setTimeout(() => {
+                                                            window.location.replace(mageUrlBuilder.build(response.redirectUrl));
+                                                        }, 1000);
+
+                                                        return false;
+                                                    }
+                                                )
+                                            });
                                         }
 
                                         return false;
