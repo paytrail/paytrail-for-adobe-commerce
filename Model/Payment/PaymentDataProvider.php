@@ -7,7 +7,6 @@ use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Sales\Api\Data\OrderAddressInterface;
 use Magento\Sales\Model\Order;
-use Magento\Sales\Model\Order\Item as OrderItem;
 use Magento\Sales\Model\ResourceModel\Order\Tax\Item as TaxItem;
 use Magento\Tax\Helper\Data as TaxHelper;
 use Paytrail\PaymentService\Exceptions\CheckoutException;
@@ -33,7 +32,7 @@ class PaymentDataProvider
      * @param CompanyRequestData $companyRequestData
      * @param CountryInformationAcquirerInterface $countryInfo
      * @param TaxHelper $taxHelper
-     * @param DiscountSplitter $discountSplitter
+     * @param DiscountApply $discountApply
      * @param TaxItem $taxItems
      * @param UrlDataProvider $urlDataProvider
      * @param CallbackDelay $callbackDelay
@@ -46,14 +45,15 @@ class PaymentDataProvider
         private CompanyRequestData                  $companyRequestData,
         private CountryInformationAcquirerInterface $countryInfo,
         private TaxHelper                           $taxHelper,
-        private DiscountSplitter                    $discountSplitter,
+        private DiscountApply                       $discountApply,
         private TaxItem                             $taxItems,
         private UrlDataProvider                     $urlDataProvider,
         private CallbackDelay                       $callbackDelay,
         private FinnishReferenceNumber              $referenceNumber,
         private Config                              $gatewayConfig,
         private Flag                                $flag,
-        private PaytrailLogger                      $log
+        private PaytrailLogger                      $log,
+        private RoundingFixer                       $roundingFixer
     ) {
     }
 
@@ -328,7 +328,10 @@ class PaymentDataProvider
             $items[] = $this->getShippingItem($order);
         }
 
-        return $this->discountSplitter->process($items, $order);
+        // Add discount
+        $items = $this->discountApply->process($items, $order);
+
+        return $items;
     }
 
     /**
