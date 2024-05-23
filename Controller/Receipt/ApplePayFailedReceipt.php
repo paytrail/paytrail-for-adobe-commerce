@@ -88,7 +88,9 @@ class ApplePayFailedReceipt implements ActionInterface
         ];
 
         foreach ($params as $param) {
-            $paramsToProcess[$param['name']] = $param['value'];
+            if (!array_key_exists($param['name'], $paramsToProcess)) {
+                $paramsToProcess[$param['name']] = $param['value'];
+            }
         }
 
         return $paramsToProcess;
