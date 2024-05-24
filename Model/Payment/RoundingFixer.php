@@ -22,8 +22,8 @@ class RoundingFixer
         }
 
         $items[] = [
-            'title'  => 'Discount rounding correction',
-            'code'   => 'discount-rounding-correction',
+            'title'  => 'Rounding correction',
+            'code'   => 'rounding-correction',
             'price'  => $delta,
             'amount' => 1,
             'vat'    => 0,

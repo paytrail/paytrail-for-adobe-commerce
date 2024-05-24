@@ -82,6 +82,19 @@ class OrderItem
         foreach ($order->getAllItems() as $item) {
             $qtyOrdered = $item->getQtyOrdered();
 
+            // When in grouped or bundle product price is dynamic (product_calculations = 0)
+            // then also the child products has prices, so we set
+            if ($item->getChildrenItems() && !$item->getProductOptions()['product_calculations']) {
+                $items[] = [
+                    'title'  => $item->getName(),
+                    'code'   => $item->getSku(),
+                    'amount' => $qtyOrdered,
+                    'price'  => 0,
+                    'vat'    => 0
+                ];
+
+                continue;
+            }
 
             if (!$this->taxHelper->priceIncludesTax() && $this->taxHelper->applyTaxAfterDiscount()) {
                 $discountInclTax = $this->formatPrice(
@@ -94,15 +107,13 @@ class OrderItem
             $rowTotalInclDiscount  = $item->getRowTotalInclTax() - $discountInclTax;
             $itemPriceInclDiscount = $this->formatPrice($rowTotalInclDiscount / $qtyOrdered);
 
-            $paytrailItem = [
+            $items [] = [
                 'title'  => $item->getName(),
                 'code'   => $item->getSku(),
                 'amount' => $qtyOrdered,
                 'price'  => $itemPriceInclDiscount,
-                'vat'    => $item->getTaxPercent()
+                'vat'    => $item->getTaxPercent() ?: 0
             ];
-
-            $items [] = $paytrailItem;
         }
 
         if (!$order->getIsVirtual()) {
