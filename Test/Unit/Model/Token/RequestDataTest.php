@@ -145,8 +145,10 @@ class RequestDataTest extends TestCase
      */
     public static function itemArgsDataProvider(): array
     {
-        $taxPercent   = 0.24;
-        $productPrice = 100;
+        $taxPercent      = 0.24;
+        $productPrice    = 100;
+        $shippingExclTax = 12.02;
+
 
         $cases = [
             '#1 discount 10.00, giftcard 10.00'   => [
@@ -237,11 +239,11 @@ class RequestDataTest extends TestCase
 
         $result = [];
         foreach ($cases as $key => $case) {
-            $shippingExclTax = 12.02;
-            $shippingTax     = $case['shipping_tax'] ? $shippingExclTax * $taxPercent : 0;
-            $discountTax     = $case['discount_tax'] ? $case['discount'] * $taxPercent : 0;
-            $expectedTotal   = $case['price'] * $case['qty'] - $case['discount'] - $discountTax - $case['giftcard'] + $shippingExclTax + $shippingTax;
-            $result[$key]    = [
+
+            $shippingTax   = $case['shipping_tax'] ? $shippingExclTax * $taxPercent : 0;
+            $discountTax   = $case['discount_tax'] ? $case['discount'] * $taxPercent : 0;
+            $expectedTotal = $case['price'] * $case['qty'] - $case['discount'] - $discountTax - $case['giftcard'] + $shippingExclTax + $shippingTax;
+            $result[$key]  = [
                 'input'     => [
                     'config'   => [
                         'discount_tax'               => $case['discount_tax'],
