@@ -86,7 +86,7 @@ class ApplePayFailedReceipt implements ActionInterface
             'checkout-algorithm' => '',
             'checkout-timestamp' => '',
             'checkout-nonce' => '',
-            'signature'
+            'signature' =>  ''
         ];
 
         foreach ($params as $param) {
