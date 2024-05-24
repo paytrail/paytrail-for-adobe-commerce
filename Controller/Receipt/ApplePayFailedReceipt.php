@@ -43,8 +43,9 @@ class ApplePayFailedReceipt implements ActionInterface
      */
     public function execute()
     {
+        $params = $this->getParamsToProcess($this->request->getParams()['params']);
+
         $order = $this->session->getLastRealOrder();
-        $params = $this->getParamsToProcess($this->request->getParams()['params'], $order);
         $status = $order->getStatus();
 
         $failMessages = $this->processPayment->process($params, $this->session);
@@ -71,24 +72,25 @@ class ApplePayFailedReceipt implements ActionInterface
      * Get params for processing order and payment.
      *
      * @param array $params
-     * @param Order $order
      *
      * @return array
      *
      * @throws \Paytrail\PaymentService\Exceptions\CheckoutException
      */
-    private function getParamsToProcess($params, $order): array
+    private function getParamsToProcess($params): array
     {
-        $datetime    = new \DateTime();
         $paramsToProcess = [
-            'checkout-status' => 'fail',
-            'checkout-provider' => 'applepay',
-            'checkout-stamp' => $datetime->format('Y-m-d\TH:i:s.u\Z'),
-            'checkout-reference' => $this->referenceNumber->getReference($order)
+            'checkout-transaction-id' => '',
+            'checkout-account' => '',
+            'checkout-method' => '',
+            'checkout-algorithm' => '',
+            'checkout-timestamp' => '',
+            'checkout-nonce' => '',
+            'signature'
         ];
 
         foreach ($params as $param) {
-            if (!array_key_exists($param['name'], $paramsToProcess)) {
+            if (array_key_exists($param['name'], $paramsToProcess)) {
                 $paramsToProcess[$param['name']] = $param['value'];
             }
         }
