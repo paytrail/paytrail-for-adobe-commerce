@@ -4,6 +4,7 @@ namespace Paytrail\PaymentService\Model\Payment\PaymentDataProvider;
 
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Sales\Model\Order;
+use Magento\Tax\Helper\Data;
 use Paytrail\PaymentService\Model\Payment\RoundingFixer;
 use Paytrail\SDK\Model\Item;
 use Magento\Sales\Model\ResourceModel\Order\Tax\Item as TaxItem;
@@ -20,7 +21,8 @@ class OrderItem
     public function __construct(
         private DiscountApply $discountApply,
         private TaxItem       $taxItem,
-        private RoundingFixer $roundingFixer
+        private RoundingFixer $roundingFixer,
+        private Data          $taxHelper
     ) {
     }
 
@@ -30,6 +32,7 @@ class OrderItem
      * @param Order $order
      *
      * @return array|Item[]
+     * @throws LocalizedException
      */
     public function getOrderLines(Order $order): array
     {
@@ -79,9 +82,14 @@ class OrderItem
         foreach ($order->getAllItems() as $item) {
             $qtyOrdered = $item->getQtyOrdered();
 
-            $discountInclTax = $this->formatPrice(
-                $item->getDiscountAmount() * (($item->getTaxPercent() / 100) + 1)
-            );
+
+            if (!$this->taxHelper->priceIncludesTax() && $this->taxHelper->applyTaxAfterDiscount()) {
+                $discountInclTax = $this->formatPrice(
+                    $item->getDiscountAmount() * (($item->getTaxPercent() / 100) + 1)
+                );
+            } else {
+                $discountInclTax = $item->getDiscountAmount();
+            }
 
             $rowTotalInclDiscount  = $item->getRowTotalInclTax() - $discountInclTax;
             $itemPriceInclDiscount = $this->formatPrice($rowTotalInclDiscount / $qtyOrdered);
@@ -102,6 +110,7 @@ class OrderItem
         }
 
         $items = $this->discountApply->process($items, $order);
+
         $this->roundingFixer->correctRoundingErrors($items, $order->getGrandTotal(), $this->getItemTotal($items));
 
         return $items;
@@ -153,7 +162,7 @@ class OrderItem
     {
         $total = 0;
         foreach ($items as $item) {
-            $total += $item['price'] * $item['quantity'];
+            $total += $item['price'] * $item['amount'];
         }
         return $total;
     }
