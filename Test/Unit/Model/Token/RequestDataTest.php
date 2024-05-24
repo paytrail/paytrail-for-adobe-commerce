@@ -255,7 +255,7 @@ class RequestDataTest extends TestCase
                         [
                             'qty'             => 3,
                             'price'           => $case['price'],
-                            'tax_percent'     => 24,
+                            'tax_percent'     => $taxPercent * 100,
                             'row_total'       => $case['price'] * $case['qty'],
                             'name'            => 'test',
                             'discount_amount' => $case['discount'],
