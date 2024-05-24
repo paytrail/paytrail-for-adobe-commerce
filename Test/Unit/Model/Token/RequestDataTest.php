@@ -6,10 +6,9 @@ use Magento\Directory\Api\CountryInformationAcquirerInterface;
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Pricing\PriceCurrencyInterface;
+use Magento\Framework\TestFramework\Unit\Helper\ObjectManager;
 use Magento\Sales\Model\Order;
 use Magento\Sales\Model\Order\Item;
-use Magento\Sales\Model\ResourceModel\Order\Tax\Item as TaxItem;
-use Magento\SalesRule\Model\DeltaPriceRound;
 use Magento\Tax\Helper\Data as TaxHelper;
 use Paytrail\PaymentService\Gateway\Config\Config;
 use Paytrail\PaymentService\Logger\PaytrailLogger;
@@ -17,19 +16,39 @@ use Paytrail\PaymentService\Model\Company\CompanyRequestData;
 use Paytrail\PaymentService\Model\Config\Source\CallbackDelay;
 use Paytrail\PaymentService\Model\FinnishReferenceNumber;
 use Paytrail\PaymentService\Model\Invoice\Activation\Flag;
-use Paytrail\PaymentService\Model\Payment\DiscountSplitter;
+use Paytrail\PaymentService\Model\Payment\DiscountApply;
 use Paytrail\PaymentService\Model\Payment\PaymentDataProvider;
+use Paytrail\PaymentService\Model\Payment\RoundingFixer;
 use Paytrail\PaymentService\Model\UrlDataProvider;
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
 class RequestDataTest extends TestCase
 {
-    private PaymentDataProvider                                        $requestDataObject;
-    private \Magento\Framework\TestFramework\Unit\Helper\ObjectManager $objectManager;
+    private PaymentDataProvider $paymentDataProvider;
+    private ObjectManager       $objectManager;
+
+    /**
+     * @param $config1
+     *
+     * @return MockObject
+     */
+    public function getTaxHelperMock($config1): MockObject
+    {
+        $taxHelper = $this->createMock(TaxHelper::class);
+        $taxHelper->method('applyTaxAfterDiscount')->willReturn(
+            $config1['discount_tax']
+        );
+        $taxHelper->method('priceIncludesTax')->willReturn(
+            $config1['catalog_price_includes_tax'] ?? true
+        );
+
+        return $taxHelper;
+    }
 
     protected function setUp(): void
     {
-        $this->objectManager = new \Magento\Framework\TestFramework\Unit\Helper\ObjectManager($this);
+        $this->objectManager = new ObjectManager($this);
     }
 
     /**
@@ -40,13 +59,7 @@ class RequestDataTest extends TestCase
     public function prepareRequestDataMock($input): void
     {
         $config    = $this->objectManager->getObject(Config::class);
-        $taxHelper = $this->createMock(TaxHelper::class);
-        $taxHelper->method('applyTaxAfterDiscount')->willReturn(
-            $input['config']['discount_tax']
-        );
-        $taxHelper->method('priceIncludesTax')->willReturn(
-            $input['config']['catalog_price_includes_tax'] ?? true
-        );
+        $taxHelper = $this->getTaxHelperMock($input['config']);
 
         $priceCurrency = $this->getMockForAbstractClass(PriceCurrencyInterface::class);
         $priceCurrency->method('round')
@@ -58,25 +71,19 @@ class RequestDataTest extends TestCase
         $configMock = $this->getMockForAbstractClass(ScopeConfigInterface::class);
         $configMock->method('getValue')->willReturn(24);
 
-        $discountSplitter = new DiscountSplitter(
-            new DeltaPriceRound($priceCurrency),
-            $configMock
-        );
 
-        $taxItems = $this->createMock(TaxItem::class);
-        $taxItems->method('getTaxItemsByOrderId')->willReturn([]);
-        $this->requestDataObject = new PaymentDataProvider(
+        $this->paymentDataProvider = new PaymentDataProvider(
             $this->createMock(CompanyRequestData::class),
             $this->createMock(CountryInformationAcquirerInterface::class),
             $taxHelper,
-            $discountSplitter,
-            $taxItems,
+            $this->createMock(DiscountApply::class),
             $this->createMock(UrlDataProvider::class),
             $this->createMock(CallbackDelay::class),
             $this->createMock(FinnishReferenceNumber::class),
             $config,
             $this->createMock(Flag::class),
-            $this->createMock(PaytrailLogger::class)
+            $this->createMock(PaytrailLogger::class),
+            $this->createMock(PaymentDataProvider\OrderItem::class)
         );
     }
 
@@ -86,23 +93,15 @@ class RequestDataTest extends TestCase
      * @magentoConfigFixture tax/calculation/apply_after_discount 1
      * @throws LocalizedException
      */
-    public function testItemArgsDiscountTax($input, $discounts, $expected)
+    public function testItemsDataDiscountTax($input, $discounts, $expected)
     {
         $this->prepareRequestDataMock($input);
 
-
         /** Mock Order */
-        //Add a magic method to the list of mocked class methods
-        $orderMethods = \array_merge(
-            \get_class_methods(Order::class),
-            ['getGiftCardsAmount']
-        );
-
-
         $order = $this->getMockBuilder(Order::class)
             ->disableOriginalConstructor()
-            ->addMethods( ['getGiftCardsAmount'])
-            ->onlyMethods(['getShippingAmount', 'getGrandTotal', 'getShippingTaxAmount','getAllItems'])
+            ->addMethods(['getGiftCardsAmount'])
+            ->onlyMethods(['getShippingAmount', 'getGrandTotal', 'getShippingTaxAmount', 'getAllItems'])
             ->getMock();
 
         $items = $this->prepareOrderItemsMock($input['items']);
@@ -116,7 +115,23 @@ class RequestDataTest extends TestCase
         $order->method('getShippingTaxAmount')->willReturn($input['order']['shipping_tax_amount']);
         $order->method('getGiftCardsAmount')->willReturn($discounts['giftcard']);
 
-        $paytrailItems = $this->requestDataObject->getOrderItemLines($order);
+        $taxItemMock = $this->createMock(\Magento\Sales\Model\ResourceModel\Order\Tax\Item::class);
+        $taxItemMock->method(
+            'getTaxItemsByOrderId'
+        )->willReturn(
+            [[
+                 'taxable_item_type' => $input['config']['shipping_tax'] ? 'shipping' : 'product',
+                 'tax_percent'       => $input['config']['shipping_tax'] ? 24 : 0
+             ]]
+        );
+        $paytrailItemsObject = new PaymentDataProvider\OrderItem(
+            new DiscountApply([]),
+            $taxItemMock,
+            new RoundingFixer(),
+            $this->getTaxHelperMock($input['config'])
+        );
+
+        $paytrailItems = $paytrailItemsObject->getOrderLines($order);
 
         $this->assertEquals(
             number_format($expected['total'] * 100, 0, '.', ''),
@@ -130,9 +145,12 @@ class RequestDataTest extends TestCase
      */
     public static function itemArgsDataProvider(): array
     {
+        $taxPercent   = 0.24;
+        $productPrice = 100;
+
         $cases = [
             '#1 discount 10.00, giftcard 10.00'   => [
-                'price'          => 100,
+                'price'          => $productPrice,
                 'qty'            => 3,
                 'discount'       => 10.00,
                 'giftcard'       => 10.00,
@@ -141,7 +159,7 @@ class RequestDataTest extends TestCase
                 'expected_total' => 294.90,
             ],
             '#2 discount 10.00 , giftcard 0'      => [
-                'price'          => 100,
+                'price'          => $productPrice,
                 'qty'            => 3,
                 'discount'       => 10.00,
                 'giftcard'       => 0.00,
@@ -150,7 +168,7 @@ class RequestDataTest extends TestCase
                 'expected_total' => 304.90,
             ],
             '#3 discount 10.00 , giftcard 0 '     => [
-                'price'        => 100,
+                'price'        => $productPrice,
                 'qty'          => 3,
                 'discount'     => 0.00,
                 'giftcard'     => 10.00,
@@ -158,7 +176,7 @@ class RequestDataTest extends TestCase
                 'shipping_tax' => 1,
             ],
             '#4 discount 0 , giftcard 0'          => [
-                'price'        => 100,
+                'price'        => $productPrice,
                 'qty'          => 3,
                 'discount'     => 0.00,
                 'giftcard'     => 0.00,
@@ -166,7 +184,7 @@ class RequestDataTest extends TestCase
                 'shipping_tax' => 1,
             ],
             '#5 discount 10.01 , giftcard 0'      => [
-                'price'                      => 124,
+                'price'                      => $productPrice * (1 + $taxPercent),
                 'qty'                        => 3,
                 'discount'                   => 10.00,
                 'giftcard'                   => 0,
@@ -176,7 +194,7 @@ class RequestDataTest extends TestCase
                 'expected_total'             => 374.50,
             ],
             '#6 discount 10.01 , giftcard 10.01'  => [
-                'price'        => 100,
+                'price'        => $productPrice,
                 'qty'          => 3,
                 'discount'     => 10.01,
                 'giftcard'     => 10.01,
@@ -184,7 +202,7 @@ class RequestDataTest extends TestCase
                 'shipping_tax' => 1,
             ],
             '#7 discount 0 , giftcard 10.01'      => [
-                'price'        => 100,
+                'price'        => $productPrice,
                 'qty'          => 3,
                 'discount'     => 0,
                 'giftcard'     => 10.01,
@@ -192,7 +210,7 @@ class RequestDataTest extends TestCase
                 'shipping_tax' => 1,
             ],
             '#8 discount 0 , giftcard 10.01'      => [
-                'price'        => 100,
+                'price'        => $productPrice,
                 'qty'          => 3,
                 'discount'     => 10.00,
                 'giftcard'     => 10.01,
@@ -200,7 +218,7 @@ class RequestDataTest extends TestCase
                 'shipping_tax' => 1,
             ],
             '#9 discount 10.01 , giftcard 10.01'  => [
-                'price'        => 100,
+                'price'        => $productPrice,
                 'qty'          => 3,
                 'discount'     => 10.01,
                 'giftcard'     => 0,
@@ -208,7 +226,7 @@ class RequestDataTest extends TestCase
                 'shipping_tax' => 0,
             ],
             '#10 discount 10.01 , giftcard 10.01' => [
-                'price'        => 124,
+                'price'        => $productPrice * (1 + $taxPercent),
                 'qty'          => 2,
                 'discount'     => 10.01,
                 'giftcard'     => 10.01,
@@ -220,8 +238,8 @@ class RequestDataTest extends TestCase
         $result = [];
         foreach ($cases as $key => $case) {
             $shippingExclTax = 12.02;
-            $shippingTax     = $case['shipping_tax'] ? $shippingExclTax * 0.24 : 0;
-            $discountTax     = $case['discount_tax'] ? $case['discount'] * 0.24 : 0;
+            $shippingTax     = $case['shipping_tax'] ? $shippingExclTax * $taxPercent : 0;
+            $discountTax     = $case['discount_tax'] ? $case['discount'] * $taxPercent : 0;
             $expectedTotal   = $case['price'] * $case['qty'] - $case['discount'] - $discountTax - $case['giftcard'] + $shippingExclTax + $shippingTax;
             $result[$key]    = [
                 'input'     => [

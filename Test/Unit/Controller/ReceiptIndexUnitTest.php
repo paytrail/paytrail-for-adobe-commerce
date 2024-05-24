@@ -53,10 +53,14 @@ class ReceiptIndexUnitTest extends TestCase
     /**
      * @var (\Magento\Framework\Controller\ResultInterface&\PHPUnit\Framework\MockObject\MockObject)|\PHPUnit\Framework\MockObject\MockObject|null
      */
-    private $resultInterfaceMock;
+    private                                          $resultInterfaceMock;
+    private Index                                    $indexController;
+    private \PHPUnit\Framework\MockObject\MockObject $quoteMock;
+    private \PHPUnit\Framework\MockObject\MockObject $quoteRepositoryMock;
 
     /**
      * @param $originalClassName
+     *
      * @return \PHPUnit\Framework\MockObject\MockObject
      */
     private function getSimpleMock($originalClassName)
@@ -72,11 +76,11 @@ class ReceiptIndexUnitTest extends TestCase
     protected function setUp(): void
     {
         $this->referenceNumberMock = $this->getSimpleMock(FinnishReferenceNumber::class);
-        $this->sessionMock = $this->getSimpleMock(Session::class);
-        $this->processPaymentMock = $this->getSimpleMock(ProcessPayment::class);
-        $this->requestMock = $this->getSimpleMock(RequestInterface::class);
-        $this->resultFactoryMock = $this->getSimpleMock(ResultFactory::class);
-        $this->messageManagerMock = $this->getSimpleMock(ManagerInterface::class);
+        $this->sessionMock         = $this->getSimpleMock(Session::class);
+        $this->processPaymentMock  = $this->getSimpleMock(ProcessPayment::class);
+        $this->requestMock         = $this->getSimpleMock(RequestInterface::class);
+        $this->resultFactoryMock   = $this->getSimpleMock(ResultFactory::class);
+        $this->messageManagerMock  = $this->getSimpleMock(ManagerInterface::class);
 
         $this->indexController = new Index(
             $this->referenceNumberMock,
@@ -87,17 +91,17 @@ class ReceiptIndexUnitTest extends TestCase
             $this->messageManagerMock
         );
 
-        $this->quoteMock = $this->getMockBuilder(Quote::class)
+        $this->quoteMock           = $this->getMockBuilder(Quote::class)
             ->disableOriginalConstructor()
             ->setMethods(['setIsActive'])
             ->getMock();
-        $methods = ['setPath', 'setHeader', 'setHttpResponseCode', 'renderResult'];
+        $methods                   = ['setPath', 'setHeader', 'setHttpResponseCode', 'renderResult'];
         $this->resultInterfaceMock = $this->getMockBuilder(\Magento\Framework\Controller\ResultInterface::class)
             ->setMethods($methods)
             ->disableOriginalConstructor()
             ->getMock();
         $this->quoteRepositoryMock = $this->getSimpleMock(QuoteRepository::class);
-        $this->orderMock = $this->getSimpleMock(Order::class);
+        $this->orderMock           = $this->getSimpleMock(Order::class);
     }
 
     /**

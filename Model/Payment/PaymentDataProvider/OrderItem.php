@@ -17,6 +17,8 @@ class OrderItem
      *
      * @param DiscountApply $discountApply
      * @param TaxItem $taxItem
+     * @param RoundingFixer $roundingFixer
+     * @param Data $taxHelper
      */
     public function __construct(
         private DiscountApply $discountApply,
