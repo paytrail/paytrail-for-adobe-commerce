@@ -62,9 +62,8 @@ class ProcessPayment
         }
 
         // Add Apple Pay missing params
-        if (!$params['checkout-reference'] && !$params['checkout-provider']) {
+        if (!isset($params['checkout-reference']) && !isset($params['checkout-provider'])) {
             $order = $session->getLastRealOrder();
-            $orderNo = $order->getId();
 
             $params['checkout-reference'] = $this->finnishReferenceNumber->getReference($order);
             $params['checkout-stamp'] = hash(
@@ -73,6 +72,9 @@ class ProcessPayment
                 $order->getIncrementId()
             );
             $params['checkout-provider'] = 'applepay';
+
+            /** @var string $orderNo */
+            $orderNo = $order->getId();
         } else {
             /** @var string $reference */
             $reference = $params['checkout-reference'];
