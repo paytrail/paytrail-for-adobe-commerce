@@ -29,7 +29,7 @@ class ProcessPayment
         private ReceiptDataProvider     $receiptDataProvider,
         private CartRepositoryInterface $cartRepository,
         private Config                  $gatewayConfig,
-        private FinnishReferenceNumber $finnishReferenceNumber
+        private FinnishReferenceNumber  $finnishReferenceNumber
     ) {
     }
 
@@ -61,13 +61,27 @@ class ProcessPayment
             return $errors;
         }
 
-        /** @var string $reference */
-        $reference = $params['checkout-reference'];
+        // Add Apple Pay missing params
+        if (!$params['checkout-reference'] && !$params['checkout-provider']) {
+            $order = $session->getLastRealOrder();
+            $orderNo = $order->getId();
 
-        /** @var string $orderNo */
-        $orderNo = $this->gatewayConfig->getGenerateReferenceForOrder()
-            ? $this->finnishReferenceNumber->getIdFromOrderReferenceNumber($reference)
-            : $reference;
+            $params['checkout-reference'] = $this->finnishReferenceNumber->getReference($order);
+            $params['checkout-stamp'] = hash(
+                $this->gatewayConfig->getCheckoutAlgorithm(),
+                time() .
+                $order->getIncrementId()
+            );
+            $params['checkout-provider'] = 'applepay';
+        } else {
+            /** @var string $reference */
+            $reference = $params['checkout-reference'];
+
+            /** @var string $orderNo */
+            $orderNo = $this->gatewayConfig->getGenerateReferenceForOrder()
+                ? $this->finnishReferenceNumber->getIdFromOrderReferenceNumber($reference)
+                : $reference;
+        }
 
         /** @var array $ret */
         $ret = $this->processPayment($params, $session, $orderNo);
@@ -129,5 +143,10 @@ class ProcessPayment
         }
 
         return $errors;
+    }
+
+    private function processApplePayParams($params, $session)
+    {
+
     }
 }
