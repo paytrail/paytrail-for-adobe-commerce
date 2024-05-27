@@ -43,9 +43,11 @@ class ApplePayFailedReceipt implements ActionInterface
      */
     public function execute()
     {
-        $params = $this->getParamsToProcess($this->request->getParams()['params']);
-
         $order = $this->session->getLastRealOrder();
+        $params = $this->getParamsToProcess(
+            $this->request->getParams()['params'],
+            $this->referenceNumber->getReference($order)
+        );
         $status = $order->getStatus();
 
         $failMessages = $this->processPayment->process($params, $this->session);
@@ -72,12 +74,10 @@ class ApplePayFailedReceipt implements ActionInterface
      * Get params for processing order and payment.
      *
      * @param array $params
-     *
-     * @return array
-     *
-     * @throws \Paytrail\PaymentService\Exceptions\CheckoutException
+     * @param string $orderReference
+     * @return string[]
      */
-    private function getParamsToProcess($params): array
+    private function getParamsToProcess($params, $orderReference): array
     {
         $paramsToProcess = [
             'checkout-transaction-id' => '',
@@ -94,6 +94,8 @@ class ApplePayFailedReceipt implements ActionInterface
                 $paramsToProcess[$param['name']] = $param['value'];
             }
         }
+
+        $paramsToProcess['checkout-reference'] = $orderReference;
 
         return $paramsToProcess;
     }
