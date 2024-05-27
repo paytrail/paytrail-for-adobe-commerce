@@ -64,17 +64,10 @@ class ProcessPayment
         // Add Apple Pay missing params
         if (!isset($params['checkout-reference']) && !isset($params['checkout-provider'])) {
             $order = $session->getLastRealOrder();
-
-            $params['checkout-reference'] = $this->finnishReferenceNumber->getReference($order);
-            $params['checkout-stamp'] = hash(
-                $this->gatewayConfig->getCheckoutAlgorithm(),
-                time() .
-                $order->getIncrementId()
-            );
-            $params['checkout-provider'] = 'applepay';
-
             /** @var string $orderNo */
             $orderNo = $order->getId();
+
+            $this->updateApplePayParams($params, $order);
         } else {
             /** @var string $reference */
             $reference = $params['checkout-reference'];
@@ -147,8 +140,25 @@ class ProcessPayment
         return $errors;
     }
 
-    private function processApplePayParams($params, $session)
+    /**
+     * Updates Apple Pay params for fail payment.
+     *
+     * @param array $params
+     * @param $order
+     * @return mixed
+     * @throws CheckoutException
+     */
+    private function updateApplePayParams($params, $order)
     {
+        $params['checkout-reference'] = $this->finnishReferenceNumber->getReference($order);
+        $params['checkout-stamp'] = hash(
+            $this->gatewayConfig->getCheckoutAlgorithm(),
+            time() .
+            $order->getIncrementId()
+        );
+        $params['checkout-provider'] = 'applepay';
+        $params['checkout-status'] = 'fail';
 
+        return $params;
     }
 }
