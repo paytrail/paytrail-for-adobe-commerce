@@ -5,6 +5,7 @@ namespace Paytrail\PaymentService\Model\Receipt;
 use Magento\Checkout\Model\Session;
 use Magento\Quote\Api\CartRepositoryInterface;
 use Paytrail\PaymentService\Gateway\Config\Config;
+use Paytrail\PaymentService\Gateway\Validator\HmacValidator;
 use Paytrail\PaymentService\Gateway\Validator\ResponseValidator;
 use Paytrail\PaymentService\Exceptions\CheckoutException;
 use Paytrail\PaymentService\Model\FinnishReferenceNumber;
@@ -158,6 +159,8 @@ class ProcessPayment
         );
         $params['checkout-provider'] = 'applepay';
         $params['checkout-status'] = 'fail';
+        // validation done, skip next hmac validation
+        $params['signature'] = HmacValidator::SKIP_HMAC_VALIDATION;
 
         return $params;
     }
