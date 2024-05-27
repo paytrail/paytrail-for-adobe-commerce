@@ -44,19 +44,11 @@ class ApplePayFailedReceipt implements ActionInterface
     public function execute()
     {
         $params = $this->getParamsToProcess($this->request->getParams()['params']);
-
-        $order = $this->session->getLastRealOrder();
-        $status = $order->getStatus();
+        $resultJson = $this->resultFactory->create(ResultFactory::TYPE_JSON);
 
         $failMessages = $this->processPayment->process($params, $this->session);
 
-        if ($status == 'pending_payment') { // status could be changed by callback, if not, it needs to be forced
-            $order  = $this->referenceNumber->getOrderByReference($params['checkout-reference']); // refreshing order
-            $status = $order->getStatus(); // getting current status
-        }
-
-        $resultJson = $this->resultFactory->create(ResultFactory::TYPE_JSON);
-        if (in_array($status, self::ORDER_CANCEL_STATUSES)) {
+        if ($failMessages) {
             foreach ($failMessages as $failMessage) {
                 $this->messageManager->addErrorMessage($failMessage);
             }
