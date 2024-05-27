@@ -3,6 +3,7 @@
 namespace Paytrail\PaymentService\Controller\Callback;
 
 use Magento\Checkout\Model\Session;
+use Magento\Framework\App\ActionInterface;
 use Magento\Framework\App\RequestInterface;
 use Magento\Framework\Controller\ResultFactory;
 use Magento\Framework\Controller\ResultInterface;
@@ -10,16 +11,16 @@ use Magento\Framework\Encryption\EncryptorInterface;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Serialize\SerializerInterface;
 use Magento\Sales\Model\Order;
-use Magento\Sales\Model\OrderFactory;
 use Magento\Vault\Api\PaymentTokenRepositoryInterface;
 use Magento\Vault\Model\PaymentTokenFactory;
 use Magento\Vault\Model\PaymentTokenManagement;
 use Paytrail\PaymentService\Controller\Receipt\Index as Receipt;
 use Paytrail\PaymentService\Gateway\Config\Config;
 use Paytrail\PaymentService\Logger\PaytrailLogger;
+use Paytrail\PaymentService\Model\FinnishReferenceNumber;
 use Paytrail\PaymentService\Model\Receipt\ProcessPayment;
 
-class PayAndAddCardCallback implements \Magento\Framework\App\ActionInterface
+class PayAndAddCardCallback implements ActionInterface
 {
     /**
      * @var string[]
@@ -41,7 +42,7 @@ class PayAndAddCardCallback implements \Magento\Framework\App\ActionInterface
      * @param RequestInterface $request
      * @param ResultFactory $resultFactory
      * @param Config $gatewayConfig
-     * @param OrderFactory $orderFactory
+     * @param FinnishReferenceNumber $referenceNumber
      * @param PaymentTokenFactory $paymentTokenFactory
      * @param SerializerInterface $jsonSerializer
      * @param PaymentTokenRepositoryInterface $tokenRepository
@@ -55,7 +56,7 @@ class PayAndAddCardCallback implements \Magento\Framework\App\ActionInterface
         private RequestInterface                $request,
         private ResultFactory                   $resultFactory,
         private Config                          $gatewayConfig,
-        private OrderFactory                    $orderFactory,
+        private FinnishReferenceNumber          $referenceNumber,
         private PaymentTokenFactory             $paymentTokenFactory,
         private SerializerInterface             $jsonSerializer,
         private PaymentTokenRepositoryInterface $tokenRepository,
@@ -73,49 +74,47 @@ class PayAndAddCardCallback implements \Magento\Framework\App\ActionInterface
      */
     public function execute(): ResultInterface
     {
-        $reference     = $this->request->getParam('checkout-reference');
-        $response      = $this->resultFactory->create(ResultFactory::TYPE_JSON);
-        $responseError = [];
+        try {
+            $this->logger->debugLog(
+                'request',
+                'PayAndAddCardCallback received' . PHP_EOL .
+                'params: ' . json_encode($this->request->getParams(), JSON_PRETTY_PRINT)
+            );
 
-        /** @var string $orderNo */
-        $orderNo = $this->gatewayConfig->getGenerateReferenceForOrder()
-            ? $this->gatewayConfig->getIdFromOrderReferenceNumber($reference)
-            : $reference;
+            $reference     = $this->request->getParam('checkout-reference');
+            $response      = $this->resultFactory->create(ResultFactory::TYPE_JSON);
+            $responseError = [];
 
-        /** @var Order $order */
-        $order  = $this->orderFactory->create()->loadByIncrementId($orderNo);
-        $status = $order->getStatus();
+            $order  = $this->referenceNumber->getOrderByReference($reference);
+            $status = $order->getStatus();
 
-        $this->logger->debugLog(
-            'request',
-            'PayAndAddCard callback received' . PHP_EOL .
-            'order status: ' . $status . PHP_EOL .
-            'orderNo: ' . $orderNo . PHP_EOL .
-            'params: ' . json_encode($this->request->getParams(), JSON_PRETTY_PRINT)
-        );
+            // save credit card
+            if ($this->request->getParam('checkout-card-token')) {
+                $this->processCardToken($this->request->getParams(), $order);
+            }
 
-        // save credit card
-        if ($this->request->getParam('checkout-card-token')) {
-            $this->processCardToken($this->request->getParams(), $order);
+            if ($status == 'pending_payment' || in_array($status, Receipt::ORDER_CANCEL_STATUSES)) {
+                // order status could be changed by receipt
+                // if not, status change needs to be forced by processing the payment
+                $responseError = $this->processPayment->process($this->request->getParams(), $this->session);
+
+                $this->logger->debugLog(
+                    'request',
+                    'PayAndAddCard callback response' . PHP_EOL .
+                    'order status: ' . $status . PHP_EOL .
+                    'orderNo: ' . $order->getId() . PHP_EOL .
+                    'responseErrors: ' . json_encode($responseError, JSON_PRETTY_PRINT)
+                );
+            }
+        } catch (\Exception $e) {
+            $this->logger->error($e->getMessage());
+            $responseError['process_error'] = $e->getMessage();
         }
 
-        if ($status == 'pending_payment' || in_array($status, Receipt::ORDER_CANCEL_STATUSES)) {
-            // order status could be changed by receipt
-            // if not, status change needs to be forced by processing the payment
-            $responseError = $this->processPayment->process($this->request->getParams(), $this->session);
-        }
-
-        $responseData = ['error' => $responseError];
-
-        $this->logger->debugLog(
-            'request',
-            'PayAndAddCard callback response' . PHP_EOL .
-            'order status: ' . $status . PHP_EOL .
-            'orderNo: ' . $orderNo . PHP_EOL .
-            'response: ' . json_encode($responseData, JSON_PRETTY_PRINT)
-        );
-
-        return $response->setData($responseData);
+        return $response->setData([
+            'success' => !$responseError ? 'true' : 'false',
+            'error' => !$responseError ? '' : $responseError
+        ]);
     }
 
     /**
