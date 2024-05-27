@@ -67,7 +67,7 @@ class ProcessPayment
             /** @var string $orderNo */
             $orderNo = $order->getId();
 
-            $this->updateApplePayParams($params, $order);
+            $params = $this->updateApplePayParams($params, $order);
         } else {
             /** @var string $reference */
             $reference = $params['checkout-reference'];
