@@ -8,13 +8,13 @@ use Magento\Framework\App\RequestInterface;
 use Magento\Framework\Controller\ResultFactory;
 use Magento\Framework\Message\ManagerInterface;
 use Magento\Sales\Model\Order;
+use Paytrail\PaymentService\Gateway\Config\Config;
+use Paytrail\PaymentService\Gateway\Validator\HmacValidator;
 use Paytrail\PaymentService\Model\FinnishReferenceNumber;
 use Paytrail\PaymentService\Model\Receipt\ProcessPayment;
 
 class ApplePayFailedReceipt implements ActionInterface
 {
-    public const ORDER_CANCEL_STATUSES  = ["canceled"];
-
     /**
      * ApplePayFailedReceipt constructor.
      *
@@ -43,7 +43,8 @@ class ApplePayFailedReceipt implements ActionInterface
      */
     public function execute()
     {
-        $params = $this->getParamsToProcess($this->request->getParams()['params']);
+        $order = $this->session->getLastRealOrder();
+        $params = $this->getParamsToProcess($this->request->getParams()['params'], $order);
         $resultJson = $this->resultFactory->create(ResultFactory::TYPE_JSON);
 
         $failMessages = $this->processPayment->process($params, $this->session);
@@ -64,9 +65,11 @@ class ApplePayFailedReceipt implements ActionInterface
      * Get params for processing order and payment.
      *
      * @param array $params
-     * @return string[]
+     * @param Order $order
+     * @return array
+     * @throws \Paytrail\PaymentService\Exceptions\CheckoutException
      */
-    private function getParamsToProcess($params): array
+    private function getParamsToProcess($params, $order): array
     {
         $paramsToProcess = [
             'checkout-transaction-id' => '',
@@ -75,7 +78,11 @@ class ApplePayFailedReceipt implements ActionInterface
             'checkout-algorithm' => '',
             'checkout-timestamp' => '',
             'checkout-nonce' => '',
-            'signature' =>  ''
+            'checkout-reference' => $this->referenceNumber->getReference($order),
+            'checkout-provider' => Config::APPLE_PAY_PAYMENT_CODE,
+            'checkout-status' => Config::PAYTRAIL_API_PAYMENT_STATUS_FAIL,
+            'signature' => '',
+            'skip_validation' => 1
         ];
 
         foreach ($params as $param) {
