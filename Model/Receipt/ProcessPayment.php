@@ -62,22 +62,13 @@ class ProcessPayment
             return $errors;
         }
 
-        // Add Apple Pay missing params
-        if (!isset($params['checkout-reference']) && !isset($params['checkout-provider'])) {
-            $order = $session->getLastRealOrder();
-            /** @var string $orderNo */
-            $orderNo = $order->getId();
+        /** @var string $reference */
+        $reference = $params['checkout-reference'];
 
-            $params = $this->updateApplePayParams($params, $order);
-        } else {
-            /** @var string $reference */
-            $reference = $params['checkout-reference'];
-
-            /** @var string $orderNo */
-            $orderNo = $this->gatewayConfig->getGenerateReferenceForOrder()
-                ? $this->finnishReferenceNumber->getIdFromOrderReferenceNumber($reference)
-                : $reference;
-        }
+        /** @var string $orderNo */
+        $orderNo = $this->gatewayConfig->getGenerateReferenceForOrder()
+            ? $this->finnishReferenceNumber->getIdFromOrderReferenceNumber($reference)
+            : $reference;
 
         /** @var array $ret */
         $ret = $this->processPayment($params, $session, $orderNo);
@@ -139,29 +130,5 @@ class ProcessPayment
         }
 
         return $errors;
-    }
-
-    /**
-     * Updates Apple Pay params for fail payment.
-     *
-     * @param array $params
-     * @param $order
-     * @return mixed
-     * @throws CheckoutException
-     */
-    private function updateApplePayParams($params, $order)
-    {
-        $params['checkout-reference'] = $this->finnishReferenceNumber->getReference($order);
-        $params['checkout-stamp'] = hash(
-            $this->gatewayConfig->getCheckoutAlgorithm(),
-            time() .
-            $order->getIncrementId()
-        );
-        $params['checkout-provider'] = 'applepay';
-        $params['checkout-status'] = 'fail';
-        // validation done, skip next hmac validation
-        $params['signature'] = HmacValidator::SKIP_HMAC_VALIDATION;
-
-        return $params;
     }
 }
