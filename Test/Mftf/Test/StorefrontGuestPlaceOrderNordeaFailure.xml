@@ -1,10 +1,10 @@
 <tests xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
        xsi:noNamespaceSchemaLocation="urn:magento:mftf:Test/etc/testSchema.xsd">
-    <test name="PaytrailGuestUserPlaceOrderNordea">
+    <test name="PaytrailGuestUserPlaceOrderNordeaFailure">
         <annotations>
-            <title value="Place an order using Nordea"/>
+            <title value="Checkout using Nordea failure"/>
             <description
-                value="User can go trough the checkout and place the order."/>
+                value="Cancel payment on Nordea payment page."/>
             <severity value="CRITICAL"/>
             <stories value="Payment Checkout"/>
             <group value="paytrail"/>
@@ -79,9 +79,11 @@
         <click selector="{{CheckoutPaymentSection.placeOrderWithoutTimeout}}" stepKey="clickPlaceOrder"/>
         <waitForPageLoad stepKey="waitForNordeaRedirect" time="10"/>
         <seeCurrentUrlMatches regex="~\//epmt.nordea.fi/~" stepKey="assertNordeaRedirect"/>
-        <!-- click on simulate success -->
-        <click selector="//a[contains(@href, 'nordea/success')]" stepKey="clickNordeaSimulateSuccess"/>
-
-        <waitForElementVisible selector="{{CheckoutSuccessMainSection.orderNumber}}" stepKey="waitForOrderNumber"/>
+        <!-- click on simulate cancel -->
+        <click selector="//a[contains(@href, 'nordea/cancel')]" stepKey="clickNordeaSimulateCancel"/>
+        <waitForPageLoad stepKey="waitForCartRedirect" time="10"/>
+        <seeCurrentUrlMatches regex="~checkout/cart~" stepKey="assertCartRedirect"/>
+        <waitForText userInput="Failed to complete the payment. Please try again or contact the customer service."
+                     stepKey="waitForErrorMessage"/>
     </test>
 </tests>
