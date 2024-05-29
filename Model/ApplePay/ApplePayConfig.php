@@ -3,7 +3,10 @@
 namespace Paytrail\PaymentService\Model\ApplePay;
 
 use Magento\Framework\View\Asset\Repository;
+use Magento\Sales\Model\Order;
 use Paytrail\PaymentService\Gateway\Config\Config;
+use Paytrail\PaymentService\Model\FinnishReferenceNumber;
+use Paytrail\PaymentService\Model\Payment\PaymentDataProvider;
 use Paytrail\SDK\Model\Provider;
 
 class ApplePayConfig
@@ -13,13 +16,22 @@ class ApplePayConfig
      *
      * @param Config $gatewayConfig
      * @param Repository $assetRepository
+     * @param PaymentDataProvider $paymentDataProvider
+     * @param FinnishReferenceNumber $referenceNumber
      */
     public function __construct(
         private Config     $gatewayConfig,
-        private Repository $assetRepository
+        private Repository $assetRepository,
+        private PaymentDataProvider $paymentDataProvider,
+        private FinnishReferenceNumber $referenceNumber
     ) {
     }
 
+    /**
+     * Returns true if browser is Safari and Apple Pay is enabled.
+     *
+     * @return bool
+     */
     public function canApplePay(): bool
     {
         if ($this->isSafariBrowser() && $this->gatewayConfig->isApplePayEnabled()) {
@@ -48,6 +60,40 @@ class ApplePayConfig
         $groupMethods[] = $applePayPaymentData;
 
         return $groupMethods;
+    }
+
+    /**
+     * Get params for processing order and payment.
+     *
+     * @param array $params
+     * @param Order $order
+     * @return array
+     * @throws \Paytrail\PaymentService\Exceptions\CheckoutException
+     */
+    public function getApplePayFailParams($params, $order): array
+    {
+        $paramsToProcess = [
+            'checkout-transaction-id' => '',
+            'checkout-account' => '',
+            'checkout-method' => '',
+            'checkout-algorithm' => '',
+            'checkout-timestamp' => '',
+            'checkout-nonce' => '',
+            'checkout-reference' => $this->referenceNumber->getReference($order),
+            'checkout-provider' => Config::APPLE_PAY_PAYMENT_CODE,
+            'checkout-status' => Config::PAYTRAIL_API_PAYMENT_STATUS_FAIL,
+            'checkout-stamp' => $this->paymentDataProvider->getStamp($order),
+            'signature' => '',
+            'skip_validation' => 1
+        ];
+
+        foreach ($params as $param) {
+            if (array_key_exists($param['name'], $paramsToProcess)) {
+                $paramsToProcess[$param['name']] = $param['value'];
+            }
+        }
+
+        return $paramsToProcess;
     }
 
     /**
