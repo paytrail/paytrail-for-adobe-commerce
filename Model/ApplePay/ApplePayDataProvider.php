@@ -9,10 +9,10 @@ use Paytrail\PaymentService\Model\FinnishReferenceNumber;
 use Paytrail\PaymentService\Model\Payment\PaymentDataProvider;
 use Paytrail\SDK\Model\Provider;
 
-class ApplePayConfig
+class ApplePayDataProvider
 {
     /**
-     * ApplePayConfig constructor.
+     * ApplePayDataProvider constructor.
      *
      * @param Config $gatewayConfig
      * @param Repository $assetRepository

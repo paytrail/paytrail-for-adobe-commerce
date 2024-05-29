@@ -9,7 +9,7 @@ use Magento\Framework\Controller\ResultFactory;
 use Magento\Framework\Message\ManagerInterface;
 use Paytrail\PaymentService\Exceptions\CheckoutException;
 use Paytrail\PaymentService\Logger\PaytrailLogger;
-use Paytrail\PaymentService\Model\ApplePay\ApplePayConfig;
+use Paytrail\PaymentService\Model\ApplePay\ApplePayDataProvider;
 use Paytrail\PaymentService\Model\Receipt\ProcessPayment;
 
 class ApplePayFailedReceipt implements ActionInterface
@@ -22,7 +22,7 @@ class ApplePayFailedReceipt implements ActionInterface
      * @param RequestInterface $request
      * @param ResultFactory $resultFactory
      * @param ManagerInterface $messageManager
-     * @param ApplePayConfig $applePayConfig
+     * @param ApplePayDataProvider $applePayDataProvider
      * @param PaytrailLogger $logger
      */
     public function __construct(
@@ -31,7 +31,7 @@ class ApplePayFailedReceipt implements ActionInterface
         private RequestInterface $request,
         private ResultFactory    $resultFactory,
         private ManagerInterface $messageManager,
-        private ApplePayConfig   $applePayConfig,
+        private ApplePayDataProvider $applePayDataProvider,
         private PaytrailLogger   $logger
     ) {
     }
@@ -45,7 +45,7 @@ class ApplePayFailedReceipt implements ActionInterface
     {
         try {
             $order = $this->session->getLastRealOrder();
-            $params = $this->applePayConfig->getApplePayFailParams($this->request->getParams()['params'], $order);
+            $params = $this->applePayDataProvider->getApplePayFailParams($this->request->getParams()['params'], $order);
             $resultJson = $this->resultFactory->create(ResultFactory::TYPE_JSON);
 
             $failMessages = $this->processPayment->process($params, $this->session);

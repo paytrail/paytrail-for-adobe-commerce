@@ -10,7 +10,7 @@ use Magento\Payment\Helper\Data as PaymentHelper;
 use Magento\Store\Model\StoreManagerInterface;
 use Paytrail\PaymentService\Gateway\Config\Config;
 use Paytrail\PaymentService\Model\Card\VaultConfig;
-use Paytrail\PaymentService\Model\ApplePay\ApplePayConfig;
+use Paytrail\PaymentService\Model\ApplePay\ApplePayDataProvider;
 use Paytrail\PaymentService\Model\Ui\DataProvider\PaymentProvidersData;
 
 class ConfigProvider implements ConfigProviderInterface
@@ -36,7 +36,7 @@ class ConfigProvider implements ConfigProviderInterface
      * @param Config $gatewayConfig
      * @param StoreManagerInterface $storeManager
      * @param PaymentProvidersData $paymentProvidersData
-     * @param ApplePayConfig $applePayConfig
+     * @param ApplePayDataProvider $applePayDataProvider
      * @throws LocalizedException
      */
     public function __construct(
@@ -46,7 +46,7 @@ class ConfigProvider implements ConfigProviderInterface
         private StoreManagerInterface $storeManager,
         private PaymentProvidersData  $paymentProvidersData,
         private VaultConfig $vaultConfig,
-        private ApplePayConfig $applePayConfig
+        private ApplePayDataProvider $applePayDataProvider
     ) {
         foreach ($this->methodCodes as $code) {
             $this->methods[$code] = $paymentHelper->getMethodInstance($code);
@@ -78,8 +78,8 @@ class ConfigProvider implements ConfigProviderInterface
                     ->handlePaymentProviderGroupData($groupData['groups'])['creditcard'];
             }
 
-            if ($this->applePayConfig->canApplePay()) {
-                $groupData['groups'] = $this->applePayConfig->addApplePayPaymentMethod($groupData['groups']);
+            if ($this->applePayDataProvider->canApplePay()) {
+                $groupData['groups'] = $this->applePayDataProvider->addApplePayPaymentMethod($groupData['groups']);
             }
 
             $config = [
