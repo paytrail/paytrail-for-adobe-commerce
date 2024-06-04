@@ -129,6 +129,13 @@
                         <config_path>payment/paytrail_cc_vault/active</config_path>
                         <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                     </field>
+                    <field id="show_stored_cards" translate="label" type="select" sortOrder="1" showInDefault="1" showInWebsite="1"
+                           showInStore="0" canRestore="1">
+                        <label>Show Paytrail stored cards</label>
+                        <config_path>payment/paytrail_cc_vault/show_stored_cards</config_path>
+                        <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                        <comment>Display or hide stored credit cards and 'Add card' button from checkout page.</comment>
+                    </field>
                 </group>
                 <group id="paytrail_personalization" translate="label" type="text" sortOrder="90" showInDefault="1"
                        showInWebsite="1" showInStore="1">
