@@ -81,7 +81,7 @@
                     <!-- ko if: methodGroup.can_tokenize && $parent.isLoggedIn() -->
                     <hr>
 
-                    <div class="paytrail-stored-cards">
+                    <div class="paytrail-stored-cards" data-bind="visible: $parent.isShowStoredCards()">
                         <!-- ko foreach : { data: $parent.getTokensData(methodGroup.tokens), as: 'token' } -->
                         <div class="paytrail-stored-token" data-bind="
                         click: $parents[1].setToken,
@@ -106,12 +106,11 @@
                             </div-->
                         </div>
                         <!-- /ko -->
-                    </div>
-                    <hr>
+                        <hr>
                         <button type="button" class="action" data-bind="click: $parent.addNewCard">
                             <span data-bind="i18n: 'Add Card'">Add Card</span>
                         </button>
-                    <hr>
+                    </div>
                     <!-- /ko -->
                 </div>
                 <!-- /ko -->

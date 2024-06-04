@@ -85,6 +85,9 @@ define(
                     }
                     return false;
                 },
+                isShowStoredCards: function () {
+                    return checkoutConfig[self.payMethod].is_show_stored_cards;
+                },
                 setPaymentMethodId: function (paymentMethod) {
                     self.selectedToken(0);
                     self.selectedPaymentMethodId(paymentMethod.id);
