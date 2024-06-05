@@ -529,18 +529,6 @@ class Config extends \Magento\Payment\Gateway\Config\Config
     }
 
     /**
-     * Get order increment id from checkout reference number
-     *
-     * @param string $reference
-     *
-     * @return string|null
-     */
-    public function getIdFromOrderReferenceNumber($reference)
-    {
-        return preg_replace('/\s+/', '', substr($reference, 1, -1));
-    }
-
-    /**
      * Get module version.
      *
      * @return string
