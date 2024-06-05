@@ -70,7 +70,7 @@ class ProcessService
         $orderState = $this->gatewayConfig->getDefaultOrderStatus();
 
         if ($paymentVerified === 'ok') {
-            $currentOrder->setState($orderState)->setStatus($orderState);
+            $currentOrder->setState(Order::STATE_PROCESSING)->setStatus($orderState);
             $currentOrder->addCommentToStatusHistory(__('Payment has been completed'));
         } else {
             $currentOrder->setState(InstallPaytrail::ORDER_STATE_CUSTOM_CODE);
