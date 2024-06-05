@@ -2,7 +2,6 @@
 
 namespace Paytrail\PaymentService\Model\Payment;
 
-
 class RoundingFixer
 {
     /**

@@ -204,4 +204,3 @@ class PaymentDataProvider
         return hash($this->gatewayConfig->getCheckoutAlgorithm(), time() . $order->getIncrementId());
     }
 }
-

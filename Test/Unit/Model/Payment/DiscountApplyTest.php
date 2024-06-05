@@ -9,6 +9,9 @@ use Paytrail\PaymentService\Model\Payment\DiscountGetterInterface;
 
 class DiscountApplyTest extends TestCase
 {
+    /**
+     * @var DiscountApply
+     */
     private $discountApply;
 
     protected function setUp(): void
@@ -21,8 +24,8 @@ class DiscountApplyTest extends TestCase
         $items = ['item1', 'item2'];
         $order = $this->getMockBuilder(Order::class)
             ->disableOriginalConstructor()
-            ->addMethods( ['getGiftCardsAmount', 'getCustomerBalanceAmount', 'getRewardCurrencyAmount'])
-            ->onlyMethods(['getShippingAmount', 'getGrandTotal', 'getShippingTaxAmount','getAllItems'])
+            ->addMethods(['getGiftCardsAmount', 'getCustomerBalanceAmount', 'getRewardCurrencyAmount'])
+            ->onlyMethods(['getShippingAmount', 'getGrandTotal', 'getShippingTaxAmount', 'getAllItems'])
             ->getMock();
 
         $order->method('getGiftCardsAmount')->willReturn(0);
@@ -39,8 +42,8 @@ class DiscountApplyTest extends TestCase
         $items = ['item1', 'item2'];
         $order = $this->getMockBuilder(Order::class)
             ->disableOriginalConstructor()
-            ->addMethods( ['getGiftCardsAmount', 'getCustomerBalanceAmount', 'getRewardCurrencyAmount'])
-            ->onlyMethods(['getShippingAmount', 'getGrandTotal', 'getShippingTaxAmount','getAllItems'])
+            ->addMethods(['getGiftCardsAmount', 'getCustomerBalanceAmount', 'getRewardCurrencyAmount'])
+            ->onlyMethods(['getShippingAmount', 'getGrandTotal', 'getShippingTaxAmount', 'getAllItems'])
             ->getMock();
 
         $order->method('getGiftCardsAmount')->willReturn(50);

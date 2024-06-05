@@ -5,6 +5,7 @@ namespace Paytrail\PaymentService\Test\Unit\Controller;
 use Magento\Checkout\Model\Session;
 use Magento\Framework\App\RequestInterface;
 use Magento\Framework\Controller\ResultFactory;
+use Magento\Framework\Controller\ResultInterface;
 use Magento\Framework\Message\ManagerInterface;
 use Magento\Quote\Model\Quote;
 use Magento\Quote\Model\QuoteRepository;
@@ -12,56 +13,69 @@ use Magento\Sales\Model\Order;
 use Paytrail\PaymentService\Model\FinnishReferenceNumber;
 use Paytrail\PaymentService\Model\Receipt\ProcessPayment;
 use Paytrail\PaymentService\Controller\Receipt\Index;
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
 class ReceiptIndexUnitTest extends TestCase
 {
     /**
-     * @var \PHPUnit\Framework\MockObject\MockObject
+     * @var MockObject
      */
     private $referenceNumberMock;
 
     /**
-     * @var \PHPUnit\Framework\MockObject\MockObject
+     * @var MockObject
      */
     private $sessionMock;
 
     /**
-     * @var \PHPUnit\Framework\MockObject\MockObject
+     * @var MockObject
      */
     private $processPaymentMock;
     /**
-     * @var \PHPUnit\Framework\MockObject\MockObject
+     * @var MockObject
      */
     private $requestMock;
 
     /**
-     * @var \PHPUnit\Framework\MockObject\MockObject
+     * @var MockObject
      */
     private $resultFactoryMock;
 
     /**
-     * @var \PHPUnit\Framework\MockObject\MockObject|null
+     * @var MockObject|null
      */
-    private \PHPUnit\Framework\MockObject\MockObject $messageManagerMock;
+    private MockObject $messageManagerMock;
 
     /**
-     * @var \PHPUnit\Framework\MockObject\MockObject|null
+     * @var MockObject|null
      */
-    private \PHPUnit\Framework\MockObject\MockObject $orderMock;
+    private MockObject $orderMock;
 
     /**
-     * @var (\Magento\Framework\Controller\ResultInterface&\PHPUnit\Framework\MockObject\MockObject)|\PHPUnit\Framework\MockObject\MockObject|null
+     * @var (ResultInterface&MockObject)|MockObject|null
      */
-    private                                          $resultInterfaceMock;
-    private Index                                    $indexController;
-    private \PHPUnit\Framework\MockObject\MockObject $quoteMock;
-    private \PHPUnit\Framework\MockObject\MockObject $quoteRepositoryMock;
+    private $resultInterfaceMock;
+
+    /**
+     * @var Index
+     */
+    private Index $indexController;
+
+    /**
+     * @var MockObject|(Quote&MockObject)
+     */
+    private MockObject $quoteMock;
+
+    /**
+     * @var MockObject
+     */
+    private MockObject $quoteRepositoryMock;
 
     /**
      * @param $originalClassName
      *
-     * @return \PHPUnit\Framework\MockObject\MockObject
+     * @return MockObject
      */
     private function getSimpleMock($originalClassName)
     {
@@ -96,7 +110,7 @@ class ReceiptIndexUnitTest extends TestCase
             ->setMethods(['setIsActive'])
             ->getMock();
         $methods                   = ['setPath', 'setHeader', 'setHttpResponseCode', 'renderResult'];
-        $this->resultInterfaceMock = $this->getMockBuilder(\Magento\Framework\Controller\ResultInterface::class)
+        $this->resultInterfaceMock = $this->getMockBuilder(ResultInterface::class)
             ->setMethods($methods)
             ->disableOriginalConstructor()
             ->getMock();
