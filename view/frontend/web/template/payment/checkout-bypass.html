@@ -70,11 +70,11 @@
                         </div>
                     </div>
                     <!--/ko-->
-                    <!-- ko if: $parent.isLoginButtonEnabled(methodGroup) && !$parent.isLoggedIn() -->
+                    <!-- ko if: $parent.isLoginButtonEnabled(methodGroup) && !$parent.isLoggedIn() && $parent.isShowStoredCards() -->
                     <hr>
-                        <button type="button" class="action" data-trigger="authentication">
-                            <span data-bind="i18n: 'Login to save cards'">Login to save cards</span>
-                        </button>
+                    <button type="button" class="action" data-trigger="authentication">
+                        <span data-bind="i18n: 'Login to save cards'">Login to save cards</span>
+                    </button>
                     <hr>
                     <!--/ko-->
 
@@ -88,7 +88,8 @@
                         attr: {id: token.id },
                         css: { active: $parents[1].selectedToken() == token.id }">
 
-                            <input class="radio" type="radio" name="optoken" data-bind="attr: {value: token.id}, checked: $parents[1].selectedToken()"/>
+                            <input class="radio" type="radio" name="optoken"
+                                   data-bind="attr: {value: token.id}, checked: $parents[1].selectedToken()"/>
                             <div class="paytrail-stored-token-data">
 
                                 <img data-bind="attr: {'src': token.url}"/>
