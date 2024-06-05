@@ -24,35 +24,44 @@
             <!-- ko template: getTemplate() --><!-- /ko -->
             <!--/ko-->
         </div>
+        <div class="paytrail-payment-terms-container">
+            <span data-bind="html: getTerms()"></span>
+        </div>
 
         <div class="paytrail-payment-methods">
             <!-- Collapsible elements for payment groups-->
-            <!-- ko foreach:  { data: getMethodGroups(), as: 'methodGroup' } -->
-            <!-- ko if: methodGroup['id'] === 'bank' -->
             <div class="paytrail-payment-groups"
                  data-bind="mageInit: {'accordion':{'collapsible': false, 'openedState': 'active', 'active': '0'}}"
                  id='accordion-element'>
+                <!-- ko foreach:  { data: getMethodGroups(), as: 'methodGroup' } -->
                 <div class='paytrail-group-collapsible' data-bind="attr: {id: methodGroup['id']}"
                      data-role='collapsible'>
-                    <div class="paytrail-group-title">
-                        <span data-bind="text: name"></span>
+                    <div class="paytrail-group-header-wrapper" data-role="trigger">
+                        <div class="paytrail-group-title">
+                            <!-- ko if: $parent.getGroupIcon(methodGroup['id']) -->
+                            <img class="paytrail-group-logo"
+                                 data-bind="attr: {src: $parent.getGroupIcon(methodGroup['id'])}"/>
+                            <!--/ko-->
+                            <span data-bind="text: name"></span>
+                        </div>
+                        <div class="paytrail-group-method-list">
+                            <ul>
+                                <!-- ko foreach: methodGroup['providers'], as: 'paymentMethod' -->
+                                <li data-bind="text: name"></li>
+                                <!--/ko-->
+                            </ul>
+                        </div>
                     </div>
                 </div>
                 <div class="paytrail-group-wrapper" data-role="content">
                     <!-- ko foreach: methodGroup['providers'], as: 'paymentMethod' -->
-                    <div tabindex="0" class="paytrail-payment-method" data-bind="
+                    <div class="paytrail-payment-method" data-bind="
                   attr: {id: 'paytrail-payment-method-' + id},
                   css: { active: $parents[1].selectedPaymentMethodId() == id },
-                  click: $parents[1].setPaymentMethodId,
-                  event: { keyup: $parents[1].setPaymentMethodIdOnKeyUp }">
-                        <!-- ko if: methodGroup['id'] === 'applepay' -->
-                        <div class="apple-pay-button apple-pay-button-black"></div>
-                        <!--/ko-->
-                        <!-- ko ifnot: methodGroup['id'] === 'applepay' -->
+                  click: $parents[1].setPaymentMethodId">
                         <div class="paytrail-payment-method-logo">
-                            <img data-bind="attr: { src: icon, alt: name }">
+                            <img data-bind="attr: { src: icon }">
                         </div>
-                        <!--/ko-->
                         <div class="paytrail-payment-method-title" data-bind="text: name"></div>
 
                         <div>
@@ -61,84 +70,52 @@
                         </div>
                     </div>
                     <!--/ko-->
-                </div>
-            </div>
-            <!-- /ko -->
-            <!-- /ko -->
-            <!-- ko foreach:  { data: getMethodGroups(), as: 'methodGroup' } -->
-            <!-- ko ifnot: methodGroup['id'] === 'bank' -->
-            <div class="paytrail-group-title">
-                <span data-bind="text: name"></span>
-                <!-- ko if: methodGroup['id'] === 'bank' -->
-                <p data-bind="text: methodGroup['id']"></p>
-                <!--/ko-->
-            </div>
-            <div class="paytrail-group-wrapper" data-role="content">
-                <!-- ko foreach: methodGroup['providers'], as: 'paymentMethod' -->
-                <div tabindex="0" class="paytrail-payment-method" data-bind="
-              attr: {id: 'paytrail-payment-method-' + id},
-              css: { active: $parents[1].selectedPaymentMethodId() == id },
-              click: $parents[1].setPaymentMethodId,
-              event: { keyup: $parents[1].setPaymentMethodIdOnKeyUp }">
-                    <div class="paytrail-payment-method-logo">
-                        <img data-bind="attr: { src: icon, alt: name }">
-                    </div>
-                    <div class="paytrail-payment-method-title" data-bind="text: name"></div>
+                    <!-- ko if: $parent.isLoginButtonEnabled(methodGroup) && !$parent.isLoggedIn() -->
+                    <hr>
+                    <button type="button" class="action" data-trigger="authentication">
+                        <span data-bind="i18n: 'Login to save cards'">Login to save cards</span>
+                    </button>
+                    <hr>
+                    <!--/ko-->
 
-                    <div>
-                        <input data-bind="attr: {value: id}, checked: $parents[1].selectedPaymentMethodId()"
-                               type="radio"/>
-                    </div>
-                </div>
-                <!--/ko-->
-                <!-- ko if: $parent.isLoginButtonEnabled(methodGroup) && !$parent.isLoggedIn() -->
-                <hr>
-                <button type="button" class="action" data-trigger="authentication">
-                    <span data-bind="i18n: 'Login to save cards'">Login to save cards</span>
-                </button>
-                <hr>
-                <!--/ko-->
+                    <!-- ko if: methodGroup.can_tokenize && $parent.isLoggedIn() -->
+                    <hr>
 
-                <!-- ko if: methodGroup.can_tokenize && $parent.isLoggedIn() -->
-                <hr>
+                    <div class="paytrail-stored-cards">
+                        <!-- ko foreach : { data: $parent.getTokensData(methodGroup.tokens), as: 'token' } -->
+                        <div class="paytrail-stored-token" data-bind="
+                        click: $parents[1].setToken,
+                        attr: {id: token.id },
+                        css: { active: $parents[1].selectedToken() == token.id }">
 
-                <div class="paytrail-stored-cards" data-bind="visible: isShowStoredCards()">
-                    <!-- ko foreach : { data: $parent.getTokensData(methodGroup.tokens), as: 'token' } -->
-                    <div tabindex="0" class="paytrail-stored-token" data-bind="
-                    click: $parents[1].setToken,
-                    attr: {id: token.id },
-                    css: { active: $parents[1].selectedToken() == token.id },
-                    event: { keyup: $parents[1].setTokenOnKeyUp }">
-                        <input class="radio" type="radio" name="optoken" data-bind="attr: {value: token.id}, checked: $parents[1].selectedToken()"/>
-                        <div class="paytrail-stored-token-data">
+                            <input class="radio" type="radio" name="optoken" data-bind="attr: {value: token.id}, checked: $parents[1].selectedToken()"/>
+                            <div class="paytrail-stored-token-data">
 
-                            <img data-bind="attr: {'src': token.url}"/>
-                            <span translate="'ending'"></span>
-                            <span data-bind="text: token.maskedCC"></span>
-                            (
-                            <span translate="'expires'"></span>:
-                            <span data-bind="text: token.expires"></span>
-                            )
+                                <img data-bind="attr: {'src': token.url}"/>
+                                <span translate="'ending'"></span>
+                                <span data-bind="text: token.maskedCC"></span>
+                                (
+                                <span translate="'expires'"></span>:
+                                <span data-bind="text: token.expires"></span>
+                                )
+                            </div>
+                            <!--div class="wrapper right">
+                                <button type="button" class="action delete-card" data-bind="click: $parent.deleteCard">
+                                    <span data-bind="i18n: 'Delete Card'">Delete</span>
+                                </button>
+                            </div-->
                         </div>
-                        <!--div class="wrapper right">
-                            <button type="button" class="action delete-card" data-bind="click: $parent.deleteCard">
-                                <span data-bind="i18n: 'Delete Card'">Delete</span>
-                            </button>
-                        </div-->
+                        <!-- /ko -->
                     </div>
-                    <!-- /ko -->
                     <hr>
                     <button type="button" class="action" data-bind="click: $parent.addNewCard">
                         <span data-bind="i18n: 'Add Card'">Add Card</span>
                     </button>
+                    <hr>
+                    <!-- /ko -->
                 </div>
                 <!-- /ko -->
             </div>
-            <!-- /ko -->
-            <!-- /ko -->
-        </div>
-        <div class="paytrail-payment-terms-container">
-            <span data-bind="html: getTerms()"></span>
         </div>
         <div class="paytrail-agreements-block">
             <!-- ko foreach: $parent.getRegion('before-place-order') -->
@@ -175,10 +152,6 @@
             </div>
         </div>
         <div id="paytrail-form-wrapper" style="display:none;"></div>
-        <div id="apple-pay-popup-wrapper" class="apple-pay-popup-modal" style="display: none;">
-            <span class="apple-pay-popup-header">Apple Pay</span>
-            <p class="apple-pay-popup-content">Press the button below to pay with Apple Pay</p>
-        </div>
     </div>
     <!-- /ko -->
 </div>
