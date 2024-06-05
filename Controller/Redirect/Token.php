@@ -21,6 +21,7 @@ use Magento\Sales\Model\Order;
 use Magento\Sales\Model\OrderFactory;
 use Paytrail\PaymentService\Exceptions\CheckoutException;
 use Paytrail\PaymentService\Gateway\Config\Config;
+use Paytrail\PaymentService\Gateway\Validator\HmacValidator;
 use Paytrail\PaymentService\Model\Receipt\ProcessService;
 use Paytrail\PaymentService\Model\ReceiptDataProvider;
 use Paytrail\PaymentService\Model\Recurring\TotalConfigProvider;
@@ -28,7 +29,6 @@ use Paytrail\PaymentService\Model\Subscription\SubscriptionCreate;
 
 class Token implements HttpPostActionInterface
 {
-    public const SKIP_HMAC_VALIDATION = 'skip_hmac';
     private Phrase $errorMsg;
 
     /**
@@ -158,7 +158,7 @@ class Token implements HttpPostActionInterface
             'checkout-transaction-id' => $response['data']->getTransactionId(),
             'checkout-status' => $response['data']->getStatus(),
             'checkout-provider' => $response['data']->getProvider(),
-            'signature' => self::SKIP_HMAC_VALIDATION
+            'signature' => HmacValidator::SKIP_HMAC_VALIDATION
         ];
 
         $this->receiptDataProvider->execute($receiptData);

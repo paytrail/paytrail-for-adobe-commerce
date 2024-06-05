@@ -5,6 +5,7 @@ namespace Paytrail\PaymentService\Model\Receipt;
 use Magento\Checkout\Model\Session;
 use Magento\Quote\Api\CartRepositoryInterface;
 use Paytrail\PaymentService\Gateway\Config\Config;
+use Paytrail\PaymentService\Gateway\Validator\HmacValidator;
 use Paytrail\PaymentService\Gateway\Validator\ResponseValidator;
 use Paytrail\PaymentService\Exceptions\CheckoutException;
 use Paytrail\PaymentService\Model\FinnishReferenceNumber;
@@ -29,7 +30,7 @@ class ProcessPayment
         private ReceiptDataProvider     $receiptDataProvider,
         private CartRepositoryInterface $cartRepository,
         private Config                  $gatewayConfig,
-        private FinnishReferenceNumber $finnishReferenceNumber
+        private FinnishReferenceNumber  $finnishReferenceNumber
     ) {
     }
 
