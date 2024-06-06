@@ -400,11 +400,8 @@ define(
                                                     }
                                                 }).done(
                                                     function (response) {
-                                                        self.addErrorMessage($t(response.message));
-                                                        self.scrollTo();
-                                                        setTimeout(() => {
-                                                            window.location.replace(mageUrlBuilder.build(response.redirectUrl));
-                                                        }, 1000);
+                                                        fullScreenLoader.startLoader();
+                                                        window.location.replace(mageUrlBuilder.build(response.redirectUrl));
 
                                                         return false;
                                                     }
