@@ -83,10 +83,10 @@
                     <hr>
                     <!--/ko-->
 
-                    <!-- ko if: methodGroup.can_tokenize && $parent.isLoggedIn() -->
+                    <!-- ko if: methodGroup.can_tokenize && $parent.isLoggedIn() && $parent.isShowStoredCards() -->
                     <hr>
 
-                    <div class="paytrail-stored-cards" data-bind="visible: isShowStoredCards()">
+                    <div class="paytrail-stored-cards">
                         <!-- ko foreach : { data: $parent.getTokensData(methodGroup.tokens), as: 'token' } -->
                         <div class="paytrail-stored-token" data-bind="
                         click: $parents[1].setToken,
