@@ -25,8 +25,15 @@ use PHPUnit\Framework\TestCase;
 
 class RequestDataTest extends TestCase
 {
+    /**
+     * @var PaymentDataProvider
+     */
     private PaymentDataProvider $paymentDataProvider;
-    private ObjectManager       $objectManager;
+
+    /**
+     * @var ObjectManager
+     */
+    private ObjectManager $objectManager;
 
     /**
      * @param $config1
@@ -70,7 +77,6 @@ class RequestDataTest extends TestCase
             );
         $configMock = $this->getMockForAbstractClass(ScopeConfigInterface::class);
         $configMock->method('getValue')->willReturn(24);
-
 
         $this->paymentDataProvider = new PaymentDataProvider(
             $this->createMock(CompanyRequestData::class),
@@ -141,6 +147,8 @@ class RequestDataTest extends TestCase
     }
 
     /**
+     * Item args data provider
+     *
      * @return array[]
      */
     public static function itemArgsDataProvider(): array
@@ -148,7 +156,6 @@ class RequestDataTest extends TestCase
         $taxPercent      = 0.24;
         $productPrice    = 100;
         $shippingExclTax = 12.02;
-
 
         $cases = [
             '#1 discount 10.00, giftcard 10.00'   => [
@@ -240,10 +247,17 @@ class RequestDataTest extends TestCase
         $result = [];
         foreach ($cases as $key => $case) {
 
-            $shippingTax   = $case['shipping_tax'] ? $shippingExclTax * $taxPercent : 0;
-            $discountTax   = $case['discount_tax'] ? $case['discount'] * $taxPercent : 0;
-            $expectedTotal = $case['price'] * $case['qty'] - $case['discount'] - $discountTax - $case['giftcard'] + $shippingExclTax + $shippingTax;
-            $result[$key]  = [
+            $shippingTax = $case['shipping_tax'] ? $shippingExclTax * $taxPercent : 0;
+            $discountTax = $case['discount_tax'] ? $case['discount'] * $taxPercent : 0;
+
+            $expectedTotal = ($case['price'] * $case['qty'])
+                - $case['discount']
+                - $discountTax
+                - $case['giftcard']
+                + $shippingExclTax
+                + $shippingTax;
+
+            $result[$key] = [
                 'input'     => [
                     'config'   => [
                         'discount_tax'               => $case['discount_tax'],
@@ -269,7 +283,6 @@ class RequestDataTest extends TestCase
                             'shipping_discount_amount'                  => 0,
                             'shipping_discount_tax_compensation_amount' => 0,
                         ]
-
                 ],
                 'discounts' => [
                     'giftcard' => $case['giftcard'],
@@ -284,7 +297,14 @@ class RequestDataTest extends TestCase
         return $result;
     }
 
-    private function prepareOrderItemsMock($items)
+    /**
+     * Prepare order items mock
+     *
+     * @param $items
+     *
+     * @return array
+     */
+    private function prepareOrderItemsMock($items): array
     {
         $orderItems = [];
         foreach ($items as $item) {
