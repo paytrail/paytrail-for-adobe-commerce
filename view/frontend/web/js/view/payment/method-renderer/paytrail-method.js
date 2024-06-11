@@ -86,6 +86,9 @@ define(
                     }
                     return false;
                 },
+                isShowStoredCards: function () {
+                    return checkoutConfig[self.payMethod].is_show_stored_cards;
+                },
                 setPaymentMethodId: function (paymentMethod) {
                     self.selectedToken(0);
                     self.selectedPaymentMethodId(paymentMethod.id);
@@ -392,16 +395,32 @@ define(
                                                      */
                                                     click: function (event) {
                                                         element.click();
-                                                        fullScreenLoader.startLoader();
                                                     }
                                                 }]
                                             };
 
                                             let modalContainer = $('#apple-pay-popup-wrapper');
-
                                             let popup = modal(options, modalContainer);
                                             modalContainer.modal('openModal');
                                             fullScreenLoader.stopLoader();
+
+                                            modalContainer.on('modalclosed', function () {
+                                                $.ajax({
+                                                    url:mageUrlBuilder.build('paytrail/receipt/applepayfailedreceipt'),
+                                                    type:'post',
+                                                    dataType:'json',
+                                                    data: {
+                                                        'params':response.customProviders.applepay.parameters
+                                                    }
+                                                }).done(
+                                                    function (response) {
+                                                        fullScreenLoader.startLoader();
+                                                        window.location.replace(mageUrlBuilder.build(response.redirectUrl));
+
+                                                        return false;
+                                                    }
+                                                )
+                                            });
                                         }
 
                                         return false;

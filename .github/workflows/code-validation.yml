@@ -100,4 +100,3 @@ jobs:
       - name: Run Unit test
         run: |
           vendor/bin/phpunit Test/Unit/Model/
-

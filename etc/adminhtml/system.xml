@@ -33,7 +33,7 @@
                 <field id="order_status" translate="label" type="select" sortOrder="40" showInDefault="1"
                        showInWebsite="1" showInStore="0" canRestore="1">
                     <label>New Order Status</label>
-                    <source_model>Magento\Sales\Model\Config\Source\Order\Status\Newprocessing</source_model>
+                    <source_model>Magento\Sales\Model\Config\Source\Order\Status\Processing</source_model>
                 </field>
                 <field id="rounding_row_tax_percent" translate="label" type="text" sortOrder="45"
                        showInDefault="1" showInWebsite="1" showInStore="1" canRestore="1">
@@ -128,6 +128,13 @@
                         <label>Enabled</label>
                         <config_path>payment/paytrail_cc_vault/active</config_path>
                         <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    </field>
+                    <field id="show_stored_cards" translate="label" type="select" sortOrder="1" showInDefault="1" showInWebsite="1"
+                           showInStore="0" canRestore="1">
+                        <label>Show Paytrail stored cards</label>
+                        <config_path>payment/paytrail_cc_vault/show_stored_cards</config_path>
+                        <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                        <comment>Display or hide stored credit cards and 'Add card' button from checkout page.</comment>
                     </field>
                 </group>
                 <group id="paytrail_apple_pay" translate="label" type="text" sortOrder="90" showInDefault="1"

@@ -304,12 +304,13 @@
 
 /* Apple Pay CSS section */
 .modal-inner-wrap {
-  top: 50%;
+  top: 30%;
 }
 
 .apple-pay-button {
   -webkit-appearance: -apple-pay-button;
   -apple-pay-button-type: plain;
+  -apple-pay-button-style: white;
   width: 120px;
   height: 60px;
 }
