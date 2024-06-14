@@ -604,7 +604,7 @@ class Config extends \Magento\Payment\Gateway\Config\Config
     /**
      * Are manual invoice activations in use
      *
-     * @param null|int|string $storeId
+     * @param $storeId
      *
      * @return bool
      */
@@ -617,6 +617,7 @@ class Config extends \Magento\Payment\Gateway\Config\Config
      * Will creating a shipment to an order activate the order's invoice
      *
      * @param $storeId
+     *
      * @return bool
      */
     public function isShipmentActivateInvoice($storeId = null)
