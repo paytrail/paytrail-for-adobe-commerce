@@ -36,6 +36,7 @@ class ConfigProvider implements ConfigProviderInterface
      * @param Config $gatewayConfig
      * @param StoreManagerInterface $storeManager
      * @param PaymentProvidersData $paymentProvidersData
+     * @param VaultConfig $vaultConfig
      * @param ApplePayDataProvider $applePayDataProvider
      * @throws LocalizedException
      */
