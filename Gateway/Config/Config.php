@@ -50,12 +50,9 @@ class Config extends \Magento\Payment\Gateway\Config\Config
     public const VAULT_CODE                            = 'paytrail_cc_vault';
     public const LOGO                                  = 'payment/paytrail/logo';
     public const KEY_MANUAL_INVOICE                    = 'manual_invoice';
-
     public const APPLE_PAY_CONFIG = 'paytrail_apple_pay/active';
     public const KEY_ACTIVATE_WITH_SHIPMENT            = 'shipment_activates_invoice';
-
     public const GIT_URL = 'https://api.github.com/repos/paytrail/paytrail-for-adobe-commerce/releases/latest';
-
     public const RECEIPT_PROCESSING_CACHE_PREFIX     = "receipt_processing_";
     public const PAYTRAIL_API_PAYMENT_STATUS_OK      = 'ok';
     public const PAYTRAIL_API_PAYMENT_STATUS_PENDING = 'pending';
