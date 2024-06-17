@@ -96,9 +96,23 @@ define(
 
                     return true;
                 },
+                setPaymentMethodIdOnKeyUp: function (data, event) {
+                    if (event.key === "Enter") {
+                        self.setPaymentMethodId(data);
+                    }
+
+                    return true;
+                },
                 setToken: function (token) {
                     self.selectedToken(token.id);
                     self.selectedPaymentMethodId(0);
+
+                    return true;
+                },
+                setTokenOnKeyUp: function (data, event) {
+                    if (event.key === "Enter") {
+                        self.setToken(data);
+                    }
 
                     return true;
                 },
