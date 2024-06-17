@@ -100,6 +100,8 @@
 
 .paytrail-group-logo {
   margin-right:1em;
+  width: 32px;
+  height: 34px;
 }
 
 .paytrail-group-collapsible.active img {
@@ -299,6 +301,44 @@
   background-color: lightgrey;
 }
 
+/* Apple Pay CSS section */
+.modal-inner-wrap {
+  top: 30%;
+}
+
+.apple-pay-button {
+  -webkit-appearance: -apple-pay-button;
+  -apple-pay-button-type: plain;
+  -apple-pay-button-style: white;
+  width: 120px;
+  height: 60px;
+}
+
+.apple-pay-popup-button {
+  -webkit-appearance: -apple-pay-button;
+  -apple-pay-button-type: plain;
+  height: 50px;
+  width: 100%;
+}
+
+.apple-pay-popup-header {
+  font-weight: bold;
+  font-size: 20px;
+}
+
+.apple-pay-popup-content {
+  padding-top: 3%;
+}
+
+.apple-pay-popup-modal {
+  margin-bottom: -3.5%;
+}
+
+.apple-pay-popup-foot {
+  border-top: none !important;
+  padding: 15px 20px !important;
+}
+
 @media only screen and (max-width : 1023px) {
   .paytrail-payment-methods .paytrail-payment-method {
     width: 23.6%;
@@ -315,6 +355,9 @@
     font-size: 1.1em;
   }
 
+  .apple-pay-popup-wrap {
+    min-height: unset !important;
+  }
 }
 
 @media only screen and (max-width : 767px) {
@@ -328,6 +371,12 @@
 
   .paytrail-payment-methods .paytrail-payment-method:nth-child(4n+0) { margin-right: 1%; }
   .paytrail-payment-methods .paytrail-payment-method:nth-child(3n+0) { margin-right: 0; }
+
+  .apple-pay-popup-wrap {
+    min-height: unset !important;
+    margin-top: 50% !important;;
+    margin-right: 10% !important;;
+  }
 }
 
 @media only screen and (max-width : 550px) {
@@ -361,4 +410,9 @@
     width: 48.5%;
   }
 
+  .apple-pay-popup-wrap {
+    min-height: unset !important;
+    margin-top: 50%;
+    margin-right: 10%;
+  }
 }
