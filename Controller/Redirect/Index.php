@@ -22,7 +22,9 @@ use Psr\Log\LoggerInterface;
 
 class Index implements ActionInterface
 {
-
+    /**
+     * @var null
+     */
     private $errorMsg = null;
 
     /**
@@ -90,6 +92,14 @@ class Index implements ActionInterface
                 $order           = $this->checkoutSession->getLastRealOrder();
                 $paytrailPayment = $this->getPaytrailPayment($order, $selectedPaymentMethodId);
 
+                if ($selectedPaymentMethodId === Config::APPLE_PAY_PAYMENT_CODE) {
+                    return $resultJson->setData([
+                        'success' => true,
+                        'applePay' => true,
+                        'customProviders' => $paytrailPayment->getCustomProviders()
+                    ]);
+                }
+
                 if ($this->gatewayConfig->getSkipBankSelection()) {
                     $redirect_url = $paytrailPayment->getHref();
 
@@ -109,7 +119,6 @@ class Index implements ActionInterface
                     $this->pendingOrderEmailConfirmation->pendingOrderEmailSend($order);
                 }
 
-
                 $block = $this->resultFactory->create(ResultFactory::TYPE_PAGE)
                     ->getLayout()
                     ->createBlock(\Paytrail\PaymentService\Block\Redirect\Paytrail::class)
@@ -117,9 +126,9 @@ class Index implements ActionInterface
                     ->setParams($this->getInputs($formParams['inputs']));
 
                 return $resultJson->setData([
-                                                'success' => true,
-                                                'data'    => $block->toHtml(),
-                                            ]);
+                    'success' => true,
+                    'data'    => $block->toHtml(),
+                ]);
             }
         } catch (\Exception $e) {
             // Error will be handled below
@@ -137,9 +146,9 @@ class Index implements ActionInterface
         $this->checkoutSession->restoreQuote();
 
         return $resultJson->setData([
-                                        'success' => false,
-                                        'message' => $this->errorMsg
-                                    ]);
+            'success' => false,
+            'message' => $this->errorMsg
+        ]);
     }
 
     /**
@@ -174,7 +183,9 @@ class Index implements ActionInterface
     }
 
     /**
-     * @param $inputs
+     * GetInputs function.
+     *
+     * @param array $inputs
      *
      * @return mixed
      */

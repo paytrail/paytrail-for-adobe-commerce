@@ -6,7 +6,6 @@ use Magento\Sales\Api\OrderRepositoryInterface;
 use Magento\Sales\Model\Order;
 use Magento\Sales\Model\Order\Payment\Transaction;
 use Magento\Sales\Model\Order\Payment\Transaction\BuilderInterface as TransactionBuilderInterface;
-use Paytrail\PaymentService\Controller\Redirect\Token;
 use Paytrail\PaymentService\Exceptions\CheckoutException;
 use Paytrail\PaymentService\Gateway\Validator\HmacValidator;
 use Paytrail\PaymentService\Logger\PaytrailLogger;
@@ -24,10 +23,10 @@ class PaymentTransaction
      */
     public function __construct(
         private TransactionBuilderInterface $transactionBuilder,
-        private HmacValidator $hmacValidator,
+        private HmacValidator               $hmacValidator,
         private CancelOrderService          $cancelOrderService,
         private OrderRepositoryInterface    $orderRepositoryInterface,
-        private PaytrailLogger $paytrailLogger
+        private PaytrailLogger              $paytrailLogger
     ) {
     }
 
@@ -48,7 +47,7 @@ class PaymentTransaction
         $transaction = $this->transactionBuilder
             ->setPayment($payment)->setOrder($order)
             ->setTransactionId($transactionId)
-            ->setAdditionalInformation([Transaction::RAW_DETAILS => (array) $details])
+            ->setAdditionalInformation([Transaction::RAW_DETAILS => (array)$details])
             ->setFailSafe(true)
             ->build(Transaction::TYPE_CAPTURE);
         $transaction->setIsClosed(0);
@@ -68,7 +67,7 @@ class PaymentTransaction
         $status = $params['checkout-status'];
 
         // skip HMAC validator if signature is 'skip_hmac' for token payment
-        if ($params['signature'] === Token::SKIP_HMAC_VALIDATION) {
+        if ($params['signature'] === HmacValidator::SKIP_HMAC_VALIDATION) {
             $verifiedPayment = true;
         } else {
             $verifiedPayment = $this->hmacValidator->validateHmac($params, $params['signature']);
