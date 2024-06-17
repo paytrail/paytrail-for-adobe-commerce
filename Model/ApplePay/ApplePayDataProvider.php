@@ -2,6 +2,7 @@
 
 namespace Paytrail\PaymentService\Model\ApplePay;
 
+use Magento\Framework\HTTP\Header;
 use Magento\Framework\View\Asset\Repository;
 use Magento\Sales\Model\Order;
 use Paytrail\PaymentService\Gateway\Config\Config;
@@ -18,12 +19,14 @@ class ApplePayDataProvider
      * @param Repository $assetRepository
      * @param PaymentDataProvider $paymentDataProvider
      * @param FinnishReferenceNumber $referenceNumber
+     * @param Header $httpHeader
      */
     public function __construct(
         private Config     $gatewayConfig,
         private Repository $assetRepository,
         private PaymentDataProvider $paymentDataProvider,
-        private FinnishReferenceNumber $referenceNumber
+        private FinnishReferenceNumber $referenceNumber,
+        private Header $httpHeader
     ) {
     }
 
@@ -124,7 +127,7 @@ class ApplePayDataProvider
      */
     private function isSafariBrowser(): bool
     {
-        $user_agent = $_SERVER['HTTP_USER_AGENT'];
+        $user_agent = $this->httpHeader->getHttpUserAgent();
 
         if (stripos($user_agent, 'Chrome') !== false && stripos($user_agent, 'Safari') !== false) {
             return false;

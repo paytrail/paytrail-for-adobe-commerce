@@ -29,6 +29,9 @@ use Paytrail\PaymentService\Model\Subscription\SubscriptionCreate;
 
 class Token implements HttpPostActionInterface
 {
+    /**
+     * @var Phrase
+     */
     private Phrase $errorMsg;
 
     /**
