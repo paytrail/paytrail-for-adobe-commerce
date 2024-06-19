@@ -120,12 +120,23 @@
   display:none;
 }
 
+.paytrail-store-card-button {
+  margin-bottom: 10px;
+  height: 40px;
+  padding: 5px 10px;
+  border: 1px solid #e3e3e3;
+  border-radius: 10px;
+  background-color: #ffffff;
+  box-shadow: 2px 5px 10px #c2c2c2 !important;
+}
 
 .paytrail-stored-token {
+    margin-bottom: 10px;
     height: 50px;
-    border: 1px solid #E6E7E8;
-    margin-bottom: 5px;
-
+    border: 1px solid #e3e3e3;
+    border-radius: 10px;
+    background-color: #ffffff;
+    box-shadow: 2px 5px 10px #c2c2c2;
 }
 
 .paytrail-stored-token input[type="radio"] {
