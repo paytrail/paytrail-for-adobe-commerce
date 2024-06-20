@@ -11,6 +11,11 @@ use Paytrail\PaymentService\Model\Validation\PreventAdminActions;
 class PaymentInformationManagementPlugin
 {
     /**
+     * Paytrail payment method code
+     */
+    const PAYTRAIL = 'paytrail';
+
+    /**
      * @var PreventAdminActions
      */
     private PreventAdminActions $preventAdminActions;
@@ -34,7 +39,7 @@ class PaymentInformationManagementPlugin
      */
     public function beforeSavePaymentInformation(PaymentInformationManagement $subject, $cartId, PaymentInterface $paymentMethod, \Magento\Quote\Api\Data\AddressInterface $billingAddress = null): array
     {
-        if ($this->preventAdminActions->isAdminAsCustomer()) {
+        if ($this->preventAdminActions->isAdminAsCustomer() && str_contains($paymentMethod->getMethod(), self::PAYTRAIL)) {
             throw new ValidationException(__('Admin user is not authorized for this operation'));
         }
 
