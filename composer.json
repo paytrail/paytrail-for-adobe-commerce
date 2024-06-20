@@ -24,7 +24,7 @@
     },
     "require-dev": {
         "magento/magento-coding-standard": "*",
-        "phpunit/phpunit": "*",
+        "phpunit/phpunit": "^9.5",
         "magento/product-enterprise-edition": "> 2.4.3"
     },
     "conflict": {
@@ -58,7 +58,8 @@
         "allow-plugins": {
             "magento/composer-dependency-version-audit-plugin": false,
             "magento/magento-composer-installer": false,
-            "magento/inventory-composer-installer": false
+            "magento/inventory-composer-installer": false,
+            "dealerdirect/phpcodesniffer-composer-installer": true
         }
     }
 }
