@@ -46,16 +46,9 @@
                       css: { active: $parents[1].selectedPaymentMethodId() == id },
                       click: $parents[1].setPaymentMethodId,
                       event: { keyup: $parents[1].setPaymentMethodIdOnKeyUp }">
-                            <!-- ko if: name === 'Apple Pay' -->
-                            <div class="paytrail-payment-method-logo">
-                                <div style="display: inline-block;" lang=fi class="apple-pay-button"></div>
-                            </div>
-                            <!--/ko-->
-                            <!-- ko if: name !== 'Apple Pay' -->
                             <div class="paytrail-payment-method-logo">
                                 <img data-bind="attr: { src: icon, alt: name }">
                             </div>
-                            <!--/ko-->
                             <div class="paytrail-payment-method-title" data-bind="text: name"></div>
                             <div>
                                 <input data-bind="attr: {value: id}, checked: $parents[1].selectedPaymentMethodId()"
@@ -68,8 +61,7 @@
                 <!-- /ko -->
                 <!-- ko ifnot: methodGroup['id'] === 'bank' -->
                 <div class="paytrail-payment-groups">
-                    <div class='paytrail-group-collapsible' data-bind="attr: {id: methodGroup['id']}"
-                         data-role='collapsible'>
+                    <div class='paytrail-group-collapsible' data-bind="attr: {id: methodGroup['id']}">
                         <div class="paytrail-group-header-wrapper" data-role="trigger">
                             <div class="paytrail-group-title">
                                 <span data-bind="text: name"></span>
@@ -107,10 +99,8 @@
                         </button>
                         <hr>
                         <!--/ko-->
-
                         <!-- ko if: methodGroup.can_tokenize && $parent.isLoggedIn() && $parent.isShowStoredCards() -->
                         <hr>
-
                         <div class="paytrail-stored-cards">
                             <!-- ko foreach : { data: $parent.getTokensData(methodGroup.tokens), as: 'token' } -->
                             <div class="paytrail-stored-token" data-bind="
@@ -130,11 +120,6 @@
                                     <span data-bind="text: token.expires"></span>
                                     )
                                 </div>
-                                <!--div class="wrapper right">
-                                    <button type="button" class="action delete-card" data-bind="click: $parent.deleteCard">
-                                        <span data-bind="i18n: 'Delete Card'">Delete</span>
-                                    </button>
-                                </div-->
                             </div>
                             <!-- /ko -->
                             <hr>
