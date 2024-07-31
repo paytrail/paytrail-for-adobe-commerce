@@ -331,6 +331,7 @@
   -apple-pay-button-type: plain;
   height: 50px;
   width: 100%;
+  border-radius: 10px;
 }
 
 .apple-pay-popup-header {
@@ -349,6 +350,10 @@
 .apple-pay-popup-foot {
   border-top: none !important;
   padding: 15px 20px !important;
+}
+
+.apple-pay-popup-wrap {
+  border-radius: 10px;
 }
 
 @media only screen and (max-width : 1023px) {
@@ -370,6 +375,7 @@
 
   .apple-pay-popup-wrap {
     min-height: unset !important;
+    border-radius: 10px;
   }
 }
 
@@ -389,6 +395,7 @@
     min-height: unset !important;
     margin-top: 50% !important;;
     margin-right: 10% !important;;
+    border-radius: 10px
   }
 }
 
@@ -427,5 +434,6 @@
     min-height: unset !important;
     margin-top: 50%;
     margin-right: 10%;
+    border-radius: 10px;
   }
 }
