@@ -17,7 +17,7 @@
     ],
     "require": {
         "php": "^8.0",
-        "paytrail/paytrail-php-sdk": "^2.6",
+        "paytrail/paytrail-php-sdk": ">=2.7.3",
         "magento/framework": ">=102.0.0",
         "ext-curl": "*",
         "nesbot/carbon": "^2.57.0"
