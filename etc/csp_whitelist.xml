@@ -28,7 +28,8 @@
                 <value id="sphstaging" type="host">v1-hub-staging.sph-test-solinor.com</value>
                 <value id="paymenthighway" type="host">v1.api.paymenthighway.io</value>
                 <value id="paymenthighway-all" type="host">*.paymenthighway.io</value>
-                <value id="mobilepay" type="host">*.mobilepay.fi</value>            </values>
+                <value id="mobilepay" type="host">*.mobilepay.fi</value>
+            </values>
         </policy>
         <policy id="script-src">
             <values>
