@@ -123,3 +123,4 @@ Hello,Hei
 "Error while payment process. Please contact customer support with order id: %id","Virhe maksutapahtumassa. Ota yhteys asiakaspalveluun tilausnumeron %id kanssa."
 "My Subscriptions","Toistuvat tilaukseni"
 "You have no payments to display.","Ei toistuvia tilauksia."
+"Press the button below to pay with Apple Pay","Paina alla olevaa nappia maksaaksesi Apple Pay:llä"
