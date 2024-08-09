@@ -7,7 +7,7 @@
 
 ***Always perform a backup of your database and source code before installing any extensions.***
 
-This module has been tested on Adobe Commerce / Magento 2.4.5, 2.4.4 and 2.3.X {community|commerce} versions. Support for 2.2.X has ended and compatibility with older versions cannot be guaranteed.
+This module has been tested on Adobe Commerce / Magento 2.4.7, 2.4.6, 2.4.5, 2.4.4 and 2.3.X {community|commerce} versions. Support for 2.2.X has ended and compatibility with older versions cannot be guaranteed.
 
 Adobe Commerce system requirements per tested version can be found [here](https://devdocs.magento.com/guides/v2.4/install-gde/system-requirements.html). 
 
@@ -95,6 +95,14 @@ Available statuses:
 - Complete
 - Closed
 - Canceled
+
+## Setting up Apple Pay
+The payment module supports Apple pay payments.
+
+Steps:
+1. Enable Apple Pay for your Paytrail Merchant Panel.
+2. [Verify your domain with association file](https://docs.paytrail.com/#/?id=verifying-your-domain-with-apple-pay)
+3. Enable Apple Pay in admin panel __Stores -> Configuration -> Sales -> Payment Methods -> Apple Pay Configuration__
 
 ## Multiple stores
 If you have multiple stores, you can set up the payment module differently depending on the selected store. In configuration settings, there is a selection for Store View.

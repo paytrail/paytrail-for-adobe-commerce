@@ -50,15 +50,16 @@ class Config extends \Magento\Payment\Gateway\Config\Config
     public const VAULT_CODE                            = 'paytrail_cc_vault';
     public const LOGO                                  = 'payment/paytrail/logo';
     public const KEY_MANUAL_INVOICE                    = 'manual_invoice';
+    public const APPLE_PAY_CONFIG = 'paytrail_apple_pay/active';
     public const KEY_ACTIVATE_WITH_SHIPMENT            = 'shipment_activates_invoice';
-
     public const GIT_URL = 'https://api.github.com/repos/paytrail/paytrail-for-adobe-commerce/releases/latest';
-
     public const RECEIPT_PROCESSING_CACHE_PREFIX     = "receipt_processing_";
     public const PAYTRAIL_API_PAYMENT_STATUS_OK      = 'ok';
     public const PAYTRAIL_API_PAYMENT_STATUS_PENDING = 'pending';
     public const PAYTRAIL_API_PAYMENT_STATUS_DELAYED = 'delayed';
     public const PAYTRAIL_API_PAYMENT_STATUS_FAIL    = 'fail';
+
+    public const APPLE_PAY_PAYMENT_CODE = 'applepay';
 
     /**
      * @var array
@@ -591,7 +592,7 @@ class Config extends \Magento\Payment\Gateway\Config\Config
     /**
      * Are manual invoice activations in use
      *
-     * @param null|int|string $storeId
+     * @param $storeId
      *
      * @return bool
      */
@@ -601,14 +602,26 @@ class Config extends \Magento\Payment\Gateway\Config\Config
     }
 
     /**
-     * Will creating a shipment to an order activate the order's invoice.
+     * Will creating a shipment to an order activate the order's invoice
      *
-     * @param null|int|string $storeId
+     * @param $storeId
      *
      * @return bool
      */
     public function isShipmentActivateInvoice($storeId = null)
     {
         return (bool)$this->getValue(self::KEY_ACTIVATE_WITH_SHIPMENT, $storeId);
+    }
+
+    /**
+     * Is Apple Pay enabled in configuration.
+     *
+     * @param $storeId
+     *
+     * @return bool
+     */
+    public function isApplePayEnabled($storeId = null): bool
+    {
+        return (bool)$this->getValue(self::APPLE_PAY_CONFIG, $storeId);
     }
 }
