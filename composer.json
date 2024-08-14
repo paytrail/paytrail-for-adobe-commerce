@@ -24,7 +24,7 @@
     },
     "require-dev": {
         "magento/magento-coding-standard": "*",
-        "phpunit/phpunit": "*",
+        "phpunit/phpunit": "^9.5",
         "magento/product-enterprise-edition": "> 2.4.3"
     },
     "conflict": {

@@ -52,15 +52,11 @@ class ApplePayDataProvider
      */
     public function addApplePayPaymentMethod(array $groupMethods): array
     {
-        $applePayPaymentData = [
-            'id' => 'applepay',
-            'name' => 'Apple Pay payment method',
-            'icon' => $this->assetRepository->getUrl('Paytrail_PaymentService::images/apple-icon.png'),
-            'svg' => $this->assetRepository->getUrl('Paytrail_PaymentService::images/apple-icon.svg'),
-            'providers' => [0 => $this->getApplePayProviderData()]
-        ];
-
-        $groupMethods[] = $applePayPaymentData;
+        foreach ($groupMethods as $key => $method) {
+            if ($method['id'] === 'mobile') {
+                $groupMethods[$key]['providers'][] = $this->getApplePayProviderData();
+            }
+        }
 
         return $groupMethods;
     }
@@ -110,7 +106,7 @@ class ApplePayDataProvider
 
         $applePayProvider
             ->setId('applepay')
-            ->setGroup('applepay')
+            ->setGroup('mobile')
             ->setUrl(null)
             ->setIcon($this->assetRepository->getUrl('Paytrail_PaymentService::images/apple-pay-logo.png'))
             ->setName('Apple Pay')

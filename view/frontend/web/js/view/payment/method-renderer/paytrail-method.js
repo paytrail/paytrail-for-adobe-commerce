@@ -405,6 +405,7 @@ define(
                                             fullScreenLoader.stopLoader();
 
                                             modalContainer.on('modalclosed', function () {
+                                                fullScreenLoader.startLoader();
                                                 $.ajax({
                                                     url:mageUrlBuilder.build('paytrail/receipt/applepayfailedreceipt'),
                                                     type:'post',
@@ -414,8 +415,8 @@ define(
                                                     }
                                                 }).done(
                                                     function (response) {
-                                                        fullScreenLoader.startLoader();
                                                         window.location.replace(mageUrlBuilder.build(response.redirectUrl));
+                                                        fullScreenLoader.stopLoader();
 
                                                         return false;
                                                     }
