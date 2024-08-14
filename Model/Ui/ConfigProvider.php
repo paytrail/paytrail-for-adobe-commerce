@@ -101,7 +101,8 @@ class ConfigProvider implements ConfigProviderInterface
                         'token_payment_redirect_url' => $this->gatewayConfig->getTokenPaymentRedirectUrl(),
                         'default_success_page_url' => $this->gatewayConfig->getDefaultSuccessPageUrl(),
                         'is_vault_for_paytrail' => $this->vaultConfig->isVaultForPaytralEnabled(),
-                        'is_show_stored_cards' => $this->vaultConfig->isShowStoredCards()
+                        'is_show_stored_cards' => $this->vaultConfig->isShowStoredCards(),
+                        'is_new_ui_enabled' => $this->gatewayConfig->isNewUiEnabled()
                     ]
                 ]
             ];
