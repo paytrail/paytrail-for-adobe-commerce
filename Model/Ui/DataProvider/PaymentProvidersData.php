@@ -76,28 +76,45 @@ class PaymentProvidersData
      */
     public function wrapPaymentMethodStyles($storeId)
     {
-        $styles = '.paytrail-group-collapsible{ background-color:'
-            . $this->gatewayConfig->getPaymentGroupBgColor($storeId) . '; margin-top:1%; margin-bottom:2%;}';
-        $styles .= '.paytrail-group-collapsible.active{ background-color:'
-            . $this->gatewayConfig->getPaymentGroupHighlightBgColor($storeId) . ';}';
-        $styles .= '.paytrail-group-collapsible span{ color:'
-            . $this->gatewayConfig->getPaymentGroupTextColor($storeId) . ';}';
-        $styles .= '.paytrail-group-collapsible li{ color:'
-            . $this->gatewayConfig->getPaymentGroupTextColor($storeId) . '}';
-        $styles .= '.paytrail-group-collapsible.active span{ color:'
-            . $this->gatewayConfig->getPaymentGroupHighlightTextColor($storeId) . ';}';
-        $styles .= '.paytrail-group-collapsible.active li{ color:'
-            . $this->gatewayConfig->getPaymentGroupHighlightTextColor($storeId) . '}';
-        $styles .= '.paytrail-group-collapsible:hover:not(.active) {background-color:'
-            . $this->gatewayConfig->getPaymentGroupHoverColor() . '}';
-        $styles .= '.paytrail-payment-methods .paytrail-payment-method.active{ border-color:'
-            . $this->gatewayConfig->getPaymentMethodHighlightColor($storeId) . ';border-width:2px;}';
-        $styles .= '.paytrail-payment-methods .paytrail-stored-token.active{ border-color:'
-            . $this->gatewayConfig->getPaymentMethodHighlightColor($storeId) . ';border-width:2px;}';
-        $styles .= '.paytrail-payment-methods .paytrail-payment-method:hover,
-        .paytrail-payment-methods .paytrail-payment-method:not(.active):hover { border-color:'
-            . $this->gatewayConfig->getPaymentMethodHoverHighlight($storeId) . ';}';
-        $styles .= $this->gatewayConfig->getAdditionalCss($storeId);
+        if ($this->gatewayConfig->isNewUiEnabled()) {
+            $styles = '.paytrail-group-collapsible{ background-color: #ffffff; margin-top:1%; margin-bottom:2%;}';
+            $styles .= '.paytrail-group-collapsible.active{ background-color: #ffffff;}';
+            $styles .= '.paytrail-group-collapsible span{ color: #323232;}';
+            $styles .= '.paytrail-group-collapsible li{ color: #323232}';
+            $styles .= '.paytrail-group-collapsible.active span{ color: #000000;}';
+            $styles .= '.paytrail-group-collapsible.active li{ color: #000000}';
+            $styles .= '.paytrail-group-collapsible:hover:not(.active) {background-color: #ffffff}';
+            $styles .= '.paytrail-payment-methods .paytrail-payment-method.active{ border: 2px solid #6f6f6f;border-width:2px;}';
+            $styles .= '.paytrail-payment-methods .paytrail-stored-token.active{ border-color: #6f6f6f;border-width:2px;}';
+            $styles .= '.paytrail-payment-methods .paytrail-payment-method:hover,
+        .paytrail-payment-methods .paytrail-payment-method:not(.active):hover { border: 2px solid #6f6f6f;}';
+            $styles .= '.paytrail-stored-token:hover { border: 2px solid #6f6f6f }';
+            $styles .= $this->gatewayConfig->getAdditionalCss($storeId);
+        } else {
+            $styles = '.paytrail-group-collapsible{ background-color:'
+                . $this->gatewayConfig->getPaymentGroupBgColor($storeId) . '; margin-top:1%; margin-bottom:2%;}';
+            $styles .= '.paytrail-group-collapsible.active{ background-color:'
+                . $this->gatewayConfig->getPaymentGroupHighlightBgColor($storeId) . ';}';
+            $styles .= '.paytrail-group-collapsible span{ color:'
+                . $this->gatewayConfig->getPaymentGroupTextColor($storeId) . ';}';
+            $styles .= '.paytrail-group-collapsible li{ color:'
+                . $this->gatewayConfig->getPaymentGroupTextColor($storeId) . '}';
+            $styles .= '.paytrail-group-collapsible.active span{ color:'
+                . $this->gatewayConfig->getPaymentGroupHighlightTextColor($storeId) . ';}';
+            $styles .= '.paytrail-group-collapsible.active li{ color:'
+                . $this->gatewayConfig->getPaymentGroupHighlightTextColor($storeId) . '}';
+            $styles .= '.paytrail-group-collapsible:hover:not(.active) {background-color:'
+                . $this->gatewayConfig->getPaymentGroupHoverColor() . '}';
+            $styles .= '.paytrail-payment-methods .paytrail-payment-method.active{ border: 2px solid '
+                . $this->gatewayConfig->getPaymentMethodHighlightColor($storeId) . ';border-width:2px;}';
+            $styles .= '.paytrail-payment-methods .paytrail-stored-token.active{ border-color:'
+                . $this->gatewayConfig->getPaymentMethodHighlightColor($storeId) . ';border-width:2px;}';
+            $styles .= '.paytrail-payment-methods .paytrail-payment-method:hover,
+        .paytrail-payment-methods .paytrail-payment-method:not(.active):hover { border: 2px solid '
+                . $this->gatewayConfig->getPaymentMethodHoverHighlight($storeId) . ';}';
+            $styles .= '.paytrail-stored-token:hover { border: 2px solid #6f6f6f }';
+            $styles .= $this->gatewayConfig->getAdditionalCss($storeId);
+        }
 
         return $styles;
     }

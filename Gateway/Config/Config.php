@@ -61,6 +61,8 @@ class Config extends \Magento\Payment\Gateway\Config\Config
 
     public const APPLE_PAY_PAYMENT_CODE = 'applepay';
 
+    public const NEW_UI_CONFIG_PATH = 'paytrail_ui_settings/new_ui_active';
+
     /**
      * @var array
      */
@@ -623,5 +625,17 @@ class Config extends \Magento\Payment\Gateway\Config\Config
     public function isApplePayEnabled($storeId = null): bool
     {
         return (bool)$this->getValue(self::APPLE_PAY_CONFIG, $storeId);
+    }
+
+    /**
+     * Is New UI for payment page enabled.
+     *
+     * @param $storeId
+     *
+     * @return bool
+     */
+    public function isNewUiEnabled($storeId = null): bool
+    {
+        return (bool)$this->getValue(self::NEW_UI_CONFIG_PATH, $storeId);
     }
 }
