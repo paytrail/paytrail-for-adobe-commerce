@@ -90,13 +90,14 @@ class PaymentProvidersData
             . $this->gatewayConfig->getPaymentGroupHighlightTextColor($storeId) . '}';
         $styles .= '.paytrail-group-collapsible:hover:not(.active) {background-color:'
             . $this->gatewayConfig->getPaymentGroupHoverColor() . '}';
-        $styles .= '.paytrail-payment-methods .paytrail-payment-method.active{ border-color:'
+        $styles .= '.paytrail-payment-methods .paytrail-payment-method.active{ border: 2px solid '
             . $this->gatewayConfig->getPaymentMethodHighlightColor($storeId) . ';border-width:2px;}';
         $styles .= '.paytrail-payment-methods .paytrail-stored-token.active{ border-color:'
             . $this->gatewayConfig->getPaymentMethodHighlightColor($storeId) . ';border-width:2px;}';
         $styles .= '.paytrail-payment-methods .paytrail-payment-method:hover,
-        .paytrail-payment-methods .paytrail-payment-method:not(.active):hover { border-color:'
+        .paytrail-payment-methods .paytrail-payment-method:not(.active):hover { border: 2px solid '
             . $this->gatewayConfig->getPaymentMethodHoverHighlight($storeId) . ';}';
+        $styles .= '.paytrail-stored-token:hover { border: 2px solid #6f6f6f }';
         $styles .= $this->gatewayConfig->getAdditionalCss($storeId);
 
         return $styles;
