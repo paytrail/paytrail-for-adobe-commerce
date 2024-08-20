@@ -154,10 +154,10 @@
                     <group id="paytrail_personalization" translate="label" type="text" sortOrder="90" showInDefault="1"
                            showInWebsite="1" showInStore="1">
                         <label>Payment page personalization</label>
-                        <comment>Hex color codes for payment page elements</comment>
                         <depends>
-                            <field id="paytrail_ui_settings/new_ui_active">0</field>
+                            <field id="new_ui_active">0</field>
                         </depends>
+                        <comment>Hex color codes for payment page elements</comment>
                         <field id="payment_group_bg" translate="label comment" sortOrder="1" type="text"
                                showInDefault="1"
                                showInWebsite="1" showInStore="1" canRestore="1">
