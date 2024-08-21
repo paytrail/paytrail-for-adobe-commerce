@@ -167,7 +167,6 @@
   height: 30px;
 }
 
-
 .paytrail-payment-methods .paytrail-payment-method:nth-child(5n+0) {
   margin-right: 0;
 }
@@ -323,7 +322,7 @@
   -apple-pay-button-type: plain;
   -apple-pay-button-style: white;
   width: auto;
-  height: 90%;
+  height: 100%;
 }
 
 .apple-pay-popup-button {
