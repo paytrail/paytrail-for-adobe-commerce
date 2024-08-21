@@ -1,30 +1,30 @@
 .paytrail-group-header-wrapper {
-  display:flex;
-  height:auto;
-  padding:1.5em 1em 1.5em 1em;
+  display: flex;
+  height: auto;
+  padding: 1.5em 1em 1.5em 1em;
   align-items: center;
   justify-content: space-between;
 }
 
 .paytrail-group-wrapper {
-  display:table;
-  height:100%;
+  display: table;
+  height: 100%;
   width: 100%;
 }
 
 .paytrail-payment-terms-container {
   font-size: 0.9em;
-  padding-top:1em;
+  padding-top: 1em;
   padding-bottom: 1em;
 }
 
-.paytrail-payment-terms-container  a{
-    text-decoration: underline;
-    display: inline-block;
+.paytrail-payment-terms-container a {
+  text-decoration: underline;
+  display: inline-block;
 }
 
 .paytrail-group-title {
-  display:flex;
+  display: flex;
   flex-wrap: nowrap;
   align-items: center;
   max-width: 60%;
@@ -32,15 +32,15 @@
 }
 
 .paytrail-group-title span {
-  line-height:1.8em;
-  font-size:1.2em;
+  line-height: 1.8em;
+  font-size: 1.2em;
   font-weight: bold;
   display: table-cell;
 }
 
 .paytrail-group-method-list {
-  max-width:60%;
-  text-align:right;
+  max-width: 60%;
+  text-align: right;
 }
 
 .paytrail-group-method-list li {
@@ -100,7 +100,7 @@
 }
 
 .paytrail-group-logo {
-  margin-right:1em;
+  margin-right: 1em;
   width: 32px;
   height: 34px;
 }
@@ -117,7 +117,7 @@
 }
 
 .paytrail-payment-methods .paytrail-payment-method input[type="radio"] {
-  display:none;
+  display: none;
 }
 
 .paytrail-store-card-button {
@@ -131,40 +131,40 @@
 }
 
 .paytrail-stored-token {
-    margin-bottom: 10px;
-    height: 50px;
-    border: 2px solid #e3e3e3;
-    border-radius: 10px;
-    background-color: #ffffff;
-    box-shadow: 2px 5px 10px #c2c2c2;
+  margin-bottom: 10px;
+  height: 50px;
+  border: 2px solid #e3e3e3;
+  border-radius: 10px;
+  background-color: #ffffff;
+  box-shadow: 2px 5px 10px #c2c2c2;
 }
 
 .paytrail-stored-token input[type="radio"] {
-    display:none;
+  display: none;
 }
 
 .paytrail-stored-token .paytrail-stored-token-data {
-    height: 50px;
-    display: inline-block;
-    vertical-align: middle;
-    padding-left: 20px;
+  height: 50px;
+  display: inline-block;
+  vertical-align: middle;
+  padding-left: 20px;
 }
 
 .paytrail-stored-token .paytrail-stored-token-data span {
-    display: inline-block;
-    line-height: 30px;
-    height: 30px;
-    padding-top: 10px;
-    padding-bottom: 10px;
-    vertical-align: middle;
+  display: inline-block;
+  line-height: 30px;
+  height: 30px;
+  padding-top: 10px;
+  padding-bottom: 10px;
+  vertical-align: middle;
 }
 
 .paytrail-stored-token .paytrail-stored-token-data img {
-    vertical-align: middle;
-    display: inline-block;
-    padding-top: 10px;
-    padding-bottom: 10px;
-    height: 30px;
+  vertical-align: middle;
+  display: inline-block;
+  padding-top: 10px;
+  padding-bottom: 10px;
+  height: 30px;
 }
 
 
@@ -197,11 +197,11 @@
 }
 
 .paytrail-order-payments.account .table-wrapper {
-    overflow: visible !important;
+  overflow: visible !important;
 }
 
 #payment-methods-modal {
-    display: none;
+  display: none;
 }
 
 .customer-subscription-action {
@@ -356,13 +356,18 @@
   border-radius: 10px;
 }
 
-@media only screen and (max-width : 1023px) {
+@media only screen and (max-width: 1023px) {
   .paytrail-payment-methods .paytrail-payment-method {
     width: 23.6%;
   }
 
-  .paytrail-payment-methods .paytrail-payment-method:nth-child(5n+0) { margin-right: 1%; }
-  .paytrail-payment-methods .paytrail-payment-method:nth-child(4n+0) { margin-right: 0; }
+  .paytrail-payment-methods .paytrail-payment-method:nth-child(5n+0) {
+    margin-right: 1%;
+  }
+
+  .paytrail-payment-methods .paytrail-payment-method:nth-child(4n+0) {
+    margin-right: 0;
+  }
 
   .paytrail-group-method-list li {
     font-size: 1.2rem;
@@ -379,7 +384,7 @@
   }
 }
 
-@media only screen and (max-width : 767px) {
+@media only screen and (max-width: 767px) {
   .paytrail-payment-methods .paytrail-payment-method {
     width: 32%;
   }
@@ -388,8 +393,13 @@
     font-size: 1.3rem;
   }
 
-  .paytrail-payment-methods .paytrail-payment-method:nth-child(4n+0) { margin-right: 1%; }
-  .paytrail-payment-methods .paytrail-payment-method:nth-child(3n+0) { margin-right: 0; }
+  .paytrail-payment-methods .paytrail-payment-method:nth-child(4n+0) {
+    margin-right: 1%;
+  }
+
+  .paytrail-payment-methods .paytrail-payment-method:nth-child(3n+0) {
+    margin-right: 0;
+  }
 
   .apple-pay-popup-wrap {
     min-height: unset !important;
@@ -399,7 +409,7 @@
   }
 }
 
-@media only screen and (max-width : 550px) {
+@media only screen and (max-width: 550px) {
 
   .paytrail-group-header-wrapper {
     flex-wrap: wrap;
@@ -407,24 +417,29 @@
   }
 
   .paytrail-group-title {
-    padding-top:1em;
+    padding-top: 1em;
     padding-left: 1em;
-    max-width:100%;
+    max-width: 100%;
   }
 
   .paytrail-group-method-list {
     text-align: left;
-    padding-top:0.8em;
+    padding-top: 0.8em;
     max-width: 90%;
     width: 90%;
   }
 
   .paytrail-group-method-list ul {
-    padding-left:1.2em;
+    padding-left: 1.2em;
   }
 
-  .paytrail-payment-methods .paytrail-payment-method:nth-child(3n+0) { margin-right: 1%; }
-  .paytrail-payment-methods .paytrail-payment-method:nth-child(2n+0) { margin-right: 0; }
+  .paytrail-payment-methods .paytrail-payment-method:nth-child(3n+0) {
+    margin-right: 1%;
+  }
+
+  .paytrail-payment-methods .paytrail-payment-method:nth-child(2n+0) {
+    margin-right: 0;
+  }
 
   .paytrail-payment-methods .paytrail-payment-method {
     width: 48.5%;
