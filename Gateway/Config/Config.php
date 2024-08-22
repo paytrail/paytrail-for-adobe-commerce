@@ -33,17 +33,17 @@ class Config extends \Magento\Payment\Gateway\Config\Config
     public const CHECKOUT_PATH                         = 'Paytrail_PaymentService/payment/checkout';
     public const KEY_GENERATE_REFERENCE                = 'generate_reference';
     public const KEY_RECOMMENDED_TAX_ALGORITHM         = 'recommended_tax_algorithm';
-    public const KEY_PAYMENTGROUP_BG_COLOR             = 'paytrail_personalization/payment_group_bg';
-    public const KEY_PAYMENTGROUP_HIGHLIGHT_BG_COLOR   = 'paytrail_personalization/payment_group_highlight_bg';
-    public const KEY_PAYMENTGROUP_TEXT_COLOR           = 'paytrail_personalization/payment_group_text';
-    public const KEY_PAYMENTGROUP_HIGHLIGHT_TEXT_COLOR = 'paytrail_personalization/payment_group_highlight_text';
-    public const KEY_PAYMENTGROUP_HOVER_COLOR          = 'paytrail_personalization/payment_group_hover';
-    public const KEY_PAYMENTMETHOD_HIGHLIGHT_COLOR     = 'paytrail_personalization/payment_method_highlight';
-    public const KEY_PAYMENTMETHOD_HIGHLIGHT_COLOR_NEW     = 'paytrail_personalization/payment_method_highlight_new_ui';
-    public const KEY_PAYMENTMETHOD_HIGHLIGHT_HOVER     = 'paytrail_personalization/payment_method_hover';
-    public const KEY_PAYMENTMETHOD_HIGHLIGHT_HOVER_NEW     = 'paytrail_personalization/payment_method_hover_new_ui';
+    public const KEY_PAYMENTGROUP_BG_COLOR             = 'paytrail_ui_settings/paytrail_personalization/payment_group_bg';
+    public const KEY_PAYMENTGROUP_HIGHLIGHT_BG_COLOR   = 'paytrail_ui_settings/paytrail_personalization/payment_group_highlight_bg';
+    public const KEY_PAYMENTGROUP_TEXT_COLOR           = 'paytrail_ui_settings/paytrail_personalization/payment_group_text';
+    public const KEY_PAYMENTGROUP_HIGHLIGHT_TEXT_COLOR = 'paytrail_ui_settings/paytrail_personalization/payment_group_highlight_text';
+    public const KEY_PAYMENTGROUP_HOVER_COLOR          = 'paytrail_ui_settings/paytrail_personalization/payment_group_hover';
+    public const KEY_PAYMENTMETHOD_HIGHLIGHT_COLOR     = 'paytrail_ui_settings/paytrail_personalization/payment_method_highlight';
+    public const KEY_PAYMENTMETHOD_HIGHLIGHT_COLOR_NEW     = 'paytrail_ui_settings/paytrail_personalization_new_ui/payment_method_highlight_new_ui';
+    public const KEY_PAYMENTMETHOD_HIGHLIGHT_HOVER     = 'paytrail_ui_settings/paytrail_personalization/payment_method_hover';
+    public const KEY_PAYMENTMETHOD_HIGHLIGHT_HOVER_NEW     = 'paytrail_ui_settings/paytrail_personalization_new_ui/payment_method_hover_new_ui';
     public const KEY_PAYMENTMETHOD_ADDITIONAL          =
-        'paytrail_personalization/advanced_paytrail_personalization/additional_css';
+        'paytrail_ui_settings/paytrail_personalization/advanced_paytrail_personalization/additional_css';
     public const KEY_RESPONSE_LOG                      = 'response_log';
     public const KEY_REQUEST_LOG                       = 'request_log';
     public const KEY_DEFAULT_ORDER_STATUS              = 'order_status';
