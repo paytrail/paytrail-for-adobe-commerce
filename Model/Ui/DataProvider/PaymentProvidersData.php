@@ -93,6 +93,8 @@ class PaymentProvidersData
                 . $this->gatewayConfig->getPaymentMethodHoverHighlightNewUi($storeId) . '}';
             $styles .= '.paytrail-stored-token:hover { border: 2px solid '
                 . $this->gatewayConfig->getPaymentMethodHoverHighlightNewUi($storeId) . '}';
+            $styles .= '.paytrail-store-card-button:hover { border: 2px solid '
+                . $this->gatewayConfig->getPaymentMethodHoverHighlightNewUi($storeId) . ';}';
             $styles .= $this->gatewayConfig->getAdditionalCss($storeId);
         } else {
             $styles = '.paytrail-group-collapsible{ background-color:'
