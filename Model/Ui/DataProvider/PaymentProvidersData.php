@@ -13,7 +13,7 @@ use Psr\Log\LoggerInterface;
 
 class PaymentProvidersData
 {
-    private const CREDITCARD_GROUP_ID    = 'creditcard';
+    private const CREDITCARD_GROUP_ID = 'creditcard';
     public const  ID_INCREMENT_SEPARATOR = '__';
     public const  ID_CARD_TYPE_SEPARATOR = '__';
 
@@ -47,7 +47,7 @@ class PaymentProvidersData
         $orderValue = $this->checkoutSession->getQuote()->getGrandTotal() ?: 0;
 
         $commandExecutor = $this->commandManagerPool->get('paytrail');
-        $response        = $commandExecutor->executeByCode(
+        $response = $commandExecutor->executeByCode(
             'method_provider',
             null,
             ['amount' => $orderValue]
@@ -135,10 +135,10 @@ class PaymentProvidersData
     public function handlePaymentProviderGroupData($responseData)
     {
         $allMethods = [];
-        $allGroups  = [];
+        $allGroups = [];
         foreach ($responseData as $group) {
             $allGroups[$group['id']] = [
-                'id'   => $group['id'],
+                'id' => $group['id'],
                 'name' => $group['name'],
                 'icon' => $group['icon']
             ];
@@ -150,10 +150,10 @@ class PaymentProvidersData
         foreach ($allGroups as $key => $group) {
             if ($group['id'] == 'creditcard') {
                 $allGroups[$key]["can_tokenize"] = true;
-                $allGroups[$key]["tokens"]       = $this->gatewayConfig->getCustomerTokens();
+                $allGroups[$key]["tokens"] = $this->gatewayConfig->getCustomerTokens();
             } else {
                 $allGroups[$key]["can_tokenize"] = false;
-                $allGroups[$key]["tokens"]       = false;
+                $allGroups[$key]["tokens"] = false;
             }
 
             $allGroups[$key]['providers'] = $this->addProviderDataToGroup($allMethods, $group['id']);
@@ -172,18 +172,20 @@ class PaymentProvidersData
     private function addProviderDataToGroup($responseData, $groupId)
     {
         $methods = [];
-        $i       = 1;
+        $i = 1;
 
         foreach ($responseData as $key => $method) {
             if ($method->getGroup() == $groupId) {
-                $id        = $groupId === self::CREDITCARD_GROUP_ID ? $method->getId() . self::ID_INCREMENT_SEPARATOR . strtolower($method->getName()) : $method->getId();
+                $id = $groupId === self::CREDITCARD_GROUP_ID ? $method->getId()
+                    . self::ID_INCREMENT_SEPARATOR
+                    . strtolower($method->getName()) : $method->getId();
                 $methods[] = [
                     'checkoutId' => $method->getId(),
-                    'id'         => $this->getIncrementalId($id, $i),
-                    'name'       => $method->getName(),
-                    'group'      => $method->getGroup(),
-                    'icon'       => $method->getIcon(),
-                    'svg'        => $method->getSvg()
+                    'id' => $this->getIncrementalId($id, $i),
+                    'name' => $method->getName(),
+                    'group' => $method->getGroup(),
+                    'icon' => $method->getIcon(),
+                    'svg' => $method->getSvg()
                 ];
             }
         }
@@ -192,6 +194,8 @@ class PaymentProvidersData
     }
 
     /**
+     * Returns incremental Id.
+     *
      * @param mixed $method
      * @param int $i
      *
@@ -203,6 +207,8 @@ class PaymentProvidersData
     }
 
     /**
+     * Returns Id without increment.
+     *
      * @param string $id
      *
      * @return string
@@ -213,6 +219,8 @@ class PaymentProvidersData
     }
 
     /**
+     * Returns card type.
+     *
      * @param string $id
      *
      * @return ?string
@@ -221,7 +229,7 @@ class PaymentProvidersData
     {
         $idParts = explode(self::ID_INCREMENT_SEPARATOR, $id);
 
-        if (count($idParts)  == 3) {
+        if (count($idParts) == 3) {
             return $idParts[1];
         }
 

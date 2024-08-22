@@ -620,7 +620,7 @@ class Config extends \Magento\Payment\Gateway\Config\Config
     /**
      * Are manual invoice activations in use
      *
-     * @param $storeId
+     * @param string $storeId
      *
      * @return bool
      */
@@ -632,7 +632,7 @@ class Config extends \Magento\Payment\Gateway\Config\Config
     /**
      * Will creating a shipment to an order activate the order's invoice
      *
-     * @param $storeId
+     * @param string $storeId
      *
      * @return bool
      */
@@ -644,7 +644,7 @@ class Config extends \Magento\Payment\Gateway\Config\Config
     /**
      * Is Apple Pay enabled in configuration.
      *
-     * @param $storeId
+     * @param string $storeId
      *
      * @return bool
      */
@@ -656,7 +656,7 @@ class Config extends \Magento\Payment\Gateway\Config\Config
     /**
      * Is New UI for payment page enabled.
      *
-     * @param $storeId
+     * @param string $storeId
      *
      * @return bool
      */
