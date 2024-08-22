@@ -194,11 +194,10 @@ class PaymentProvidersData
     }
 
     /**
-     * Returns incremental Id.
+     * Returns incremental id.
      *
-     * @param mixed $method
+     * @param string $id
      * @param int $i
-     *
      * @return string
      */
     public function getIncrementalId($id, int &$i): string
@@ -207,7 +206,7 @@ class PaymentProvidersData
     }
 
     /**
-     * Returns Id without increment.
+     * Returns id without increment.
      *
      * @param string $id
      *
