@@ -41,8 +41,8 @@
     </table>
     <table name="recurring_payment_profiles" resource="default" engine="innodb" comment="Stores recurring payment profiles">
         <column xsi:type="int" name="profile_id" unsigned="false" nullable="false" identity="true" comment="Entity Id" />
-        <column xsi:type="varchar" name="name" nullable="false" comment="" />
-        <column xsi:type="varchar" name="description" nullable="true" comment="" />
+        <column xsi:type="varchar" name="name" nullable="false"/>
+        <column xsi:type="varchar" name="description" nullable="true"/>
         <column xsi:type="varchar" name="schedule" nullable="false" comment="profile schedule" />
 
         <constraint xsi:type="primary" referenceId="PRIMARY">
