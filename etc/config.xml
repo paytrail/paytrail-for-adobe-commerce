@@ -54,6 +54,10 @@
             <additional_css></additional_css>
           </advanced_paytrail_personalization>
         </paytrail_personalization>
+        <paytrail_personalization_new_ui>
+          <payment_method_highlight_new_ui>#575757</payment_method_highlight_new_ui>
+          <payment_method_hover_new_ui>#292929</payment_method_hover_new_ui>
+        </paytrail_personalization_new_ui>
         <checkout_algorithm>sha256</checkout_algorithm>
         <order_place_redirect_url>0</order_place_redirect_url>
       </paytrail>

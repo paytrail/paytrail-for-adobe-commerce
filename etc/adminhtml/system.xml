@@ -151,6 +151,24 @@
                         <comment>Enables new UI on payment page</comment>
                         <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                     </field>
+                    <group id="paytrail_personalization_new_ui" translate="label" type="text" sortOrder="90" showInDefault="1"
+                           showInWebsite="1" showInStore="1">
+                        <label>Payment page personalization</label>
+                        <depends>
+                            <field id="new_ui_active">1</field>
+                        </depends>
+                        <comment>Hex color codes for payment page elements</comment>
+                        <field id="payment_method_highlight_new_ui" translate="label comment" sortOrder="20" type="text"
+                               showInDefault="1"
+                               showInWebsite="1" showInStore="1" canRestore="1">
+                            <label>Highlighted payment method color</label>
+                        </field>
+                        <field id="payment_method_hover_new_ui" translate="label comment" sortOrder="21" type="text"
+                               showInDefault="1"
+                               showInWebsite="1" showInStore="1" canRestore="1">
+                            <label>Payment method hover highlight</label>
+                        </field>
+                    </group>
                     <group id="paytrail_personalization" translate="label" type="text" sortOrder="90" showInDefault="1"
                            showInWebsite="1" showInStore="1">
                         <label>Payment page personalization</label>

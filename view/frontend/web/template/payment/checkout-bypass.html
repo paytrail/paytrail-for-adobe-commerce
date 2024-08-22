@@ -64,7 +64,7 @@
                         <!--/ko-->
                         <!-- ko if: $parent.isLoginButtonEnabled(methodGroup) && !$parent.isLoggedIn() && $parent.isShowStoredCards() -->
                         <hr>
-                        <button type="button" class="action" data-trigger="authentication">
+                        <button type="button" class="action paytrail-store-card-login-button" data-trigger="authentication">
                             <span data-bind="i18n: 'Login to save cards'">Login to save cards</span>
                         </button>
                         <hr>
@@ -93,7 +93,7 @@
                             </div>
                             <!-- /ko -->
                             <hr>
-                            <button type="button" class="action" data-bind="click: $parent.addNewCard">
+                            <button type="button" class="action paytrail-store-card-button" data-bind="click: $parent.addNewCard">
                                 <span data-bind="i18n: 'Add Card'">Add Card</span>
                             </button>
                         </div>
@@ -157,7 +157,7 @@
                     <!--/ko-->
                     <!-- ko if: $parent.isLoginButtonEnabled(methodGroup) && !$parent.isLoggedIn() && $parent.isShowStoredCards() -->
                     <hr>
-                    <button type="button" class="action" data-trigger="authentication">
+                    <button type="button" class="action paytrail-store-card-login-button" data-trigger="authentication">
                         <span data-bind="i18n: 'Login to save cards'">Login to save cards</span>
                     </button>
                     <hr>
@@ -185,15 +185,10 @@
                                 <span data-bind="text: token.expires"></span>
                                 )
                             </div>
-                            <!--div class="wrapper right">
-                                <button type="button" class="action delete-card" data-bind="click: $parent.deleteCard">
-                                    <span data-bind="i18n: 'Delete Card'">Delete</span>
-                                </button>
-                            </div-->
                         </div>
                         <!-- /ko -->
                         <hr>
-                        <button type="button" class="action" data-bind="click: $parent.addNewCard">
+                        <button type="button" class="action paytrail-store-card-button" data-bind="click: $parent.addNewCard">
                             <span data-bind="i18n: 'Add Card'">Add Card</span>
                         </button>
                     </div>
