@@ -91,6 +91,7 @@
   padding: 5px 10px;
   background-color: #ffffff;
   box-shadow: 2px 5px 10px #c2c2c2;
+  cursor: pointer;
 }
 
 .paytrail-payment-methods:after {
@@ -123,11 +124,25 @@
 .paytrail-store-card-button {
   margin-bottom: 10px;
   height: 40px;
-  padding: 5px 10px;
+  width: 15%;
   border: 2px solid #e3e3e3;
   border-radius: 10px;
   background-color: #ffffff;
   box-shadow: 2px 5px 10px #c2c2c2 !important;
+}
+
+.paytrail-store-card-button:hover {
+  margin-bottom: 10px;
+  height: 40px;
+  width: 15%;
+  border: 2px solid #e3e3e3;
+  border-radius: 10px;
+  background-color: #ffffff;
+  box-shadow: 2px 5px 10px #c2c2c2 !important;
+}
+
+.paytrail-store-card-button:hover {
+  background-color: #ffffff;
 }
 
 .paytrail-stored-token {
@@ -137,6 +152,7 @@
   border-radius: 10px;
   background-color: #ffffff;
   box-shadow: 2px 5px 10px #c2c2c2;
+  cursor: pointer;
 }
 
 .paytrail-stored-token input[type="radio"] {
@@ -165,6 +181,10 @@
   padding-top: 10px;
   padding-bottom: 10px;
   height: 30px;
+}
+
+.paytrail-payment-groups {
+  padding-top: 3%;
 }
 
 .paytrail-payment-methods .paytrail-payment-method:nth-child(5n+0) {
