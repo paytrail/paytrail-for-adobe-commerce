@@ -19,47 +19,56 @@ use Psr\Log\LoggerInterface;
 
 class Config extends \Magento\Payment\Gateway\Config\Config
 {
-    public const DEFAULT_PATH_PATTERN                  = 'payment/%s/%s';
-    public const KEY_TITLE                             = 'title';
-    public const CODE                                  = 'paytrail';
-    public const CC_VAULT_CODE                         = 'paytrail_cc_vault';
-    public const SAVE_CARD_URL                         = 'tokenization/savecard';
-    public const KEY_CHECKOUT_ALGORITHM                = 'checkout_algorithm';
-    public const KEY_MERCHANT_SECRET                   = 'merchant_secret';
-    public const KEY_MERCHANT_ID                       = 'merchant_id';
-    public const KEY_ACTIVE                            = 'active';
-    public const KEY_SKIP_BANK_SELECTION               = 'skip_bank_selection';
-    public const BYPASS_PATH                           = 'Paytrail_PaymentService/payment/checkout-bypass';
-    public const CHECKOUT_PATH                         = 'Paytrail_PaymentService/payment/checkout';
-    public const KEY_GENERATE_REFERENCE                = 'generate_reference';
-    public const KEY_RECOMMENDED_TAX_ALGORITHM         = 'recommended_tax_algorithm';
-    public const KEY_PAYMENTGROUP_BG_COLOR             = 'paytrail_ui_settings/paytrail_personalization/payment_group_bg';
-    public const KEY_PAYMENTGROUP_HIGHLIGHT_BG_COLOR   = 'paytrail_ui_settings/paytrail_personalization/payment_group_highlight_bg';
-    public const KEY_PAYMENTGROUP_TEXT_COLOR           = 'paytrail_ui_settings/paytrail_personalization/payment_group_text';
-    public const KEY_PAYMENTGROUP_HIGHLIGHT_TEXT_COLOR = 'paytrail_ui_settings/paytrail_personalization/payment_group_highlight_text';
-    public const KEY_PAYMENTGROUP_HOVER_COLOR          = 'paytrail_ui_settings/paytrail_personalization/payment_group_hover';
-    public const KEY_PAYMENTMETHOD_HIGHLIGHT_COLOR     = 'paytrail_ui_settings/paytrail_personalization/payment_method_highlight';
-    public const KEY_PAYMENTMETHOD_HIGHLIGHT_COLOR_NEW     = 'paytrail_ui_settings/paytrail_personalization_new_ui/payment_method_highlight_new_ui';
-    public const KEY_PAYMENTMETHOD_HIGHLIGHT_HOVER     = 'paytrail_ui_settings/paytrail_personalization/payment_method_hover';
-    public const KEY_PAYMENTMETHOD_HIGHLIGHT_HOVER_NEW     = 'paytrail_ui_settings/paytrail_personalization_new_ui/payment_method_hover_new_ui';
-    public const KEY_PAYMENTMETHOD_ADDITIONAL          =
+    public const DEFAULT_PATH_PATTERN = 'payment/%s/%s';
+    public const KEY_TITLE = 'title';
+    public const CODE = 'paytrail';
+    public const CC_VAULT_CODE = 'paytrail_cc_vault';
+    public const SAVE_CARD_URL = 'tokenization/savecard';
+    public const KEY_CHECKOUT_ALGORITHM = 'checkout_algorithm';
+    public const KEY_MERCHANT_SECRET = 'merchant_secret';
+    public const KEY_MERCHANT_ID = 'merchant_id';
+    public const KEY_ACTIVE = 'active';
+    public const KEY_SKIP_BANK_SELECTION = 'skip_bank_selection';
+    public const BYPASS_PATH = 'Paytrail_PaymentService/payment/checkout-bypass';
+    public const CHECKOUT_PATH = 'Paytrail_PaymentService/payment/checkout';
+    public const KEY_GENERATE_REFERENCE = 'generate_reference';
+    public const KEY_RECOMMENDED_TAX_ALGORITHM = 'recommended_tax_algorithm';
+    public const KEY_PAYMENTGROUP_BG_COLOR =
+        'paytrail_ui_settings/paytrail_personalization/payment_group_bg';
+    public const KEY_PAYMENTGROUP_HIGHLIGHT_BG_COLOR =
+        'paytrail_ui_settings/paytrail_personalization/payment_group_highlight_bg';
+    public const KEY_PAYMENTGROUP_TEXT_COLOR =
+        'paytrail_ui_settings/paytrail_personalization/payment_group_text';
+    public const KEY_PAYMENTGROUP_HIGHLIGHT_TEXT_COLOR =
+        'paytrail_ui_settings/paytrail_personalization/payment_group_highlight_text';
+    public const KEY_PAYMENTGROUP_HOVER_COLOR =
+        'paytrail_ui_settings/paytrail_personalization/payment_group_hover';
+    public const KEY_PAYMENTMETHOD_HIGHLIGHT_COLOR =
+        'paytrail_ui_settings/paytrail_personalization/payment_method_highlight';
+    public const KEY_PAYMENTMETHOD_HIGHLIGHT_COLOR_NEW =
+        'paytrail_ui_settings/paytrail_personalization_new_ui/payment_method_highlight_new_ui';
+    public const KEY_PAYMENTMETHOD_HIGHLIGHT_HOVER =
+        'paytrail_ui_settings/paytrail_personalization/payment_method_hover';
+    public const KEY_PAYMENTMETHOD_HIGHLIGHT_HOVER_NEW =
+        'paytrail_ui_settings/paytrail_personalization_new_ui/payment_method_hover_new_ui';
+    public const KEY_PAYMENTMETHOD_ADDITIONAL =
         'paytrail_ui_settings/paytrail_personalization/advanced_paytrail_personalization/additional_css';
-    public const KEY_RESPONSE_LOG                      = 'response_log';
-    public const KEY_REQUEST_LOG                       = 'request_log';
-    public const KEY_DEFAULT_ORDER_STATUS              = 'order_status';
-    public const KEY_NOTIFICATION_EMAIL                = 'recipient_email';
-    public const KEY_CANCEL_ORDER_ON_FAILED_PAYMENT    = 'failed_payment_cancel';
-    public const VAULT_CODE                            = 'paytrail_cc_vault';
-    public const LOGO                                  = 'payment/paytrail/logo';
-    public const KEY_MANUAL_INVOICE                    = 'manual_invoice';
+    public const KEY_RESPONSE_LOG = 'response_log';
+    public const KEY_REQUEST_LOG = 'request_log';
+    public const KEY_DEFAULT_ORDER_STATUS = 'order_status';
+    public const KEY_NOTIFICATION_EMAIL = 'recipient_email';
+    public const KEY_CANCEL_ORDER_ON_FAILED_PAYMENT = 'failed_payment_cancel';
+    public const VAULT_CODE = 'paytrail_cc_vault';
+    public const LOGO = 'payment/paytrail/logo';
+    public const KEY_MANUAL_INVOICE = 'manual_invoice';
     public const APPLE_PAY_CONFIG = 'paytrail_apple_pay/active';
-    public const KEY_ACTIVATE_WITH_SHIPMENT            = 'shipment_activates_invoice';
+    public const KEY_ACTIVATE_WITH_SHIPMENT = 'shipment_activates_invoice';
     public const GIT_URL = 'https://api.github.com/repos/paytrail/paytrail-for-adobe-commerce/releases/latest';
-    public const RECEIPT_PROCESSING_CACHE_PREFIX     = "receipt_processing_";
-    public const PAYTRAIL_API_PAYMENT_STATUS_OK      = 'ok';
+    public const RECEIPT_PROCESSING_CACHE_PREFIX = "receipt_processing_";
+    public const PAYTRAIL_API_PAYMENT_STATUS_OK = 'ok';
     public const PAYTRAIL_API_PAYMENT_STATUS_PENDING = 'pending';
     public const PAYTRAIL_API_PAYMENT_STATUS_DELAYED = 'delayed';
-    public const PAYTRAIL_API_PAYMENT_STATUS_FAIL    = 'fail';
+    public const PAYTRAIL_API_PAYMENT_STATUS_FAIL = 'fail';
 
     public const APPLE_PAY_PAYMENT_CODE = 'applepay';
 
@@ -99,8 +108,8 @@ class Config extends \Magento\Payment\Gateway\Config\Config
         private ComponentRegistrar      $componentRegistrar,
         private ReadFactory             $readFactory,
         private LoggerInterface         $logger,
-        $methodCode = self::CODE,
-        $pathPattern = self::DEFAULT_PATH_PATTERN
+                                        $methodCode = self::CODE,
+                                        $pathPattern = self::DEFAULT_PATH_PATTERN
     ) {
         parent::__construct($scopeConfig, $methodCode, $pathPattern);
         $this->paymenticons = $this->ccConfigProvider->getIcons();
@@ -495,8 +504,8 @@ class Config extends \Magento\Payment\Gateway\Config\Config
         }
 
         return [
-            'url'    => '',
-            'width'  => 0,
+            'url' => '',
+            'width' => 0,
             'height' => 0
         ];
     }
@@ -509,16 +518,16 @@ class Config extends \Magento\Payment\Gateway\Config\Config
     public function getCustomerTokens()
     {
         $tokens = $this->customerTokenManagement->getCustomerSessionTokens();
-        $t      = [];
+        $t = [];
 
         foreach ($tokens as $token) {
             if ($token->getPaymentMethodCode() == self::VAULT_CODE && $token->getIsActive() && $token->getIsVisible()) {
-                $cdata                                = json_decode($token->getTokenDetails(), true);
-                $t[$token->getEntityId()]["expires"]  = $cdata['expirationDate'];
-                $t[$token->getEntityId()]["url"]      = $this->getIconUrl($cdata["type"])['url'];
+                $cdata = json_decode($token->getTokenDetails(), true);
+                $t[$token->getEntityId()]["expires"] = $cdata['expirationDate'];
+                $t[$token->getEntityId()]["url"] = $this->getIconUrl($cdata["type"])['url'];
                 $t[$token->getEntityId()]["maskedCC"] = $cdata["maskedCC"];
-                $t[$token->getEntityId()]["type"]     = $cdata["type"];
-                $t[$token->getEntityId()]["id"]       = $token->getPublicHash();
+                $t[$token->getEntityId()]["type"] = $cdata["type"];
+                $t[$token->getEntityId()]["id"] = $token->getPublicHash();
             }
         }
 
@@ -589,13 +598,13 @@ class Config extends \Magento\Payment\Gateway\Config\Config
      */
     public function getComposerVersion(string $moduleName)
     {
-        $path             = $this->componentRegistrar->getPath(
+        $path = $this->componentRegistrar->getPath(
             \Magento\Framework\Component\ComponentRegistrar::MODULE,
             $moduleName
         );
-        $directoryRead    = $this->readFactory->create($path);
+        $directoryRead = $this->readFactory->create($path);
         $composerJsonData = $directoryRead->readFile('composer.json');
-        $data             = json_decode($composerJsonData);
+        $data = json_decode($composerJsonData);
 
         return !empty($data->version) ? $data->version : __('Read error!');
     }
@@ -610,7 +619,7 @@ class Config extends \Magento\Payment\Gateway\Config\Config
         $options = [
             CURLOPT_RETURNTRANSFER => 1,
             CURLOPT_CONNECTTIMEOUT => 1,
-            CURLOPT_USERAGENT      => 'magento'
+            CURLOPT_USERAGENT => 'magento'
         ];
         $this->curlClient->setOptions($options);
         $this->curlClient->get(self::GIT_URL);
