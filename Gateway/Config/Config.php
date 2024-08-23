@@ -108,8 +108,8 @@ class Config extends \Magento\Payment\Gateway\Config\Config
         private ComponentRegistrar      $componentRegistrar,
         private ReadFactory             $readFactory,
         private LoggerInterface         $logger,
-                                        $methodCode = self::CODE,
-                                        $pathPattern = self::DEFAULT_PATH_PATTERN
+        $methodCode = self::CODE,
+        $pathPattern = self::DEFAULT_PATH_PATTERN
     ) {
         parent::__construct($scopeConfig, $methodCode, $pathPattern);
         $this->paymenticons = $this->ccConfigProvider->getIcons();
