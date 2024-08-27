@@ -95,6 +95,8 @@ class PaymentProvidersData
                 . $this->gatewayConfig->getPaymentMethodHoverHighlightNewUi($storeId) . '}';
             $styles .= '.paytrail-store-card-button:hover { border: 2px solid '
                 . $this->gatewayConfig->getPaymentMethodHoverHighlightNewUi($storeId) . ';}';
+            $styles .= '.paytrail-store-card-login-button:hover { border: 2px solid '
+                . $this->gatewayConfig->getPaymentMethodHoverHighlightNewUi($storeId) . ';}';
             $styles .= $this->gatewayConfig->getAdditionalCss($storeId);
         } else {
             $styles = '.paytrail-group-collapsible{ background-color:'
@@ -118,7 +120,12 @@ class PaymentProvidersData
             $styles .= '.paytrail-payment-methods .paytrail-payment-method:hover,
         .paytrail-payment-methods .paytrail-payment-method:not(.active):hover { border: 2px solid '
                 . $this->gatewayConfig->getPaymentMethodHoverHighlight($storeId) . ';}';
-            $styles .= '.paytrail-stored-token:hover { border: 2px solid #6f6f6f }';
+            $styles .= '.paytrail-stored-token:hover { border: 2px solid '
+                . $this->gatewayConfig->getPaymentMethodHoverHighlight($storeId) . '}';
+            $styles .= '.paytrail-store-card-button:hover { border: 2px solid '
+                . $this->gatewayConfig->getPaymentMethodHoverHighlight($storeId) . ';}';
+            $styles .= '.paytrail-store-card-login-button:hover { border: 2px solid '
+                . $this->gatewayConfig->getPaymentMethodHoverHighlight($storeId) . ';}';
             $styles .= $this->gatewayConfig->getAdditionalCss($storeId);
         }
 
