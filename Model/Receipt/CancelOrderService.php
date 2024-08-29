@@ -6,6 +6,7 @@ use Magento\Backend\Model\UrlInterface;
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\Mail\Template\TransportBuilder;
 use Magento\Sales\Api\OrderManagementInterface;
+use Magento\Sales\Model\Order;
 use Paytrail\PaymentService\Exceptions\CheckoutException;
 use Paytrail\PaymentService\Gateway\Config\Config;
 use Paytrail\PaymentService\Logger\PaytrailLogger;
@@ -33,7 +34,7 @@ class CancelOrderService
     /**
      * NotifyCanceledOrder
      *
-     * @param $currentOrder
+     * @param Order $currentOrder
      * @return void
      * @throws \Magento\Framework\Exception\LocalizedException
      * @throws \Magento\Framework\Exception\MailException
@@ -73,7 +74,7 @@ class CancelOrderService
     /**
      * CancelOrderById function
      *
-     * @param $orderId
+     * @param string $orderId
      * @return void
      * @throws CheckoutException
      */
