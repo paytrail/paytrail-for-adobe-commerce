@@ -135,10 +135,6 @@ class ProcessService
         $this->currentOrderPayment->setOrder($currentOrder);
         $this->currentOrderPayment->addTransactionCommentsToOrder($transaction, '');
         $this->currentOrderPayment->setLastTransId($transactionId);
-
-        if ($currentOrder->getStatus() == 'canceled') {
-            $this->cancelOrderService->notifyCanceledOrder($currentOrder);
-        }
     }
 
     /**
@@ -204,7 +200,7 @@ class ProcessService
         }
 
         if ($currentOrder->getStatus() == 'canceled') {
-            $this->cancelOrderService->notifyCanceledOrder($orderId);
+            $this->cancelOrderService->notifyCanceledOrder($currentOrder);
         }
     }
 
