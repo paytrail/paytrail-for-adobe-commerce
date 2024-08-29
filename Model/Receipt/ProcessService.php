@@ -169,7 +169,7 @@ class ProcessService
     public function processTransaction($paymentStatus, $transactionId, $currentOrder, $orderId, $paymentDetails)
     {
         $oldTransaction = $this->loadService->loadTransaction($transactionId, $currentOrder, $orderId);
-//        $this->validateOldTransaction($oldTransaction, $transactionId);
+        $this->validateOldTransaction($oldTransaction, $transactionId);
         $oldStatus = false;
         $paymentDetails['api_status'] = $paymentStatus;
 
