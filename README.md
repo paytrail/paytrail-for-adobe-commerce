@@ -109,12 +109,12 @@ If you have multiple stores, you can set up the payment module differently depen
 
 By changing the Store View, you can define different settings for each store within the Adobe Commerce instance.
 
-## Payment page UI interface
-Version 2.2.0 provided a new UI for payment page. There is no need to use new UI for payment page, old UI is still available when <b>Enable new UI</b> is set to No.
-
-For the new UI personalisation options are restricted only to highlight selected payment method, and hover on payment method.
+## Payment page UI
+Version 2.2.0 provided new UI for payment page. There is no need to use new UI for payment page, old UI is still available when <b>Enable new UI</b> is set to No, as it is by default.
 
 Enable New UI interface in admin panel __Stores -> Configuration -> Sales -> Payment Methods -> Payment Page UI -> Enable new UI__
+
+For the new UI, personalisation options are restricted only to highlight selected payment method and hover on payment method.
 
 ## Rounding problems with certain providers (Collector)
 
