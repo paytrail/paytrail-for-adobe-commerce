@@ -109,6 +109,13 @@ If you have multiple stores, you can set up the payment module differently depen
 
 By changing the Store View, you can define different settings for each store within the Adobe Commerce instance.
 
+## Payment page UI
+Version 2.2.0 provided new UI for payment page. There is no need to use new UI for payment page, old UI is still available when <b>Enable new UI</b> is set to No, as it is by default.
+
+Enable New UI interface in admin panel __Stores -> Configuration -> Sales -> Payment Methods -> Payment Page UI -> Enable new UI__
+
+For the new UI, personalisation options are restricted only to highlight selected payment method and hover on payment method.
+
 ## Rounding problems with certain providers (Collector)
 
 In some cases, this module might send a so-called "rounding-row" item in the order data, which might result in an error if this value is negative (this has been observed with Collector payment method). This is related to how Adobe Commerce calculates and rounds taxes and how this module compensates for possible mismatches between the total and sum of individual items.
