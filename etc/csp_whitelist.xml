@@ -37,7 +37,7 @@
                 <value id="services-paytrail-script" type="host">services.paytrail.com</value>
             </values>
         </policy>
-        <policy id="content-src">
+        <policy id="connect-src">
             <values>
                 <value id="services-paytrail" type="host">*.paytrail.com</value>
             </values>
