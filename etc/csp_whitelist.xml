@@ -37,5 +37,10 @@
                 <value id="services-paytrail-script" type="host">services.paytrail.com</value>
             </values>
         </policy>
+        <policy id="connect-src">
+            <values>
+                <value id="services-paytrail" type="host">*.paytrail.com</value>
+            </values>
+        </policy>
     </policies>
 </csp_whitelist>
