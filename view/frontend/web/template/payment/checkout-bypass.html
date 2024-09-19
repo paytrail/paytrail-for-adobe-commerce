@@ -133,10 +133,11 @@
                 </div>
                 <div class="paytrail-group-wrapper" data-role="content">
                     <!-- ko foreach: methodGroup['providers'], as: 'paymentMethod' -->
-                    <div class="paytrail-payment-method" data-bind="
-                  attr: {id: 'paytrail-payment-method-' + id},
-                  css: { active: $parents[1].selectedPaymentMethodId() == id },
-                  click: $parents[1].setPaymentMethodId">
+                    <div tabindex="0" class="paytrail-payment-method" data-bind="
+                          attr: {id: 'paytrail-payment-method-' + id},
+                          css: { active: $parents[1].selectedPaymentMethodId() == id },
+                          click: $parents[1].setPaymentMethodId,
+                          event: { keyup: $parents[1].setPaymentMethodIdOnKeyUp }">
                         <!-- ko if: name === 'Apple Pay' -->
                         <div class="paytrail-payment-method-logo">
                             <div style="display: inline-block;" lang=fi class="apple-pay-button"></div>
