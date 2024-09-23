@@ -7,6 +7,8 @@ use Paytrail\PaymentService\Gateway\Config\Config;
 
 class OrderDataAnonymization
 {
+    private const ANONYMIZED_DATA = '*****';
+
     /**
      * OrderAnonymization constructor.
      *
@@ -26,8 +28,8 @@ class OrderDataAnonymization
     public function anonymizeItemData($orderItem): Item
     {
         if ($orderItem->getProductType() === $this->gatewayConfig->getAnonymizationProductType()) {
-            $orderItem->setName('*****');
-            $orderItem->setSku('*****');
+            $orderItem->setName(self::ANONYMIZED_DATA);
+            $orderItem->setSku(self::ANONYMIZED_DATA);
         }
 
         return $orderItem;
