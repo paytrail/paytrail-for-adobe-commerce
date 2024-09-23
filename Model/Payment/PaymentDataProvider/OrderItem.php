@@ -21,6 +21,8 @@ class OrderItem
      * @param TaxItem $taxItem
      * @param RoundingFixer $roundingFixer
      * @param Data $taxHelper
+     * @param Config $gatewayConfig
+     * @param OrderDataAnonymization $orderDataAnonymization
      */
     public function __construct(
         private DiscountApply $discountApply,

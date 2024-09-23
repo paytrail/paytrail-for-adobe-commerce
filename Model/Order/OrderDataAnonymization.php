@@ -22,7 +22,7 @@ class OrderDataAnonymization
     /**
      * Anonymization of the items in the order.
      *
-     * @param $orderItem
+     * @param Item $orderItem
      * @return Item
      */
     public function anonymizeItemData($orderItem): Item
