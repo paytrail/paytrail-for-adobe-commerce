@@ -16,6 +16,7 @@ use Paytrail\PaymentService\Model\Company\CompanyRequestData;
 use Paytrail\PaymentService\Model\Config\Source\CallbackDelay;
 use Paytrail\PaymentService\Model\FinnishReferenceNumber;
 use Paytrail\PaymentService\Model\Invoice\Activation\Flag;
+use Paytrail\PaymentService\Model\Order\OrderDataAnonymization;
 use Paytrail\PaymentService\Model\Payment\DiscountApply;
 use Paytrail\PaymentService\Model\Payment\PaymentDataProvider;
 use Paytrail\PaymentService\Model\Payment\RoundingFixer;
@@ -122,6 +123,7 @@ class RequestDataTest extends TestCase
         $order->method('getGiftCardsAmount')->willReturn($discounts['giftcard']);
 
         $taxItemMock = $this->createMock(\Magento\Sales\Model\ResourceModel\Order\Tax\Item::class);
+        $gatewayConfig = $this->createMock(Config::class);
         $taxItemMock->method(
             'getTaxItemsByOrderId'
         )->willReturn(
@@ -134,7 +136,9 @@ class RequestDataTest extends TestCase
             new DiscountApply([]),
             $taxItemMock,
             new RoundingFixer(),
-            $this->getTaxHelperMock($input['config'])
+            $this->getTaxHelperMock($input['config']),
+            $gatewayConfig,
+            new OrderDataAnonymization($gatewayConfig)
         );
 
         $paytrailItems = $paytrailItemsObject->getOrderLines($order);
