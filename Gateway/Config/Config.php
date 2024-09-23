@@ -69,10 +69,10 @@ class Config extends \Magento\Payment\Gateway\Config\Config
     public const PAYTRAIL_API_PAYMENT_STATUS_PENDING = 'pending';
     public const PAYTRAIL_API_PAYMENT_STATUS_DELAYED = 'delayed';
     public const PAYTRAIL_API_PAYMENT_STATUS_FAIL = 'fail';
-
     public const APPLE_PAY_PAYMENT_CODE = 'applepay';
-
     public const NEW_UI_CONFIG_PATH = 'paytrail_ui_settings/new_ui_active';
+    public const ANONYMIZATION_DATA_CONFIG_PATH = 'paytrail_anonymization/active';
+    public const ANONYMIZATION_PRODUCT_TYPE_CONFIG_PATH = 'paytrail_anonymization/anonymization_product_type';
 
     /**
      * @var array
@@ -672,5 +672,29 @@ class Config extends \Magento\Payment\Gateway\Config\Config
     public function isNewUiEnabled($storeId = null): bool
     {
         return (bool)$this->getValue(self::NEW_UI_CONFIG_PATH, $storeId);
+    }
+
+    /**
+     * Is Anonymization data enabled.
+     *
+     * @param string $storeId
+     *
+     * @return bool
+     */
+    public function isAnonymizationDataEnabled($storeId = null): bool
+    {
+        return (bool)$this->getValue(self::ANONYMIZATION_DATA_CONFIG_PATH, $storeId);
+    }
+
+    /**
+     * Get product type for anonymization.
+     *
+     * @param string $storeId
+     *
+     * @return string
+     */
+    public function getAnonymizationProductType($storeId = null): string
+    {
+        return (string)$this->getValue(self::ANONYMIZATION_PRODUCT_TYPE_CONFIG_PATH, $storeId);
     }
 }
