@@ -5,6 +5,8 @@ namespace Paytrail\PaymentService\Model\Payment\PaymentDataProvider;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Sales\Model\Order;
 use Magento\Tax\Helper\Data;
+use Paytrail\PaymentService\Gateway\Config\Config;
+use Paytrail\PaymentService\Model\Order\OrderDataAnonymization;
 use Paytrail\PaymentService\Model\Payment\RoundingFixer;
 use Paytrail\SDK\Model\Item;
 use Magento\Sales\Model\ResourceModel\Order\Tax\Item as TaxItem;
@@ -24,7 +26,9 @@ class OrderItem
         private DiscountApply $discountApply,
         private TaxItem       $taxItem,
         private RoundingFixer $roundingFixer,
-        private Data          $taxHelper
+        private Data          $taxHelper,
+        private readonly Config $gatewayConfig,
+        private readonly OrderDataAnonymization $orderDataAnonymization
     ) {
     }
 
@@ -83,6 +87,11 @@ class OrderItem
 
         foreach ($order->getAllItems() as $item) {
             $qtyOrdered = $item->getQtyOrdered();
+
+            // When Anonymization Order Data is enabled in config settings item data is anonymized
+            if ($this->gatewayConfig->isAnonymizationDataEnabled()) {
+                $item = $this->orderDataAnonymization->anonymizeItemData($item);
+            }
 
             // When in grouped or bundle product price is dynamic (product_calculations = 0)
             // then also the child products has prices, so we set
