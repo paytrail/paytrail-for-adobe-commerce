@@ -10,6 +10,7 @@ use Magento\Payment\Helper\Data as PaymentHelper;
 use Magento\Store\Model\StoreManagerInterface;
 use Paytrail\PaymentService\Gateway\Config\Config;
 use Paytrail\PaymentService\Model\Card\VaultConfig;
+use Paytrail\PaymentService\Model\ApplePay\ApplePayDataProvider;
 use Paytrail\PaymentService\Model\Ui\DataProvider\PaymentProvidersData;
 
 class ConfigProvider implements ConfigProviderInterface
@@ -35,6 +36,8 @@ class ConfigProvider implements ConfigProviderInterface
      * @param Config $gatewayConfig
      * @param StoreManagerInterface $storeManager
      * @param PaymentProvidersData $paymentProvidersData
+     * @param VaultConfig $vaultConfig
+     * @param ApplePayDataProvider $applePayDataProvider
      * @throws LocalizedException
      */
     public function __construct(
@@ -43,7 +46,8 @@ class ConfigProvider implements ConfigProviderInterface
         private Config                $gatewayConfig,
         private StoreManagerInterface $storeManager,
         private PaymentProvidersData  $paymentProvidersData,
-        private VaultConfig $vaultConfig
+        private VaultConfig $vaultConfig,
+        private ApplePayDataProvider $applePayDataProvider
     ) {
         foreach ($this->methodCodes as $code) {
             $this->methods[$code] = $paymentHelper->getMethodInstance($code);
@@ -75,6 +79,10 @@ class ConfigProvider implements ConfigProviderInterface
                     ->handlePaymentProviderGroupData($groupData['groups'])['creditcard'];
             }
 
+            if ($this->applePayDataProvider->canApplePay()) {
+                $groupData['groups'] = $this->applePayDataProvider->addApplePayPaymentMethod($groupData['groups']);
+            }
+
             $config = [
                 'payment' => [
                     Config::CODE => [
@@ -93,7 +101,8 @@ class ConfigProvider implements ConfigProviderInterface
                         'token_payment_redirect_url' => $this->gatewayConfig->getTokenPaymentRedirectUrl(),
                         'default_success_page_url' => $this->gatewayConfig->getDefaultSuccessPageUrl(),
                         'is_vault_for_paytrail' => $this->vaultConfig->isVaultForPaytralEnabled(),
-                        'is_show_stored_cards' => $this->vaultConfig->isShowStoredCards()
+                        'is_show_stored_cards' => $this->vaultConfig->isShowStoredCards(),
+                        'is_new_ui_enabled' => $this->gatewayConfig->isNewUiEnabled($storeId)
                     ]
                 ]
             ];

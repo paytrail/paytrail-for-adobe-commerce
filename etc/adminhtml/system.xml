@@ -35,11 +35,6 @@
                     <label>New Order Status</label>
                     <source_model>Magento\Sales\Model\Config\Source\Order\Status\Processing</source_model>
                 </field>
-                <field id="rounding_row_tax_percent" translate="label" type="text" sortOrder="45"
-                       showInDefault="1" showInWebsite="1" showInStore="1" canRestore="1">
-                    <label>Rounding correction tax percent</label>
-                    <comment>Tax percent applied to discount rounding correction rows</comment>
-                </field>
                 <field id="recipient_email" translate="label" type="text" sortOrder="20" showInDefault="1"
                        showInWebsite="1" showInStore="1" canRestore="1">
                     <label>Email Address For Notifications</label>
@@ -137,54 +132,95 @@
                         <comment>Display or hide stored credit cards and 'Add card' button from checkout page.</comment>
                     </field>
                 </group>
-                <group id="paytrail_personalization" translate="label" type="text" sortOrder="90" showInDefault="1"
+                <group id="paytrail_apple_pay" translate="label" type="text" sortOrder="90" showInDefault="1"
                        showInWebsite="1" showInStore="1">
-                    <label>Payment page personalization</label>
-                    <comment>Hex color codes for payment page elements</comment>
-                    <field id="payment_group_bg" translate="label comment" sortOrder="1" type="text"
-                           showInDefault="1"
-                           showInWebsite="1" showInStore="1" canRestore="1">
-                        <label>Payment group background color</label>
+                    <label>Apple Pay Configuration</label>
+                    <field id="active" translate="label" type="select" sortOrder="1" showInDefault="1" showInWebsite="1"
+                           showInStore="0" canRestore="1">
+                        <label>Enabled</label>
+                        <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                     </field>
-                    <field id="payment_group_text" translate="label comment" sortOrder="2" type="text"
-                           showInDefault="1"
-                           showInWebsite="1" showInStore="1" canRestore="1">
-                        <label>Payment group text color</label>
+                </group>
+                <group id="paytrail_ui_settings" translate="label" type="text" sortOrder="90" showInDefault="1"
+                        showInWebsite="1" showInStore="1">
+                    <label>Payment page UI</label>
+                    <comment>UI settings section</comment>
+                    <field id="new_ui_active" translate="label" type="select" sortOrder="1" showInDefault="1" showInWebsite="1"
+                           showInStore="0" canRestore="1">
+                        <label>Enable new UI</label>
+                        <comment>Enables new UI on payment page</comment>
+                        <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                     </field>
-                    <field id="payment_group_highlight_bg" translate="label comment" sortOrder="10" type="text"
-                           showInDefault="1"
-                           showInWebsite="1" showInStore="1" canRestore="1">
-                        <label>Highlighted payment group background color</label>
-                    </field>
-                    <field id="payment_group_highlight_text" translate="label comment" sortOrder="11" type="text"
-                           showInDefault="1"
-                           showInWebsite="1" showInStore="1" canRestore="1">
-                        <label>Highlighted payment group text color</label>
-                    </field>
-                    <field id="payment_group_hover" translate="label comment" sortOrder="11" type="text"
-                           showInDefault="1"
-                           showInWebsite="1" showInStore="1" canRestore="1">
-                        <label>Payment group hover color</label>
-                    </field>
-                    <field id="payment_method_highlight" translate="label comment" sortOrder="20" type="text"
-                           showInDefault="1"
-                           showInWebsite="1" showInStore="1" canRestore="1">
-                        <label>Highlighted payment method color</label>
-                    </field>
-                    <field id="payment_method_hover" translate="label comment" sortOrder="21" type="text"
-                           showInDefault="1"
-                           showInWebsite="1" showInStore="1" canRestore="1">
-                        <label>Payment method hover highlight</label>
-                    </field>
-                    <group id="advanced_paytrail_personalization" translate="label" type="text" sortOrder="90" showInDefault="1"
+                    <group id="paytrail_personalization_new_ui" translate="label" type="text" sortOrder="90" showInDefault="1"
                            showInWebsite="1" showInStore="1">
-                        <label>Advanced</label>
-                        <field id="additional_css" translate="label comment" sortOrder="21" type="textarea"
+                        <label>Payment page personalization</label>
+                        <depends>
+                            <field id="new_ui_active">1</field>
+                        </depends>
+                        <comment>Hex color codes for payment page elements</comment>
+                        <field id="payment_method_highlight_new_ui" translate="label comment" sortOrder="20" type="text"
                                showInDefault="1"
                                showInWebsite="1" showInStore="1" canRestore="1">
-                            <label>Additional CSS</label>
-                            <comment>Add styles in this fomat: .classname { background-color:blue; }</comment>
+                            <label>Highlighted payment method color</label>
                         </field>
+                        <field id="payment_method_hover_new_ui" translate="label comment" sortOrder="21" type="text"
+                               showInDefault="1"
+                               showInWebsite="1" showInStore="1" canRestore="1">
+                            <label>Payment method hover highlight</label>
+                        </field>
+                    </group>
+                    <group id="paytrail_personalization" translate="label" type="text" sortOrder="90" showInDefault="1"
+                           showInWebsite="1" showInStore="1">
+                        <label>Payment page personalization</label>
+                        <depends>
+                            <field id="new_ui_active">0</field>
+                        </depends>
+                        <comment>Hex color codes for payment page elements</comment>
+                        <field id="payment_group_bg" translate="label comment" sortOrder="1" type="text"
+                               showInDefault="1"
+                               showInWebsite="1" showInStore="1" canRestore="1">
+                            <label>Payment group background color</label>
+                        </field>
+                        <field id="payment_group_text" translate="label comment" sortOrder="2" type="text"
+                               showInDefault="1"
+                               showInWebsite="1" showInStore="1" canRestore="1">
+                            <label>Payment group text color</label>
+                        </field>
+                        <field id="payment_group_highlight_bg" translate="label comment" sortOrder="10" type="text"
+                               showInDefault="1"
+                               showInWebsite="1" showInStore="1" canRestore="1">
+                            <label>Highlighted payment group background color</label>
+                        </field>
+                        <field id="payment_group_highlight_text" translate="label comment" sortOrder="11" type="text"
+                               showInDefault="1"
+                               showInWebsite="1" showInStore="1" canRestore="1">
+                            <label>Highlighted payment group text color</label>
+                        </field>
+                        <field id="payment_group_hover" translate="label comment" sortOrder="11" type="text"
+                               showInDefault="1"
+                               showInWebsite="1" showInStore="1" canRestore="1">
+                            <label>Payment group hover color</label>
+                        </field>
+                        <field id="payment_method_highlight" translate="label comment" sortOrder="20" type="text"
+                               showInDefault="1"
+                               showInWebsite="1" showInStore="1" canRestore="1">
+                            <label>Highlighted payment method color</label>
+                        </field>
+                        <field id="payment_method_hover" translate="label comment" sortOrder="21" type="text"
+                               showInDefault="1"
+                               showInWebsite="1" showInStore="1" canRestore="1">
+                            <label>Payment method hover highlight</label>
+                        </field>
+                        <group id="advanced_paytrail_personalization" translate="label" type="text" sortOrder="90" showInDefault="1"
+                               showInWebsite="1" showInStore="1">
+                            <label>Advanced</label>
+                            <field id="additional_css" translate="label comment" sortOrder="21" type="textarea"
+                                   showInDefault="1"
+                                   showInWebsite="1" showInStore="1" canRestore="1">
+                                <label>Additional CSS</label>
+                                <comment>Add styles in this fomat: .classname { background-color:blue; }</comment>
+                            </field>
+                        </group>
                     </group>
                 </group>
             </group>

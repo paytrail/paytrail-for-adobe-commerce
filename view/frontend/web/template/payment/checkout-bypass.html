@@ -24,10 +24,90 @@
             <!-- ko template: getTemplate() --><!-- /ko -->
             <!--/ko-->
         </div>
-        <div class="paytrail-payment-terms-container">
-            <span data-bind="html: getTerms()"></span>
-        </div>
 
+        <!-- Payment page new UI -->
+        <!-- ko if: isNewUiEnabled() -->
+        <div class="paytrail-payment-methods">
+            <!-- Collapsible elements for payment groups-->
+            <!-- ko foreach:  { data: getMethodGroups(), as: 'methodGroup' } -->
+            <div class="paytrail-payment-groups">
+                <div class='paytrail-group-collapsible-new-ui' data-bind="attr: {id: methodGroup['id']}">
+                    <div class="paytrail-group-header-wrapper-new-ui" data-role="trigger">
+                        <div class="paytrail-group-title">
+                            <span data-bind="text: name"></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="paytrail-group-wrapper" data-role="content">
+                    <!-- ko foreach: methodGroup['providers'], as: 'paymentMethod' -->
+                    <div tabindex="0" class="paytrail-payment-method" data-bind="
+                          attr: {id: 'paytrail-payment-method-' + id},
+                          css: { active: $parents[1].selectedPaymentMethodId() == id },
+                          click: $parents[1].setPaymentMethodId,
+                          event: { keyup: $parents[1].setPaymentMethodIdOnKeyUp }">
+                        <!-- ko if: name === 'Apple Pay' -->
+                        <div class="paytrail-payment-method-logo">
+                            <div style="display: inline-block;" lang=fi class="apple-pay-button"></div>
+                        </div>
+                        <!--/ko-->
+                        <!-- ko if: name !== 'Apple Pay' -->
+                        <div class="paytrail-payment-method-logo">
+                            <img data-bind="attr: { src: svg, alt: name }">
+                        </div>
+                        <!--/ko-->
+                        <div class="paytrail-payment-method-title" data-bind="text: name"></div>
+                        <div>
+                            <input data-bind="attr: {value: id}, checked: $parents[1].selectedPaymentMethodId()"
+                                   type="radio"/>
+                        </div>
+                    </div>
+                    <!--/ko-->
+                    <!-- ko if: $parent.isLoginButtonEnabled(methodGroup) && !$parent.isLoggedIn() && $parent.isShowStoredCards() -->
+                    <hr>
+                    <button type="button" class="action paytrail-store-card-login-button" data-trigger="authentication">
+                        <span data-bind="i18n: 'Login to save cards'">Login to save cards</span>
+                    </button>
+                    <hr>
+                    <!--/ko-->
+                    <!-- ko if: methodGroup.can_tokenize && $parent.isLoggedIn() && $parent.isShowStoredCards() -->
+                    <hr>
+                    <div class="paytrail-stored-cards">
+                        <!-- ko foreach : { data: $parent.getTokensData(methodGroup.tokens), as: 'token' } -->
+                        <div tabindex="0" class="paytrail-stored-token" data-bind="
+                                click: $parents[1].setToken,
+                                attr: {id: token.id },
+                                css: { active: $parents[1].selectedToken() == token.id },
+                                event: { keyup: $parents[1].setTokenOnKeyUp }">
+
+                            <input class="radio" type="radio" name="optoken"
+                                   data-bind="attr: {value: token.id}, checked: $parents[1].selectedToken()"/>
+                            <div class="paytrail-stored-token-data">
+
+                                <img data-bind="attr: {'src': token.url}"/>
+                                <span translate="'ending'"></span>
+                                <span data-bind="text: token.maskedCC"></span>
+                                (
+                                <span translate="'expires'"></span>:
+                                <span data-bind="text: token.expires"></span>
+                                )
+                            </div>
+                        </div>
+                        <!-- /ko -->
+                        <hr>
+                        <button type="button" class="action paytrail-store-card-button"
+                                data-bind="click: $parent.addNewCard">
+                            <span data-bind="i18n: 'Add Card'">Add Card</span>
+                        </button>
+                    </div>
+                    <!-- /ko -->
+                </div>
+            </div>
+            <!-- /ko -->
+        </div>
+        <!-- /ko -->
+
+        <!-- Payment page old UI -->
+        <!-- ko ifnot: isNewUiEnabled() -->
         <div class="paytrail-payment-methods">
             <!-- Collapsible elements for payment groups-->
             <div class="paytrail-payment-groups"
@@ -55,13 +135,21 @@
                 </div>
                 <div class="paytrail-group-wrapper" data-role="content">
                     <!-- ko foreach: methodGroup['providers'], as: 'paymentMethod' -->
-                    <div class="paytrail-payment-method" data-bind="
-                  attr: {id: 'paytrail-payment-method-' + id},
-                  css: { active: $parents[1].selectedPaymentMethodId() == id },
-                  click: $parents[1].setPaymentMethodId">
+                    <div tabindex="0" class="paytrail-payment-method" data-bind="
+                          attr: {id: 'paytrail-payment-method-' + id},
+                          css: { active: $parents[1].selectedPaymentMethodId() == id },
+                          click: $parents[1].setPaymentMethodId,
+                          event: { keyup: $parents[1].setPaymentMethodIdOnKeyUp }">
+                        <!-- ko if: name === 'Apple Pay' -->
                         <div class="paytrail-payment-method-logo">
-                            <img data-bind="attr: { src: icon }">
+                            <div style="display: inline-block;" lang=fi class="apple-pay-button"></div>
                         </div>
+                        <!--/ko-->
+                        <!-- ko if: name !== 'Apple Pay' -->
+                        <div class="paytrail-payment-method-logo">
+                            <img data-bind="attr: { src: svg, alt: name }">
+                        </div>
+                        <!--/ko-->
                         <div class="paytrail-payment-method-title" data-bind="text: name"></div>
 
                         <div>
@@ -72,7 +160,7 @@
                     <!--/ko-->
                     <!-- ko if: $parent.isLoginButtonEnabled(methodGroup) && !$parent.isLoggedIn() && $parent.isShowStoredCards() -->
                     <hr>
-                    <button type="button" class="action" data-trigger="authentication">
+                    <button type="button" class="action paytrail-store-card-login-button" data-trigger="authentication">
                         <span data-bind="i18n: 'Login to save cards'">Login to save cards</span>
                     </button>
                     <hr>
@@ -83,10 +171,11 @@
 
                     <div class="paytrail-stored-cards">
                         <!-- ko foreach : { data: $parent.getTokensData(methodGroup.tokens), as: 'token' } -->
-                        <div class="paytrail-stored-token" data-bind="
-                        click: $parents[1].setToken,
-                        attr: {id: token.id },
-                        css: { active: $parents[1].selectedToken() == token.id }">
+                        <div tabindex="0" class="paytrail-stored-token" data-bind="
+                            click: $parents[1].setToken,
+                            attr: {id: token.id },
+                            css: { active: $parents[1].selectedToken() == token.id },
+                            event: { keyup: $parents[1].setTokenOnKeyUp }">
 
                             <input class="radio" type="radio" name="optoken"
                                    data-bind="attr: {value: token.id}, checked: $parents[1].selectedToken()"/>
@@ -100,15 +189,11 @@
                                 <span data-bind="text: token.expires"></span>
                                 )
                             </div>
-                            <!--div class="wrapper right">
-                                <button type="button" class="action delete-card" data-bind="click: $parent.deleteCard">
-                                    <span data-bind="i18n: 'Delete Card'">Delete</span>
-                                </button>
-                            </div-->
                         </div>
                         <!-- /ko -->
                         <hr>
-                        <button type="button" class="action" data-bind="click: $parent.addNewCard">
+                        <button type="button" class="action paytrail-store-card-button"
+                                data-bind="click: $parent.addNewCard">
                             <span data-bind="i18n: 'Add Card'">Add Card</span>
                         </button>
                     </div>
@@ -116,6 +201,10 @@
                 </div>
                 <!-- /ko -->
             </div>
+        </div>
+        <!-- /ko -->
+        <div class="paytrail-payment-terms-container">
+            <span data-bind="html: getTerms()"></span>
         </div>
         <div class="paytrail-agreements-block">
             <!-- ko foreach: $parent.getRegion('before-place-order') -->
@@ -152,6 +241,10 @@
             </div>
         </div>
         <div id="paytrail-form-wrapper" style="display:none;"></div>
+        <div id="apple-pay-popup-wrapper" class="apple-pay-popup-modal" style="display: none;">
+            <span class="apple-pay-popup-header">Apple Pay</span>
+            <p class="apple-pay-popup-content">Press the button below to pay with Apple Pay</p>
+        </div>
     </div>
     <!-- /ko -->
 </div>

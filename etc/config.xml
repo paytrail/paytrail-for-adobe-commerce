@@ -40,21 +40,26 @@
         <shipment_activates_invoice>1</shipment_activates_invoice>
         <recommended_tax_algorithm>0</recommended_tax_algorithm>
         <logo>https://cdn2.hubspot.net/hubfs/335946/System/paytrail-logo.png</logo>
-        <rounding_row_tax_percent>24</rounding_row_tax_percent>
         <failed_payment_cancel>1</failed_payment_cancel>
         <callback_delay>120</callback_delay>
-        <paytrail_personalization>
-          <payment_group_bg>#ebebeb</payment_group_bg>
-          <payment_group_text>#323232</payment_group_text>
-          <payment_group_highlight_bg>#007b90</payment_group_highlight_bg>
-          <payment_group_highlight_text>#f2f8f9</payment_group_highlight_text>
-          <payment_group_hover>#d0d0d0</payment_group_hover>
-          <payment_method_highlight>#007b90</payment_method_highlight>
-          <payment_method_hover>#007b90</payment_method_hover>
-          <advanced_paytrail_personalization>
-            <additional_css></additional_css>
-          </advanced_paytrail_personalization>
-        </paytrail_personalization>
+        <paytrail_ui_settings>
+            <paytrail_personalization_new_ui>
+                <payment_method_highlight_new_ui>#575757</payment_method_highlight_new_ui>
+                <payment_method_hover_new_ui>#292929</payment_method_hover_new_ui>
+            </paytrail_personalization_new_ui>
+            <paytrail_personalization>
+                <payment_group_bg>#ebebeb</payment_group_bg>
+                <payment_group_text>#323232</payment_group_text>
+                <payment_group_highlight_bg>#007b90</payment_group_highlight_bg>
+                <payment_group_highlight_text>#f2f8f9</payment_group_highlight_text>
+                <payment_group_hover>#d0d0d0</payment_group_hover>
+                <payment_method_highlight>#007b90</payment_method_highlight>
+                <payment_method_hover>#007b90</payment_method_hover>
+                <advanced_paytrail_personalization>
+                    <additional_css></additional_css>
+                </advanced_paytrail_personalization>
+            </paytrail_personalization>
+        </paytrail_ui_settings>
         <checkout_algorithm>sha256</checkout_algorithm>
         <order_place_redirect_url>0</order_place_redirect_url>
       </paytrail>

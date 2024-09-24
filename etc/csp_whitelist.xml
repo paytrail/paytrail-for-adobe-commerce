@@ -34,6 +34,12 @@
         <policy id="script-src">
             <values>
                 <value id="paytrail-form" type="hash" algorithm="sha256">nyuJ902j4bh+Bk201CS4WCVJJWHk9Pd0Qy4EZla4CeA=</value>
+                <value id="services-paytrail-script" type="host">services.paytrail.com</value>
+            </values>
+        </policy>
+        <policy id="connect-src">
+            <values>
+                <value id="services-paytrail" type="host">*.paytrail.com</value>
             </values>
         </policy>
     </policies>

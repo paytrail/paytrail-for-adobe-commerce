@@ -20,8 +20,9 @@ define(
         'Magento_Checkout/js/model/totals',
         'Magento_Ui/js/model/messageList',
         'mage/translate',
+        'Magento_Ui/js/modal/modal'
     ],
-    function (ko, $, _, storage, Component, placeOrderAction, selectPaymentMethodAction, additionalValidators, quote, getTotalsAction, urlBuilder, mageUrlBuilder, fullScreenLoader, customer, checkoutData, totals, messageList, $t) {
+    function (ko, $, _, storage, Component, placeOrderAction, selectPaymentMethodAction, additionalValidators, quote, getTotalsAction, urlBuilder, mageUrlBuilder, fullScreenLoader, customer, checkoutData, totals, messageList, $t, modal) {
         'use strict';
         var self;
         var checkoutConfig = window.checkoutConfig.payment;
@@ -88,6 +89,9 @@ define(
                 isShowStoredCards: function () {
                     return checkoutConfig[self.payMethod].is_show_stored_cards;
                 },
+                isNewUiEnabled: function () {
+                    return checkoutConfig[self.payMethod].is_new_ui_enabled;
+                },
                 setPaymentMethodId: function (paymentMethod) {
                     self.selectedToken(0);
                     self.selectedPaymentMethodId(paymentMethod.id);
@@ -95,9 +99,23 @@ define(
 
                     return true;
                 },
+                setPaymentMethodIdOnKeyUp: function (data, event) {
+                    if (event.key === "Enter") {
+                        self.setPaymentMethodId(data);
+                    }
+
+                    return true;
+                },
                 setToken: function (token) {
                     self.selectedToken(token.id);
                     self.selectedPaymentMethodId(0);
+
+                    return true;
+                },
+                setTokenOnKeyUp: function (data, event) {
+                    if (event.key === "Enter") {
+                        self.setToken(data);
+                    }
 
                     return true;
                 },
@@ -333,6 +351,85 @@ define(
                                 }
                             }).done(
                                 function (response) {
+                                    if (response.applePay) {
+                                        function myFunction(item, index)
+                                        {
+                                            inputText += `<input type="hidden" name="${item.name}" value="${item.value}" />`
+                                        }
+
+                                        const applePayParameters = response.customProviders.applepay.parameters;
+                                        const element = document.createElement('div');
+                                        let inputText = '';
+
+                                        element.setAttribute('id','apple-pay-button');
+                                        applePayParameters.forEach(myFunction)
+
+                                        element.innerHTML = inputText;
+                                        document.body.appendChild(element);
+
+                                        const applePayButton = checkoutFinland.applePayButton;
+                                        if (applePayButton.canMakePayment()) {
+                                            // Mount the button to the element you created earlier, here e.g. #apple-pay-button.
+                                            applePayButton.mount('#apple-pay-button', (redirectUrl) => {
+                                                setTimeout(() => {
+                                                    window.location.replace(redirectUrl);
+                                                }, 1500);
+                                            });
+
+                                            let options = {
+                                                type: 'popup',
+                                                modalClass: 'apple-pay-popup-modal',
+                                                label: 'Proceed to Apple Pay',
+                                                responsive: true,
+                                                innerScroll: true,
+                                                clickableOverlay: true,
+                                                opened: function ($Event) {
+                                                    $('.modal-header', $Event.srcElement).addClass('apple-pay-popup-head');
+                                                    $('.modal-content', $Event.srcElement).addClass('apple-pay-popup-cont');
+                                                    $('.modal-footer', $Event.srcElement).addClass('apple-pay-popup-foot');
+                                                    $('.modal-inner-wrap', $Event.srcElement).addClass('apple-pay-popup-wrap');
+                                                },
+                                                buttons: [{
+                                                    class: 'apple-pay-popup-button',
+                                                    attr: {},
+
+                                                    /**
+                                                     * Default action on button click
+                                                     */
+                                                    click: function (event) {
+                                                        element.click();
+                                                    }
+                                                }]
+                                            };
+
+                                            let modalContainer = $('#apple-pay-popup-wrapper');
+                                            let popup = modal(options, modalContainer);
+                                            modalContainer.modal('openModal');
+                                            fullScreenLoader.stopLoader();
+
+                                            modalContainer.on('modalclosed', function () {
+                                                fullScreenLoader.startLoader();
+                                                $.ajax({
+                                                    url:mageUrlBuilder.build('paytrail/receipt/applepayfailedreceipt'),
+                                                    type:'post',
+                                                    dataType:'json',
+                                                    data: {
+                                                        'params':response.customProviders.applepay.parameters
+                                                    }
+                                                }).done(
+                                                    function (response) {
+                                                        window.location.replace(mageUrlBuilder.build(response.redirectUrl));
+                                                        fullScreenLoader.stopLoader();
+
+                                                        return false;
+                                                    }
+                                                )
+                                            });
+                                        }
+
+                                        return false;
+                                    }
+
                                     if ($.type(response) === 'object' && response.success && response.data) {
                                         if (response.reference) {
                                             window.location.href = self.getDefaultSuccessUrl();

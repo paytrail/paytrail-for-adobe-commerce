@@ -96,10 +96,25 @@ Available statuses:
 - Closed
 - Canceled
 
+## Setting up Apple Pay
+The payment module supports Apple pay payments.
+
+Steps:
+1. Enable Apple Pay for your Paytrail Merchant Panel.
+2. [Verify your domain with association file](https://docs.paytrail.com/#/?id=verifying-your-domain-with-apple-pay)
+3. Enable Apple Pay in admin panel __Stores -> Configuration -> Sales -> Payment Methods -> Apple Pay Configuration__
+
 ## Multiple stores
 If you have multiple stores, you can set up the payment module differently depending on the selected store. In configuration settings, there is a selection for Store View.
 
 By changing the Store View, you can define different settings for each store within the Adobe Commerce instance.
+
+## Payment page UI
+Version 2.2.0 provided new UI for payment page. There is no need to use new UI for payment page, old UI is still available when <b>Enable new UI</b> is set to No, as it is by default.
+
+Enable New UI interface in admin panel __Stores -> Configuration -> Sales -> Payment Methods -> Payment Page UI -> Enable new UI__
+
+For the new UI, personalisation options are restricted only to highlight selected payment method and hover on payment method.
 
 ## Rounding problems with certain providers (Collector)
 
