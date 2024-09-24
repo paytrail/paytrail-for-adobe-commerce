@@ -65,12 +65,15 @@ class OrderItem
     {
         $paytrailItem = new Item();
 
+        // When Anonymization Order Data is enabled in config settings item data is anonymized
+        $anonymizeData = $this->gatewayConfig->isAnonymizationDataEnabled();
+
         $paytrailItem->setUnitPrice(round($item['price'] * 100))
             ->setUnits($item['amount'])
             ->setVatPercentage($item['vat'])
-            ->setProductCode($item['code'])
+            ->setProductCode($anonymizeData ? '*****' : $item['code'])
             ->setDeliveryDate(date('Y-m-d'))
-            ->setDescription($item['title']);
+            ->setDescription($anonymizeData ? '*****' : $item['title']);
 
         return $paytrailItem;
     }
@@ -89,11 +92,6 @@ class OrderItem
 
         foreach ($order->getAllItems() as $item) {
             $qtyOrdered = $item->getQtyOrdered();
-
-            // When Anonymization Order Data is enabled in config settings item data is anonymized
-            if ($this->gatewayConfig->isAnonymizationDataEnabled()) {
-                $item = $this->orderDataAnonymization->anonymizeItemData($item);
-            }
 
             // When in grouped or bundle product price is dynamic (product_calculations = 0)
             // then also the child products has prices, so we set

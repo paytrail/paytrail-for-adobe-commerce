@@ -27,6 +27,7 @@ class OrderDataAnonymization
      */
     public function anonymizeItemData($orderItem): Item
     {
+        // TODO: anonymize item based on different config param provided
         if ($orderItem->getProductType() === $this->gatewayConfig->getAnonymizationProductType()) {
             $orderItem->setName(self::ANONYMIZED_DATA);
             $orderItem->setSku(self::ANONYMIZED_DATA);
