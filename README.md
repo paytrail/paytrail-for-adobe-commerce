@@ -116,6 +116,11 @@ Enable New UI interface in admin panel __Stores -> Configuration -> Sales -> Pay
 
 For the new UI, personalisation options are restricted only to highlight selected payment method and hover on payment method.
 
+## Data Anonymization
+If you want to anonymize data from order that is sent to payment provider, you can enable it in admin panel.
+
+Enable Anonymization Order Data in admin panel __Stores -> Configuration -> Sales -> Payment Methods -> Anonymization Order Data -> Enable__
+
 ## Rounding problems with certain providers (Collector)
 
 In some cases, this module might send a so-called "rounding-row" item in the order data, which might result in an error if this value is negative (this has been observed with Collector payment method). This is related to how Adobe Commerce calculates and rounds taxes and how this module compensates for possible mismatches between the total and sum of individual items.
