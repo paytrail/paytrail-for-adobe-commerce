@@ -18,20 +18,18 @@
     "require": {
         "php": "^8.0",
         "paytrail/paytrail-php-sdk": ">=2.7.3",
-        "magento/framework": "*",
+        "magento/framework": ">=102.0.0",
         "ext-curl": "*",
         "nesbot/carbon": "^2.57.0"
     },
     "require-dev": {
-        "magento/magento-coding-standard": "*",
-        "phpunit/phpunit": "^9.5",
-        "magento/product-enterprise-edition": "> 2.4.3"
+        "magento/magento-coding-standard": "*"
     },
     "conflict": {
         "markup/module-paytrail": "*"
     },
     "type": "magento2-module",
-    "version": "2.2.0",
+    "version": "2.2.1",
     "license": "MIT",
     "autoload": {
         "files": [

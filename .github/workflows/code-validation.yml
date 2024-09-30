@@ -22,7 +22,7 @@ jobs:
 
     steps:
       - name: Check out code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v3
         with:
           fetch-depth: ${{ matrix.fetch-depth }}
 
@@ -33,9 +33,11 @@ jobs:
           if [ "$BASE_SHA" = "0000000000000000000000000000000000000000" ]; then
             BASE_SHA="${{ matrix.base-branch }}"
           fi
+
           if [[ ! -z "${{ github.event.pull_request.base.sha }}" ]]; then
             BASE_SHA="${{ github.event.pull_request.base.sha }}"
           fi
+
           echo "all=$(git diff --name-only --diff-filter=ACMRT $BASE_SHA ${{ github.sha }} | xargs)" >> $GITHUB_OUTPUT
           echo "php=$(git diff --name-only --diff-filter=ACMRT $BASE_SHA ${{ github.sha }} | grep -E '.ph(p|tml)$' | xargs)" >> $GITHUB_OUTPUT
   validate-php:
@@ -50,7 +52,7 @@ jobs:
     strategy:
       matrix:
         node-version:
-          - 20
+          - 16
         php-version: ["8.1", "8.2", "8.3"]
         dependencies:
           - "highest"
@@ -58,12 +60,12 @@ jobs:
           - "--no-plugins --no-progress"
     steps:
       - name: Setup node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v2
         with:
           node-version: ${{ matrix.node_version }}
 
       - name: Check out code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v3
 
       - name: Setup Php
         uses: shivammathur/setup-php@v2
@@ -94,6 +96,8 @@ jobs:
         run: |
           vendor/bin/phpcs --config-set installed_paths ../../magento/magento-coding-standard/,../../phpcompatibility/php-compatibility,../../magento/php-compatibility-fork
           vendor/bin/phpcs --standard=Magento2 -q --report=checkstyle ${{needs.changed-files.outputs.php}} | cs2pr --graceful-warnings
+
       - name: Run Unit test
         run: |
           vendor/bin/phpunit Test/Unit/Model/
+
