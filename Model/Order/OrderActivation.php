@@ -124,7 +124,6 @@ class OrderActivation
             $invoice->setRequestedCaptureCase(\Magento\Sales\Model\Order\Invoice::CAPTURE_ONLINE);
             $invoice->setTransactionId($transactionId);
             $invoice->register();
-
             $this->saveInvoiceAndOrder($invoice, $order);
         }
     }
@@ -132,12 +131,12 @@ class OrderActivation
     /**
      * Save invoice and order.
      *
-     * @param AbstractModel $invoice
-     * @param AbstractModel $order
+     * @param InvoiceInterface $invoice
+     * @param OrderInterface $order
      * @return void
      * @throws LocalizedException
      */
-    private function saveInvoiceAndOrder(AbstractModel $invoice, AbstractModel $order): void
+    private function saveInvoiceAndOrder(InvoiceInterface $invoice, OrderInterface $order): void
     {
         try {
             /** @var \Magento\Framework\DB\Transaction $transactionSave */
