@@ -53,9 +53,6 @@ class OrderActivation
             $item->setQtyCanceled('0.0000');
         }
 
-        $order->setStatus('processing');
-        $order->setState('processing');
-
         $this->orderRepository->save($order);
         $this->processInvoice($order);
     }
