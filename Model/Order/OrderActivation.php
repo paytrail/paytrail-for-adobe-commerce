@@ -67,7 +67,6 @@ class OrderActivation
     public function isCanceled($orderId): bool
     {
         $order = $this->orderRepository->get($orderId);
-
         $i = 0;
 
         foreach ($order->getItems() as $item) {
