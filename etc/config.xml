@@ -64,7 +64,6 @@
         <order_place_redirect_url>0</order_place_redirect_url>
         <paytrail_anonymization>
             <active>0</active>
-            <anonymization_product_type></anonymization_product_type>
         </paytrail_anonymization>
       </paytrail>
       <paytrail_cc_vault>
