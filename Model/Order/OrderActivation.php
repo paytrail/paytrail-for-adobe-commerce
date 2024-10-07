@@ -4,6 +4,7 @@ namespace Paytrail\PaymentService\Model\Order;
 
 use Magento\Framework\Exception\InputException;
 use Magento\Framework\Exception\LocalizedException;
+use Magento\Framework\Model\AbstractModel;
 use Magento\Sales\Api\Data\InvoiceInterface;
 use Magento\Sales\Api\Data\OrderInterface;
 use Magento\Sales\Api\OrderRepositoryInterface;
@@ -49,7 +50,7 @@ class OrderActivation
          * Loop through order items and set canceled items as ordered
          */
         foreach ($order->getItems() as $item) {
-            $item->setQtyCanceled(0);
+            $item->setQtyCanceled('0.0000');
         }
 
         $this->orderRepository->save($order);
@@ -69,7 +70,7 @@ class OrderActivation
         $i = 0;
 
         foreach ($order->getItems() as $item) {
-            if ($item->getQtyCanceled() > 0) {
+            if ((int)$item->getQtyCanceled() > 0) {
                 $i++;
             }
         }
@@ -114,7 +115,7 @@ class OrderActivation
     {
         $transactionId = $this->getCaptureTransaction($order);
 
-        if ($order->canInvoice()) {
+        if ($order->canInvoice() && $transactionId) {
             $invoice = $this->invoiceService->prepareInvoice($order);
             $invoice->setRequestedCaptureCase(\Magento\Sales\Model\Order\Invoice::CAPTURE_ONLINE);
             $invoice->setTransactionId($transactionId);
@@ -131,7 +132,7 @@ class OrderActivation
      * @return void
      * @throws LocalizedException
      */
-    private function saveInvoiceAndOrder(InvoiceInterface $invoice, $order): void
+    private function saveInvoiceAndOrder(InvoiceInterface $invoice, OrderInterface $order): void
     {
         try {
             /** @var \Magento\Framework\DB\Transaction $transactionSave */
