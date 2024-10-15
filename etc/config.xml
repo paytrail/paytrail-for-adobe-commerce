@@ -62,6 +62,9 @@
         </paytrail_ui_settings>
         <checkout_algorithm>sha256</checkout_algorithm>
         <order_place_redirect_url>0</order_place_redirect_url>
+        <paytrail_anonymization>
+            <active>0</active>
+        </paytrail_anonymization>
       </paytrail>
       <paytrail_cc_vault>
         <model>PaytrailVaultFacade</model>

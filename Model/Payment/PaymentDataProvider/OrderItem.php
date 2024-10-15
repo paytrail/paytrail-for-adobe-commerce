@@ -5,6 +5,8 @@ namespace Paytrail\PaymentService\Model\Payment\PaymentDataProvider;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Sales\Model\Order;
 use Magento\Tax\Helper\Data;
+use Paytrail\PaymentService\Gateway\Config\Config;
+use Paytrail\PaymentService\Model\Order\OrderDataAnonymization;
 use Paytrail\PaymentService\Model\Payment\RoundingFixer;
 use Paytrail\SDK\Model\Item;
 use Magento\Sales\Model\ResourceModel\Order\Tax\Item as TaxItem;
@@ -19,12 +21,16 @@ class OrderItem
      * @param TaxItem $taxItem
      * @param RoundingFixer $roundingFixer
      * @param Data $taxHelper
+     * @param Config $gatewayConfig
+     * @param OrderDataAnonymization $orderDataAnonymization
      */
     public function __construct(
         private DiscountApply $discountApply,
         private TaxItem       $taxItem,
         private RoundingFixer $roundingFixer,
-        private Data          $taxHelper
+        private Data          $taxHelper,
+        private readonly Config $gatewayConfig,
+        private readonly OrderDataAnonymization $orderDataAnonymization
     ) {
     }
 
@@ -59,12 +65,15 @@ class OrderItem
     {
         $paytrailItem = new Item();
 
+        // When Anonymization Order Data is enabled in config settings item data is anonymized
+        $anonymizeData = $this->gatewayConfig->isAnonymizationDataEnabled();
+
         $paytrailItem->setUnitPrice(round($item['price'] * 100))
             ->setUnits($item['amount'])
             ->setVatPercentage($item['vat'])
-            ->setProductCode($item['code'])
+            ->setProductCode($anonymizeData ? '*****' : $item['code'])
             ->setDeliveryDate(date('Y-m-d'))
-            ->setDescription($item['title']);
+            ->setDescription($anonymizeData ? '*****' : $item['title']);
 
         return $paytrailItem;
     }
