@@ -60,7 +60,7 @@ class OrderActivation
          * Force order status change to 'processing'.
          */
         if ($order->getState() != Order::STATE_PROCESSING) {
-            $order->setState('processing');
+            $order->setState(Order::STATE_PROCESSING);
             $order->setStatus($this->gatewayConfig->getDefaultOrderStatus());
         }
 
