@@ -4,13 +4,14 @@ namespace Paytrail\PaymentService\Model\Order;
 
 use Magento\Framework\Exception\InputException;
 use Magento\Framework\Exception\LocalizedException;
-use Magento\Framework\Model\AbstractModel;
 use Magento\Sales\Api\Data\InvoiceInterface;
 use Magento\Sales\Api\Data\OrderInterface;
 use Magento\Sales\Api\OrderRepositoryInterface;
 use Magento\Sales\Api\TransactionRepositoryInterface;
+use Magento\Sales\Model\Order;
 use Magento\Sales\Model\Service\InvoiceService;
 use Magento\Framework\DB\TransactionFactory;
+use Paytrail\PaymentService\Gateway\Config\Config;
 use Psr\Log\LoggerInterface;
 
 class OrderActivation
@@ -22,6 +23,7 @@ class OrderActivation
      * @param TransactionRepositoryInterface $transactionRepository
      * @param InvoiceService $invoiceService
      * @param TransactionFactory $transactionFactory
+     * @param Config $gatewayConfig
      * @param LoggerInterface $logger
      */
     public function __construct(
@@ -29,6 +31,7 @@ class OrderActivation
         private TransactionRepositoryInterface $transactionRepository,
         private InvoiceService $invoiceService,
         private TransactionFactory $transactionFactory,
+        private Config $gatewayConfig,
         private LoggerInterface $logger
     ) {
     }
@@ -51,6 +54,14 @@ class OrderActivation
          */
         foreach ($order->getItems() as $item) {
             $item->setQtyCanceled('0.0000');
+        }
+
+        /**
+         * Force order status change.
+         */
+        if ($order->getState() != Order::STATE_PROCESSING) {
+            $order->setState(Order::STATE_PROCESSING);
+            $order->setStatus($this->gatewayConfig->getDefaultOrderStatus());
         }
 
         $this->orderRepository->save($order);
