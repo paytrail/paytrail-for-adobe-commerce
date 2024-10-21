@@ -57,7 +57,7 @@ class OrderActivation
         }
 
         /**
-         * Force order status change.
+         * Force order status change to 'processing'.
          */
         if ($order->getState() != Order::STATE_PROCESSING) {
             $order->setState(Order::STATE_PROCESSING);
