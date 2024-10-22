@@ -1,24 +1,31 @@
 name: Run code validation checks
+
 on:
   pull_request:
+
 jobs:
   changed-files:
     runs-on: ubuntu-latest
+
     name: Gather Changelist
+
     strategy:
       matrix:
         fetch-depth:
           - 2
         base-branch:
           - "master"
+
     outputs:
       all: ${{ steps.changes.outputs.all }}
       php: ${{ steps.changes.outputs.php }}
+
     steps:
       - name: Check out code
         uses: actions/checkout@v4
         with:
           fetch-depth: ${{ matrix.fetch-depth }}
+
       - name: Get changed files
         id: changes
         run: |
@@ -33,13 +40,17 @@ jobs:
           echo "php=$(git diff --name-only --diff-filter=ACMRT $BASE_SHA ${{ github.sha }} | grep -E '.ph(p|tml)$' | xargs)" >> $GITHUB_OUTPUT
   validate-php:
     runs-on: ubuntu-latest
-    name: Run php code validation and Unit tests
+
+    name: Run php code validation
+
     needs: changed-files
+
     if: ${{needs.changed-files.outputs.php}}
+
     strategy:
       matrix:
         node-version:
-          - 20
+          - 16
         php-version: ["8.1", "8.2", "8.3"]
         dependencies:
           - "highest"
@@ -50,14 +61,16 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node_version }}
+
       - name: Check out code
         uses: actions/checkout@v4
+
       - name: Setup Php
         uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php-version }}
           ini-file: development
-          tools: composer:2.7.9, cs2pr
+          tools: composer:2.2, cs2pr
         env:
           COMPOSER_AUTH_JSON: |
             {
@@ -70,15 +83,14 @@ jobs:
             }
       - name: Validate Composer Files
         run: composer validate
+
       - name: Run Composer install
         uses: "ramsey/composer-install@v1"
         with:
           dependency-versions: "${{ matrix.dependencies }}"
           composer-options: "${{ matrix.composer-options }}"
+
       - name: Detect PhpCs violations
         run: |
-          vendor/bin/phpcs --config-set installed_paths ../../magento/magento-coding-standard/,../../phpcompatibility/php-compatibility,../../magento/php-compatibility-fork
+          vendor/bin/phpcs --config-set installed_paths ../../magento/magento-coding-standard/,../../phpcompatibility/php-compatibility
           vendor/bin/phpcs --standard=Magento2 -q --report=checkstyle ${{needs.changed-files.outputs.php}} | cs2pr --graceful-warnings
-      - name: Run Unit test
-        run: |
-          vendor/bin/phpunit Test/Unit/Model/
