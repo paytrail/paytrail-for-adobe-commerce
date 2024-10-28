@@ -57,7 +57,7 @@ class RefundDataBuilder implements BuilderInterface
             $errMsg = 'Invalid amount for refund.';
         }
 
-        if (!$payment->getTransactionId()) {
+        if (!$payment->getLastTransId()) {
             $errMsg = 'Invalid transaction ID.';
         }
 
@@ -76,7 +76,7 @@ class RefundDataBuilder implements BuilderInterface
 
         return [
             'payment'               => $payment,
-            'transaction_id'        => $payment->getTransactionId(),
+            'transaction_id'        => $payment->getLastTransId(),
             'parent_transaction_id' => $payment->getParentTransactionId(),
             'order'                 => $order,
             'refund_request'        => $paytrailRefund,
