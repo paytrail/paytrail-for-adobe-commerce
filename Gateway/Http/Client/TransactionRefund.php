@@ -40,7 +40,7 @@ class TransactionRefund implements ClientInterface
         $response = $this->refund(
             $request['refund_request'],
             $request['order'],
-            $request['parent_transaction_id']
+            $request['transaction_id']
         );
 
         if (isset($response['error'])) {
