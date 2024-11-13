@@ -78,11 +78,12 @@
             <div class="order-products-toolbar toolbar bottom"><?= $block->getPagerHtml() ?></div>
         <?php endif ?>
     <?php else: ?>
-        <div class="message info empty"><span><?= $escaper->escapeHtml($block->getEmptyRecurringPaymentsMessage()) ?></span>
+        <div class="message info empty"><span><?= $escaper
+                    ->escapeHtml($block->getEmptyRecurringPaymentsMessage()) ?></span>
         </div>
     <?php endif ?>
 
-    <?php if ($closedSubscriptions && count($closedSubscriptions)) : ?>
+    <?php if ($closedSubscriptions && count($closedSubscriptions)): ?>
         <h2><?= $escaper->escapeHtml(__('Canceled subscriptions')) ?></h2>
         <div class="table-wrapper subscription-canceled">
             <table class="data table table-order-items history" id="my-closed-subscriptions-table">
@@ -96,19 +97,25 @@
                 </tr>
                 </thead>
                 <tbody>
-                <?php foreach ($closedSubscriptions as $closedSubscription) : ?>
+                <?php foreach ($closedSubscriptions as $closedSubscription): ?>
                     <tr>
                         <td data-th="<?= $escaper->escapeHtml(__('Next Order Date')) ?>"
-                            class="col id"><?= $escaper->escapeHtml($block->validateDate($closedSubscription->getNextOrderDate())) ?></td>
+                            class="col id"><?= $escaper
+                                ->escapeHtml(
+                                    $block->validateDate($closedSubscription->getNextOrderDate())) ?></td>
                         <td data-th="<?= $escaper->escapeHtml(__('Status')) ?>" class="col date"><?= /* @noEscape */
-                            $escaper->escapeHtml($block->getRecurringPaymentStatusName($closedSubscription->getStatus())) ?></td>
+                            $escaper->escapeHtml($block
+                                ->getRecurringPaymentStatusName(
+                                    $closedSubscription->getStatus())) ?></td>
                         <td data-th="<?= $escaper->escapeHtml(__('Recurring Payment Profile')) ?>"
                             class="col total"><?= /* @noEscape */
                             $escaper->escapeHtml($closedSubscription->getName()) ?></td>
                         <td data-th="<?= $escaper->escapeHtml(__('Grand total')) ?>"
-                            class="col status"><?= $escaper->escapeHtml($closedSubscription->getBaseGrandTotal()) ?></td>
+                            class="col status"><?= $escaper->escapeHtml(
+                                $closedSubscription->getBaseGrandTotal()) ?></td>
                         <td data-th="<?= $escaper->escapeHtml(__('Actions')) ?>" class="col actions">
-                            <a href="<?= $escaper->escapeUrl($block->getViewUrl($closedSubscription)) ?>" class="action view">
+                            <a href="<?= $escaper->escapeUrl($block
+                                ->getViewUrl($closedSubscription)) ?>" class="action view">
                                 <span><?= $escaper->escapeHtml(__('View Order')) ?></span>
                             </a>
                         </td>
