@@ -34,8 +34,8 @@
                             $escaper->escapeHtml($recurringPayment->getName()) ?></td>
                         <td data-th="<?= $escaper->escapeHtml(__('Grand total')) ?>"
                             class="col status"><?= $escaper->escapeHtml($block
-                                ->getCurrentCurrency()) . $escaper
-                                ->escapeHtml($recurringPayment->getBaseGrandTotal()) ?></td>
+                                ->getCurrentCurrency()) . $escaper->escapeHtml($recurringPayment->getBaseGrandTotal()
+                                ) ?></td>
                         <td data-th="<?= $escaper->escapeHtml(__('Card number')) ?>"
                             class="col status"><?= $escaper->escapeHtml($block
                                 ->getCardNumber($recurringPayment)) ?></td>
@@ -63,8 +63,7 @@
                                     </li>
                                     <li>
                                         <a class="action show-payment-methods" data-id="<?= $escaper
-                                            ->escapeHtml($recurringPayment->getId()
-                                            ) ?>">
+                                            ->escapeHtml($recurringPayment->getId()) ?>">
                                             <span><?= $escaper->escapeHtml(__('Change card')) ?></span
                                         </a>
                                     </li>
@@ -103,12 +102,10 @@
                     <tr>
                         <td data-th="<?= $escaper->escapeHtml(__('Next Order Date')) ?>"
                             class="col id"><?= $escaper
-                                ->escapeHtml($block->validateDate($closedSubscription->getNextOrderDate())
-                                ) ?></td>
+                                ->escapeHtml($block->validateDate($closedSubscription->getNextOrderDate())) ?></td>
                         <td data-th="<?= $escaper->escapeHtml(__('Status')) ?>" class="col date"><?= /* @noEscape */
                             $escaper->escapeHtml($block
-                                ->getRecurringPaymentStatusName($closedSubscription->getStatus())
-                            ) ?></td>
+                                ->getRecurringPaymentStatusName($closedSubscription->getStatus())) ?></td>
                         <td data-th="<?= $escaper->escapeHtml(__('Recurring Payment Profile')) ?>"
                             class="col total"><?= /* @noEscape */
                             $escaper->escapeHtml($closedSubscription->getName()) ?></td>
