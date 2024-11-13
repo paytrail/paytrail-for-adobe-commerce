@@ -68,11 +68,11 @@
                 </tbody>
             </table>
         </div>
-        <?php if ($block->getPagerHtml()) : ?>
+        <?php if ($block->getPagerHtml()): ?>
             <div class="order-products-toolbar toolbar bottom"><?= $block->getPagerHtml() ?></div>
         <?php endif ?>
-    <?php else : ?>
-        <div class="message info empty"><span><?= $block->escapeHtml($block->getEmptyRecurringPaymentsMessage()) ?></span>
+    <?php else: ?>
+        <div class="message info empty"><span><?= $escaper->escapeHtml($block->getEmptyRecurringPaymentsMessage()) ?></span>
         </div>
     <?php endif ?>
 
@@ -114,16 +114,16 @@
     <?php endif; ?>
 
     <div id="payment-methods-modal">
-        <form method="post" action="<?= $block->getUrl('paytrail/card/change') ?>">
+        <form method="post" action="<?= $escaper->escapeUrl('paytrail/card/change') ?>">
             <input type="hidden" name="subscription_id" id="payment-change-card-subscription-input">
             <?= $block->getChildHtml('vault.cards.list') ?>
 
             <button type="button" id="add-new-payment-card">
-                <span><?= $block->escapeHtml(__('Add card')) ?></span>
+                <span><?= $escaper->escapeHtml(__('Add card')) ?></span>
             </button>
 
             <button type="submit">
-                <span><?= $block->escapeHtml(__('Change Card')) ?></span>
+                <span><?= $escaper->escapeHtml(__('Change Card')) ?></span>
             </button>
         </form>
     </div>
