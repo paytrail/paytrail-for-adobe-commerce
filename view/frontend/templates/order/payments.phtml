@@ -84,7 +84,7 @@
         </div>
     <?php endif ?>
 
-    <?php if ($closedSubscriptions && count($closedSubscriptions)): ?>
+    <?php if ($closedSubscriptions && count($closedSubscriptions)) : ?>
         <h2><?= $escaper->escapeHtml(__('Canceled subscriptions')) ?></h2>
         <div class="table-wrapper subscription-canceled">
             <table class="data table table-order-items history" id="my-closed-subscriptions-table">
