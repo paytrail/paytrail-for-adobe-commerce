@@ -102,17 +102,19 @@
                         <td data-th="<?= $escaper->escapeHtml(__('Next Order Date')) ?>"
                             class="col id"><?= $escaper
                                 ->escapeHtml(
-                                    $block->validateDate($closedSubscription->getNextOrderDate())) ?></td>
+                                    $block->validateDate($closedSubscription->getNextOrderDate())
+                                ) ?></td>
                         <td data-th="<?= $escaper->escapeHtml(__('Status')) ?>" class="col date"><?= /* @noEscape */
                             $escaper->escapeHtml($block
-                                ->getRecurringPaymentStatusName(
-                                    $closedSubscription->getStatus())) ?></td>
+                                ->getRecurringPaymentStatusName($closedSubscription->getStatus())
+                            ) ?></td>
                         <td data-th="<?= $escaper->escapeHtml(__('Recurring Payment Profile')) ?>"
                             class="col total"><?= /* @noEscape */
                             $escaper->escapeHtml($closedSubscription->getName()) ?></td>
                         <td data-th="<?= $escaper->escapeHtml(__('Grand total')) ?>"
                             class="col status"><?= $escaper->escapeHtml(
-                                $closedSubscription->getBaseGrandTotal()) ?></td>
+                                $closedSubscription->getBaseGrandTotal()
+                            ) ?></td>
                         <td data-th="<?= $escaper->escapeHtml(__('Actions')) ?>" class="col actions">
                             <a href="<?= $escaper->escapeUrl($block
                                 ->getViewUrl($closedSubscription)) ?>" class="action view">
