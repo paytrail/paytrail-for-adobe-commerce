@@ -33,8 +33,8 @@
                             class="col total"><?= /* @noEscape */
                             $escaper->escapeHtml($recurringPayment->getName()) ?></td>
                         <td data-th="<?= $escaper->escapeHtml(__('Grand total')) ?>"
-                            class="col status"><?= $escaper->escapeHtml($block
-                                ->getCurrentCurrency()) . $escaper
+                            class="col status"><?= $escaper
+                                ->escapeHtml($block->getCurrentCurrency()) . $escaper
                                 ->escapeHtml($recurringPayment->getBaseGrandTotal()) ?></td>
                         <td data-th="<?= $escaper->escapeHtml(__('Card number')) ?>"
                             class="col status"><?= $escaper->escapeHtml($block
@@ -110,9 +110,8 @@
                             class="col total"><?= /* @noEscape */
                             $escaper->escapeHtml($closedSubscription->getName()) ?></td>
                         <td data-th="<?= $escaper->escapeHtml(__('Grand total')) ?>"
-                            class="col status"><?= $escaper->escapeHtml(
-                                $closedSubscription->getBaseGrandTotal()
-                            ) ?></td>
+                            class="col status"><?= $escaper
+                                ->escapeHtml($closedSubscription->getBaseGrandTotal()) ?></td>
                         <td data-th="<?= $escaper->escapeHtml(__('Actions')) ?>" class="col actions">
                             <a href="<?= $escaper->escapeUrl($block
                                 ->getViewUrl($closedSubscription)) ?>" class="action view">
