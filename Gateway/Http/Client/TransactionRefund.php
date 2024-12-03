@@ -40,7 +40,7 @@ class TransactionRefund implements ClientInterface
         $response = $this->refund(
             $request['refund_request'],
             $request['order'],
-            $request['transaction_id'] == $request['parent_transaction_id']
+            $request['transaction_id'] === $request['parent_transaction_id']
                 ? $request['transaction_id'] : $request['parent_transaction_id']
         );
 
@@ -84,8 +84,7 @@ class TransactionRefund implements ClientInterface
         RefundRequest         $refundRequest,
         OrderAdapterInterface $order = null,
         string                $transactionId = null
-    ): array
-    {
+    ): array {
         $response = [];
 
         try {
