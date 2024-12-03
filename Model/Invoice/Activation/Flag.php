@@ -54,7 +54,7 @@ class Flag
     public function setManualInvoiceActivationFlag(
         AbstractPaymentRequest $paytrailPayment,
         string                 $method,
-                               $order
+        $order
     ): AbstractPaymentRequest {
         if ($this->isManualInvoiceEnabled()
             && in_array($method, $this->getInvoiceMethods())
