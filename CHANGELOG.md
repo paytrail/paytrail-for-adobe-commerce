@@ -8,7 +8,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [2.2.4] - 2024-12-04
 
 - fix partial refund.
-- new method code for manual invoice.
 - add translations for 'Add card' & 'Login to save cards' buttons.
 - update block to escaper in the payment template.
 
