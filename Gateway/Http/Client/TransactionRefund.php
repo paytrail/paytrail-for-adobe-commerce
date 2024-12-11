@@ -14,16 +14,16 @@ use Paytrail\SDK\Request\RefundRequest;
 class TransactionRefund implements ClientInterface
 {
     /**
-     * Constructor
+     * TransactionRefund constructor.
      *
-     * @param \Paytrail\PaymentService\Logger\PaytrailLogger               $log
-     * @param \Magento\Payment\Gateway\Command\CommandManagerPoolInterface $commandManagerPool
-     * @param \Paytrail\PaymentService\Model\Adapter\Adapter               $paytrailAdapter
+     * @param PaytrailLogger $log
+     * @param CommandManagerPoolInterface $commandManagerPool
+     * @param Adapter $paytrailAdapter
      */
     public function __construct(
-        private readonly PaytrailLogger $log,
+        private readonly PaytrailLogger              $log,
         private readonly CommandManagerPoolInterface $commandManagerPool,
-        private readonly Adapter $paytrailAdapter,
+        private readonly Adapter                     $paytrailAdapter,
     ) {
     }
 
@@ -36,11 +36,12 @@ class TransactionRefund implements ClientInterface
      */
     public function placeRequest(TransferInterface $transferObject)
     {
-        $request  = $transferObject->getBody();
+        $request = $transferObject->getBody();
         $response = $this->refund(
             $request['refund_request'],
             $request['order'],
-            $request['transaction_id']
+            $request['transaction_id'] === $request['parent_transaction_id']
+                ? $request['transaction_id'] : $request['parent_transaction_id']
         );
 
         if (isset($response['error'])) {
@@ -73,16 +74,16 @@ class TransactionRefund implements ClientInterface
     /**
      * Refund function
      *
-     * @param \Paytrail\SDK\Request\RefundRequest                      $refundRequest
-     * @param \Magento\Payment\Gateway\Data\OrderAdapterInterface|null $order
-     * @param string|null                                              $transactionId
+     * @param RefundRequest $refundRequest
+     * @param OrderAdapterInterface|null $order
+     * @param string|null $transactionId
      *
      * @return array
      */
     public function refund(
-        RefundRequest $refundRequest,
+        RefundRequest         $refundRequest,
         OrderAdapterInterface $order = null,
-        string $transactionId = null
+        string                $transactionId = null
     ): array {
         $response = [];
 
