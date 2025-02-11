@@ -18,8 +18,13 @@
         <plugin name="RecurringToOrderGrid" type="Paytrail\PaymentService\Plugin\RecurringToOrderGrid" />
     </type>
 
+    <!-- include selected payment method into payment method data on order page   -->
     <type name="Magento\Sales\Block\Adminhtml\Order\View\Tab\Info">
-        <plugin name="OrderAdminViewInfo" type="Paytrail\PaymentService\Plugin\PaymentMethodOrderInfo" />
+        <plugin name="OrderAdminViewInfo" type="Paytrail\PaymentService\Plugin\PaymentMethodAdminOrderInfo" />
+    </type>
+
+    <type name="Magento\Sales\Block\Order\Info">
+        <plugin name="OrderCustomerViewInfo" type="Paytrail\PaymentService\Plugin\PaymentMethodCustomerOrderInfo" />
     </type>
 
     <!-- hide recurring_payment_schedule attribute on product edit page for disable Recurring Payment configuration -->
