@@ -93,7 +93,7 @@ class Token implements HttpPostActionInterface
             $this->checkoutSession->getLastRealOrderId()
         );
 
-        // set selected payment method to order payment additional_data
+        // set selected payment method to order's payment additional_data
         $this->paymentMethodData->setSelectedCardTokenData($order, $selectedTokenId);
 
         $resultJson = $this->jsonFactory->create();

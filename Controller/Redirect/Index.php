@@ -94,6 +94,7 @@ class Index implements ActionInterface
                 $order = $this->checkoutSession->getLastRealOrder();
                 $paytrailPayment = $this->getPaytrailPayment($order, $selectedPaymentMethodId);
 
+                // set selected payment method to order's payment additional_data
                 $this->paymentMethodData->setSelectedPaymentMethodData($order, $selectedPaymentMethodId);
 
                 if ($selectedPaymentMethodId === Config::APPLE_PAY_PAYMENT_CODE) {

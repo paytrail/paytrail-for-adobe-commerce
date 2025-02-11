@@ -71,6 +71,7 @@ class PayAndAddCard implements ActionInterface
 
         $order = $this->checkoutSession->getLastRealOrder();
 
+        // set selected payment method to order's payment additional_data
         $this->paymentMethodData->setSelectedCardTokenData($order, 'pay_and_add_card');
 
         try {
