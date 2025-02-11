@@ -11,7 +11,7 @@ class OrderPaymentMethodData
 {
     public const SELECTED_PAYMENT_METHOD_CODE = 'selected_payment_method';
     public const METHOD_TITLE_CODE = 'method_title';
-    private const CREDIT_CARD_VALUE = 'credit card';
+    private const CREDIT_CARD_VALUE = 'creditcard';
 
     /**
      * OrderPaymentMethodData constructor.
@@ -38,7 +38,7 @@ class OrderPaymentMethodData
     public function setSelectedPaymentMethodData($order, $selectedPaymentMethod): void
     {
         try {
-            $currentAdditionalInformation = $order->getPayment()->getAdditionalInformation()['method_title'];
+            $currentAdditionalInformation = $order->getPayment()->getAdditionalInformation()[self::METHOD_TITLE_CODE];
             $order->getPayment()->setAdditionalInformation(
                 [
                     self::METHOD_TITLE_CODE => $currentAdditionalInformation,
@@ -66,8 +66,8 @@ class OrderPaymentMethodData
         try {
             $cardDetails = $this->paymentTokenManagement->getByPublicHash($selectedTokenId, $order->getCustomerId());
 
-            if (isset($cardDetails)) {
-                $currentAdditionalInformation = $order->getPayment()->getAdditionalInformation()['method_title'];
+            if (isset($cardDetails) || $selectedTokenId === 'pay_and_add_card') {
+                $currentAdditionalInformation = $order->getPayment()->getAdditionalInformation()[self::METHOD_TITLE_CODE];
                 $order->getPayment()->setAdditionalInformation(
                     [
                         self::METHOD_TITLE_CODE => $currentAdditionalInformation,

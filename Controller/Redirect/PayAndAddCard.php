@@ -17,6 +17,7 @@ use Magento\Payment\Gateway\Command\CommandException;
 use Magento\Payment\Gateway\Command\CommandManagerPoolInterface;
 use Magento\Sales\Model\Order;
 use Paytrail\PaymentService\Exceptions\CheckoutException;
+use Paytrail\PaymentService\Model\PaymentMethod\OrderPaymentMethodData;
 use Paytrail\PaymentService\Model\Receipt\ProcessService;
 use Paytrail\PaymentService\Model\Validation\PreventAdminActions;
 use Psr\Log\LoggerInterface;
@@ -50,7 +51,8 @@ class PayAndAddCard implements ActionInterface
         private CustomerSession             $customerSession,
         private PreventAdminActions         $preventAdminActions,
         private CommandManagerPoolInterface $commandManagerPool,
-        private ProcessService              $processService
+        private ProcessService              $processService,
+        private OrderPaymentMethodData $paymentMethodData
     ) {
         $this->urlBuilder = $context->getUrl();
     }
@@ -68,6 +70,8 @@ class PayAndAddCard implements ActionInterface
         $resultJson = $this->jsonFactory->create();
 
         $order = $this->checkoutSession->getLastRealOrder();
+
+        $this->paymentMethodData->setSelectedCardTokenData($order, 'pay_and_add_card');
 
         try {
             if ($this->customerSession->getCustomerId() && $this->context->getRequest()->getParam('is_ajax')) {
