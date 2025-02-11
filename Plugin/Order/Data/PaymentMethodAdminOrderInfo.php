@@ -1,8 +1,9 @@
 <?php
 
-namespace Paytrail\PaymentService\Plugin;
+namespace Paytrail\PaymentService\Plugin\Order\Data;
 
 use Magento\Sales\Block\Adminhtml\Order\View\Tab\Info;
+use Paytrail\PaymentService\Gateway\Config\Config;
 
 class PaymentMethodAdminOrderInfo
 {
@@ -12,10 +13,11 @@ class PaymentMethodAdminOrderInfo
      */
     public function aroundGetPaymentHtml(Info $subject)
     {
-        if ($subject->getOrder()->getPayment()->getMethod() === 'paytrail') {
+        if ($subject->getOrder()->getPayment()->getMethod() === Config::CODE) {
             return $subject->getChildHtml('order_payment')
                 . $subject->getOrder()->getPayment()->getAdditionalInformation()['method_title']
-                . ' (' . $subject->getOrder()->getPayment()->getAdditionalInformation()['selected_payment_method'] . ')';
+                . ' (' . $subject->getOrder()->getPayment()->getAdditionalInformation()['selected_payment_method']
+                . ')';
         } else {
             return $subject->getChildHtml('order_payment');
         }
