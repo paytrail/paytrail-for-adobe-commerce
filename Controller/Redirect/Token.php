@@ -22,6 +22,7 @@ use Magento\Sales\Model\OrderFactory;
 use Paytrail\PaymentService\Exceptions\CheckoutException;
 use Paytrail\PaymentService\Gateway\Config\Config;
 use Paytrail\PaymentService\Gateway\Validator\HmacValidator;
+use Paytrail\PaymentService\Model\PaymentMethod\OrderPaymentMethodData;
 use Paytrail\PaymentService\Model\Receipt\ProcessService;
 use Paytrail\PaymentService\Model\ReceiptDataProvider;
 use Paytrail\PaymentService\Model\Recurring\TotalConfigProvider;
@@ -64,7 +65,8 @@ class Token implements HttpPostActionInterface
         private SubscriptionCreate       $subscriptionCreate,
         private CommandManagerPoolInterface $commandManagerPool,
         private ProcessService $processService,
-        private TotalConfigProvider $totalConfigProvider
+        private TotalConfigProvider $totalConfigProvider,
+        private OrderPaymentMethodData $paymentMethodData
     ) {
     }
 
@@ -90,6 +92,9 @@ class Token implements HttpPostActionInterface
         $order = $order->loadByIncrementId(
             $this->checkoutSession->getLastRealOrderId()
         );
+
+        // set selected payment method to order payment additional_data
+        $this->paymentMethodData->setSelectedCardTokenData($order, $selectedTokenId);
 
         $resultJson = $this->jsonFactory->create();
         if ($order->getStatus() === Order::STATE_PROCESSING) {
