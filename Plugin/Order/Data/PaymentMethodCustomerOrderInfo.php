@@ -9,6 +9,8 @@ use Paytrail\PaymentService\Model\PaymentMethod\OrderPaymentMethodData;
 class PaymentMethodCustomerOrderInfo
 {
     /**
+     * Around plugin for getPaymentInfoHtml method in Info class.
+     *
      * @return string
      */
     public function aroundGetPaymentInfoHtml(Info $subject)
