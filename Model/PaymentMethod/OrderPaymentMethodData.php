@@ -38,13 +38,7 @@ class OrderPaymentMethodData
     public function setSelectedPaymentMethodData($order, $selectedPaymentMethod): void
     {
         try {
-            $currentAdditionalInformation = $order->getPayment()->getAdditionalInformation()[self::METHOD_TITLE_CODE];
-            $order->getPayment()->setAdditionalInformation(
-                [
-                    self::METHOD_TITLE_CODE => $currentAdditionalInformation,
-                    self::SELECTED_PAYMENT_METHOD_CODE => $selectedPaymentMethod
-                ]
-            );
+            $order->getPayment()->setAdditionalInformation(self::SELECTED_PAYMENT_METHOD_CODE, $selectedPaymentMethod);
 
             $this->orderRepository->save($order);
         } catch (\Exception $e) {
