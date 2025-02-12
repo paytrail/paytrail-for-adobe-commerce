@@ -43,6 +43,7 @@ class Index implements ActionInterface
      * @param ProcessService $processService
      * @param PaymentProvidersData $paymentProvidersData
      * @param ProviderForm $providerForm
+     * @param OrderPaymentMethodData $paymentMethodData
      */
     public function __construct(
         private readonly PendingOrderEmailConfirmation $pendingOrderEmailConfirmation,

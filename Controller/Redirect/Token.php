@@ -51,6 +51,7 @@ class Token implements HttpPostActionInterface
      * @param CommandManagerPoolInterface $commandManagerPool
      * @param ProcessService $processService
      * @param TotalConfigProvider $totalConfigProvider
+     * @param OrderPaymentMethodData $paymentMethodData
      */
     public function __construct(
         private ReceiptDataProvider      $receiptDataProvider,

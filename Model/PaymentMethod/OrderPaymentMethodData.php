@@ -3,6 +3,7 @@
 namespace Paytrail\PaymentService\Model\PaymentMethod;
 
 use Magento\Sales\Api\OrderRepositoryInterface;
+use Magento\Sales\Model\Order;
 use Magento\Vault\Api\PaymentTokenManagementInterface;
 use Monolog\Logger;
 use Paytrail\PaymentService\Logger\PaytrailLogger;
@@ -24,15 +25,14 @@ class OrderPaymentMethodData
         private OrderRepositoryInterface        $orderRepository,
         private PaymentTokenManagementInterface $paymentTokenManagement,
         private PaytrailLogger                  $paytrailLogger
-    )
-    {
+    ) {
     }
 
     /**
      * Sets selected method to order payment additional_data.
      *
-     * @param $order
-     * @param $selectedPaymentMethod
+     * @param Order $order
+     * @param string $selectedPaymentMethod
      * @return void
      */
     public function setSelectedPaymentMethodData($order, $selectedPaymentMethod): void
@@ -49,7 +49,8 @@ class OrderPaymentMethodData
             $this->orderRepository->save($order);
         } catch (\Exception $e) {
             $this->paytrailLogger->logData(
-                Logger::ERROR, 'Error setting selected payment method data: ' . $e->getMessage()
+                Logger::ERROR, 'Error setting selected payment method data: '
+                . $e->getMessage()
             );
         }
     }
@@ -57,8 +58,8 @@ class OrderPaymentMethodData
     /**
      * Sets selected card details to order payment additional_data.
      *
-     * @param $order
-     * @param $selectedTokenId
+     * @param Order $order
+     * @param string $selectedTokenId
      * @return void
      */
     public function setSelectedCardTokenData($order, $selectedTokenId): void

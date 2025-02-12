@@ -29,6 +29,9 @@ class PayAndAddCard implements ActionInterface
      */
     private $urlBuilder;
 
+    /**
+     * @var null
+     */
     private $errorMsg = null;
 
     /**
@@ -42,6 +45,7 @@ class PayAndAddCard implements ActionInterface
      * @param PreventAdminActions $preventAdminActions
      * @param CommandManagerPoolInterface $commandManagerPool
      * @param ProcessService $processService
+     * @param OrderPaymentMethodData $paymentMethodData
      */
     public function __construct(
         private Context                     $context,
@@ -58,6 +62,8 @@ class PayAndAddCard implements ActionInterface
     }
 
     /**
+     * Execute method.
+     *
      * @return ResponseInterface|Json|ResultInterface
      * @throws ValidationException
      */
