@@ -8,4 +8,9 @@
             </argument>
         </arguments>
     </type>
+
+    <!-- include selected payment method into payment method data on order page   -->
+    <type name="Magento\Sales\Block\Order\Info">
+        <plugin name="OrderCustomerViewInfo" type="Paytrail\PaymentService\Plugin\Order\Data\PaymentMethodCustomerOrderInfo" />
+    </type>
 </config>

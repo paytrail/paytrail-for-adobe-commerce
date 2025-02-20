@@ -17,6 +17,7 @@ use Magento\Payment\Gateway\Command\CommandException;
 use Magento\Payment\Gateway\Command\CommandManagerPoolInterface;
 use Magento\Sales\Model\Order;
 use Paytrail\PaymentService\Exceptions\CheckoutException;
+use Paytrail\PaymentService\Model\PaymentMethod\OrderPaymentMethodData;
 use Paytrail\PaymentService\Model\Receipt\ProcessService;
 use Paytrail\PaymentService\Model\Validation\PreventAdminActions;
 use Psr\Log\LoggerInterface;
@@ -28,6 +29,9 @@ class PayAndAddCard implements ActionInterface
      */
     private $urlBuilder;
 
+    /**
+     * @var null
+     */
     private $errorMsg = null;
 
     /**
@@ -41,6 +45,7 @@ class PayAndAddCard implements ActionInterface
      * @param PreventAdminActions $preventAdminActions
      * @param CommandManagerPoolInterface $commandManagerPool
      * @param ProcessService $processService
+     * @param OrderPaymentMethodData $paymentMethodData
      */
     public function __construct(
         private Context                     $context,
@@ -50,12 +55,15 @@ class PayAndAddCard implements ActionInterface
         private CustomerSession             $customerSession,
         private PreventAdminActions         $preventAdminActions,
         private CommandManagerPoolInterface $commandManagerPool,
-        private ProcessService              $processService
+        private ProcessService              $processService,
+        private OrderPaymentMethodData $paymentMethodData
     ) {
         $this->urlBuilder = $context->getUrl();
     }
 
     /**
+     * Execute method.
+     *
      * @return ResponseInterface|Json|ResultInterface
      * @throws ValidationException
      */
@@ -68,6 +76,9 @@ class PayAndAddCard implements ActionInterface
         $resultJson = $this->jsonFactory->create();
 
         $order = $this->checkoutSession->getLastRealOrder();
+
+        // set selected payment method to order's payment additional_data
+        $this->paymentMethodData->setSelectedCardTokenData($order, 'pay_and_add_card');
 
         try {
             if ($this->customerSession->getCustomerId() && $this->context->getRequest()->getParam('is_ajax')) {

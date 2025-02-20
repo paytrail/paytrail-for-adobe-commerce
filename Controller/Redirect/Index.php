@@ -15,6 +15,7 @@ use Magento\Sales\Model\Order;
 use Paytrail\PaymentService\Exceptions\CheckoutException;
 use Paytrail\PaymentService\Gateway\Config\Config;
 use Paytrail\PaymentService\Model\Email\Order\PendingOrderEmailConfirmation;
+use Paytrail\PaymentService\Model\PaymentMethod\OrderPaymentMethodData;
 use Paytrail\PaymentService\Model\ProviderForm;
 use Paytrail\PaymentService\Model\Receipt\ProcessService;
 use Paytrail\PaymentService\Model\Ui\DataProvider\PaymentProvidersData;
@@ -42,6 +43,7 @@ class Index implements ActionInterface
      * @param ProcessService $processService
      * @param PaymentProvidersData $paymentProvidersData
      * @param ProviderForm $providerForm
+     * @param OrderPaymentMethodData $paymentMethodData
      */
     public function __construct(
         private readonly PendingOrderEmailConfirmation $pendingOrderEmailConfirmation,
@@ -55,7 +57,8 @@ class Index implements ActionInterface
         private readonly CommandManagerPoolInterface   $commandManagerPool,
         private readonly ProcessService                $processService,
         private readonly PaymentProvidersData          $paymentProvidersData,
-        private readonly ProviderForm                  $providerForm
+        private readonly ProviderForm                  $providerForm,
+        private readonly OrderPaymentMethodData        $paymentMethodData
     ) {
     }
 
@@ -89,8 +92,11 @@ class Index implements ActionInterface
                     throw new LocalizedException(__('No payment method selected'));
                 }
 
-                $order           = $this->checkoutSession->getLastRealOrder();
+                $order = $this->checkoutSession->getLastRealOrder();
                 $paytrailPayment = $this->getPaytrailPayment($order, $selectedPaymentMethodId);
+
+                // set selected payment method to order's payment additional_data
+                $this->paymentMethodData->setSelectedPaymentMethodData($order, $selectedPaymentMethodId);
 
                 if ($selectedPaymentMethodId === Config::APPLE_PAY_PAYMENT_CODE) {
                     return $resultJson->setData([
@@ -105,8 +111,8 @@ class Index implements ActionInterface
 
                     return $resultJson->setData(
                         [
-                            'success'  => true,
-                            'data'     => 'redirect',
+                            'success' => true,
+                            'data' => 'redirect',
                             'redirect' => $redirect_url
                         ]
                     );
@@ -127,7 +133,7 @@ class Index implements ActionInterface
 
                 return $resultJson->setData([
                     'success' => true,
-                    'data'    => $block->toHtml(),
+                    'data' => $block->toHtml(),
                 ]);
             }
         } catch (\Exception $e) {
@@ -165,11 +171,11 @@ class Index implements ActionInterface
     private function getPaytrailPayment(Order $order, string $paymentMethod)
     {
         $commandExecutor = $this->commandManagerPool->get('paytrail');
-        $response        = $commandExecutor->executeByCode(
+        $response = $commandExecutor->executeByCode(
             'payment',
             null,
             [
-                'order'          => $order,
+                'order' => $order,
                 'payment_method' => $paymentMethod
             ]
         );
