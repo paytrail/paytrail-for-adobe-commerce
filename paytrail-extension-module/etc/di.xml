@@ -1,0 +1,45 @@
+<?xml version="1.0"?>
+<!--
+  ~  Copyright © 2024 GoodAhead. All rights reserved.
+  -->
+
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
+    <virtualType name="Goodahead\Paytrail\Logger\Handler" type="Magento\Framework\Logger\Handler\Base">
+        <arguments>
+            <argument name="filesystem" xsi:type="object">Magento\Framework\Filesystem\Driver\File</argument>
+            <argument name="fileName" xsi:type="string">var/log/goodahead_paytrail_payment.log</argument>
+        </arguments>
+    </virtualType>
+    <virtualType name="Goodahead\Paytrail\Logger\Logger" type="Magento\Framework\Logger\Monolog">
+        <arguments>
+            <argument name="name" xsi:type="string">Paytrail Logger</argument>
+            <argument name="handlers" xsi:type="array">
+                <item name="debug" xsi:type="object">Goodahead\Paytrail\Logger\Handler</item>
+            </argument>
+        </arguments>
+    </virtualType>
+    <type name="Goodahead\Paytrail\Service\PaymentService">
+        <arguments>
+            <argument name="logger" xsi:type="object">Goodahead\Paytrail\Logger\Logger</argument>
+        </arguments>
+    </type>
+    <type name="Goodahead\Paytrail\Controller\Receipt\Index">
+        <arguments>
+            <argument name="logger" xsi:type="object">Goodahead\Paytrail\Logger\Logger</argument>
+        </arguments>
+    </type>
+    <preference for="Paytrail\PaymentService\Controller\Receipt\Index"
+                type="Goodahead\Paytrail\Controller\Receipt\Index"/>
+    <type name="Paytrail\PaymentService\Model\Receipt\ProcessService">
+        <plugin name="goodahead_paytrail_process_service_before_process_pymennt"
+                type="Goodahead\Paytrail\Plugin\ProcessServicePlugin"
+                sortOrder="10"/>
+    </type>
+
+    <type name="Goodahead\Paytrail\Plugin\ProcessServicePlugin">
+        <arguments>
+            <argument name="logger" xsi:type="object">Goodahead\Paytrail\Logger\Logger</argument>
+        </arguments>
+    </type>
+</config>

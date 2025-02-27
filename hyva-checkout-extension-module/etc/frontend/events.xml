@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:framework:Event/etc/events.xsd">
+    <event name="controller_action_predispatch_hyva_checkout_index_index">
+        <observer name="ga_initiate_hyva_checkout_onepage" instance="Goodahead\HyvaCheckout\Observer\RestoreCart" />
+    </event>
+    <event name="controller_action_predispatch_checkout_index_index">
+        <observer name="initiate_checkout_onepage" instance="Paytrail\PaymentService\Observer\RestoreCart" disabled="true" />
+    </event>
+    <event name="restore_quote">
+        <observer name="goodahead_hyva_checkout_session_restore_quote" instance="Goodahead\HyvaCheckout\Observer\SessionObserver"/>
+    </event>
+</config>

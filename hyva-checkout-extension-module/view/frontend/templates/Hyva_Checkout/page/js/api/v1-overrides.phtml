@@ -1,0 +1,81 @@
+<script>
+    hyvaCheckout.order.place = function () {
+        return hyvaCheckout.navigation.executeTasks()
+            .then(() => hyvaCheckout.validation.validate())
+
+            .then(async isValid => {
+                await hyvaCheckout.isIdle()
+
+                return isValid;
+            })
+
+            .then(async isValid => {
+                if (! isValid) {
+                    const errorMessage = document.querySelector('.component-messenger.error');
+
+                    if (errorMessage) {
+                        window.scrollTo({top: errorMessage.getBoundingClientRect().top + window.scrollY - 10, behavior: 'smooth'});
+                    }
+
+                    return false
+                }
+
+                const method = hyvaCheckout.payment.getActive()
+
+                if (method && method.placeOrderViaJs() && method.isVisibleInStep()) {
+                    <?php /* Place the order via the Payment Method when it's visible in the current step. */ ?>
+                    await method.placeOrder()
+                        .then(() => hyvaCheckout.storage.clear())
+
+                    return true
+                }
+
+                <?php /* Place the order via the Main component fallback method. */ ?>
+                await hyvaCheckout.main
+                <?php /* Grep the Main Magewire component. */ ?>
+                    .getWireComponent()
+                    <?php /* Execute the placeOrder method with the session storage and wait for it resolves. */ ?>
+                    .placeOrder(hyvaCheckout.storage.data)
+                    <?php /* Process the final evaluation result. */ ?>
+                    .then(result => {
+                        if (result === true) {
+                            hyvaCheckout.navigation.executeTasks({
+                                executeAfter: true
+                            })
+                        }
+                    })
+
+                return true
+            })
+            .catch(() => {
+                const errorFields = document.querySelectorAll('#hyva-checkout-main .field-error');
+
+                if (errorFields.length > 0) {
+                    errorFields[0].scrollIntoView({ block: "center" });
+                }
+            });
+    }
+    hyvaCheckout.customBlockLoader = {
+        enableLoader(section) {
+            window.dispatchEvent(new CustomEvent('checkout:enableBlockLoader', { detail: { section: section } }));
+        },
+        disableLoader(section) {
+            window.dispatchEvent(new CustomEvent('checkout:disableBlockLoader', { detail: { section: section } }));
+        }
+    }
+
+    document.addEventListener('magewire:load', () => {
+        Livewire.connection.showHtmlModal = function (html) {
+            let message = 'Jotain meni pieleen. Voit kuitenkin jatkaa tilauksen tekemistä. Jos ongelma toistuu, otathan meihin yhteyttä: asiakaspalvelu@keskisenkello.fi'
+            try {
+                let result = JSON.parse(html)
+                if (result.message && !result.message.startsWith('Warning:')) {
+                    message = result.message
+                }
+            } catch (e) {
+                console.error(e)
+            }
+            dispatchMessages([{text: message, type: 'error'}])
+        }
+    })
+</script>

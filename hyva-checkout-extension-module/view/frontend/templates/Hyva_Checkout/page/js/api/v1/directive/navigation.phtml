@@ -1,0 +1,152 @@
+<?php
+/**
+ * Hyvä Themes - https://hyva.io
+ * Copyright © Hyvä Themes 2022-present. All rights reserved.
+ * This product is licensed per Magento install
+ * See https://hyva.io/license
+ */
+
+declare(strict_types=1);
+
+// A better name for this file would be alpinejs/navigation-component.phtml, but keeping the existing name for backwards compatibility.
+?>
+<script>
+    (() => {
+        const BTN_PREVIOUS = 'previous',
+              BTN_NEXT = 'next',
+              BTN_PLACE_ORDER = 'place-order'
+
+        window.initCheckoutNavigation = function() {
+            return {
+                disabled: {
+                    [BTN_PREVIOUS]: false,
+                    [BTN_NEXT]: false,
+                    [BTN_PLACE_ORDER]: false
+                },
+
+                async onClick(event) {
+                    const button = this.getButton(event);
+                    const stepData = JSON.parse(button && button.dataset && button.dataset.step || '{}')
+
+                    Object.keys(this.disabled).forEach(key => this.disabled[key] = true)
+
+                    if (stepData.place) {
+                        await hyvaCheckout.order.place()
+                    } else {
+                        await hyvaCheckout.navigation.stepTo(stepData.route, stepData.validate)
+                    }
+
+                    Object.keys(this.disabled).forEach(key => this.disabled[key] = false)
+                },
+
+                buttonAttributes(name) {
+                    return {
+                        ['x-on:checkout:navigate:disable-button.window'](event) {
+                            if (event.detail.name === name) {
+                                this.disabled[event.detail.name] = true;
+                            }
+                        },
+                        ['x-on:checkout:navigate:enable-button.window'](event) {
+                            if (event.detail.name === name) {
+                                this.disabled[event.detail.name] = false;
+                            }
+                        },
+                        ['x-bind:class']() {
+                            let classes = {
+                                'disabled': this.disabled[name]
+                            }
+
+                            classes['btn-' + name] = true;
+                            return classes
+                        },
+                        ['x-on:click'](event) {
+                            return this.onClick(event, name)
+                        }
+                    }
+                },
+
+                buttonPrevious(route) {
+                    return this.buttonStepTo(BTN_PREVIOUS, route, false)
+                },
+
+                buttonNext(route) {
+                    return this.buttonStepTo(BTN_NEXT, route)
+                },
+
+                buttonStepTo(namespace, route, validate = true) {
+                    return Object.assign(this.buttonAttributes(namespace), {
+                        ['x-bind:data-step']() {
+                            return JSON.stringify({route, validate})
+                        },
+                    })
+                },
+
+                buttonPlaceOrder() {
+                    return Object.assign(this.buttonAttributes(BTN_PLACE_ORDER), {
+                        ['x-bind:data-step']() {
+                            return JSON.stringify({ place: true })
+                        },
+                    })
+                },
+
+                getButton(event) {
+                    return event && event.target && event.target.dataset && event.target.dataset.step
+                        ? event.target
+                        : event.target.closest('[data-step]');
+                }
+            }
+        }
+
+        <?php /* Register additional navigation features after the navigation API is fully initialized. */ ?>
+        window.addEventListener('checkout:init:navigation', () => {
+            hyvaCheckout.navigation.disableButtonPrevious = function() {
+                window.dispatchEvent(new CustomEvent('checkout:navigate:disable-button', { detail: { name: BTN_PREVIOUS } }))
+            }
+            hyvaCheckout.navigation.enableButtonPrevious = function() {
+                window.dispatchEvent(new CustomEvent('checkout:navigate:enable-button', { detail: { name: BTN_PREVIOUS } }))
+            }
+            hyvaCheckout.navigation.disableButtonNext = function() {
+                window.dispatchEvent(new CustomEvent('checkout:navigate:disable-button', { detail: { name: BTN_NEXT } }))
+            }
+            hyvaCheckout.navigation.enableButtonNext = function() {
+                window.dispatchEvent(new CustomEvent('checkout:navigate:enable-button', { detail: { name: BTN_NEXT } }))
+            }
+            hyvaCheckout.navigation.disableButtonPlaceOrder = function() {
+                window.dispatchEvent(new CustomEvent('checkout:navigate:disable-button', { detail: { name: BTN_PLACE_ORDER } }))
+            }
+            hyvaCheckout.navigation.enableButtonPlaceOrder = function() {
+                window.dispatchEvent(new CustomEvent('checkout:navigate:enable-button', { detail: { name: BTN_PLACE_ORDER } }))
+            }
+
+            hyvaCheckout.navigation.disableButtonPrimary = function() {
+                hyvaCheckout.navigation.disableButtonNext()
+                hyvaCheckout.navigation.disableButtonPlaceOrder()
+            }
+            hyvaCheckout.navigation.enableButtonPrimary = function() {
+                hyvaCheckout.navigation.enableButtonNext()
+                hyvaCheckout.navigation.enableButtonPlaceOrder()
+            }
+
+            window.addEventListener('checkout:step:loaded', (event) => {
+                <?php /* When a step is loaded by a page refresh (in other words: preceding) */ ?>
+                if (! event.detail.subsequent) {
+                    if (hyvaCheckout.validation.hasBlocking()) {
+                        hyvaCheckout.navigation.disableButtonPrimary()
+                    }
+                }
+
+                <?php /* Listen for subsequent component updates to check if we can enable/disable the primary button again. */ ?>
+                Magewire.hook('message.processed', (message, component) => {
+                    <?php /* Execute after the current thread yields control back to the browser to make sure the buttons are handled by AlpineJS. */ ?>
+                    setTimeout(() => {
+                        if (hyvaCheckout.validation.hasBlocking()) {
+                            hyvaCheckout.navigation.disableButtonPrimary()
+                        } else {
+                            hyvaCheckout.navigation.enableButtonPrimary()
+                        }
+                    }, 0)
+                })
+            })
+        })
+    })()
+</script>

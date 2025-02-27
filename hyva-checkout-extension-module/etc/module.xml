@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:framework:Module/etc/module.xsd">
+    <module name="Goodahead_HyvaCheckout">
+        <sequence>
+            <module name="Hyva_Checkout"/>
+            <module name="Paytrail_PaymentService" />
+            <module name="Paytrail_PaymentService" />
+        </sequence>
+    </module>
+</config>

@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<!--
+  ~  Copyright © 2024 GoodAhead. All rights reserved.
+  -->
+
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
+    <type name="Hyva\Checkout\Model\Magewire\Payment\PlaceOrderServiceProvider">
+        <arguments>
+            <argument name="placeOrderServiceList" xsi:type="array">
+                <item name="paytrail" xsi:type="object">Goodahead\Paytrail\Model\Magewire\Checkout\Payment\PaytrailPlaceOrderService</item>
+            </argument>
+        </arguments>
+    </type>
+</config>

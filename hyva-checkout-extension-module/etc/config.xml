@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<!--
+  ~  Copyright © 2024 GoodAhead. All rights reserved.
+  -->
+
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Store:etc/config.xsd">
+    <default>
+        <hyva_themes_checkout>
+            <navigation>
+                <skip_redirect_notification>1</skip_redirect_notification>
+            </navigation>
+        </hyva_themes_checkout>
+    </default>
+</config>

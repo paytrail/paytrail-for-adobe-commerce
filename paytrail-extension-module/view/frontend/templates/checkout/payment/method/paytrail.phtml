@@ -1,0 +1,30 @@
+<?php
+/*
+ *  Copyright © 2024 GoodAhead. All rights reserved.
+ */
+
+declare(strict_types=1);
+
+use Magento\Framework\View\Element\Template;
+use Hyva\Theme\Model\ViewModelRegistry;
+use Goodahead\Paytrail\ViewModel\PaytrailPaymentViewModel;
+
+/** @var Template $block */
+/** @var ViewModelRegistry $viewModels */
+/** @var PaytrailPaymentViewModel $paytrailPayment */
+
+$paytrailPayment = $viewModels->require(PaytrailPaymentViewModel::class);
+if (!$paytrailPayment->canDisplayAdditionalInformation()) {
+    return;
+}
+
+$contentBlock = $this->getLayout()->createBlock(
+    'Magento\Cms\Block\Block'
+)->setBlockId('paytrail_payment_method_information');
+?>
+
+<?php if ($htmlContent = $contentBlock->toHtml()): ?>
+    <div class="wrapper text-right">
+        <?= $htmlContent; ?>
+    </div>
+<?php endif; ?>
