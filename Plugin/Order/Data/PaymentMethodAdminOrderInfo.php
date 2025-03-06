@@ -17,12 +17,15 @@ class PaymentMethodAdminOrderInfo
     public function aroundGetPaymentHtml(Info $subject)
     {
         if ($subject->getOrder()->getPayment()->getMethod() === Config::CODE &&
-            isset($subject->getOrder()->getPayment()->getAdditionalInformation()[OrderPaymentMethodData::SELECTED_PAYMENT_METHOD_CODE])
+            isset($subject->getOrder()->getPayment()
+                    ->getAdditionalInformation()[OrderPaymentMethodData::SELECTED_PAYMENT_METHOD_CODE])
         ) {
             return $subject->getChildHtml('order_payment')
-                . $subject->getOrder()->getPayment()->getAdditionalInformation()[OrderPaymentMethodData::METHOD_TITLE_CODE]
+                . $subject->getOrder()->getPayment()
+                    ->getAdditionalInformation()[OrderPaymentMethodData::METHOD_TITLE_CODE]
                 . ' ('
-                . $subject->getOrder()->getPayment()->getAdditionalInformation()[OrderPaymentMethodData::SELECTED_PAYMENT_METHOD_CODE]
+                . $subject->getOrder()->getPayment()
+                    ->getAdditionalInformation()[OrderPaymentMethodData::SELECTED_PAYMENT_METHOD_CODE]
                 . ')';
         } else {
             return $subject->getChildHtml('order_payment');
