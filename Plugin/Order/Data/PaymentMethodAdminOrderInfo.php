@@ -18,9 +18,11 @@ class PaymentMethodAdminOrderInfo
     {
         if ($subject->getOrder()->getPayment()->getMethod() === Config::CODE) {
             return $subject->getChildHtml('order_payment')
-                . $subject->getOrder()->getPayment()->getAdditionalInformation()[OrderPaymentMethodData::METHOD_TITLE_CODE]
+                . $subject->getOrder()->getPayment()
+                    ->getAdditionalInformation(OrderPaymentMethodData::METHOD_TITLE_CODE)
                 . ' ('
-                . $subject->getOrder()->getPayment()->getAdditionalInformation()[OrderPaymentMethodData::SELECTED_PAYMENT_METHOD_CODE]
+                . $subject->getOrder()->getPayment()
+                    ->getAdditionalInformation(OrderPaymentMethodData::SELECTED_PAYMENT_METHOD_CODE)
                 . ')';
         } else {
             return $subject->getChildHtml('order_payment');
