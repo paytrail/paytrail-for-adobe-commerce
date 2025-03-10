@@ -11,13 +11,17 @@ class PaymentMethodCustomerOrderInfo
     /**
      * Around plugin for getPaymentInfoHtml method in Info class.
      *
+     * @param Info $subject
      * @return string
      */
     public function aroundGetPaymentInfoHtml(Info $subject)
     {
         if ($subject->getOrder()->getPayment()->getMethod() === Config::CODE) {
-            return $subject->getOrder()->getPayment()->getAdditionalInformation()[OrderPaymentMethodData::METHOD_TITLE_CODE]
-                . ' (' . $subject->getOrder()->getPayment()->getAdditionalInformation()[OrderPaymentMethodData::SELECTED_PAYMENT_METHOD_CODE]
+            return $subject->getOrder()->getPayment()
+                    ->getAdditionalInformation(OrderPaymentMethodData::METHOD_TITLE_CODE)
+                . ' ('
+                . $subject->getOrder()->getPayment()
+                    ->getAdditionalInformation(OrderPaymentMethodData::SELECTED_PAYMENT_METHOD_CODE)
                 . ')';
         } else {
             return $subject->getChildHtml('payment_info');
