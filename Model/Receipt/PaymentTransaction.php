@@ -80,7 +80,6 @@ class PaymentTransaction
             return $status;
         } else {
             $currentOrder->addCommentToStatusHistory(__('Failed to complete the payment.'));
-
             $this->orderRepositoryInterface->save($currentOrder);
             $this->cancelOrderService->cancelOrderById($currentOrder->getId());
 
