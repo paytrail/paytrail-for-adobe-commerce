@@ -71,7 +71,6 @@ class PayAndAddCardCallback implements ActionInterface
      * Execute function
      *
      * @return ResultInterface
-     * @throws LocalizedException
      */
     public function execute(): ResultInterface
     {
