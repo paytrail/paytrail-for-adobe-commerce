@@ -24,8 +24,7 @@ class PaytrailCheckoutStatus extends Column
         private OrderRepositoryInterface $orderRepository,
         array                            $components = [],
         array                            $data = []
-    )
-    {
+    ) {
         parent::__construct($context, $uiComponentFactory, $components, $data);
     }
 
@@ -39,7 +38,8 @@ class PaytrailCheckoutStatus extends Column
     {
         if (isset($dataSource['data']['items'])) {
             foreach ($dataSource['data']['items'] as & $item) {
-                $item['paytrail_checkout_status'] = $this->orderRepository->get($item['entity_id'])->getPaytrailCheckoutStatus();
+                $item['paytrail_checkout_status'] =
+                    $this->orderRepository->get($item['entity_id'])->getPaytrailCheckoutStatus();
             }
         }
 
