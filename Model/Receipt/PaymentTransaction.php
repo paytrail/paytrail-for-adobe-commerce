@@ -73,13 +73,12 @@ class PaymentTransaction
             $verifiedPayment = $this->hmacValidator->validateHmac($params, $params['signature']);
         }
 
-        // Set checkout-status to order
-        $currentOrder->setPaytrailCheckoutStatus($status);
-
         if ($verifiedPayment && ($status === 'ok' || $status == 'pending' || $status == 'delayed')) {
             return $status;
         } else {
             $currentOrder->addCommentToStatusHistory(__('Failed to complete the payment.'));
+            // Set checkout-status to order
+            $currentOrder->setPaytrailCheckoutStatus($status);
             $this->orderRepositoryInterface->save($currentOrder);
             $this->cancelOrderService->cancelOrderById($currentOrder->getId());
 
