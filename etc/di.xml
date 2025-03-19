@@ -623,4 +623,12 @@
                 type="Paytrail\PaymentService\Plugin\PreventVaultCCMethod"
                 sortOrder="10"/>
     </type>
+
+    <virtualType name="Magento\Sales\Model\ResourceModel\Order\Grid">
+        <arguments>
+            <argument name="columns" xsi:type="array">
+                <item name="paytrail_checkout_status" xsi:type="string">sales_order.paytrail_checkout_status</item>
+            </argument>
+        </arguments>
+    </virtualType>
 </config>

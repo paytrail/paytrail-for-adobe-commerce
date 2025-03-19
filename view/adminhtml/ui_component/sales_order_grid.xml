@@ -45,7 +45,7 @@
                 <visible>false</visible>
             </settings>
         </column>
-        <column name="paytrail_checkout_status" class="Paytrail\PaymentService\Ui\Component\Listing\Column\PaytrailCheckoutStatus">
+        <column name="paytrail_checkout_status">
             <argument name="data" xsi:type="array">
                 <item name="config" xsi:type="array">
                     <item name="filter" xsi:type="string">text</item>
