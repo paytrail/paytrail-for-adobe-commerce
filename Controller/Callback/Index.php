@@ -44,7 +44,7 @@ class Index implements ActionInterface
     {
         try {
             $this->logger->logData(
-                Logger::DEBUG,
+                Logger::NOTICE,
                 'Callback from Paytrail received' . PHP_EOL .
                 'params: ' . json_encode($this->request->getParams(), JSON_PRETTY_PRINT)
             );
