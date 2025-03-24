@@ -45,5 +45,13 @@
                 <visible>false</visible>
             </settings>
         </column>
+        <column name="paytrail_checkout_status">
+            <settings>
+                <options class="Paytrail\PaymentService\Model\OptionSource\CheckoutStatus"/>
+                <filter>select</filter>
+                <dataType>select</dataType>
+                <label translate="true">Paytrail Checkout Status</label>
+            </settings>
+        </column>
     </columns>
 </listing>
