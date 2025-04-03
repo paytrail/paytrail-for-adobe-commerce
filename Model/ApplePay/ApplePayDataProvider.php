@@ -40,7 +40,7 @@ class ApplePayDataProvider
         if ($this->isSafariBrowser() && $this->gatewayConfig->isApplePayEnabled()) {
             return true;
         }
-    
+
         return false;
     }
 
@@ -52,9 +52,11 @@ class ApplePayDataProvider
      */
     public function addApplePayPaymentMethod(array $groupMethods): array
     {
-        foreach ($groupMethods as $key => $method) {
-            if ($method['id'] === 'mobile') {
-                $groupMethods[$key]['providers'][] = $this->getApplePayProviderData();
+        if ($this->isApplePayAdded($groupMethods)) {
+            foreach ($groupMethods as $key => $method) {
+                if ($method['id'] === 'mobile') {
+                    $groupMethods[$key]['providers'][] = $this->getApplePayProviderData();
+                }
             }
         }
 
@@ -109,7 +111,7 @@ class ApplePayDataProvider
             ->setGroup('mobile')
             ->setUrl(null)
             ->setIcon($this->assetRepository->getUrl('Paytrail_PaymentService::images/apple-pay-logo.png'))
-            ->setName('Apple Pay')
+            ->setName('ApplePay')
             ->setParameters(null)
             ->setSvg($this->assetRepository->getUrl('Paytrail_PaymentService::images/apple-pay-logo.svg'));
 
@@ -117,7 +119,7 @@ class ApplePayDataProvider
     }
 
     /**
-     * Checks if user browser is Safari.
+     * Returns if user browser is Safari.
      *
      * @return bool
      */
@@ -132,5 +134,26 @@ class ApplePayDataProvider
         } else {
             return false;
         }
+    }
+
+    /**
+     * Returns if Apple Pay method is already added to payment methods by Paytrail API.
+     *
+     * @param $groupMethods
+     * @return bool
+     */
+    private function isApplePayAdded($groupMethods): bool
+    {
+        foreach($groupMethods as $method) {
+            if ($method['id'] === 'mobile') {
+                foreach($method['providers'] as $provider) {
+                    if ($provider->getId() === 'apple-pay') {
+                        return true;
+                    }
+                }
+            }
+        }
+
+        return false;
     }
 }
