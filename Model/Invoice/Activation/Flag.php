@@ -11,6 +11,8 @@ class Flag
     public const SUB_METHODS_WITH_MANUAL_ACTIVATION_SUPPORT = [
         'collectorb2c',
         'collectorb2b',
+        'walleyb2c',
+        'walleyb2b',
     ];
 
     /**
@@ -32,9 +34,9 @@ class Flag
      */
     public function __construct(
         Config $config,
-        array $activationOverride = []
+        array  $activationOverride = []
     ) {
-        $this->config = $config;
+        $this->config             = $config;
         $this->activationOverride = $activationOverride;
     }
 
@@ -46,13 +48,14 @@ class Flag
      * @param AbstractPaymentRequest $paytrailPayment
      * @param string $method
      * @param \Magento\Sales\Model\Order $order
+     *
      * @return AbstractPaymentRequest
      */
     public function setManualInvoiceActivationFlag(
         AbstractPaymentRequest $paytrailPayment,
-        string $method,
+        string                 $method,
         $order
-    ) : AbstractPaymentRequest {
+    ): AbstractPaymentRequest {
         if ($this->isManualInvoiceEnabled()
             && in_array($method, $this->getInvoiceMethods())
             && (!$order->getIsVirtual() || !$this->config->isShipmentActivateInvoice())
