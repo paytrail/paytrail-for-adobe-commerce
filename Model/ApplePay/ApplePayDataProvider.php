@@ -139,14 +139,14 @@ class ApplePayDataProvider
     /**
      * Returns if Apple Pay method is already added to payment methods by Paytrail API.
      *
-     * @param $groupMethods
+     * @param array $groupMethods
      * @return bool
      */
     private function isApplePayAdded($groupMethods): bool
     {
-        foreach($groupMethods as $method) {
+        foreach ($groupMethods as $method) {
             if ($method['id'] === 'mobile') {
-                foreach($method['providers'] as $provider) {
+                foreach ($method['providers'] as $provider) {
                     if ($provider->getId() === 'apple-pay') {
                         return true;
                     }
