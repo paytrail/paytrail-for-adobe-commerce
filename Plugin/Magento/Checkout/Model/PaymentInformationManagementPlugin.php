@@ -59,5 +59,4 @@ class PaymentInformationManagementPlugin
 
         return [$cartId, $paymentMethod, $billingAddress];
     }
-
 }
