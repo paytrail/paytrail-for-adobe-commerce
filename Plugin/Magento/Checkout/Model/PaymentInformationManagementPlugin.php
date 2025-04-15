@@ -46,7 +46,7 @@ class PaymentInformationManagementPlugin
         PaymentInformationManagement $subject,
                                      $cartId,
         PaymentInterface             $paymentMethod,
-        AddressInterface             $billingAddress = null
+        ?AddressInterface            $billingAddress = null
     ): array {
         if ($this->preventAdminActions->isAdminAsCustomer()
             && str_contains(
@@ -59,4 +59,5 @@ class PaymentInformationManagementPlugin
 
         return [$cartId, $paymentMethod, $billingAddress];
     }
+
 }
