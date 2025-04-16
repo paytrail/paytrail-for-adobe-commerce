@@ -1,13 +1,14 @@
 <?php
 namespace Paytrail\PaymentService\Model\ResourceModel\Subscription;
 
-use Magento\Framework\Api\SearchResultsInterface;
+use Magento\Framework\Api\ExtensibleDataInterface;
+use Magento\Framework\Api\SearchCriteriaInterface;
 use Magento\Framework\Model\ResourceModel\Db\Collection\AbstractCollection;
 use Paytrail\PaymentService\Api\Data\SubscriptionSearchResultInterface;
 
 class Collection extends AbstractCollection implements SubscriptionSearchResultInterface
 {
-    /** @var \Magento\Framework\Api\SearchCriteriaInterface */
+    /** @var SearchCriteriaInterface */
     private $searchCriteria;
 
     protected function _construct()
@@ -21,11 +22,11 @@ class Collection extends AbstractCollection implements SubscriptionSearchResultI
     /**
      * Set items list.
      *
-     * @param \Magento\Framework\Api\ExtensibleDataInterface[] $items
+     * @param ExtensibleDataInterface[]|null $items
      * @return $this
      * @throws \Exception
      */
-    public function setItems(array $items = null)
+    public function setItems(?array $items = null)
     {
         if (!$items) {
             return $this;
@@ -39,7 +40,7 @@ class Collection extends AbstractCollection implements SubscriptionSearchResultI
     /**
      * Get search criteria.
      *
-     * @return \Magento\Framework\Api\SearchCriteriaInterface|null
+     * @return SearchCriteriaInterface|null
      */
     public function getSearchCriteria()
     {
@@ -49,11 +50,11 @@ class Collection extends AbstractCollection implements SubscriptionSearchResultI
     /**
      * Set search criteria.
      *
-     * @param \Magento\Framework\Api\SearchCriteriaInterface $searchCriteria
+     * @param SearchCriteriaInterface $searchCriteria
      * @return $this
      * @SuppressWarnings(PHPMD.UnusedFormalParameter)
      */
-    public function setSearchCriteria(\Magento\Framework\Api\SearchCriteriaInterface $searchCriteria)
+    public function setSearchCriteria(SearchCriteriaInterface $searchCriteria)
     {
         $this->searchCriteria = $searchCriteria;
 

@@ -2,7 +2,6 @@
 
 namespace Paytrail\PaymentService\Model;
 
-use Paytrail\SDK\Model\Provider;
 use Paytrail\SDK\Response\PaymentResponse;
 
 class ProviderForm
@@ -10,20 +9,21 @@ class ProviderForm
     const FORM_SUBMIT_METHOD = 'POST';
 
     /**
-     * @param $paytrailPayment
-     * @param null $paymentMethodId
+     * GetFormParams function
+     *
+     * @param PaymentResponse $paytrailPayment
+     * @param string|null $paymentMethodId
+     * @param null $cardType
      *
      * @return array
      */
-    public function getFormParams(PaymentResponse $paytrailPayment, string $paymentMethodId = null, $cardType = null)
+    public function getFormParams(PaymentResponse $paytrailPayment, ?string $paymentMethodId = null, $cardType = null)
     {
-        $formParams = [
+        return [
             'action' => $this->getFormAction($paytrailPayment, $paymentMethodId, $cardType),
             'inputs' => $this->getFormFields($paytrailPayment, $paymentMethodId, $cardType),
             'method' => self::FORM_SUBMIT_METHOD,
         ];
-
-        return $formParams;
     }
 
     /**

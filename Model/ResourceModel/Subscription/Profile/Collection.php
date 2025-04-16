@@ -2,6 +2,9 @@
 
 namespace Paytrail\PaymentService\Model\ResourceModel\Subscription\Profile;
 
+use Exception;
+use Magento\Framework\Api\SearchCriteriaInterface;
+use Magento\Framework\DataObject;
 use Magento\Framework\Model\ResourceModel\Db\Collection\AbstractCollection;
 use Paytrail\PaymentService\Api\Data\RecurringProfileSearchResultInterface;
 use Paytrail\PaymentService\Model\Subscription\Profile;
@@ -9,8 +12,7 @@ use Paytrail\PaymentService\Model\ResourceModel\Subscription\Profile as ProfileR
 
 class Collection extends AbstractCollection implements RecurringProfileSearchResultInterface
 {
-    /** @var \Magento\Framework\Api\SearchCriteriaInterface */
-    private $searchCriteria;
+    private SearchCriteriaInterface $searchCriteria;
 
     protected function _construct()
     {
@@ -23,11 +25,12 @@ class Collection extends AbstractCollection implements RecurringProfileSearchRes
     /**
      * Set items list.
      *
-     * @param \Magento\Framework\DataObject[] $items
-     * @return \Paytrail\PaymentService\Model\ResourceModel\Subscription\Profile\Collection
-     * @throws \Exception
+     * @param DataObject[]|null $items
+     *
+     * @return Collection
+     * @throws Exception
      */
-    public function setItems(array $items = null)
+    public function setItems(?array $items = null)
     {
         if (!$items) {
             return $this;
@@ -44,10 +47,10 @@ class Collection extends AbstractCollection implements RecurringProfileSearchRes
     }
 
     /**
-     * @param \Magento\Framework\Api\SearchCriteriaInterface $searchCriteria
+     * @param SearchCriteriaInterface $searchCriteria
      * @return $this|Collection
      */
-    public function setSearchCriteria(\Magento\Framework\Api\SearchCriteriaInterface $searchCriteria)
+    public function setSearchCriteria(SearchCriteriaInterface $searchCriteria)
     {
         $this->searchCriteria = $searchCriteria;
 
@@ -68,7 +71,8 @@ class Collection extends AbstractCollection implements RecurringProfileSearchRes
      * Set total count.
      *
      * @param int $totalCount
-     * @return \Paytrail\PaymentService\Model\ResourceModel\Subscription\Profile\Collection
+     *
+     * @return Collection
      * @SuppressWarnings(PHPMD.UnusedFormalParameter)
      */
     public function setTotalCount($totalCount)
