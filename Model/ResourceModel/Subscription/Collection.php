@@ -85,7 +85,7 @@ class Collection extends AbstractCollection implements SubscriptionSearchResultI
      * @return $this
      * @SuppressWarnings(PHPMD.UnusedFormalParameter)
      */
-    public function setTotalCount(int $totalCount)
+    public function setTotalCount($totalCount)
     {
         // total count is the collections size, do not modify it.
         return $this;
