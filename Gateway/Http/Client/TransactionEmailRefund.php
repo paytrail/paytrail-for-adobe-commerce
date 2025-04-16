@@ -58,9 +58,9 @@ class TransactionEmailRefund implements ClientInterface
      * @return array
      */
     public function emailRefund(
-        OrderAdapterInterface $order = null,
-        float $amount = null,
-        string $transactionId = null
+        ?OrderAdapterInterface $order = null,
+        ?float $amount = null,
+        ?string $transactionId = null
     ):array {
         $response= [];
 
