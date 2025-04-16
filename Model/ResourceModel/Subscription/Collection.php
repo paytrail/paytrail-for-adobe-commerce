@@ -8,7 +8,9 @@ use Paytrail\PaymentService\Api\Data\SubscriptionSearchResultInterface;
 
 class Collection extends AbstractCollection implements SubscriptionSearchResultInterface
 {
-
+    /**
+     * @var SearchCriteriaInterface
+     */
     private SearchCriteriaInterface $searchCriteria;
 
     /**
@@ -83,7 +85,7 @@ class Collection extends AbstractCollection implements SubscriptionSearchResultI
      * @return $this
      * @SuppressWarnings(PHPMD.UnusedFormalParameter)
      */
-    public function setTotalCount($totalCount)
+    public function setTotalCount(int $totalCount)
     {
         // total count is the collections size, do not modify it.
         return $this;
@@ -92,11 +94,11 @@ class Collection extends AbstractCollection implements SubscriptionSearchResultI
     /**
      * Get billing collection for orders
      *
-     * @param $orderIds
+     * @param int[] $orderIds
      *
      * @return $this
      */
-    public function getBillingCollectionByOrderIds($orderIds)
+    public function getBillingCollectionByOrderIds(array $orderIds)
     {
         $this->join(
             ['links' => SubscriptionLink::LINK_TABLE_NAME],

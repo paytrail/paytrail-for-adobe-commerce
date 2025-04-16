@@ -17,8 +17,11 @@ class ProviderForm
      *
      * @return array
      */
-    public function getFormParams(PaymentResponse $paytrailPayment, ?string $paymentMethodId = null, ?string $cardType = null)
-    {
+    public function getFormParams(
+        PaymentResponse $paytrailPayment,
+        ?string         $paymentMethodId = null,
+        ?string         $cardType = null
+    ) {
         return [
             'action' => $this->getFormAction($paytrailPayment, $paymentMethodId, $cardType),
             'inputs' => $this->getFormFields($paytrailPayment, $paymentMethodId, $cardType),
