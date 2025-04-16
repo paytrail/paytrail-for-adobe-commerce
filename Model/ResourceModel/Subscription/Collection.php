@@ -8,9 +8,14 @@ use Paytrail\PaymentService\Api\Data\SubscriptionSearchResultInterface;
 
 class Collection extends AbstractCollection implements SubscriptionSearchResultInterface
 {
-    /** @var SearchCriteriaInterface */
-    private $searchCriteria;
 
+    private SearchCriteriaInterface $searchCriteria;
+
+    /**
+     * Initialize subscription model
+     *
+     * @return void
+     */
     protected function _construct()
     {
         $this->_init(
@@ -84,6 +89,13 @@ class Collection extends AbstractCollection implements SubscriptionSearchResultI
         return $this;
     }
 
+    /**
+     * Get billing collection for orders
+     *
+     * @param $orderIds
+     *
+     * @return $this
+     */
     public function getBillingCollectionByOrderIds($orderIds)
     {
         $this->join(

@@ -12,8 +12,16 @@ use Paytrail\PaymentService\Model\ResourceModel\Subscription\Profile as ProfileR
 
 class Collection extends AbstractCollection implements RecurringProfileSearchResultInterface
 {
+    /**
+     * @var SearchCriteriaInterface
+     */
     private SearchCriteriaInterface $searchCriteria;
 
+    /**
+     * Initialize model
+     *
+     * @return void
+     */
     protected function _construct()
     {
         $this->_init(
@@ -41,13 +49,21 @@ class Collection extends AbstractCollection implements RecurringProfileSearchRes
         return $this;
     }
 
+    /**
+     * SearchCriteria getter
+     *
+     * @return SearchCriteriaInterface
+     */
     public function getSearchCriteria()
     {
         return $this->searchCriteria;
     }
 
     /**
+     * SeachCriteria setter
+     *
      * @param SearchCriteriaInterface $searchCriteria
+     *
      * @return $this|Collection
      */
     public function setSearchCriteria(SearchCriteriaInterface $searchCriteria)
