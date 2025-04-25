@@ -52,7 +52,7 @@ class ApplePayDataProvider
      */
     public function addApplePayPaymentMethod(array $groupMethods): array
     {
-        if ($this->isApplePayAdded($groupMethods)) {
+        if (!$this->isApplePayAdded($groupMethods)) {
             foreach ($groupMethods as $key => $method) {
                 if ($method['id'] === 'mobile') {
                     $groupMethods[$key]['providers'][] = $this->getApplePayProviderData();
