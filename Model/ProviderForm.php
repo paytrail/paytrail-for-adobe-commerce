@@ -34,11 +34,11 @@ class ProviderForm
      *
      * @param PaymentResponse $paytrailPayment
      * @param string $paymentMethodId
-     * @param string $cardType
+     * @param ?string $cardType
      *
      * @return string
      */
-    private function getFormAction(PaymentResponse $paytrailPayment, string $paymentMethodId, string $cardType): string
+    private function getFormAction(PaymentResponse $paytrailPayment, string $paymentMethodId, ?string $cardType): string
     {
         $returnUrl = '';
 
@@ -61,11 +61,11 @@ class ProviderForm
      *
      * @param PaymentResponse $paytrailPayment
      * @param string $paymentMethodId
-     * @param string $cardType
+     * @param ?string $cardType
      *
      * @return array
      */
-    private function getFormFields(PaymentResponse $paytrailPayment, string $paymentMethodId, string $cardType): array
+    private function getFormFields(PaymentResponse $paytrailPayment, string $paymentMethodId, ?string $cardType): array
     {
         $formFields = [];
 
