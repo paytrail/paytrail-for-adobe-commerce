@@ -6,6 +6,7 @@ use Magento\Backend\App\Action;
 use Magento\Backend\App\Action\Context;
 use Magento\Framework\App\Action\HttpGetActionInterface;
 use Magento\Framework\Controller\Result\Redirect;
+use Magento\Framework\Exception\LocalizedException;
 use Paytrail\PaymentService\Model\Invoice\Activation\ManualActivation;
 use Paytrail\SDK\Exception\ClientException;
 use Paytrail\SDK\Exception\HmacException;
@@ -58,7 +59,7 @@ class Activate extends Action implements HttpGetActionInterface
         try {
             $this->manualActivation->activateInvoice($orderId);
             $this->messageManager->addSuccessMessage(__('Invoice activated successfully'));
-        } catch (ClientException|HmacException|RequestException|ValidationException $e) {
+        } catch (ClientException|HmacException|RequestException|ValidationException|LocalizedException $e) {
             $this->messageManager->addErrorMessage(sprintf(
                 'Error while activating invoice: %s',
                 $e->getMessage()

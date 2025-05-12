@@ -94,7 +94,11 @@ class ManualActivation
                 ]
             );
 
-            if ($response['data']->getStatus() === 'ok') {
+            if ($response['error']) {
+                throw new \Magento\Framework\Exception\LocalizedException(
+                    __('Failed to activate invoice for order #%1, error: %2', $orderId, $response['error'])
+                );
+            } elseif ($response['data'] && $response['data']->getStatus() === 'ok') {
                 $invoiceResult = $this->invoiceOrder->execute($orderId, true);
                 if ($invoiceResult) {
                     $state = $this->orderStateResolver->getStateForOrder(

@@ -45,12 +45,12 @@
                           css: { active: $parents[1].selectedPaymentMethodId() == id },
                           click: $parents[1].setPaymentMethodId,
                           event: { keyup: $parents[1].setPaymentMethodIdOnKeyUp }">
-                        <!-- ko if: name === 'Apple Pay' -->
+                        <!-- ko if: name === 'ApplePay' -->
                         <div class="paytrail-payment-method-logo">
                             <div style="display: inline-block;" lang=fi class="apple-pay-button"></div>
                         </div>
                         <!--/ko-->
-                        <!-- ko if: name !== 'Apple Pay' -->
+                        <!-- ko if: name !== 'ApplePay' -->
                         <div class="paytrail-payment-method-logo">
                             <img data-bind="attr: { src: svg, alt: name }">
                         </div>
@@ -140,12 +140,12 @@
                           css: { active: $parents[1].selectedPaymentMethodId() == id },
                           click: $parents[1].setPaymentMethodId,
                           event: { keyup: $parents[1].setPaymentMethodIdOnKeyUp }">
-                        <!-- ko if: name === 'Apple Pay' -->
+                        <!-- ko if: name === 'ApplePay' -->
                         <div class="paytrail-payment-method-logo">
                             <div style="display: inline-block;" lang=fi class="apple-pay-button"></div>
                         </div>
                         <!--/ko-->
-                        <!-- ko if: name !== 'Apple Pay' -->
+                        <!-- ko if: name !== 'ApplePay' -->
                         <div class="paytrail-payment-method-logo">
                             <img data-bind="attr: { src: svg, alt: name }">
                         </div>
