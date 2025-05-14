@@ -7,6 +7,7 @@ use Magento\Framework\App\ActionInterface;
 use Magento\Framework\App\RequestInterface;
 use Magento\Framework\Controller\ResultFactory;
 use Magento\Framework\Controller\ResultInterface;
+use Monolog\Logger;
 use Paytrail\PaymentService\Controller\Receipt\Index as Receipt;
 use Paytrail\PaymentService\Logger\PaytrailLogger;
 use Paytrail\PaymentService\Model\FinnishReferenceNumber;
@@ -42,9 +43,9 @@ class Index implements ActionInterface
     public function execute(): ResultInterface
     {
         try {
-            $this->logger->debugLog(
-                'request',
-                'callback received' . PHP_EOL .
+            $this->logger->logData(
+                Logger::NOTICE,
+                'Callback from Paytrail received' . PHP_EOL .
                 'params: ' . json_encode($this->request->getParams(), JSON_PRETTY_PRINT)
             );
 

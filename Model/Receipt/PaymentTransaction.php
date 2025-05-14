@@ -77,6 +77,8 @@ class PaymentTransaction
             return $status;
         } else {
             $currentOrder->addCommentToStatusHistory(__('Failed to complete the payment.'));
+            // Set checkout-status to order
+            $currentOrder->setPaytrailCheckoutStatus($status);
             $this->orderRepositoryInterface->save($currentOrder);
             $this->cancelOrderService->cancelOrderById($currentOrder->getId());
 

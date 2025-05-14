@@ -78,6 +78,9 @@ class ProcessService
             $currentOrder->addCommentToStatusHistory(__('Pending payment from Paytrail Payment Service'));
         }
 
+        // Set checkout-status to order
+        $currentOrder->setPaytrailCheckoutStatus($paymentVerified);
+
         $this->orderRepositoryInterface->save($currentOrder);
 
         try {

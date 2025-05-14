@@ -14,6 +14,7 @@ use Magento\Sales\Model\Order;
 use Magento\Vault\Api\PaymentTokenRepositoryInterface;
 use Magento\Vault\Model\PaymentTokenFactory;
 use Magento\Vault\Model\PaymentTokenManagement;
+use Monolog\Logger;
 use Paytrail\PaymentService\Controller\Receipt\Index as Receipt;
 use Paytrail\PaymentService\Gateway\Config\Config;
 use Paytrail\PaymentService\Logger\PaytrailLogger;
@@ -70,14 +71,13 @@ class PayAndAddCardCallback implements ActionInterface
      * Execute function
      *
      * @return ResultInterface
-     * @throws LocalizedException
      */
     public function execute(): ResultInterface
     {
         try {
-            $this->logger->debugLog(
-                'request',
-                'PayAndAddCardCallback received' . PHP_EOL .
+            $this->logger->logData(
+                Logger::NOTICE,
+                'Callback from Paytrail received' . PHP_EOL .
                 'params: ' . json_encode($this->request->getParams(), JSON_PRETTY_PRINT)
             );
 
