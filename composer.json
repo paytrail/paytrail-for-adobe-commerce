@@ -20,7 +20,7 @@
         "paytrail/paytrail-php-sdk": ">=2.7.3",
         "magento/framework": ">=102.0.0",
         "ext-curl": "*",
-        "nesbot/carbon": "^2.57.0"
+        "nesbot/carbon": "^2.57.0 || ^3.0"
     },
     "require-dev": {
         "magento/magento-coding-standard": "*"
