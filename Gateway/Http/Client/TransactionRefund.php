@@ -82,8 +82,8 @@ class TransactionRefund implements ClientInterface
      */
     public function refund(
         RefundRequest         $refundRequest,
-        OrderAdapterInterface $order = null,
-        string                $transactionId = null
+        ?OrderAdapterInterface $order = null,
+        ?string                $transactionId = null
     ): array {
         $response = [];
 
