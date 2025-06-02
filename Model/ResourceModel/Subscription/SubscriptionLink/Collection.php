@@ -2,6 +2,9 @@
 
 namespace Paytrail\PaymentService\Model\ResourceModel\Subscription\SubscriptionLink;
 
+use Exception;
+use Magento\Framework\Api\SearchCriteriaInterface;
+use Magento\Framework\DataObject;
 use Magento\Framework\Model\ResourceModel\Db\Collection\AbstractCollection;
 use Paytrail\PaymentService\Api\Data\SubscriptionLinkSearchResultInterface;
 use Paytrail\PaymentService\Model\Subscription\SubscriptionLink;
@@ -9,7 +12,7 @@ use Paytrail\PaymentService\Model\ResourceModel\Subscription\SubscriptionLink as
 
 class Collection extends AbstractCollection implements SubscriptionLinkSearchResultInterface
 {
-    /** @var \Magento\Framework\Api\SearchCriteriaInterface */
+    /** @var SearchCriteriaInterface */
     private $searchCriteria;
 
     /**
@@ -26,11 +29,12 @@ class Collection extends AbstractCollection implements SubscriptionLinkSearchRes
     /**
      * Set items list.
      *
-     * @param \Magento\Framework\DataObject[] $items
-     * @return \Paytrail\PaymentService\Model\ResourceModel\Subscription\SubscriptionLink\Collection
-     * @throws \Exception
+     * @param DataObject[]|null $items
+     *
+     * @return Collection
+     * @throws Exception
      */
-    public function setItems(array $items = null)
+    public function setItems(?array $items = null)
     {
         if (!$items) {
             return $this;
@@ -42,7 +46,9 @@ class Collection extends AbstractCollection implements SubscriptionLinkSearchRes
     }
 
     /**
-     * @return \Magento\Framework\Api\SearchCriteriaInterface
+     * Get search criteria.
+     *
+     * @return SearchCriteriaInterface
      */
     public function getSearchCriteria()
     {
@@ -50,10 +56,12 @@ class Collection extends AbstractCollection implements SubscriptionLinkSearchRes
     }
 
     /**
-     * @param \Magento\Framework\Api\SearchCriteriaInterface $searchCriteria
+     * Set search criteria.
+     *
+     * @param SearchCriteriaInterface $searchCriteria
      * @return $this|Collection
      */
-    public function setSearchCriteria(\Magento\Framework\Api\SearchCriteriaInterface $searchCriteria)
+    public function setSearchCriteria(SearchCriteriaInterface $searchCriteria)
     {
         $this->searchCriteria = $searchCriteria;
 
@@ -74,7 +82,8 @@ class Collection extends AbstractCollection implements SubscriptionLinkSearchRes
      * Set total count.
      *
      * @param int $totalCount
-     * @return \Paytrail\PaymentService\Model\ResourceModel\Subscription\SubscriptionLink\Collection
+     *
+     * @return Collection
      * @SuppressWarnings(PHPMD.UnusedFormalParameter)
      */
     public function setTotalCount($totalCount)

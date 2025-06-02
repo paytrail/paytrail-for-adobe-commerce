@@ -83,18 +83,19 @@ class NextDateCalculator
         $schedule   = $this->serializer->unserialize($schedule);
         $carbonDate = $startDate === 'now' ? Carbon::now() : Carbon::createFromFormat('Y-m-d H:i:s', $startDate);
 
+        $interval = (int)$schedule['interval'];
         switch ($schedule['unit']) {
             case 'D':
-                $nextDate = $carbonDate->addDays($schedule['interval']);
+                $nextDate = $carbonDate->addDays($interval);
                 break;
             case 'W':
-                $nextDate = $carbonDate->addWeeks($schedule['interval']);
+                $nextDate = $carbonDate->addWeeks($interval);
                 break;
             case 'M':
-                $nextDate = $this->addMonthsNoOverflow($carbonDate, $schedule['interval']);
+                $nextDate = $this->addMonthsNoOverflow($carbonDate, $interval);
                 break;
             case 'Y':
-                $nextDate = $carbonDate->addYearsNoOverflow($schedule['interval']);
+                $nextDate = $carbonDate->addYearsNoOverflow($interval);
                 break;
             default:
                 throw new LocalizedException(__('Schedule type not supported'));
