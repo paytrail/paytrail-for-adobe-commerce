@@ -7,15 +7,16 @@ interface RecurringProfileSearchResultInterface extends \Magento\Framework\Api\S
     /**
      * Get items.
      *
-     * @return \Paytrail\PaymentService\Api\Data\RecurringProfileInterface[] Array of collection items.
+     * @return RecurringProfileInterface[] Array of collection items.
      */
     public function getItems();
 
     /**
      * Set items.
      *
-     * @param \Paytrail\PaymentService\Api\Data\RecurringProfileInterface[] $items
+     * @param RecurringProfileInterface[]|null $items
+     *
      * @return $this
      */
-    public function setItems(array $items = null);
+    public function setItems(?array $items = null);
 }

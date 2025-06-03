@@ -1,15 +1,23 @@
 <?php
 namespace Paytrail\PaymentService\Model\ResourceModel\Subscription;
 
-use Magento\Framework\Api\SearchResultsInterface;
+use Magento\Framework\Api\ExtensibleDataInterface;
+use Magento\Framework\Api\SearchCriteriaInterface;
 use Magento\Framework\Model\ResourceModel\Db\Collection\AbstractCollection;
 use Paytrail\PaymentService\Api\Data\SubscriptionSearchResultInterface;
 
 class Collection extends AbstractCollection implements SubscriptionSearchResultInterface
 {
-    /** @var \Magento\Framework\Api\SearchCriteriaInterface */
-    private $searchCriteria;
+    /**
+     * @var SearchCriteriaInterface
+     */
+    private SearchCriteriaInterface $searchCriteria;
 
+    /**
+     * Initialize subscription model
+     *
+     * @return void
+     */
     protected function _construct()
     {
         $this->_init(
@@ -21,11 +29,11 @@ class Collection extends AbstractCollection implements SubscriptionSearchResultI
     /**
      * Set items list.
      *
-     * @param \Magento\Framework\Api\ExtensibleDataInterface[] $items
+     * @param ExtensibleDataInterface[]|null $items
      * @return $this
      * @throws \Exception
      */
-    public function setItems(array $items = null)
+    public function setItems(?array $items = null)
     {
         if (!$items) {
             return $this;
@@ -39,7 +47,7 @@ class Collection extends AbstractCollection implements SubscriptionSearchResultI
     /**
      * Get search criteria.
      *
-     * @return \Magento\Framework\Api\SearchCriteriaInterface|null
+     * @return SearchCriteriaInterface|null
      */
     public function getSearchCriteria()
     {
@@ -49,11 +57,11 @@ class Collection extends AbstractCollection implements SubscriptionSearchResultI
     /**
      * Set search criteria.
      *
-     * @param \Magento\Framework\Api\SearchCriteriaInterface $searchCriteria
+     * @param SearchCriteriaInterface $searchCriteria
      * @return $this
      * @SuppressWarnings(PHPMD.UnusedFormalParameter)
      */
-    public function setSearchCriteria(\Magento\Framework\Api\SearchCriteriaInterface $searchCriteria)
+    public function setSearchCriteria(SearchCriteriaInterface $searchCriteria)
     {
         $this->searchCriteria = $searchCriteria;
 
@@ -83,7 +91,14 @@ class Collection extends AbstractCollection implements SubscriptionSearchResultI
         return $this;
     }
 
-    public function getBillingCollectionByOrderIds($orderIds)
+    /**
+     * Get billing collection for orders
+     *
+     * @param int[] $orderIds
+     *
+     * @return $this
+     */
+    public function getBillingCollectionByOrderIds(array $orderIds)
     {
         $this->join(
             ['links' => SubscriptionLink::LINK_TABLE_NAME],
