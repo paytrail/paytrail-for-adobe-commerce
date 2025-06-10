@@ -7,15 +7,16 @@ interface SubscriptionLinkSearchResultInterface extends \Magento\Framework\Api\S
     /**
      * Get items.
      *
-     * @return \Paytrail\PaymentService\Api\Data\SubscriptionLinkInterface[] Array of collection items.
+     * @return SubscriptionLinkInterface[] Array of collection items.
      */
     public function getItems();
 
     /**
      * Set items.
      *
-     * @param \Paytrail\PaymentService\Api\Data\SubscriptionLinkInterface[] $items
+     * @param SubscriptionLinkInterface[]|null $items
+     *
      * @return $this
      */
-    public function setItems(array $items = null);
+    public function setItems(?array $items = null);
 }
