@@ -41,7 +41,7 @@ class TransactionRefund implements ClientInterface
             $request['refund_request'],
             $request['order'],
             $request['transaction_id'] === $request['parent_transaction_id']
-                ? $request['transaction_id'] : $request['parent_transaction_id']
+                ? $request['parent_transaction_id'] : $request['transaction_id']
         );
 
         if (isset($response['error'])) {
