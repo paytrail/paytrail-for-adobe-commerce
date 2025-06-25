@@ -1,6 +1,6 @@
 <?php
 /** @var $block \Paytrail\PaymentService\Block\Info\Paytrail */
+/** @var $escaper \Magento\Framework\Escaper */
 ?>
-
-<img src="<?= $block->getPaytrailLogo(); ?>">
+<img src="<?= $escaper->escapeHtml($block->getPaytrailLogo()); ?>">
 <?= $block->getChildHtml()?>

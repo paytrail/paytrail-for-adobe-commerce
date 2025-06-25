@@ -5,12 +5,13 @@ use Magento\Vault\Api\Data\PaymentTokenInterface;
 use Magento\Vault\Block\CardRendererInterface;
 
 /** @var CardRendererInterface|Template $block */
+/** @var \Magento\Framework\Escaper $escaper */
 
 $ccNumberView = $block->escapeHtml($block->getNumberLast4Digits());
 ?>
 <tr>
     <td data-th="<?= $block->escapeHtml(__('Select Card')) ?>" class="col select-card">
-        <input type="radio" name="selected_token" value="<?= $block->getToken()->getPublicHash() ?>"/>
+        <input type="radio" name="selected_token" value="<?= $escaper->escapeHtml($block->getToken()->getPublicHash()) ?>"/>
     </td>
     <td data-th="<?= $block->escapeHtml(__('Card Number')) ?>" class="col card-number">
         <span><?= $block->escapeHtml(__('ending')) ?></span> <?= /* @noEscape */ $ccNumberView ?>
