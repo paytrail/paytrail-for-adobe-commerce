@@ -48,7 +48,8 @@ $ccNumberView = $escaper->escapeHtml($block->getNumberLast4Digits());
                                         "toggleEvent": "click",
                                         "title": "<?= $escaper->escapeHtml(__('Delete')) ?>",
                                         "content": "<?= $escaper->escapeHtml(
-                                            __('Are you sure you want to delete this card: %1?', $ccNumberView)) ?>"
+                                            __('Are you sure you want to delete this card: %1?', $ccNumberView)
+                    ) ?>"
                                     }
                                 }'>
                 <span><?= $escaper->escapeHtml(__('Delete')) ?></span>
