@@ -75,7 +75,7 @@ class Index implements ActionInterface
     }
 
     /**
-     * Method to use for plugins if pwa-graphql installed
+     * Method returns success URL.
      *
      * @param Order $order
      *
@@ -86,8 +86,9 @@ class Index implements ActionInterface
         return 'checkout/onepage/success';
     }
 
-
     /**
+     * Method returns cart URL.
+     *
      * @param Order $order
      *
      * @return string
