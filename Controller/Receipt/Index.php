@@ -45,12 +45,11 @@ class Index implements ActionInterface
      */
     public function execute()
     {
-        $reference = $this->request->getParam('checkout-reference');
+        $failMessages = $this->processPayment->process($this->request->getParams(), $this->session);
 
+        $reference = $this->request->getParam('checkout-reference');
         $order  = $this->referenceNumber->getOrderByReference($reference);
         $status = $order->getStatus();
-
-        $failMessages = $this->processPayment->process($this->request->getParams(), $this->session);
 
         if ($status == 'pending_payment') { // status could be changed by callback, if not, it needs to be forced
             $order  = $this->referenceNumber->getOrderByReference($reference); // refreshing order
