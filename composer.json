@@ -23,9 +23,7 @@
         "nesbot/carbon": "^2.57.0 || ^3.0"
     },
     "require-dev": {
-        "magento/magento-coding-standard": "*",
-        "phpunit/phpunit": "^9.6",
-        "magento/product-enterprise-edition": ">2.4.7"
+        "magento/magento-coding-standard": "*"
     },
     "conflict": {
         "markup/module-paytrail": "*"
