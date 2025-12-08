@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Improve receipt controller.
 - Improve accessibility of payment page.
+- Change paytrail script link.
 
 ## [2.2.11] - 2025-07-01
 
