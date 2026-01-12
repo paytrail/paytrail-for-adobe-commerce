@@ -186,6 +186,14 @@ define(
 
                     return true;
                 },
+                selectPaymentMethodOnKeyUp: function (data, event) {
+                    if (event.key === "Enter") {
+                        selectPaymentMethodAction(self.getData());
+                        checkoutData.setSelectedPaymentMethod(self.item.method);
+                    }
+
+                    return true;
+                },
                 addErrorMessage: function (msg) {
                     messageList.addErrorMessage(
                         {

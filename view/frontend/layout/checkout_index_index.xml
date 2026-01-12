@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
     <head>
-        <script type='text/javascript' src="https://services.paytrail.com/static/paytrail.js" src_type="url"></script>
+        <script type='text/javascript' src="https://resources.paytrail.com/libraries/paytrail.js" src_type="url"/>
     </head>
     <body>
         <referenceBlock name="checkout.root">

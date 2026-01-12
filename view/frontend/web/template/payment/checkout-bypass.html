@@ -1,4 +1,5 @@
-<div class="payment-method" data-bind="css: {'_active': (getCode() == isChecked())}">
+<div tabindex="0" class="payment-method"
+     data-bind="css: {'_active': (getCode() == isChecked())}, event: { keyup: selectPaymentMethodOnKeyUp }">
     <!-- ko if: getIsSuccess() -->
     <div class="payment-method-title field choice">
         <input class="radio"
@@ -40,8 +41,13 @@
                 </div>
                 <div class="paytrail-group-wrapper" data-role="content">
                     <!-- ko foreach: methodGroup['providers'], as: 'paymentMethod' -->
-                    <div tabindex="0" class="paytrail-payment-method" data-bind="
-                          attr: {id: 'paytrail-payment-method-' + id},
+                    <div role="radio" tabindex="0" class="paytrail-payment-method" data-bind="
+                          attr: {
+                          id: 'paytrail-payment-method-' + id,
+                          'aria-checked': $parents[1].selectedPaymentMethodId() == id ? 'true' : 'false',
+                          'aria-label': name,
+                          'aria-labelledby': name
+                            },
                           css: { active: $parents[1].selectedPaymentMethodId() == id },
                           click: $parents[1].setPaymentMethodId,
                           event: { keyup: $parents[1].setPaymentMethodIdOnKeyUp }">
@@ -73,9 +79,14 @@
                     <hr>
                     <div class="paytrail-stored-cards">
                         <!-- ko foreach : { data: $parent.getTokensData(methodGroup.tokens), as: 'token' } -->
-                        <div tabindex="0" class="paytrail-stored-token" data-bind="
+                        <div tabindex="0" role="radio" class="paytrail-stored-token" data-bind="
                                 click: $parents[1].setToken,
-                                attr: {id: token.id },
+                                attr: {
+                                id: token.id,
+                                'aria-checked': $parents[1].selectedToken() == token.id ? 'true' : 'false',
+                                'aria-label': token.maskedCC,
+                                'aria-labelledby': token.maskedCC
+                                    },
                                 css: { active: $parents[1].selectedToken() == token.id },
                                 event: { keyup: $parents[1].setTokenOnKeyUp }">
 
@@ -135,8 +146,13 @@
                 </div>
                 <div class="paytrail-group-wrapper" data-role="content">
                     <!-- ko foreach: methodGroup['providers'], as: 'paymentMethod' -->
-                    <div tabindex="0" class="paytrail-payment-method" data-bind="
-                          attr: {id: 'paytrail-payment-method-' + id},
+                    <div role="radio" tabindex="0" class="paytrail-payment-method" data-bind="
+                          attr: {
+                          id: 'paytrail-payment-method-' + id
+                          'aria-checked': $parents[1].selectedPaymentMethodId() == id ? 'true' : 'false',
+                          'aria-label': name,
+                          'aria-labelledby': name
+                            },
                           css: { active: $parents[1].selectedPaymentMethodId() == id },
                           click: $parents[1].setPaymentMethodId,
                           event: { keyup: $parents[1].setPaymentMethodIdOnKeyUp }">
@@ -171,9 +187,14 @@
 
                     <div class="paytrail-stored-cards">
                         <!-- ko foreach : { data: $parent.getTokensData(methodGroup.tokens), as: 'token' } -->
-                        <div tabindex="0" class="paytrail-stored-token" data-bind="
+                        <div tabindex="0" role="radio" class="paytrail-stored-token" data-bind="
                             click: $parents[1].setToken,
-                            attr: {id: token.id },
+                            attr: {
+                            id: token.id
+                            'aria-checked': $parents[1].selectedToken() == token.id ? 'true' : 'false',
+                            'aria-label': token.maskedCC,
+                            'aria-labelledby': token.maskedCC
+                                },
                             css: { active: $parents[1].selectedToken() == token.id },
                             event: { keyup: $parents[1].setTokenOnKeyUp }">
 
