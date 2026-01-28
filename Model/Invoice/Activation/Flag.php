@@ -13,6 +13,7 @@ class Flag
         'collectorb2b',
         'walleyb2c',
         'walleyb2b',
+        'klarna'
     ];
 
     /**
