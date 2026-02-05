@@ -80,11 +80,7 @@ class OrderPaymentMethodData
     }
 
     /**
-     * Sets selected payment method data from callback/receipt response.
-     *
-     * This method is used when payment method selection is on a separate page (SkipBankSelection enabled)
-     * and the checkout-provider is returned from Paytrail in the callback/receipt response.
-     * It sets the selected payment method code and the manual invoice activation flag if applicable.
+     * Sets payment method data from Paytrail callback to order payment additional_data.
      *
      * @param Order $order
      * @param string $checkoutProvider The checkout-provider value from Paytrail callback/receipt params
@@ -95,10 +91,8 @@ class OrderPaymentMethodData
     {
         try {
             $payment = $order->getPayment();
-
-            // Only set if not already set (to avoid overwriting pre-selected method)
             $existingMethod = $payment->getAdditionalInformation(self::SELECTED_PAYMENT_METHOD_CODE);
-            if (empty($existingMethod) || $existingMethod != $checkoutProvider) {
+            if (empty($existingMethod) || $existingMethod == 'paytrail') {
                 $payment->setAdditionalInformation(self::SELECTED_PAYMENT_METHOD_CODE, $checkoutProvider);
             }
 
