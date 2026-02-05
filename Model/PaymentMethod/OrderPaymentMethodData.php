@@ -24,7 +24,7 @@ class OrderPaymentMethodData
     public function __construct(
         private OrderRepositoryInterface        $orderRepository,
         private PaymentTokenManagementInterface $paymentTokenManagement,
-        private PaytrailLogger                  $paytrailLogger
+        private PaytrailLogger                  $paytrailLogger,
     ) {
     }
 
@@ -75,6 +75,40 @@ class OrderPaymentMethodData
         } catch (\Exception $e) {
             $this->paytrailLogger->logData(
                 Logger::ERROR, 'Error setting selected card token data: ' . $e->getMessage()
+            );
+        }
+    }
+
+    /**
+     * Sets selected payment method data from callback/receipt response.
+     *
+     * This method is used when payment method selection is on a separate page (SkipBankSelection enabled)
+     * and the checkout-provider is returned from Paytrail in the callback/receipt response.
+     * It sets the selected payment method code and the manual invoice activation flag if applicable.
+     *
+     * @param Order $order
+     * @param string $checkoutProvider The checkout-provider value from Paytrail callback/receipt params
+     * @param bool $saveOrder Whether to save the order after setting the data
+     * @return void
+     */
+    public function setPaymentMethodDataFromCallback(Order $order, string $checkoutProvider, bool $saveOrder = true): void
+    {
+        try {
+            $payment = $order->getPayment();
+
+            // Only set if not already set (to avoid overwriting pre-selected method)
+            $existingMethod = $payment->getAdditionalInformation(self::SELECTED_PAYMENT_METHOD_CODE);
+            if (empty($existingMethod) || $existingMethod != $checkoutProvider) {
+                $payment->setAdditionalInformation(self::SELECTED_PAYMENT_METHOD_CODE, $checkoutProvider);
+            }
+
+            if ($saveOrder) {
+                $this->orderRepository->save($order);
+            }
+        } catch (\Exception $e) {
+            $this->paytrailLogger->logData(
+                Logger::ERROR,
+                'Error setting payment method data from callback: ' . $e->getMessage()
             );
         }
     }
