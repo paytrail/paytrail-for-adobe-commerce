@@ -58,7 +58,6 @@ class Flag
         $order
     ): AbstractPaymentRequest {
         if ($this->isManualInvoiceEnabled()
-            && in_array($method, $this->getInvoiceMethods())
             && (!$order->getIsVirtual() || !$this->config->isShipmentActivateInvoice())
         ) {
             $paytrailPayment->setManualInvoiceActivation(true);
