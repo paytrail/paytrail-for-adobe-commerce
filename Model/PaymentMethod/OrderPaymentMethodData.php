@@ -6,13 +6,14 @@ use Magento\Sales\Api\OrderRepositoryInterface;
 use Magento\Sales\Model\Order;
 use Magento\Vault\Api\PaymentTokenManagementInterface;
 use Monolog\Logger;
+use Paytrail\PaymentService\Gateway\Config\Config;
 use Paytrail\PaymentService\Logger\PaytrailLogger;
 
 class OrderPaymentMethodData
 {
-    public const SELECTED_PAYMENT_METHOD_CODE = 'selected_payment_method';
-    public const METHOD_TITLE_CODE = 'method_title';
-    private const CREDIT_CARD_VALUE = 'creditcard';
+    public const  SELECTED_PAYMENT_METHOD_CODE = 'selected_payment_method';
+    public const  METHOD_TITLE_CODE            = 'method_title';
+    private const CREDIT_CARD_VALUE            = 'creditcard';
 
     /**
      * OrderPaymentMethodData constructor.
@@ -22,9 +23,9 @@ class OrderPaymentMethodData
      * @param PaytrailLogger $paytrailLogger
      */
     public function __construct(
-        private OrderRepositoryInterface        $orderRepository,
+        private OrderRepositoryInterface $orderRepository,
         private PaymentTokenManagementInterface $paymentTokenManagement,
-        private PaytrailLogger                  $paytrailLogger,
+        private PaytrailLogger $paytrailLogger,
     ) {
     }
 
@@ -33,6 +34,7 @@ class OrderPaymentMethodData
      *
      * @param Order $order
      * @param string $selectedPaymentMethod
+     *
      * @return void
      */
     public function setSelectedPaymentMethodData($order, $selectedPaymentMethod): void
@@ -43,8 +45,8 @@ class OrderPaymentMethodData
             $this->orderRepository->save($order);
         } catch (\Exception $e) {
             $this->paytrailLogger->logData(
-                Logger::ERROR, 'Error setting selected payment method data: '
-                . $e->getMessage()
+                Logger::ERROR,
+                'Error setting selected payment method data: ' . $e->getMessage()
             );
         }
     }
@@ -54,6 +56,7 @@ class OrderPaymentMethodData
      *
      * @param Order $order
      * @param string $selectedTokenId
+     *
      * @return void
      */
     public function setSelectedCardTokenData($order, $selectedTokenId): void
@@ -62,10 +65,10 @@ class OrderPaymentMethodData
             $cardDetails = $this->paymentTokenManagement->getByPublicHash($selectedTokenId, $order->getCustomerId());
 
             if (isset($cardDetails) || $selectedTokenId === 'pay_and_add_card') {
-                $currentAdditionalInformation = $order->getPayment()->getAdditionalInformation()[self::METHOD_TITLE_CODE];
+                $additionalInformation = $order->getPayment()->getAdditionalInformation()[self::METHOD_TITLE_CODE];
                 $order->getPayment()->setAdditionalInformation(
                     [
-                        self::METHOD_TITLE_CODE => $currentAdditionalInformation,
+                        self::METHOD_TITLE_CODE            => $additionalInformation,
                         self::SELECTED_PAYMENT_METHOD_CODE => self::CREDIT_CARD_VALUE
                     ]
                 );
@@ -74,7 +77,8 @@ class OrderPaymentMethodData
             }
         } catch (\Exception $e) {
             $this->paytrailLogger->logData(
-                Logger::ERROR, 'Error setting selected card token data: ' . $e->getMessage()
+                Logger::ERROR,
+                'Error setting selected card token data: ' . $e->getMessage()
             );
         }
     }
@@ -85,14 +89,18 @@ class OrderPaymentMethodData
      * @param Order $order
      * @param string $checkoutProvider The checkout-provider value from Paytrail callback/receipt params
      * @param bool $saveOrder Whether to save the order after setting the data
+     *
      * @return void
      */
-    public function setPaymentMethodDataFromCallback(Order $order, string $checkoutProvider, bool $saveOrder = true): void
-    {
+    public function setPaymentMethodDataFromCallback(
+        Order $order,
+        string $checkoutProvider,
+        bool $saveOrder = true
+    ): void {
         try {
             $payment = $order->getPayment();
             $existingMethod = $payment->getAdditionalInformation(self::SELECTED_PAYMENT_METHOD_CODE);
-            if (empty($existingMethod) || $existingMethod == 'paytrail') {
+            if (empty($existingMethod) || $existingMethod == Config::CODE) {
                 $payment->setAdditionalInformation(self::SELECTED_PAYMENT_METHOD_CODE, $checkoutProvider);
             }
 
