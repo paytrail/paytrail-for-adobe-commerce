@@ -13,6 +13,7 @@ class Flag
         'collectorb2b',
         'walleyb2c',
         'walleyb2b',
+        'klarna'
     ];
 
     /**
@@ -57,7 +58,6 @@ class Flag
         $order
     ): AbstractPaymentRequest {
         if ($this->isManualInvoiceEnabled()
-            && in_array($method, $this->getInvoiceMethods())
             && (!$order->getIsVirtual() || !$this->config->isShipmentActivateInvoice())
         ) {
             $paytrailPayment->setManualInvoiceActivation(true);
