@@ -6,14 +6,14 @@ interface SubscriptionSearchResultInterface extends \Magento\Framework\Api\Searc
     /**
      * Get items.
      *
-     * @return SubscriptionInterface[] Array of collection items.
+     * @return \Paytrail\PaymentService\Api\Data\SubscriptionInterface[] Array of collection items.
      */
     public function getItems();
 
     /**
      * Set items.
      *
-     * @param SubscriptionInterface[]|null $items
+     * @param \Paytrail\PaymentService\Api\Data\SubscriptionInterface[]|null $items
      *
      * @return $this
      */
