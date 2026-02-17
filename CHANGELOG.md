@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.2.14] - 2026-02-11
+
+- Fix issues with Manual Invoice Activation.
+- Allow using Klarna with Manual Invoice Activation.
+
 ## [2.2.13] - 2026-01-26
 
 - Fix issue on Adobe Commerce 2.4.6 and older.

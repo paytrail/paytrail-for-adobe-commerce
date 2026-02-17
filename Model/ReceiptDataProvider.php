@@ -7,6 +7,7 @@ use Magento\Framework\Exception\LocalizedException;
 use Magento\Sales\Model\Order;
 use Paytrail\PaymentService\Exceptions\CheckoutException;
 use Paytrail\PaymentService\Gateway\Config\Config;
+use Paytrail\PaymentService\Model\PaymentMethod\OrderPaymentMethodData;
 use Paytrail\PaymentService\Model\Receipt\LoadService;
 use Paytrail\PaymentService\Model\Receipt\PaymentTransaction;
 use Paytrail\PaymentService\Model\Receipt\ProcessService;
@@ -52,6 +53,7 @@ class ReceiptDataProvider
      * @param LoadService $loadService
      * @param PaymentTransaction $paymentTransaction
      * @param FinnishReferenceNumber $referenceNumber
+     * @param OrderPaymentMethodData $orderPaymentMethodData
      */
     public function __construct(
         private Session $session,
@@ -59,7 +61,8 @@ class ReceiptDataProvider
         private ProcessService $processService,
         private LoadService $loadService,
         private PaymentTransaction $paymentTransaction,
-        private FinnishReferenceNumber $referenceNumber
+        private FinnishReferenceNumber $referenceNumber,
+        private OrderPaymentMethodData $orderPaymentMethodData
     ) {
     }
 
@@ -92,6 +95,15 @@ class ReceiptDataProvider
 
         /** @var string|void $paymentVerified */
         $paymentVerified = $this->paymentTransaction->verifyPaymentData($params, $this->currentOrder);
+
+        // Set payment method data from checkout-provider when payment is verified
+        // This handles the case when payment method selection is on a separate page (SkipBankSelection enabled)
+        $this->orderPaymentMethodData->setPaymentMethodDataFromCallback(
+            $this->currentOrder,
+            $this->paramsMethod,
+            false // Don't save order here, it will be saved in processOrder
+        );
+
         $this->processService->processTransaction(
             $paymentVerified,
             $this->transactionId,
