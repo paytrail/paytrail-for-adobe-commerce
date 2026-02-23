@@ -19,7 +19,6 @@ use Magento\Vault\Model\PaymentTokenFactory;
 use Paytrail\PaymentService\Exceptions\CheckoutException;
 use Paytrail\PaymentService\Gateway\Config\Config;
 use Paytrail\PaymentService\Model\Receipt\ProcessService;
-use Paytrail\SDK\Exception\ClientException;
 use Paytrail\SDK\Model\Token\Card;
 use Paytrail\SDK\Response\GetTokenResponse;
 use Psr\Log\LoggerInterface;
@@ -112,9 +111,9 @@ class SaveCard implements ActionInterface
             $this->context->getMessageManager()->addErrorMessage('This card has already been added to your vault');
             $this->logger->error($e->getMessage());
             return $this->redirect();
-        } catch (ClientException $e) {
-            $this->checkoutSession->setData('paytrail_previous_error', __('Card data is incorrect'));
+        } catch (\Exception $e) {
             $this->logger->error($e->getMessage());
+            $this->checkoutSession->setData('paytrail_previous_error', __('Error while adding card. Please contact customer service.'));
             return $this->redirect();
         }
 
