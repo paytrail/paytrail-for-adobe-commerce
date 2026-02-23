@@ -25,19 +25,21 @@ use Psr\Log\LoggerInterface;
 
 class SaveCard implements ActionInterface
 {
-
+    /**
+     * @var null
+     */
     private $errorMsg = null;
 
     /**
      * @var string[]
      */
     private $cardTypes = [
-        'Visa'       => 'VI',
+        'Visa' => 'VI',
         'MasterCard' => 'MC',
-        'Discover'   => 'DI',
-        'Amex'       => 'AE',
-        'Maestro'    => 'SM',
-        'Solo'       => 'SO'
+        'Discover' => 'DI',
+        'Amex' => 'AE',
+        'Maestro' => 'SM',
+        'Solo' => 'SO'
     ];
 
     /**
@@ -69,14 +71,14 @@ class SaveCard implements ActionInterface
         private PaymentTokenManagementInterface $paymentTokenManagementInterface,
         private Session                         $checkoutSession,
         private ProcessService                  $processService
-    ) {
+    )
+    {
     }
 
     /**
+     * Execute function.
+     *
      * @return ResponseInterface
-     * @throws CheckoutException
-     * @throws CommandException
-     * @throws NotFoundException
      */
     public function execute()
     {
@@ -93,7 +95,7 @@ class SaveCard implements ActionInterface
 
         try {
             $responseData = $this->getResponseData($tokenizationId);
-            $customerId   = $this->customerSession->getCustomerId();
+            $customerId = $this->customerSession->getCustomerId();
             $paymentToken = $this->paymentTokenManagementInterface->getByPublicHash(
                 $this->createPublicHash($responseData->getCard(), $customerId),
                 $customerId
@@ -113,7 +115,10 @@ class SaveCard implements ActionInterface
             return $this->redirect();
         } catch (\Exception $e) {
             $this->logger->error($e->getMessage());
-            $this->checkoutSession->setData('paytrail_previous_error', __('Error while adding card. Please contact customer service.'));
+            $this->checkoutSession->setData(
+                'paytrail_previous_error',
+                __('Error while adding card. Please contact customer service.')
+            );
             return $this->redirect();
         }
 
@@ -135,7 +140,7 @@ class SaveCard implements ActionInterface
     private function getResponseData($tokenizationId)
     {
         $commandExecutor = $this->commandManagerPool->get('paytrail');
-        $response        = $commandExecutor->executeByCode(
+        $response = $commandExecutor->executeByCode(
             'token_request',
             null,
             [
@@ -172,10 +177,10 @@ class SaveCard implements ActionInterface
         }
 
         $gatewayToken = $responseData->getToken();
-        $cardData     = $responseData->getCard();
+        $cardData = $responseData->getCard();
 
         $vaultPaymentToken = $this->paymentTokenFactory->create(PaymentTokenFactory::TOKEN_TYPE_CREDIT_CARD);
-        $customerId        = $this->customerSession->getCustomer()->getId();
+        $customerId = $this->customerSession->getCustomer()->getId();
         $vaultPaymentToken->setCustomerId($customerId);
         $vaultPaymentToken->setPaymentMethodCode($this->gatewayConfig->getCcVaultCode());
         $vaultPaymentToken->setExpiresAt(
@@ -183,8 +188,8 @@ class SaveCard implements ActionInterface
         );
         $tokenDetails = $this->jsonSerializer->serialize(
             [
-                'type'           => $this->cardTypes[$cardData->getType()],
-                'maskedCC'       => $cardData->getPartialPan(),
+                'type' => $this->cardTypes[$cardData->getType()],
+                'maskedCC' => $cardData->getPartialPan(),
                 'expirationDate' => $cardData->getExpireYear() . '/' . $cardData->getExpireMonth()
             ]
         );
@@ -206,8 +211,8 @@ class SaveCard implements ActionInterface
     {
         $tokenDetails = $this->jsonSerializer->serialize(
             [
-                'type'           => $this->cardTypes[$addingCard->getType()],
-                'maskedCC'       => $addingCard->getPartialPan(),
+                'type' => $this->cardTypes[$addingCard->getType()],
+                'maskedCC' => $addingCard->getPartialPan(),
                 'expirationDate' => $addingCard->getExpireYear() . '/' . $addingCard->getExpireMonth()
             ]
         );
