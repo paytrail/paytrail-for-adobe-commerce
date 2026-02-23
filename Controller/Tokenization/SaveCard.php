@@ -71,8 +71,7 @@ class SaveCard implements ActionInterface
         private PaymentTokenManagementInterface $paymentTokenManagementInterface,
         private Session                         $checkoutSession,
         private ProcessService                  $processService
-    )
-    {
+    ) {
     }
 
     /**
