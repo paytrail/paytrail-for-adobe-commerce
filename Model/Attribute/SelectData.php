@@ -8,7 +8,7 @@ use Paytrail\PaymentService\Model\ResourceModel\Subscription\Profile\CollectionF
 
 class SelectData extends AbstractSource
 {
-    public const NO_RECURRING_PAYMENT_VALUE = null;
+    public const NO_RECURRING_PAYMENT_VALUE = '';
 
     /**
      * @var CollectionFactory
