@@ -34,7 +34,9 @@ class OrderInvoiceCancellation implements ObserverInterface
     {
         try {
             $order = $observer->getEvent()->getOrder();
-            $paymentMethod = $order->getPayment()->getAdditionalInformation()[OrderPaymentMethodData::SELECTED_PAYMENT_METHOD_CODE];
+            $paymentMethod = $order
+                ->getPayment()
+                ->getAdditionalInformation()[OrderPaymentMethodData::SELECTED_PAYMENT_METHOD_CODE];
 
             if ($order->getState() === Order::STATE_CANCELED && $paymentMethod === 'klarna') {
                 $commandExecutor = $this->commandManagerPool->get('paytrail');
@@ -50,7 +52,10 @@ class OrderInvoiceCancellation implements ObserverInterface
                 if (!$response['error']) {
                     $order->getPayment()->addTransactionCommentsToOrder(
                         $order->getPayment()->getTransactionId(),
-                        __('Invoice cancellation successfully with code: "%code".', ['code' => $response['data']->getHttpStatusCode()])
+                        __(
+                            'Invoice cancellation successfully with code: "%code".',
+                            ['code' => $response['data']->getHttpStatusCode()]
+                        )
                     );
                 }
             }
@@ -62,4 +67,3 @@ class OrderInvoiceCancellation implements ObserverInterface
         }
     }
 }
-
