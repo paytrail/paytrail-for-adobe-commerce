@@ -13,7 +13,7 @@ use Magento\Payment\Gateway\Response\HandlerInterface;
 class InvoiceCancellation implements CommandInterface
 {
     /**
-     * InvoiceActivation constructor.
+     * InvoiceCancellation constructor.
      *
      * @param TransferFactoryInterface $transferFactory
      * @param BuilderInterface $requestBuilder
