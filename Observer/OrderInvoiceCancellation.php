@@ -7,6 +7,7 @@ use Magento\Framework\Event\Observer;
 use Magento\Framework\Event\ObserverInterface;
 use Magento\Payment\Gateway\Command\CommandManagerPoolInterface;
 use Magento\Sales\Model\Order;
+use Paytrail\PaymentService\Model\PaymentMethod\OrderPaymentMethodData;
 use Psr\Log\LoggerInterface;
 
 class OrderInvoiceCancellation implements ObserverInterface
@@ -14,11 +15,12 @@ class OrderInvoiceCancellation implements ObserverInterface
     /**
      * OrderInvoiceCancellation constructor.
      *
+     * @param CommandManagerPoolInterface $commandManagerPool
      * @param LoggerInterface $logger
      */
     public function __construct(
         private CommandManagerPoolInterface $commandManagerPool,
-        private LoggerInterface $logger
+        private LoggerInterface             $logger
     ) {
     }
 
@@ -32,8 +34,9 @@ class OrderInvoiceCancellation implements ObserverInterface
     {
         try {
             $order = $observer->getEvent()->getOrder();
+            $paymentMethod = $order->getPayment()->getAdditionalInformation()[OrderPaymentMethodData::SELECTED_PAYMENT_METHOD_CODE];
 
-            if ($order->getState() === Order::STATE_CANCELED) {
+            if ($order->getState() === Order::STATE_CANCELED && $paymentMethod === 'klarna') {
                 $commandExecutor = $this->commandManagerPool->get('paytrail');
 
                 $response = $commandExecutor->executeByCode(
