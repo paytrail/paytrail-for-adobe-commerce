@@ -53,8 +53,8 @@ class OrderInvoiceCancellation implements ObserverInterface
                     $order->getPayment()->addTransactionCommentsToOrder(
                         $order->getPayment()->getTransactionId(),
                         __(
-                            'Invoice cancellation successfully with code: "%code".',
-                            ['code' => $response['data']->getHttpStatusCode()]
+                            'Invoice cancellation successfully with message: %message',
+                            ['message' => $this->getResponseMessage($response['data']->getHttpStatusCode())]
                         )
                     );
                 }
@@ -65,5 +65,25 @@ class OrderInvoiceCancellation implements ObserverInterface
                 . $e->getMessage()
             );
         }
+    }
+
+    /**
+     * Retrieves the response message corresponding to a given response code.
+     *
+     * @param int $responseCode
+     *
+     * @return string
+     */
+    private function getResponseMessage(int $responseCode): string
+    {
+        $responseMessage = [
+            200 => 'Invoice already cancelled.',
+            201 => 'Invoice cancelled.',
+            202 => 'Invoice cancellation requested, status of the payment will be updated asynchronously.',
+            400 => 'Invalid request. Refer to body.message for more information',
+            500 => 'Other error. Refer to body.message for more information'
+        ];
+
+        return $responseMessage[$responseCode] ?? 'Unknown response code.';
     }
 }
