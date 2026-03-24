@@ -14,4 +14,7 @@
     <event name="sales_order_place_before">
         <observer name="validate_cart_before_order_place" instance="Paytrail\PaymentService\Observer\ScheduledCartValidation"/>
     </event>
+    <event name="order_cancel_after">
+        <observer name="order_invoice_cancellation" instance="Paytrail\PaymentService\Observer\OrderInvoiceCancellation"/>
+    </event>
 </config>

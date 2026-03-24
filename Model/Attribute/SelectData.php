@@ -25,8 +25,9 @@ class SelectData extends AbstractSource
     }
 
     /**
-     * Get all options
-     * @return array
+     * Retrieves all available options in a predefined format.
+     *
+     * @return array|null
      */
     public function getAllOptions()
     {
@@ -39,7 +40,7 @@ class SelectData extends AbstractSource
                     $this->_options[] = ['label' => $data['name'], 'value' => $data['profile_id']];
                 }
             }
-            $this->_options[] = ['label' => __('No recurring payment'), 'value' => self::NO_RECURRING_PAYMENT_VALUE];
+            $this->_options[] = ['label' => __(' '), 'value' => ''];
         }
 
         return $this->_options;
