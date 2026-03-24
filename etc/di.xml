@@ -74,6 +74,9 @@
                 <item name="invoice_activation" xsi:type="string">
                     Paytrail\PaymentService\Gateway\Command\InvoiceActivation
                 </item>
+                <item name="invoice_cancellation" xsi:type="string">
+                    Paytrail\PaymentService\Gateway\Command\InvoiceCancellation
+                </item>
             </argument>
         </arguments>
     </virtualType>
@@ -364,6 +367,36 @@
             <argument name="builders" xsi:type="array">
                 <item name="paymentBuilder" xsi:type="string">
                     Paytrail\PaymentService\Gateway\Request\InvoiceActivationDataBuilder
+                </item>
+            </argument>
+        </arguments>
+    </virtualType>
+
+    <!-- Command section for invoice_cancellation action  -->
+    <virtualType name="PaytrailInvoiceCancellationCommandManager" type="Magento\Payment\Gateway\Command\CommandManager">
+        <arguments>
+            <argument name="commandPool" xsi:type="object">PaytrailInvoiceCancellationCommandPool</argument>
+        </arguments>
+    </virtualType>
+
+    <type name="Paytrail\PaymentService\Gateway\Command\InvoiceCancellation">
+        <arguments>
+            <argument name="requestBuilder" xsi:type="object">PaytrailInvoiceCancellationRequest</argument>
+            <argument name="transferFactory" xsi:type="object">Paytrail\PaymentService\Gateway\Http\TransferFactory
+            </argument>
+            <argument name="client" xsi:type="object">Paytrail\PaymentService\Gateway\Http\Client\InvoiceCancellation
+            </argument>
+            <argument name="handler" xsi:type="object">
+                Paytrail\PaymentService\Gateway\Response\InvoiceCancellationHandler
+            </argument>
+        </arguments>
+    </type>
+
+    <virtualType name="PaytrailInvoiceCancellationRequest" type="Magento\Payment\Gateway\Request\BuilderComposite">
+        <arguments>
+            <argument name="builders" xsi:type="array">
+                <item name="paymentBuilder" xsi:type="string">
+                    Paytrail\PaymentService\Gateway\Request\InvoiceCancellationDataBuilder
                 </item>
             </argument>
         </arguments>
