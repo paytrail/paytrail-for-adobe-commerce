@@ -17,6 +17,8 @@
                         command="config:set payment/paytrail/merchant_id {{_CREDS.paytrail/payment_paytrail_merchant_id}}"/>
             <magentoCLI stepKey="SetTestSecret"
                         command="config:set payment/paytrail/merchant_secret {{_CREDS.paytrail/payment_paytrail_merchant_secret}}"/>
+            <magentoCLI command="config:set {{DisableCheckoutAgreementsConfigData.path}} {{DisableCheckoutAgreementsConfigData.value}}"
+                        stepKey="DisableCheckoutAgreements"/>
 
             <!-- Set Currency options for Default Config -->
             <magentoCLI command="config:set {{SetCurrencyEURBaseConfig.path}} {{SetCurrencyEURBaseConfig.value}}"
@@ -41,21 +43,8 @@
         </before>
 
         <after>
-            <magentoCLI stepKey="DisablePaytrailPayment"
-                        command="config:set {{DisablePaytrailConfigData.path}} {{DisablePaytrailConfigData.value}}"/>
-
-            <!-- Reset currency configurations -->
-            <magentoCLI command="config:set {{SetCurrencyUSDBaseConfig.path}} {{SetCurrencyUSDBaseConfig.value}}"
-                        stepKey="setCurrencyBaseUSD"/>
-            <magentoCLI command="config:set {{SetDefaultCurrencyUSDConfig.path}} {{SetDefaultCurrencyUSDConfig.value}}"
-                        stepKey="setCurrencyDefaultUSD"/>
-            <magentoCLI
-                command="config:set {{SetAllowedCurrenciesConfigForUSD.path}} {{SetAllowedCurrenciesConfigForUSD.value}}"
-                stepKey="setAllowedCurrencyUSD"/>
-
             <deleteData createDataKey="createSimpleProduct" stepKey="deleteSimpleProduct"/>
             <deleteData createDataKey="createCustomer" stepKey="deleteCustomer"/>
-
         </after>
 
         <actionGroup ref="LoginToStorefrontActionGroup" stepKey="customerLogin">

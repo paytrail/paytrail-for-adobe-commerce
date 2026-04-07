@@ -1,0 +1,104 @@
+name: Run MFTF Tests
+
+on:
+  schedule:
+    - cron: "00 6 * * 1"
+
+jobs:
+  mftf:
+    runs-on: ubuntu-latest
+
+    services:
+      selenium:
+        image: selenium/standalone-chromium:latest # For AMD64
+        options: --shm-size=2gb
+        ports:
+          - "4444:4444"
+
+    steps:
+      - name: validate selenium
+        run: |
+          curl -s http://localhost:4444/wd/hub/status | jq .
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up PHP 8.2
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.2"
+          extensions: mbstring, intl, soap, mysqli, dom, simplexml, xsl, zip, bcmath, gd
+          ini-values: memory_limit=2G
+
+      - name: Install Composer
+        run: sudo apt-get update && sudo apt-get install -y composer
+
+      - name: Install Magento 2.4.8
+        env:
+          COMPOSER_AUTH: |
+            {
+              "http-basic": {
+                "repo.magento.com": {
+                  "username": "${{ secrets.REPO_MAGENTO_USER }}",
+                  "password": "${{ secrets.REPO_MAGENTO_PASSWORD }}"
+                }
+              }
+            }
+        run: |
+          composer create-project --repository-url=https://repo.magento.com/ magento/project-community-edition magento
+          cd magento
+
+      - name: Install Paytrail module
+        run: |
+          cd magento
+          composer require paytrail/paytrail-php-sdk
+          mkdir -p app/code/Paytrail/PaymentService
+          rsync -av --exclude='.git' --exclude='vendor' --exclude='app/autoload.php' --exclude='magento' ../ ./app/code/Paytrail/PaymentService/
+
+      - name: Install MFTF
+        run: |
+          cd magento
+          chmod +x bin/magento
+          composer require --dev magento/magento2-functional-testing-framework
+          vendor/bin/mftf build:project
+          # configure MFTF env
+          cat <<EOF > dev/tests/acceptance/.env
+          MAGENTO_BASE_URL=${{ vars.BASE_URL }}
+          MAGENTO_BACKEND_NAME=admin
+          MAGENTO_ADMIN_USERNAME=${{ vars.ADMIN_USER }}
+          SELENIUM_HOST=localhost
+          SELENIUM_PATH=/
+          SELENIUM_PORT=4444
+          BROWSER=chrome
+          ENABLE_SELENIUM=1
+          EOF
+          # add .credential file
+          cat <<EOF > dev/tests/acceptance/.credentials
+          # Admin password
+          magento/MAGENTO_ADMIN_PASSWORD=${{ secrets.ADMIN_PASSWORD }}
+          magento/tfa/OTP_SHARED_SECRET=MFRGGZDF
+
+          # Paytrail test credentials:
+          paytrail/payment_paytrail_merchant_id=375917
+          paytrail/payment_paytrail_merchant_secret=SAIPPUAKAUPPIAS
+          EOF
+
+          echo '--- .env file ---'
+          cat dev/tests/acceptance/.env || echo '.env not found'
+          echo '--- .credentials file ---'
+          cat dev/tests/acceptance/.credentials || echo '.credentials not found'
+
+      - name: Run MFTF Tests
+        run: |
+          cd magento
+          php vendor/bin/codecept bootstrap
+          vendor/bin/mftf build:project
+          vendor/bin/mftf generate:suite PaytrailSuite
+
+          vendor/bin/mftf run:group PaytrailSuite
+
+      - name: Upload MFTF Logs
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mftf-logs
+          path: magento/dev/tests/acceptance/tests/_output

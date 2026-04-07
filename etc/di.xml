@@ -129,12 +129,6 @@
     </virtualType>
 
     <!-- Command section for payment action  -->
-    <virtualType name="PaytrailPaymentCommandManager" type="Magento\Payment\Gateway\Command\CommandManager">
-        <arguments>
-            <argument name="commandPool" xsi:type="object">PaytrailPaymentCommandPool</argument>
-        </arguments>
-    </virtualType>
-
     <type name="Paytrail\PaymentService\Gateway\Command\Payment">
         <arguments>
             <argument name="requestBuilder" xsi:type="object">PaytrailPaymentRequest</argument>
@@ -157,19 +151,7 @@
         </arguments>
     </virtualType>
 
-    <virtualType name="PaytrailPaymentRedirect" type="Paytrail\PaymentService\Controller\Redirect\Index">
-        <arguments>
-            <argument name="commandManager" xsi:type="object">PaytrailPaymentCommandManager</argument>
-        </arguments>
-    </virtualType>
-
     <!-- Command section for token payment action  -->
-    <virtualType name="PaytrailTokenPaymentCommandManager" type="Magento\Payment\Gateway\Command\CommandManager">
-        <arguments>
-            <argument name="commandPool" xsi:type="object">PaytrailTokenPaymentCommandPool</argument>
-        </arguments>
-    </virtualType>
-
     <type name="Paytrail\PaymentService\Gateway\Command\TokenPayment">
         <arguments>
             <argument name="requestBuilder" xsi:type="object">PaytrailTokenPaymentRequest</argument>
@@ -199,7 +181,7 @@
         </arguments>
     </virtualType>
 
-<!--    command for MIT token payments-->
+    <!--    command for MIT token payments-->
     <virtualType name="PaytrailTokenPaymentMitRequest" type="Magento\Payment\Gateway\Request\BuilderComposite">
         <arguments>
             <argument name="builders" xsi:type="array">
@@ -224,12 +206,6 @@
     </virtualType>
 
     <!-- Command section for get_payment_data action  -->
-    <virtualType name="PaytrailPaymentDataCommandManager" type="Magento\Payment\Gateway\Command\CommandManager">
-        <arguments>
-            <argument name="commandPool" xsi:type="object">PaytrailPaymentDataCommandPool</argument>
-        </arguments>
-    </virtualType>
-
     <type name="Paytrail\PaymentService\Gateway\Command\PaymentData">
         <arguments>
             <argument name="requestBuilder" xsi:type="object">PaytrailPaymentDataRequest</argument>
@@ -285,12 +261,6 @@
     </virtualType>
 
     <!-- Command section for add_card action  -->
-    <virtualType name="PaytrailAddCardCommandManager" type="Magento\Payment\Gateway\Command\CommandManager">
-        <arguments>
-            <argument name="commandPool" xsi:type="object">PaytrailAddCardCommandPool</argument>
-        </arguments>
-    </virtualType>
-
     <type name="Paytrail\PaymentService\Gateway\Command\AddCard">
         <arguments>
             <argument name="requestBuilder" xsi:type="object">PaytrailAddCardRequest</argument>
@@ -314,12 +284,6 @@
     </virtualType>
 
     <!-- Command section for token_request action  -->
-    <virtualType name="PaytrailTokenRequestCommandManager" type="Magento\Payment\Gateway\Command\CommandManager">
-        <arguments>
-            <argument name="commandPool" xsi:type="object">PaytrailTokenRequestCommandPool</argument>
-        </arguments>
-    </virtualType>
-
     <type name="Paytrail\PaymentService\Gateway\Command\TokenRequest">
         <arguments>
             <argument name="requestBuilder" xsi:type="object">PaytrailTokenRequestRequest</argument>
@@ -343,12 +307,6 @@
     </virtualType>
 
     <!-- Command section for invoice_activation action  -->
-    <virtualType name="PaytrailInvoiceActivationCommandManager" type="Magento\Payment\Gateway\Command\CommandManager">
-        <arguments>
-            <argument name="commandPool" xsi:type="object">PaytrailInvoiceActivationCommandPool</argument>
-        </arguments>
-    </virtualType>
-
     <type name="Paytrail\PaymentService\Gateway\Command\InvoiceActivation">
         <arguments>
             <argument name="requestBuilder" xsi:type="object">PaytrailInvoiceActivationRequest</argument>
@@ -373,12 +331,6 @@
     </virtualType>
 
     <!-- Command section for invoice_cancellation action  -->
-    <virtualType name="PaytrailInvoiceCancellationCommandManager" type="Magento\Payment\Gateway\Command\CommandManager">
-        <arguments>
-            <argument name="commandPool" xsi:type="object">PaytrailInvoiceCancellationCommandPool</argument>
-        </arguments>
-    </virtualType>
-
     <type name="Paytrail\PaymentService\Gateway\Command\InvoiceCancellation">
         <arguments>
             <argument name="requestBuilder" xsi:type="object">PaytrailInvoiceCancellationRequest</argument>
@@ -459,12 +411,6 @@
     </virtualType>
 
     <!-- Command section for pay and add card action  -->
-    <virtualType name="PaytrailPayAndAddCardCommandManager" type="Magento\Payment\Gateway\Command\CommandManager">
-        <arguments>
-            <argument name="commandPool" xsi:type="object">PaytrailPayAndAddCardCommandPool</argument>
-        </arguments>
-    </virtualType>
-
     <type name="Paytrail\PaymentService\Gateway\Command\PayAndAddCard">
         <arguments>
             <argument name="requestBuilder" xsi:type="object">PaytrailPayAndAddCardRequest</argument>

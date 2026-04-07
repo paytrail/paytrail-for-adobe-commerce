@@ -11,6 +11,7 @@
         </annotations>
         <before>
             <actionGroup ref="AdminLoginActionGroup" stepKey="loginGetFromGeneralFile"/>
+            <magentoCLI command="config:set {{DisableUseFormKey.path}} {{DisableUseFormKey.value}}" stepKey="DisableUseFormKey"/>
         </before>
         <after>
             <actionGroup ref="AdminLogoutActionGroup" stepKey="logout"/>

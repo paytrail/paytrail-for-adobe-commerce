@@ -9,7 +9,7 @@
 
         <amOnPage url="{{AdminConfigurationPaymentPage.url}}" stepKey="goToConfigurationPaymentPage"/>
         <waitForPageLoad stepKey="waitPageLoad"/>
-        <click selector="{{PaytrailPaymentServiceForAdobeCommerceSection.ExpandSection}}" stepKey="clickToExpandSettings"/>
+        <click selector="//a[contains(@id, 'paytrail-head')]" stepKey="clickToExpandSettings"/>
         <see userInput="Paytrail Payment Service for Adobe Commerce" stepKey="checkLabel"/>
     </actionGroup>
 </actionGroups>

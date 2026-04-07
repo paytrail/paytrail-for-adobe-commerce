@@ -26,7 +26,8 @@
                 stepKey="setAllowedCurrencyEURandUSD"/>
             <magentoCLI command="config:set {{SetDefaultCurrencyEURConfig.path}} {{SetDefaultCurrencyEURConfig.value}}"
                         stepKey="setCurrencyDefaultEUR"/>
-
+            <magentoCLI command="config:set {{DisableCheckoutAgreementsConfigData.path}} {{DisableCheckoutAgreementsConfigData.value}}"
+                        stepKey="DisableCheckoutAgreements"/>
             <createData entity="SimpleProduct2" stepKey="createSimpleProduct">
                 <field key="price">20</field>
             </createData>
@@ -36,18 +37,6 @@
         </before>
 
         <after>
-            <magentoCLI stepKey="DisablePaytrailPayment"
-                        command="config:set {{DisablePaytrailConfigData.path}} {{DisablePaytrailConfigData.value}}"/>
-
-            <!-- Reset currency configurations -->
-            <magentoCLI command="config:set {{SetCurrencyUSDBaseConfig.path}} {{SetCurrencyUSDBaseConfig.value}}"
-                        stepKey="setCurrencyBaseUSD"/>
-            <magentoCLI command="config:set {{SetDefaultCurrencyUSDConfig.path}} {{SetDefaultCurrencyUSDConfig.value}}"
-                        stepKey="setCurrencyDefaultUSD"/>
-            <magentoCLI
-                command="config:set {{SetAllowedCurrenciesConfigForUSD.path}} {{SetAllowedCurrenciesConfigForUSD.value}}"
-                stepKey="setAllowedCurrencyUSD"/>
-
             <deleteData createDataKey="createSimpleProduct" stepKey="deleteSimpleProduct"/>
         </after>
 

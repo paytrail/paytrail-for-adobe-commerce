@@ -14,4 +14,16 @@
         <data key="label">Yes</data>
         <data key="value">0</data>
     </entity>
+    <entity name="DisableCheckoutAgreementsConfigData">
+        <data key="path">checkout/options/enable_agreements</data>
+        <data key="scope_id">0</data>
+        <data key="label">Yes</data>
+        <data key="value">0</data>
+    </entity>
+    <entity name="DisableUseFormKey">
+        <data key="path">admin/security/use_form_key</data>
+        <data key="scope_id">0</data>
+        <data key="label">Yes</data>
+        <data key="value">0</data>
+    </entity>
 </entities>
