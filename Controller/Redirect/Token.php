@@ -27,6 +27,7 @@ use Paytrail\PaymentService\Model\Receipt\ProcessService;
 use Paytrail\PaymentService\Model\ReceiptDataProvider;
 use Paytrail\PaymentService\Model\Recurring\TotalConfigProvider;
 use Paytrail\PaymentService\Model\Subscription\SubscriptionCreate;
+use Paytrail\SDK\Util\Signature;
 
 class Token implements HttpPostActionInterface
 {
@@ -167,8 +168,8 @@ class Token implements HttpPostActionInterface
             'checkout-transaction-id' => $response['data']->getTransactionId(),
             'checkout-status' => $response['data']->getStatus(),
             'checkout-provider' => $response['data']->getProvider(),
-            'signature' => HmacValidator::SKIP_HMAC_VALIDATION
         ];
+        $receiptData['signature'] = Signature::calculateHmac($receiptData, "", $this->gatewayConfig->getMerchantSecret());
 
         $this->receiptDataProvider->execute($receiptData);
 
