@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [2.3.1] - 2026-10-08
 
-- Improved security for payment processing.
+- Improve security for payment processing.
 
 ## [2.3.0] - 2026-06-30
 
