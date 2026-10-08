@@ -55,20 +55,20 @@ class Token implements HttpPostActionInterface
      * @param OrderPaymentMethodData $paymentMethodData
      */
     public function __construct(
-        private ReceiptDataProvider      $receiptDataProvider,
-        private Config                   $gatewayConfig,
-        private RequestInterface         $request,
-        private OrderFactory             $orderFactory,
-        private Session                  $checkoutSession,
-        private CustomerSession          $customerSession,
-        private JsonFactory              $jsonFactory,
-        private OrderRepositoryInterface $orderRepository,
-        private OrderManagementInterface $orderManagementInterface,
-        private SubscriptionCreate       $subscriptionCreate,
+        private ReceiptDataProvider         $receiptDataProvider,
+        private Config                      $gatewayConfig,
+        private RequestInterface            $request,
+        private OrderFactory                $orderFactory,
+        private Session                     $checkoutSession,
+        private CustomerSession             $customerSession,
+        private JsonFactory                 $jsonFactory,
+        private OrderRepositoryInterface    $orderRepository,
+        private OrderManagementInterface    $orderManagementInterface,
+        private SubscriptionCreate          $subscriptionCreate,
         private CommandManagerPoolInterface $commandManagerPool,
-        private ProcessService $processService,
-        private TotalConfigProvider $totalConfigProvider,
-        private OrderPaymentMethodData $paymentMethodData
+        private ProcessService              $processService,
+        private TotalConfigProvider         $totalConfigProvider,
+        private OrderPaymentMethodData      $paymentMethodData
     ) {
     }
 
@@ -169,7 +169,11 @@ class Token implements HttpPostActionInterface
             'checkout-status' => $response['data']->getStatus(),
             'checkout-provider' => $response['data']->getProvider(),
         ];
-        $receiptData['signature'] = Signature::calculateHmac($receiptData, "", $this->gatewayConfig->getMerchantSecret());
+        $receiptData['signature'] = Signature::calculateHmac(
+            $receiptData,
+            "",
+            $this->gatewayConfig->getMerchantSecret()
+        );
 
         $this->receiptDataProvider->execute($receiptData);
 
