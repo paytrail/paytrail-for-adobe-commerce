@@ -85,7 +85,6 @@ class ApplePayDataProvider
             'checkout-status' => Config::PAYTRAIL_API_PAYMENT_STATUS_FAIL,
             'checkout-stamp' => $this->paymentDataProvider->getStamp($order),
             'signature' => '',
-            'skip_validation' => 1
         ];
 
         foreach ($params as $param) {

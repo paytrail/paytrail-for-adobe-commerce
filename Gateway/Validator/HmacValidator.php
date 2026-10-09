@@ -7,8 +7,6 @@ use Paytrail\PaymentService\Model\Adapter\Adapter;
 
 class HmacValidator
 {
-    public const SKIP_HMAC_VALIDATION = 'skip_hmac';
-
     /**
      * HmacValidator constructor.
      *

@@ -34,10 +34,6 @@ class ResponseValidator extends AbstractValidator
         $isValid = true;
         $fails = [];
 
-        if (isset($validationSubject["skip_validation"]) && $validationSubject["skip_validation"] == 1) {
-            return $this->createResult($isValid, $fails);
-        }
-
         if ($this->isRequestMerchantIdEmpty($this->gatewayConfig->getMerchantId())) {
             $fails[] = "Request MerchantId is empty";
         }
