@@ -4,6 +4,7 @@ namespace Paytrail\PaymentService\Notification\Model\Message;
 
 use Magento\AdminNotification\Model\InboxFactory;
 use Magento\Backend\Model\Auth\Session;
+use Magento\Framework\App\CacheInterface;
 use Magento\Framework\Notification\MessageInterface;
 use Paytrail\PaymentService\Gateway\Config\Config;
 use Paytrail\PaymentService\Logger\PaytrailLogger;
@@ -11,6 +12,8 @@ use Paytrail\PaymentService\Logger\PaytrailLogger;
 class VersionNotification implements MessageInterface
 {
     private const MESSAGE_IDENTITY = 'Paytrail Payment Service Version Control message';
+    private const GITHUB_VERSION_CACHE_KEY = 'paytrail_github_version_data';
+    private const GITHUB_VERSION_CACHE_TTL = 86400;
 
     /**
      * VersionNotification constructor.
@@ -19,12 +22,14 @@ class VersionNotification implements MessageInterface
      * @param InboxFactory $inboxFactory
      * @param Config $gatewayConfig
      * @param PaytrailLogger $paytrailLogger
+     * @param CacheInterface $cache
      */
     public function __construct(
         private Session        $authSession,
         private InboxFactory   $inboxFactory,
         private Config         $gatewayConfig,
-        private PaytrailLogger $paytrailLogger
+        private PaytrailLogger $paytrailLogger,
+        private CacheInterface $cache
     ) {
     }
 
@@ -46,7 +51,7 @@ class VersionNotification implements MessageInterface
     public function isDisplayed()
     {
         try {
-            $githubContent = $this->gatewayConfig->getDecodedContentFromGithub();
+            $githubContent = $this->getGithubVersionData();
             $this->setSessionData("PaytrailGithubVersion", $githubContent);
 
             /*
@@ -82,6 +87,31 @@ class VersionNotification implements MessageInterface
             return false;
         }
         return false;
+    }
+
+    /**
+     * Get GitHub release metadata with 24h cache.
+     *
+     * @return array
+     */
+    private function getGithubVersionData(): array
+    {
+        $cacheData = $this->cache->load(self::GITHUB_VERSION_CACHE_KEY);
+
+        if ($cacheData !== false) {
+            $content = json_decode($cacheData, true);
+            if (is_array($content)) {
+                return $content;
+            }
+        }
+
+        $content = $this->gatewayConfig->getDecodedContentFromGithub();
+
+        if (!empty($content)) {
+            $this->cache->save(json_encode($content), self::GITHUB_VERSION_CACHE_KEY, [], self::GITHUB_VERSION_CACHE_TTL);
+        }
+
+        return is_array($content) ? $content : [];
     }
 
     /**
