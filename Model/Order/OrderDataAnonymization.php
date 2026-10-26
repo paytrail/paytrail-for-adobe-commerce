@@ -7,7 +7,7 @@ use Paytrail\PaymentService\Gateway\Config\Config;
 
 class OrderDataAnonymization
 {
-    private const ANONYMIZED_DATA = '*****';
+    public const ANONYMIZED_DATA = 'hidden';
 
     /**
      * OrderAnonymization constructor.

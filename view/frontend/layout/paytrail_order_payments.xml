@@ -1,6 +1,9 @@
 <?xml version="1.0"?>
 <page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
     <update handle="customer_account"/>
+    <head>
+        <css src="Paytrail_PaymentService::css/payment-page-bypass.css"/>
+    </head>
     <body>
         <referenceContainer name="content">
             <block class="Paytrail\PaymentService\Block\Order\Payments" name="paytrail.order.payments" cacheable="false">

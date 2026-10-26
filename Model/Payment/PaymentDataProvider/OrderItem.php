@@ -71,9 +71,9 @@ class OrderItem
         $paytrailItem->setUnitPrice(round($item['price'] * 100))
             ->setUnits($item['amount'])
             ->setVatPercentage($item['vat'])
-            ->setProductCode($anonymizeData ? '*****' : $item['code'])
+            ->setProductCode($anonymizeData ? OrderDataAnonymization::ANONYMIZED_DATA : $item['code'])
             ->setDeliveryDate(date('Y-m-d'))
-            ->setDescription($anonymizeData ? '*****' : $item['title']);
+            ->setDescription($anonymizeData ? OrderDataAnonymization::ANONYMIZED_DATA : $item['title']);
 
         return $paytrailItem;
     }
