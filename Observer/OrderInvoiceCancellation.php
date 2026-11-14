@@ -38,7 +38,10 @@ class OrderInvoiceCancellation implements ObserverInterface
                 ->getPayment()
                 ->getAdditionalInformation()[OrderPaymentMethodData::SELECTED_PAYMENT_METHOD_CODE];
 
-            if ($order->getState() === Order::STATE_CANCELED && $paymentMethod === 'klarna') {
+            if ($order->getState() === Order::STATE_CANCELED
+                && $paymentMethod === 'klarna'
+                && $order->getPayment()->getLastTransId()
+            ) {
                 $commandExecutor = $this->commandManagerPool->get('paytrail');
 
                 $response = $commandExecutor->executeByCode(
