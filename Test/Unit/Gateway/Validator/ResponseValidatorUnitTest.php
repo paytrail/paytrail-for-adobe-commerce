@@ -66,7 +66,7 @@ class ResponseValidatorUnitTest extends TestCase
             \Magento\Payment\Gateway\Validator\ResultInterfaceFactory::class
         )
             ->disableOriginalConstructor()
-            ->setMethods(['create'])
+            ->onlyMethods(['create'])
             ->getMock();
 
 

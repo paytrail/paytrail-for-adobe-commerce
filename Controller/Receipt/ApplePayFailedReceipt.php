@@ -43,10 +43,11 @@ class ApplePayFailedReceipt implements ActionInterface
      */
     public function execute()
     {
+        $resultJson = $this->resultFactory->create(ResultFactory::TYPE_JSON);
+
         try {
             $order = $this->session->getLastRealOrder();
             $params = $this->applePayDataProvider->getApplePayFailParams($this->request->getParams()['params'], $order);
-            $resultJson = $this->resultFactory->create(ResultFactory::TYPE_JSON);
 
             $failMessages = $this->processPayment->process($params, $this->session);
 

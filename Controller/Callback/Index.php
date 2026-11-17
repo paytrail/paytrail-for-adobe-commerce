@@ -42,6 +42,9 @@ class Index implements ActionInterface
      */
     public function execute(): ResultInterface
     {
+        $response = $this->resultFactory->create(ResultFactory::TYPE_JSON);
+        $responseError = [];
+
         try {
             $this->logger->logData(
                 Logger::NOTICE,
@@ -50,8 +53,6 @@ class Index implements ActionInterface
             );
 
             $reference     = $this->request->getParam('checkout-reference');
-            $response      = $this->resultFactory->create(ResultFactory::TYPE_JSON);
-            $responseError = [];
 
             $order  = $this->referenceNumber->getOrderByReference($reference);
             $status = $order->getStatus();

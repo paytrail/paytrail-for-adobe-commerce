@@ -5,10 +5,8 @@ namespace Paytrail\PaymentService\Test\Unit\Controller;
 use Magento\Checkout\Model\Session;
 use Magento\Framework\App\RequestInterface;
 use Magento\Framework\Controller\ResultFactory;
-use Magento\Framework\Controller\ResultInterface;
+use Magento\Framework\Controller\Result\Redirect;
 use Magento\Framework\Message\ManagerInterface;
-use Magento\Quote\Model\Quote;
-use Magento\Quote\Model\QuoteRepository;
 use Magento\Sales\Model\Order;
 use Paytrail\PaymentService\Model\FinnishReferenceNumber;
 use Paytrail\PaymentService\Model\Receipt\ProcessPayment;
@@ -53,7 +51,7 @@ class ReceiptIndexUnitTest extends TestCase
     private MockObject $orderMock;
 
     /**
-     * @var (ResultInterface&MockObject)|MockObject|null
+     * @var Redirect&MockObject
      */
     private $resultInterfaceMock;
 
@@ -61,16 +59,6 @@ class ReceiptIndexUnitTest extends TestCase
      * @var Index
      */
     private Index $indexController;
-
-    /**
-     * @var MockObject|(Quote&MockObject)
-     */
-    private MockObject $quoteMock;
-
-    /**
-     * @var MockObject
-     */
-    private MockObject $quoteRepositoryMock;
 
     /**
      * @param $originalClassName
@@ -105,16 +93,7 @@ class ReceiptIndexUnitTest extends TestCase
             $this->messageManagerMock
         );
 
-        $this->quoteMock           = $this->getMockBuilder(Quote::class)
-            ->disableOriginalConstructor()
-            ->setMethods(['setIsActive'])
-            ->getMock();
-        $methods                   = ['setPath', 'setHeader', 'setHttpResponseCode', 'renderResult'];
-        $this->resultInterfaceMock = $this->getMockBuilder(ResultInterface::class)
-            ->setMethods($methods)
-            ->disableOriginalConstructor()
-            ->getMock();
-        $this->quoteRepositoryMock = $this->getSimpleMock(QuoteRepository::class);
+        $this->resultInterfaceMock = $this->getSimpleMock(Redirect::class);
         $this->orderMock           = $this->getSimpleMock(Order::class);
     }
 

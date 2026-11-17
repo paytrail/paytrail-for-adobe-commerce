@@ -24,13 +24,12 @@ class DiscountApplyTest extends TestCase
         $items = ['item1', 'item2'];
         $order = $this->getMockBuilder(Order::class)
             ->disableOriginalConstructor()
-            ->addMethods(['getGiftCardsAmount', 'getCustomerBalanceAmount', 'getRewardCurrencyAmount'])
-            ->onlyMethods(['getShippingAmount', 'getGrandTotal', 'getShippingTaxAmount', 'getAllItems'])
+            ->onlyMethods([])
             ->getMock();
 
-        $order->method('getGiftCardsAmount')->willReturn(0);
-        $order->method('getCustomerBalanceAmount')->willReturn(0);
-        $order->method('getRewardCurrencyAmount')->willReturn(0);
+        $order->setData('gift_cards_amount', 0);
+        $order->setData('customer_balance_amount', 0);
+        $order->setData('reward_currency_amount', 0);
 
         $result = $this->discountApply->process($items, $order);
 
@@ -42,13 +41,12 @@ class DiscountApplyTest extends TestCase
         $items = ['item1', 'item2'];
         $order = $this->getMockBuilder(Order::class)
             ->disableOriginalConstructor()
-            ->addMethods(['getGiftCardsAmount', 'getCustomerBalanceAmount', 'getRewardCurrencyAmount'])
-            ->onlyMethods(['getShippingAmount', 'getGrandTotal', 'getShippingTaxAmount', 'getAllItems'])
+            ->onlyMethods([])
             ->getMock();
 
-        $order->method('getGiftCardsAmount')->willReturn(50);
-        $order->method('getCustomerBalanceAmount')->willReturn(50);
-        $order->method('getRewardCurrencyAmount')->willReturn(50);
+        $order->setData('gift_cards_amount', 50);
+        $order->setData('customer_balance_amount', 50);
+        $order->setData('reward_currency_amount', 50);
 
         $result = $this->discountApply->process($items, $order);
 
@@ -58,5 +56,4 @@ class DiscountApplyTest extends TestCase
         $this->assertEquals(-150, (float)$discountItem['price']);
     }
 
-    // Add more tests here...
 }
