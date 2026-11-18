@@ -15,6 +15,7 @@ use Magento\Sales\Api\OrderRepositoryInterface;
 use Magento\Sales\Api\OrderStatusHistoryRepositoryInterface;
 use Magento\Sales\Model\Order\Payment\Transaction\BuilderInterface;
 use Magento\Sales\Model\Service\InvoiceService;
+use Magento\Sales\Model\ResourceModel\Order\Invoice as InvoiceResource;
 use Paytrail\PaymentService\Gateway\Request\TokenRequestDataBuilder;
 use Paytrail\PaymentService\Logger\PaytrailLogger;
 use Paytrail\PaymentService\Model\Adapter\Adapter;
@@ -40,6 +41,7 @@ class Payment
      * @param PaytrailLogger $paytrailLogger
      * @param TokenRequestDataBuilder $tokenRequestDataBuilder
      * @param CommandManagerPool $commandManagerPool
+     * @param InvoiceResource $invoiceResource
      */
     public function __construct(
         private OrderRepositoryInterface              $orderRepository,
@@ -54,7 +56,8 @@ class Payment
         private OrderStatusHistoryRepositoryInterface $orderStatusHistoryRepository,
         private PaytrailLogger                        $paytrailLogger,
         private TokenRequestDataBuilder               $tokenRequestDataBuilder,
-        private CommandManagerPool                    $commandManagerPool
+        private CommandManagerPool                    $commandManagerPool,
+        private InvoiceResource                       $invoiceResource
     ) {
     }
 
@@ -125,7 +128,7 @@ class Payment
                 $invoice = $this->invoiceService->prepareInvoice($order);
                 $invoice->register();
                 $invoice->setTransactionId($mitResponse->getTransactionId());
-                $invoice->save();
+                $this->invoiceResource->save($invoice);
                 $transactionSave = $this->transaction->addObject(
                     $invoice
                 )->addObject(

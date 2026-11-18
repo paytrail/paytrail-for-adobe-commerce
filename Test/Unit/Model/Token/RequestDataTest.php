@@ -23,6 +23,7 @@ use Paytrail\PaymentService\Model\Payment\RoundingFixer;
 use Paytrail\PaymentService\Model\UrlDataProvider;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
+use PHPUnit\Framework\Attributes\DataProvider;
 
 class RequestDataTest extends TestCase
 {
@@ -69,14 +70,14 @@ class RequestDataTest extends TestCase
         $config    = $this->objectManager->getObject(Config::class);
         $taxHelper = $this->getTaxHelperMock($input['config']);
 
-        $priceCurrency = $this->getMockForAbstractClass(PriceCurrencyInterface::class);
+        $priceCurrency = $this->createMock(PriceCurrencyInterface::class);
         $priceCurrency->method('round')
             ->willReturnCallback(
                 function ($amount) {
                     return round($amount, 2);
                 }
             );
-        $configMock = $this->getMockForAbstractClass(ScopeConfigInterface::class);
+        $configMock = $this->createMock(ScopeConfigInterface::class);
         $configMock->method('getValue')->willReturn(24);
 
         $this->paymentDataProvider = new PaymentDataProvider(
@@ -100,6 +101,7 @@ class RequestDataTest extends TestCase
      * @magentoConfigFixture tax/calculation/apply_after_discount 1
      * @throws LocalizedException
      */
+    #[DataProvider('itemArgsDataProvider')]
     public function testItemsDataDiscountTax($input, $discounts, $expected)
     {
         $this->prepareRequestDataMock($input);
@@ -107,7 +109,6 @@ class RequestDataTest extends TestCase
         /** Mock Order */
         $order = $this->getMockBuilder(Order::class)
             ->disableOriginalConstructor()
-            ->addMethods(['getGiftCardsAmount'])
             ->onlyMethods(['getShippingAmount', 'getGrandTotal', 'getShippingTaxAmount', 'getAllItems'])
             ->getMock();
 
@@ -120,7 +121,7 @@ class RequestDataTest extends TestCase
         $order->method('getShippingAmount')->willReturn($input['order']['shipping_amount']);
         $order->method('getGrandTotal')->willReturn($expected['total']);
         $order->method('getShippingTaxAmount')->willReturn($input['order']['shipping_tax_amount']);
-        $order->method('getGiftCardsAmount')->willReturn($discounts['giftcard']);
+        $order->setData('gift_cards_amount', $discounts['giftcard']);
 
         $taxItemMock = $this->createMock(\Magento\Sales\Model\ResourceModel\Order\Tax\Item::class);
         $gatewayConfig = $this->createMock(Config::class);

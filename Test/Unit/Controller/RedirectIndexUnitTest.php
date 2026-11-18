@@ -16,6 +16,7 @@ use Paytrail\PaymentService\Controller\Redirect\Index;
 use Paytrail\PaymentService\Gateway\Config\Config;
 use Paytrail\PaymentService\Model\Email\Order\PendingOrderEmailConfirmation;
 use Paytrail\PaymentService\Model\ProviderForm;
+use Paytrail\PaymentService\Model\PaymentMethod\OrderPaymentMethodData;
 use Paytrail\PaymentService\Model\Receipt\ProcessService;
 use Paytrail\PaymentService\Model\Ui\DataProvider\PaymentProvidersData;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -144,7 +145,8 @@ class RedirectIndexUnitTest extends TestCase
             $this->commandManagerPoolMock,
             $this->processServiceMock,
             $this->paymentProvidersData,
-            $this->ProviderForm
+            $this->ProviderForm,
+            $this->getSimpleMock(OrderPaymentMethodData::class)
         );
 
         $this->jsonMock         = $this->getSimpleMock(Json::class);
